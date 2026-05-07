@@ -7,6 +7,7 @@
 
   const TOKEN_KEY = 'loveflix_token';
   const USER_KEY = 'loveflix_user';
+  const SETTINGS_KEY = 'loveflix_settings';
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY) || '';
@@ -22,6 +23,18 @@
   function getUser() {
     try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); }
     catch { return null; }
+  }
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || {}; }
+    catch { return {}; }
+  }
+  function saveSettings(updates) {
+    const current = getSettings();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(Object.assign(current, updates)));
+  }
+  function clearSettings() {
+    localStorage.removeItem(SETTINGS_KEY);
   }
 
   async function signIn(email, password) {
@@ -128,6 +141,9 @@
     getUser,
     setSession,
     clearSession,
+    getSettings,
+    saveSettings,
+    clearSettings,
     signIn,
     signUp,
     signOut,

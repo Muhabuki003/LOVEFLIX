@@ -133,10 +133,10 @@
     <a href="browse.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4z"/></svg>Browse Library</a>
 
     <div class="side-foot">
-      <div class="av">B</div>
+      <div class="av" id="sideAvatar">Y</div>
       <div>
-        <div style="color:#fff;font-weight:500;font-size:13px">Buki</div>
-        <div>Admin · loveflix.so</div>
+        <div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div>
+        <div>Admin · <span id="sideUrl">loveflix.so</span></div>
       </div>
     </div>
   </aside>
@@ -145,7 +145,7 @@
     <div class="page-head">
       <div>
         <h1 class="page-title">Dashboard</h1>
-        <div class="page-sub">Welcome back, Buki. Here's what's happening on your site.</div>
+        <div class="page-sub" id="welcomeSub">Welcome back. Here's what's happening on your site.</div>
       </div>
       <div class="head-actions">
         <button class="btn btn-ghost" onclick="location.href='home.html'">
@@ -283,5 +283,17 @@
   </main>
 </div>
 
+<script src="assets/loveflix.js"></script>
+<script>
+  (function() {
+    const s = LoveFlix.getSettings();
+    const name = s.adminName || 'You';
+    const slug = s.urlSlug || 'loveflix.so';
+    document.getElementById('sideAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('sideAdminName').textContent = name;
+    document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
+    document.getElementById('welcomeSub').textContent = 'Welcome back, ' + name + '. Here\'s what\'s happening on your site.';
+  })();
+</script>
 </body>
 </html>

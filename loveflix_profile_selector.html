@@ -267,15 +267,15 @@
       <div class="profile-avatar her-avatar">
         <span class="emoji-bg">🌸</span>
       </div>
-      <span class="profile-name" id="herName">Her Name</span>
+      <span class="profile-name" id="herName">My Love</span>
     </div>
 
     <!-- HIS PROFILE (ADMIN) -->
     <div class="profile-card" onclick="selectHim()">
       <div class="profile-avatar his-avatar">
-        <span class="initials">B</span>
+        <span class="initials" id="hisInitial">Y</span>
       </div>
-      <span class="profile-name" id="hisName">Buki</span>
+      <span class="profile-name" id="hisName">You</span>
     </div>
 
   </div>
@@ -379,7 +379,7 @@
       }
       setTimeout(() => {
         closePin();
-        showSuccess('Buki', true);
+        showSuccess(document.getElementById('hisName').textContent, true);
       }, 600);
     } else {
       pinLocked = true;
@@ -417,6 +417,17 @@
     if (e.key === 'Backspace') pinDelete();
     if (e.key === 'Escape') closePin();
   });
+
+  // Load names from settings
+  (function() {
+    const raw = localStorage.getItem('loveflix_settings');
+    const s = raw ? JSON.parse(raw) : {};
+    const partnerName = s.partnerName || 'My Love';
+    const adminName = s.adminName || 'You';
+    document.getElementById('herName').textContent = partnerName;
+    document.getElementById('hisName').textContent = adminName;
+    document.getElementById('hisInitial').textContent = adminName[0].toUpperCase();
+  })();
 </script>
 </body>
 </html>

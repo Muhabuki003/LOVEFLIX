@@ -162,7 +162,7 @@
     <p class="step-sub">Tell us your names so we can put theirs in lights.</p>
     <div class="field-grid">
       <div class="field"><label>Their name (the surprise-ee)</label><input type="text" id="theirName" placeholder="My Love" value="My Love"></div>
-      <div class="field"><label>Your name (you again)</label><input type="text" placeholder="Buki" value="Buki"></div>
+      <div class="field"><label>Your name (you again)</label><input type="text" id="adminName2" placeholder="Your name"></div>
     </div>
     <div class="field"><label>Anniversary date</label><input type="date" value="2023-05-14"></div>
     <p class="step-sub" style="margin-top:34px;margin-bottom:20px">Add profile photos (optional — you can skip and use the gradient avatars).</p>
@@ -195,7 +195,7 @@
       <label>Your custom URL</label>
       <div class="url-field">
         <span class="prefix">loveflix.so/</span>
-        <input type="text" id="urlSlug" placeholder="yourname" value="buki-and-love">
+        <input type="text" id="urlSlug" placeholder="yourname" value="">
       </div>
       <div class="field-hint">This is what you'll send them. <span style="color:#10b981">✓ Available</span></div>
     </div>
@@ -204,7 +204,7 @@
         <div class="chip-label">Preview</div>
         <div class="chip-logo" id="chipLogo">LOVE<span class="heart">♥</span>FLIX</div>
       </div>
-      <div class="chip-url" id="chipUrl">loveflix.so/buki-and-love</div>
+      <div class="chip-url" id="chipUrl">loveflix.so/yourname-and-love</div>
     </div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(2)">← Back</button>
@@ -242,7 +242,7 @@
         <strong style="color:#fff">Almost there.</strong> Check your email for a confirmation link. Click it, then sign in to start watching.
       </div>
       <div class="success-url">
-        <span id="successUrl">loveflix.so/buki-and-love</span>
+        <span id="successUrl">loveflix.so/yourname-and-love</span>
         <button class="copy-btn" onclick="this.textContent='Copied ✓'">COPY</button>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
@@ -255,10 +255,52 @@
 </main>
 
 <script>
+  function slugify(s) {
+    return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+  function buildSlug() {
+    const a = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
+    const p = document.getElementById('theirName').value.trim();
+    const sa = slugify(a) || 'yourname';
+    const sp = slugify(p) || 'love';
+    return sa + '-and-' + sp;
+  }
+  function refreshSlug() {
+    const s = buildSlug();
+    document.getElementById('urlSlug').value = s;
+    document.getElementById('chipUrl').textContent = 'loveflix.so/' + s;
+    document.getElementById('successUrl').textContent = 'loveflix.so/' + s;
+  }
+
   function goNext(step) {
     document.querySelectorAll('[data-pane]').forEach(p => p.classList.add('hidden'));
     document.querySelector(`[data-pane="${step}"]`).classList.remove('hidden');
+
+    if (step === 2) {
+      // Auto-populate "Your name" in step 2 from step 1 adminName
+      const n1 = document.getElementById('adminName').value.trim();
+      const n2 = document.getElementById('adminName2');
+      if (n1 && !n2.value) n2.value = n1;
+      document.getElementById('hisInitial').textContent = (n2.value[0] || n1[0] || 'Y').toUpperCase();
+    }
+
+    if (step === 3) {
+      refreshSlug();
+    }
+
     if (step === 5) {
+      // Save all settings to localStorage
+      const adminName = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
+      const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
+      const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
+      const accentEl = document.querySelector('#colors .color.selected');
+      LoveFlix.saveSettings({
+        adminName: adminName || 'You',
+        partnerName: partnerName,
+        urlSlug: slug,
+        accentColor: accentEl ? accentEl.dataset.c : '#e50914',
+      });
+      document.getElementById('successUrl').textContent = 'loveflix.so/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
       const cta = document.getElementById('primaryCta');
       if (window._needsEmailConfirm) {
@@ -268,6 +310,7 @@
         if (cta) { cta.textContent = 'Upload your first video →'; cta.href = 'admin_upload.html'; }
       }
     }
+
     document.querySelectorAll('.progress-step').forEach(s => {
       const n = parseInt(s.dataset.step, 10);
       s.classList.remove('active','done');
@@ -287,11 +330,11 @@
     chipLogo.style.color = c.dataset.c;
   });
 
-  // url slug live preview (step 3)
-  const urlSlug = document.getElementById('urlSlug');
+  // url slug live preview (step 3) — manual override
+  const urlSlugEl = document.getElementById('urlSlug');
   const chipUrl = document.getElementById('chipUrl');
   const successUrl = document.getElementById('successUrl');
-  urlSlug.addEventListener('input', e => {
+  urlSlugEl.addEventListener('input', e => {
     const v = e.target.value || 'yourname';
     chipUrl.textContent = `loveflix.so/${v}`;
     successUrl.textContent = `loveflix.so/${v}`;
@@ -305,12 +348,16 @@
     card.classList.add('selected');
   });
 
-  // sync initials (step 2)
+  // sync initials and slug (step 2)
   const theirName = document.getElementById('theirName');
   const herInitial = document.getElementById('herInitial');
-  theirName.addEventListener('input', e => herInitial.textContent = (e.target.value[0]||'M').toUpperCase());
-  const adminName = document.getElementById('adminName');
-  adminName.addEventListener('input', e => document.getElementById('hisInitial').textContent = (e.target.value[0]||'B').toUpperCase());
+  theirName.addEventListener('input', e => {
+    herInitial.textContent = (e.target.value[0] || 'M').toUpperCase();
+  });
+  const adminName2 = document.getElementById('adminName2');
+  adminName2.addEventListener('input', e => {
+    document.getElementById('hisInitial').textContent = (e.target.value[0] || 'Y').toUpperCase();
+  });
 
   // photo uploads (step 2) — using object URLs for preview before upload
   const herFileInput = document.createElement('input');
@@ -373,7 +420,6 @@
 
     try {
       const result = await LoveFlix.signUp(email, pwd);
-      // If Supabase requires email confirmation, no access_token is returned.
       window._needsEmailConfirm = !result.access_token;
       goNext(2);
     } catch (e) {
