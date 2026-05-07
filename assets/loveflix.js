@@ -101,6 +101,7 @@
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type);
       xhr.upload.onprogress = e => {
         if (e.lengthComputable && typeof onProgress === 'function') {
           onProgress(e.loaded / e.total, e.loaded, e.total);
