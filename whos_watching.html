@@ -637,24 +637,31 @@
         openPin();
       } else {
         // her profile -> proceed to home
+        try {
+          sessionStorage.setItem('loveflix_profile', 'Her');
+          sessionStorage.setItem('loveflix_is_admin', '0');
+        } catch (_) {}
         selectorPage.classList.add('fade-out');
-        setTimeout(() => {
-          // Wire to home.html when built
-          // window.location.href = 'home.html';
-          selectorPage.classList.remove('fade-out');
-        }, 500);
+        setTimeout(() => { window.location.href = 'home.html'; }, 500);
       }
     });
   });
 
-  // success buttons
+  // success buttons — record auth state, then route
   document.getElementById('goAdmin').addEventListener('click', () => {
-    // window.location.href = 'admin.html';
-    successOverlay.classList.remove('active');
+    try {
+      sessionStorage.setItem('loveflix_profile', 'Buki');
+      sessionStorage.setItem('loveflix_is_admin', '1');
+      sessionStorage.setItem('loveflix_admin_authed', '1');
+    } catch (_) {}
+    window.location.href = 'admin.html';
   });
   document.getElementById('goHome').addEventListener('click', () => {
-    // window.location.href = 'home.html';
-    successOverlay.classList.remove('active');
+    try {
+      sessionStorage.setItem('loveflix_profile', 'Buki');
+      sessionStorage.setItem('loveflix_is_admin', '1');
+    } catch (_) {}
+    window.location.href = 'home.html';
   });
 
   // manage profiles button

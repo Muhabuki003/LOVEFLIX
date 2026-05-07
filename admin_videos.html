@@ -164,7 +164,7 @@
         <tbody id="rows"></tbody>
       </table>
       <div class="footer-row">
-        <span>Showing <strong id="visCount">10</strong> of 86 videos</span>
+        <span>Showing <strong id="visCount">10</strong> of <strong id="totalCount">86</strong> videos</span>
         <span><a href="#" style="color:var(--text-dim)">Bulk edit</a> · <a href="#" style="color:var(--text-dim)">Export CSV</a></span>
       </div>
     </div>
@@ -172,7 +172,16 @@
 </div>
 
 <script>
-  const VIDEOS = [
+  const STORAGE_KEY = 'loveflix_videos';
+  function loadUploads() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function persistUploads(list) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list.filter(v => v.isUserUpload)));
+  }
+
+  const SEED_VIDEOS = [
     { id:1, t:'The Lisbon Trip · Day 3', cat:'Trips', date:'May 14, 2025', dur:'26:12', pub:true, tint:'t-rose' },
     { id:2, t:'2nd Anniversary Cut', cat:'Anniversary', date:'May 14, 2025', dur:'22:00', pub:false, tint:'t-violet' },
     { id:3, t:'Your 30th Birthday', cat:'Birthdays', date:'Mar 22, 2025', dur:'15:21', pub:true, tint:'t-amber' },
@@ -188,6 +197,9 @@
     { id:13, t:'One Year Letter', cat:'Letters', date:'May 14, 2024', dur:'02:44', pub:true, tint:'t-rose' },
     { id:14, t:'Surprise Proposal', cat:'Anniversary', date:'Feb 14, 2024', dur:'04:02', pub:true, tint:'t-amber' },
   ];
+
+  // merge user uploads (prepended) with seed data
+  const VIDEOS = [...loadUploads(), ...SEED_VIDEOS];
 
   const rows = document.getElementById('rows');
   const search = document.getElementById('search');
@@ -207,13 +219,22 @@
       return true;
     });
     visCount.textContent = list.length;
-    rows.innerHTML = list.map(v => `
+    const total = document.getElementById('totalCount');
+    if (total) total.textContent = VIDEOS.length;
+    rows.innerHTML = list.map(v => {
+      const thumbStyle = v.thumbDataUrl
+        ? `style="background:url('${v.thumbDataUrl}') center/cover no-repeat"`
+        : (v.tintCss ? `style="background:${v.tintCss}"` : '');
+      const thumbClass = v.thumbDataUrl ? 'v-thumb' : `v-thumb ${v.tint || ''}`;
+      const idLabel = typeof v.id === 'number' ? String(v.id).padStart(4,'0') : v.id;
+      const newBadge = v.isUserUpload ? ' · NEW' : '';
+      return `
       <tr data-id="${v.id}" draggable="true">
         <td><div class="grip"><svg viewBox="0 0 24 24"><path d="M9 4h2v2H9zM9 9h2v2H9zM9 14h2v2H9zM9 19h2v2H9zM13 4h2v2h-2zM13 9h2v2h-2zM13 14h2v2h-2zM13 19h2v2h-2z"/></svg></div></td>
         <td>
           <div style="display:flex;align-items:center;gap:14px">
-            <div class="v-thumb ${v.tint}">${v.t.split(' ')[0].slice(0,5).toUpperCase()}</div>
-            <div><div class="v-name">${v.t}</div><div class="v-sub">ID #${String(v.id).padStart(4,'0')} · 1080p${v.id%4===0?' · ♥ Favorite':''}</div></div>
+            <div class="${thumbClass}" ${thumbStyle}>${v.thumbDataUrl ? '' : v.t.split(' ')[0].slice(0,5).toUpperCase()}</div>
+            <div><div class="v-name">${v.t}</div><div class="v-sub">ID #${idLabel} · 1080p${newBadge}</div></div>
           </div>
         </td>
         <td><span class="cat-chip">${v.cat}</span></td>
@@ -228,7 +249,8 @@
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   }
   render();
 
@@ -236,19 +258,28 @@
   fCat.addEventListener('change', render);
   fStat.addEventListener('change', render);
 
+  function matchId(rawAttr, candidate) {
+    return String(candidate.id) === String(rawAttr);
+  }
+
   rows.addEventListener('click', e => {
     const tog = e.target.closest('.toggle');
     if (tog) {
-      const id = parseInt(tog.dataset.id, 10);
-      const v = VIDEOS.find(x => x.id === id);
-      if (v) { v.pub = !v.pub; tog.classList.toggle('on', v.pub); }
+      const id = tog.dataset.id;
+      const v = VIDEOS.find(x => matchId(id, x));
+      if (v) {
+        v.pub = !v.pub;
+        tog.classList.toggle('on', v.pub);
+        persistUploads(VIDEOS);
+      }
     }
     const del = e.target.closest('[data-del]');
     if (del) {
-      const id = parseInt(del.dataset.del, 10);
+      const id = del.dataset.del;
       if (confirm('Delete this video? This cannot be undone.')) {
-        const i = VIDEOS.findIndex(x => x.id === id);
+        const i = VIDEOS.findIndex(x => matchId(id, x));
         if (i >= 0) VIDEOS.splice(i, 1);
+        persistUploads(VIDEOS);
         render();
       }
     }
@@ -267,8 +298,9 @@
     if (dragging) dragging.classList.remove('dragging');
     rows.querySelectorAll('.drop-target').forEach(r => r.classList.remove('drop-target'));
     // commit order to VIDEOS array
-    const newOrder = [...rows.querySelectorAll('tr')].map(r => parseInt(r.dataset.id, 10));
-    VIDEOS.sort((a,b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+    const newOrder = [...rows.querySelectorAll('tr')].map(r => r.dataset.id);
+    VIDEOS.sort((a,b) => newOrder.indexOf(String(a.id)) - newOrder.indexOf(String(b.id)));
+    persistUploads(VIDEOS);
     dragging = null;
   });
   rows.addEventListener('dragover', e => {
