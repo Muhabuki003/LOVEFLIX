@@ -244,10 +244,39 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/loveflix.js"></script>
 <script>
+  // Initialize Supabase client for OAuth callback handling
+  const supabase = window.supabase.createClient(
+    'https://jeblgjjutyzzdursjqnn.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko'
+  );
+
+  // Handle OAuth callback — Supabase automatically parses #access_token from URL
+  async function handleAuthCallback() {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (data.session) {
+        LoveFlix.setSession({
+          access_token: data.session.access_token,
+          user: data.session.user
+        });
+        location.replace('whos_watching.html');
+      }
+    } catch (e) {
+      console.error('OAuth callback error:', e);
+    }
+  }
+
   // If already signed in, skip the login screen.
   if (LoveFlix.getToken()) location.replace('whos_watching.html');
+
+  // Check for OAuth callback on page load
+  if (window.location.hash.includes('access_token')) {
+    handleAuthCallback();
+  }
 
   function togglePw() {
     const input = document.getElementById('pwInput');
