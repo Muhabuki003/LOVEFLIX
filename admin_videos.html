@@ -171,35 +171,26 @@
   </main>
 </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
-  const STORAGE_KEY = 'loveflix_videos';
-  function loadUploads() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-    catch { return []; }
-  }
-  function persistUploads(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list.filter(v => v.isUserUpload)));
-  }
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
 
-  const SEED_VIDEOS = [
-    { id:1, t:'The Lisbon Trip · Day 3', cat:'Trips', date:'May 14, 2025', dur:'26:12', pub:true, tint:'t-rose' },
-    { id:2, t:'2nd Anniversary Cut', cat:'Anniversary', date:'May 14, 2025', dur:'22:00', pub:false, tint:'t-violet' },
-    { id:3, t:'Your 30th Birthday', cat:'Birthdays', date:'Mar 22, 2025', dur:'15:21', pub:true, tint:'t-amber' },
-    { id:4, t:'Forest Cabin Weekend', cat:'Trips', date:'Mar 8, 2025', dur:'16:10', pub:true, tint:'t-emerald' },
-    { id:5, t:'Pasta Night Disaster', cat:'Cooking', date:'Feb 24, 2025', dur:'08:09', pub:true, tint:'t-coral' },
-    { id:6, t:'Iceland Northern Lights', cat:'Trips', date:'Feb 12, 2025', dur:'12:34', pub:true, tint:'t-ocean' },
-    { id:7, t:'The Pancake Tradition', cat:'Cooking', date:'Jan 18, 2025', dur:'04:38', pub:true, tint:'t-twilight' },
-    { id:8, t:'Sunset Bike Ride', cat:'Moments', date:'Nov 12, 2024', dur:'03:44', pub:true, tint:'t-twilight' },
-    { id:9, t:'Stars in Joshua Tree', cat:'Trips', date:'Oct 3, 2024', dur:'07:14', pub:true, tint:'t-blue' },
-    { id:10, t:'Ocean Vows', cat:'Anniversary', date:'Aug 28, 2024', dur:'05:55', pub:true, tint:'t-blue2' },
-    { id:11, t:'The Birthday Surprise', cat:'Birthdays', date:'Aug 12, 2024', dur:'12:04', pub:true, tint:'t-amber' },
-    { id:12, t:'Dance in the Rain', cat:'Moments', date:'Jul 11, 2024', dur:'03:08', pub:true, tint:'t-violet' },
-    { id:13, t:'One Year Letter', cat:'Letters', date:'May 14, 2024', dur:'02:44', pub:true, tint:'t-rose' },
-    { id:14, t:'Surprise Proposal', cat:'Anniversary', date:'Feb 14, 2024', dur:'04:02', pub:true, tint:'t-amber' },
-  ];
+  let VIDEOS = [];
 
-  // merge user uploads (prepended) with seed data
-  const VIDEOS = [...loadUploads(), ...SEED_VIDEOS];
+  const TINTS = ['t-rose','t-violet','t-amber','t-blue','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean'];
+  function tintFor(id) {
+    let h = 0;
+    for (let i = 0; i < (id || '').length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    return TINTS[Math.abs(h) % TINTS.length];
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDur(sec) {
+    if (!sec) return '—';
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
 
   const rows = document.getElementById('rows');
   const search = document.getElementById('search');
@@ -212,106 +203,83 @@
     const cat = fCat.value;
     const stat = fStat.value;
     const list = VIDEOS.filter(v => {
-      if (q && !v.t.toLowerCase().includes(q)) return false;
-      if (cat !== 'all' && v.cat !== cat) return false;
-      if (stat === 'published' && !v.pub) return false;
-      if (stat === 'draft' && v.pub) return false;
+      if (q && !(v.title || '').toLowerCase().includes(q)) return false;
+      if (cat !== 'all' && v.category !== cat) return false;
+      if (stat === 'published' && !v.is_published) return false;
+      if (stat === 'draft' && v.is_published) return false;
       return true;
     });
     visCount.textContent = list.length;
     const total = document.getElementById('totalCount');
     if (total) total.textContent = VIDEOS.length;
+
+    if (!VIDEOS.length) {
+      rows.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-dim)">No videos yet. <a href="admin_upload.html" style="color:#fff">Upload your first one</a>.</td></tr>`;
+      return;
+    }
+
     rows.innerHTML = list.map(v => {
-      const thumbStyle = v.thumbDataUrl
-        ? `style="background:url('${v.thumbDataUrl}') center/cover no-repeat"`
-        : (v.tintCss ? `style="background:${v.tintCss}"` : '');
-      const thumbClass = v.thumbDataUrl ? 'v-thumb' : `v-thumb ${v.tint || ''}`;
-      const idLabel = typeof v.id === 'number' ? String(v.id).padStart(4,'0') : v.id;
-      const newBadge = v.isUserUpload ? ' · NEW' : '';
+      const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
+      const thumbStyle = v.thumbnail_url
+        ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+        : '';
+      const thumbLabel = v.thumbnail_url ? '' : (v.title || 'V').split(' ')[0].slice(0,5).toUpperCase();
+      const idLabel = String(v.id).slice(0, 8);
       return `
-      <tr data-id="${v.id}" draggable="true">
+      <tr data-id="${escapeHtml(v.id)}">
         <td><div class="grip"><svg viewBox="0 0 24 24"><path d="M9 4h2v2H9zM9 9h2v2H9zM9 14h2v2H9zM9 19h2v2H9zM13 4h2v2h-2zM13 9h2v2h-2zM13 14h2v2h-2zM13 19h2v2h-2z"/></svg></div></td>
         <td>
           <div style="display:flex;align-items:center;gap:14px">
-            <div class="${thumbClass}" ${thumbStyle}>${v.thumbDataUrl ? '' : v.t.split(' ')[0].slice(0,5).toUpperCase()}</div>
-            <div><div class="v-name">${v.t}</div><div class="v-sub">ID #${idLabel} · 1080p${newBadge}</div></div>
+            <div class="v-thumb ${tintClass}" ${thumbStyle}>${thumbLabel}</div>
+            <div><div class="v-name">${escapeHtml(v.title || 'Untitled')}</div><div class="v-sub">ID ${idLabel}</div></div>
           </div>
         </td>
-        <td><span class="cat-chip">${v.cat}</span></td>
-        <td style="color:var(--text-light)">${v.date}</td>
-        <td style="color:var(--text-light);font-variant-numeric:tabular-nums">${v.dur}</td>
-        <td><div class="toggle ${v.pub?'on':''}" data-id="${v.id}"></div></td>
+        <td><span class="cat-chip">${escapeHtml(v.category || '—')}</span></td>
+        <td style="color:var(--text-light)">${escapeHtml(v.date || '—')}</td>
+        <td style="color:var(--text-light);font-variant-numeric:tabular-nums">${fmtDur(v.duration_seconds)}</td>
+        <td><div class="toggle ${v.is_published ? 'on' : ''}" data-id="${escapeHtml(v.id)}"></div></td>
         <td>
           <div class="actions-cell">
-            <button class="icon-btn" title="Preview" onclick="location.href='player.html'"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-            <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
-            <button class="icon-btn danger" title="Delete" data-del="${v.id}"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+            <button class="icon-btn" title="Preview" data-play="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="icon-btn danger" title="Delete" data-del="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
           </div>
         </td>
       </tr>
     `;
     }).join('');
   }
-  render();
+
+  async function load() {
+    rows.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-dim)">Loading…</td></tr>`;
+    try {
+      const r = await LoveFlix.api('/api/videos');
+      VIDEOS = r.videos || [];
+    } catch (e) {
+      rows.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-dim)">Couldn't load: ${escapeHtml(e.message)}</td></tr>`;
+      return;
+    }
+    render();
+  }
+  load();
 
   search.addEventListener('input', render);
   fCat.addEventListener('change', render);
   fStat.addEventListener('change', render);
 
-  function matchId(rawAttr, candidate) {
-    return String(candidate.id) === String(rawAttr);
-  }
+  rows.addEventListener('click', async e => {
+    const play = e.target.closest('[data-play]');
+    if (play) { location.href = `player.html?id=${encodeURIComponent(play.dataset.play)}`; return; }
 
-  rows.addEventListener('click', e => {
-    const tog = e.target.closest('.toggle');
-    if (tog) {
-      const id = tog.dataset.id;
-      const v = VIDEOS.find(x => matchId(id, x));
-      if (v) {
-        v.pub = !v.pub;
-        tog.classList.toggle('on', v.pub);
-        persistUploads(VIDEOS);
-      }
-    }
     const del = e.target.closest('[data-del]');
     if (del) {
       const id = del.dataset.del;
-      if (confirm('Delete this video? This cannot be undone.')) {
-        const i = VIDEOS.findIndex(x => matchId(id, x));
-        if (i >= 0) VIDEOS.splice(i, 1);
-        persistUploads(VIDEOS);
+      if (!confirm('Delete this video? This cannot be undone.')) return;
+      try {
+        await LoveFlix.api(`/api/videos/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        VIDEOS = VIDEOS.filter(v => v.id !== id);
         render();
-      }
+      } catch (err) { alert('Delete failed: ' + err.message); }
     }
-  });
-
-  // drag reorder
-  let dragging = null;
-  rows.addEventListener('dragstart', e => {
-    const tr = e.target.closest('tr');
-    if (!tr) return;
-    dragging = tr;
-    tr.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  rows.addEventListener('dragend', e => {
-    if (dragging) dragging.classList.remove('dragging');
-    rows.querySelectorAll('.drop-target').forEach(r => r.classList.remove('drop-target'));
-    // commit order to VIDEOS array
-    const newOrder = [...rows.querySelectorAll('tr')].map(r => r.dataset.id);
-    VIDEOS.sort((a,b) => newOrder.indexOf(String(a.id)) - newOrder.indexOf(String(b.id)));
-    persistUploads(VIDEOS);
-    dragging = null;
-  });
-  rows.addEventListener('dragover', e => {
-    e.preventDefault();
-    const tr = e.target.closest('tr');
-    if (!tr || tr === dragging) return;
-    rows.querySelectorAll('.drop-target').forEach(r => r.classList.remove('drop-target'));
-    tr.classList.add('drop-target');
-    const r = tr.getBoundingClientRect();
-    const before = (e.clientY - r.top) < r.height / 2;
-    rows.insertBefore(dragging, before ? tr : tr.nextSibling);
   });
 </script>
 </body>

@@ -234,8 +234,10 @@
   </main>
 </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
-  const STORAGE_KEY = 'loveflix_videos';
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
   const TINTS = [
     'linear-gradient(135deg,#ff7aa2,#5a0a23)',
     'linear-gradient(135deg,#a855f7,#2e1065)',
@@ -266,7 +268,9 @@
   let selectedTint = TINTS[0];
   let selectedTintClass = TINT_CLASSES[0];
   let uploadComplete = false;
-  let uploadTimer = null;
+  let uploadedVideoUrl = null;
+  let uploadedKey = null;
+  let durationSeconds = 0;
 
   function readableSize(bytes) {
     if (!bytes) return '';
@@ -275,37 +279,67 @@
     return mb.toFixed(0) + ' MB';
   }
 
-  function startUpload(file) {
+  function probeDuration(file) {
+    return new Promise(resolve => {
+      try {
+        const v = document.createElement('video');
+        v.preload = 'metadata';
+        v.onloadedmetadata = () => {
+          const d = isFinite(v.duration) ? Math.round(v.duration) : 0;
+          URL.revokeObjectURL(v.src);
+          resolve(d);
+        };
+        v.onerror = () => resolve(0);
+        v.src = URL.createObjectURL(file);
+      } catch { resolve(0); }
+    });
+  }
+
+  async function startUpload(file) {
     selectedFile = file;
     uploadComplete = false;
-    if (uploadTimer) { clearInterval(uploadTimer); uploadTimer = null; }
+    uploadedVideoUrl = null;
+    uploadedKey = null;
+    durationSeconds = 0;
     dropEmpty.style.display = 'none';
     uploaded.classList.add('show');
     uploadedName.textContent = file.name;
     fill.style.width = '0%';
-    let p = 0;
-    uploadTimer = setInterval(() => {
-      p += Math.random() * 12 + 4;
-      if (p >= 100) {
-        p = 100;
-        clearInterval(uploadTimer);
-        uploadTimer = null;
-        uploadComplete = true;
-        status.textContent = 'Ready to publish · ' + readableSize(file.size);
-      } else {
-        status.textContent = 'Uploading… ' + Math.floor(p) + '%';
-      }
-      fill.style.width = p + '%';
-    }, 180);
+    status.textContent = 'Preparing upload…';
+
+    try {
+      const presign = await LoveFlix.api(
+        `/api/upload-url?filename=${encodeURIComponent(file.name)}&type=${encodeURIComponent(file.type || 'video/mp4')}`
+      );
+      uploadedKey = presign.key;
+      uploadedVideoUrl = presign.public_url;
+
+      durationSeconds = await probeDuration(file);
+
+      await LoveFlix.putWithProgress(presign.upload_url, file, p => {
+        const pct = Math.floor(p * 100);
+        fill.style.width = pct + '%';
+        status.textContent = `Uploading… ${pct}% · ${readableSize(file.size)}`;
+      });
+
+      fill.style.width = '100%';
+      uploadComplete = true;
+      status.textContent = 'Ready to publish · ' + readableSize(file.size);
+    } catch (e) {
+      status.textContent = 'Upload failed: ' + (e.message || 'unknown error');
+      fill.style.background = '#b0070f';
+    }
   }
 
   function resetUpload() {
-    if (uploadTimer) { clearInterval(uploadTimer); uploadTimer = null; }
     selectedFile = null;
     uploadComplete = false;
+    uploadedVideoUrl = null;
+    uploadedKey = null;
     uploaded.classList.remove('show');
     dropEmpty.style.display = '';
     fill.style.width = '0%';
+    fill.style.background = '';
     fileInput.value = '';
   }
 
@@ -366,62 +400,33 @@
     previewBox.innerHTML = (vTitle.value || 'Untitled').replace(/ · /, '<br>');
   });
 
-  // "database" — localStorage persistence
-  function loadVideos() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-    catch { return []; }
-  }
-  function saveVideo(record) {
-    return new Promise((resolve, reject) => {
-      try {
-        const all = loadVideos();
-        all.unshift(record);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-        // confirm the write actually landed before resolving
-        const verify = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        if (verify[0] && verify[0].id === record.id) resolve(record);
-        else reject(new Error('Write not confirmed'));
-      } catch (err) { reject(err); }
-    });
-  }
-
   function buildRecord(isDraft) {
     const now = new Date();
     const monthShort = now.toLocaleString('en-US', { month: 'short' });
     return {
-      id: 'u_' + now.getTime(),
-      t: vTitle.value.trim() || (selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : 'Untitled'),
-      cat: vCat.value || 'Moments',
+      title: vTitle.value.trim() || (selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : 'Untitled'),
+      description: vDesc.value.trim(),
+      category: vCat.value || 'Moments',
       date: `${monthShort} ${now.getDate()}, ${now.getFullYear()}`,
-      dur: '—',
-      pub: !isDraft,
-      tint: selectedTintClass,
-      tintCss: selectedTint,
-      thumbDataUrl: selectedThumbDataUrl,
-      desc: vDesc.value.trim(),
-      fileName: selectedFile ? selectedFile.name : null,
-      fileSize: selectedFile ? selectedFile.size : null,
-      createdAt: now.toISOString(),
-      isUserUpload: true
+      thumbnail_url: selectedThumbDataUrl || '',
+      video_url: uploadedVideoUrl || '',
+      duration_seconds: durationSeconds,
+      is_published: !isDraft,
+      display_order: 0,
     };
   }
 
   async function commitAndRedirect(isDraft) {
-    if (!selectedFile) {
-      alert('Pick a video file before publishing.');
-      return;
-    }
-    if (!uploadComplete) {
-      alert('Hold on — the upload hasn\'t finished yet.');
-      return;
-    }
+    if (!selectedFile) { alert('Pick a video file before publishing.'); return; }
+    if (!uploadComplete) { alert("Hold on — the upload hasn't finished yet."); return; }
+
     const btn = isDraft ? document.getElementById('saveDraft') : document.getElementById('publish');
     const original = btn.textContent;
     btn.disabled = true;
     btn.textContent = isDraft ? 'Saving…' : 'Publishing…';
+
     try {
-      await saveVideo(buildRecord(isDraft));
-      // only redirect after the database write is confirmed
+      await LoveFlix.api('/api/videos', { method: 'POST', body: buildRecord(isDraft) });
       location.href = 'admin_videos.html';
     } catch (err) {
       btn.disabled = false;
