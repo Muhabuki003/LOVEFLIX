@@ -448,10 +448,10 @@
     <h1 class="selector-title">Who's watching?</h1>
 
     <div class="profiles-row">
-      <!-- Profile 1: Her — replace name in data-name and the avatar initial -->
-      <button class="profile" data-profile="her" data-name="My Love" aria-label="Select profile My Love">
+      <!-- Profile 1: Partner — viewer -->
+      <button class="profile" id="herProfile" data-profile="her" data-name="My Love" aria-label="Select profile My Love">
         <div class="avatar rose">
-          <span class="avatar-initial">M</span>
+          <span class="avatar-initial" id="herInitial">M</span>
           <svg class="heart-mark" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z" fill="rgba(255,255,255,0.9)"/>
           </svg>
@@ -459,13 +459,13 @@
             <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
           </div>
         </div>
-        <span class="profile-name">My Love</span>
+        <span class="profile-name" id="herName">My Love</span>
       </button>
 
-      <!-- Profile 2: Buki — locked admin -->
-      <button class="profile" data-profile="buki" data-name="Buki" aria-label="Select profile Buki (locked)">
+      <!-- Profile 2: Admin — locked -->
+      <button class="profile" id="hisProfile" data-profile="his" data-name="You" aria-label="Select profile (locked)">
         <div class="avatar blue">
-          <span class="avatar-initial">B</span>
+          <span class="avatar-initial" id="hisInitial">Y</span>
           <div class="lock-overlay" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm9 14H6V10h12v10zm-6-3a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
             </div>
@@ -475,7 +475,7 @@
         </div>
         <div class="profile-lock-row">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6z"/></svg>
-          <span class="profile-name">Buki</span>
+          <span class="profile-name" id="hisName">You</span>
         </div>
       </button>
     </div>
@@ -488,7 +488,7 @@
     <div class="pin-card">
       <div class="pin-eyebrow">Profile Lock</div>
       <h2 class="pin-title" id="pinTitle">Enter your PIN</h2>
-      <p class="pin-sub">A 4-digit PIN is required to access Buki's profile.</p>
+      <p class="pin-sub" id="pinSub">A 4-digit PIN is required to access your profile.</p>
 
       <div class="pin-dots" id="pinDots">
         <div class="pin-dot"></div>
@@ -524,7 +524,7 @@
     <div class="success-ring">
       <svg class="success-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
     </div>
-    <h2 class="success-title">Welcome back, Buki</h2>
+    <h2 class="success-title" id="successTitle">Welcome back</h2>
     <p class="success-sub">You're signed in as the creator. Continue to the admin dashboard or browse as a viewer.</p>
     <div class="success-actions">
       <button class="success-btn" id="goAdmin">Go to Dashboard</button>
@@ -532,9 +532,28 @@
     </div>
   </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
 (function() {
   'use strict';
+
+  // Load names from settings
+  const settings = LoveFlix.getSettings();
+  const partnerName = settings.partnerName || 'My Love';
+  const adminName = settings.adminName || 'You';
+
+  document.getElementById('herInitial').textContent = partnerName[0].toUpperCase();
+  document.getElementById('herName').textContent = partnerName;
+  document.getElementById('herProfile').dataset.name = partnerName;
+  document.getElementById('herProfile').setAttribute('aria-label', 'Select profile ' + partnerName);
+
+  document.getElementById('hisInitial').textContent = adminName[0].toUpperCase();
+  document.getElementById('hisName').textContent = adminName;
+  document.getElementById('hisProfile').dataset.name = adminName;
+  document.getElementById('hisProfile').setAttribute('aria-label', 'Select profile ' + adminName + ' (locked)');
+
+  document.getElementById('pinSub').textContent = 'A 4-digit PIN is required to access ' + adminName + "'s profile.";
+  document.getElementById('successTitle').textContent = 'Welcome back, ' + adminName;
 
   const PIN = '1234';
   const overlay = document.getElementById('pinOverlay');
@@ -591,34 +610,29 @@
   function check() {
     locked = true;
     if (entry === PIN) {
-      // success
       setTimeout(() => {
         overlay.classList.remove('active');
         successOverlay.classList.add('active');
         locked = false;
       }, 250);
     } else {
-      // wrong
       dotsEl.classList.add('error', 'shake');
       errorEl.classList.add('show');
       setTimeout(() => {
         dotsEl.classList.remove('shake');
         entry = '';
         renderDots();
-        // keep red border briefly until next key
         locked = false;
       }, 600);
     }
   }
 
-  // numpad clicks
   pad.addEventListener('click', e => {
     const btn = e.target.closest('.pin-key');
     if (!btn || btn.classList.contains('ghost')) return;
     press(btn.dataset.key);
   });
 
-  // keyboard input while overlay open
   document.addEventListener('keydown', e => {
     if (!overlay.classList.contains('active')) return;
     if (e.key >= '0' && e.key <= '9') { press(e.key); e.preventDefault(); }
@@ -629,16 +643,14 @@
   cancelBtn.addEventListener('click', closePin);
   overlay.addEventListener('click', e => { if (e.target === overlay) closePin(); });
 
-  // profile clicks
   document.querySelectorAll('.profile').forEach(p => {
     p.addEventListener('click', () => {
       const which = p.dataset.profile;
-      if (which === 'buki') {
+      if (which === 'his') {
         openPin();
       } else {
-        // her profile -> proceed to home
         try {
-          sessionStorage.setItem('loveflix_profile', 'Her');
+          sessionStorage.setItem('loveflix_profile', partnerName);
           sessionStorage.setItem('loveflix_is_admin', '0');
         } catch (_) {}
         selectorPage.classList.add('fade-out');
@@ -647,10 +659,9 @@
     });
   });
 
-  // success buttons — record auth state, then route
   document.getElementById('goAdmin').addEventListener('click', () => {
     try {
-      sessionStorage.setItem('loveflix_profile', 'Buki');
+      sessionStorage.setItem('loveflix_profile', adminName);
       sessionStorage.setItem('loveflix_is_admin', '1');
       sessionStorage.setItem('loveflix_admin_authed', '1');
     } catch (_) {}
@@ -658,13 +669,12 @@
   });
   document.getElementById('goHome').addEventListener('click', () => {
     try {
-      sessionStorage.setItem('loveflix_profile', 'Buki');
+      sessionStorage.setItem('loveflix_profile', adminName);
       sessionStorage.setItem('loveflix_is_admin', '1');
     } catch (_) {}
     window.location.href = 'home.html';
   });
 
-  // manage profiles button
   document.querySelector('.manage-btn').addEventListener('click', () => {
     document.querySelectorAll('.manage-pencil').forEach(p => {
       p.style.opacity = p.style.opacity === '1' ? '' : '1';

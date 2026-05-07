@@ -101,7 +101,7 @@
     <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
     <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
     <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
-    <div class="side-foot"><div class="av">B</div><div><div style="color:#fff;font-weight:500;font-size:13px">Buki</div><div>Admin · loveflix.so</div></div></div>
+    <div class="side-foot"><div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin · <span id="sideUrl">loveflix.so</span></div></div></div>
   </aside>
 
   <main>
@@ -119,8 +119,15 @@
             <div class="field"><label>Partner 1 Name</label><input id="name1" type="text" value="My Love"></div>
             <div class="field"><label>Partner 2 Name (you)</label><input id="name2" type="text" value="Buki"></div>
           </div>
-          <div class="field"><label>Site Tagline</label><input type="text" value="A private streaming service of two."></div>
-          <div class="field"><label>Anniversary Date</label><input type="date" value="2023-05-14"></div>
+          <div class="field"><label>Site Tagline</label><input id="tagline" type="text" value="A private streaming service of two."></div>
+          <div class="field"><label>Anniversary Date</label><input id="anniversary" type="date" value="2023-05-14"></div>
+          <div class="field">
+            <label>Your custom URL</label>
+            <div style="display:flex;align-items:stretch;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+              <span style="padding:11px 14px;background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:14px;font-family:monospace;border-right:1px solid var(--border)">loveflix.so/</span>
+              <input id="urlSlug" type="text" style="border:none;background:none;flex:1;padding:11px 14px;color:#fff;font:inherit;font-size:14px;outline:none" placeholder="yourname-and-love">
+            </div>
+          </div>
         </div>
 
         <div class="panel">
@@ -129,12 +136,12 @@
           <div class="avatar-row">
             <div class="avatar-card">
               <div class="avatar-pic her" id="av1">M</div>
-              <div class="name">My Love</div>
+              <div class="name" id="av1Name">My Love</div>
               <div class="role">Viewer profile</div>
             </div>
             <div class="avatar-card">
-              <div class="avatar-pic him" id="av2">B</div>
-              <div class="name">Buki</div>
+              <div class="avatar-pic him" id="av2">Y</div>
+              <div class="name" id="av2Name">You</div>
               <div class="role">Admin profile · PIN protected</div>
             </div>
           </div>
@@ -158,7 +165,7 @@
           <h2>Featured Love Note</h2>
           <p class="desc">Shown on the home page hero. Make it good.</p>
           <div class="field"><label>Love Note</label><textarea id="loveNote">Every day with you is a new episode.</textarea></div>
-          <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" value="— Buki, Day 1,094"></div>
+          <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" placeholder="— Your Name, Day 1"></div>
         </div>
 
         <div class="panel danger">
@@ -200,7 +207,12 @@
 
 <div class="saved-toast" id="toast">Saved.</div>
 
+<script src="assets/loveflix.js"></script>
 <script>
+  function slugify(s) {
+    return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
   const colors = document.getElementById('colors');
   const previewLogo = document.getElementById('previewLogo');
   const previewFrame = document.getElementById('previewFrame');
@@ -208,6 +220,47 @@
   const previewMeta = document.getElementById('previewMeta');
   const previewName1 = document.getElementById('previewName1');
   const previewName2 = document.getElementById('previewName2');
+
+  // Load saved settings on page load
+  (function loadSettings() {
+    const s = LoveFlix.getSettings();
+    const name1 = s.partnerName || 'My Love';
+    const name2 = s.adminName || 'You';
+    const slug = s.urlSlug || (slugify(name2) + '-and-' + slugify(name1));
+    const accent = s.accentColor || '#e50914';
+    const note = s.loveNote || 'Every day with you is a new episode.';
+    const attr = s.attribution || ('— ' + name2 + ', Day 1');
+
+    document.getElementById('name1').value = name1;
+    document.getElementById('name2').value = name2;
+    document.getElementById('urlSlug').value = slug;
+    document.getElementById('loveNote').value = note;
+    document.getElementById('attr').value = attr;
+
+    // Avatar cards
+    document.getElementById('av1').textContent = name1[0].toUpperCase();
+    document.getElementById('av1Name').textContent = name1;
+    document.getElementById('av2').textContent = name2[0].toUpperCase();
+    document.getElementById('av2Name').textContent = name2;
+
+    // Sidebar
+    document.getElementById('sideAvatar').textContent = name2[0].toUpperCase();
+    document.getElementById('sideAdminName').textContent = name2;
+    document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
+
+    // Preview
+    previewName1.textContent = name1;
+    previewName2.textContent = name2;
+    previewNote.textContent = '"' + note + '"';
+    previewMeta.textContent = attr;
+    previewLogo.style.color = accent;
+    previewFrame.style.setProperty('--accent', accent);
+
+    // Select matching color swatch
+    colors.querySelectorAll('.color-swatch').forEach(sw => {
+      sw.classList.toggle('selected', sw.dataset.c === accent);
+    });
+  })();
 
   colors.addEventListener('click', e => {
     const sw = e.target.closest('.color-swatch');
@@ -221,10 +274,51 @@
 
   document.getElementById('loveNote').addEventListener('input', e => previewNote.textContent = '"' + e.target.value + '"');
   document.getElementById('attr').addEventListener('input', e => previewMeta.textContent = e.target.value);
-  document.getElementById('name1').addEventListener('input', e => previewName1.textContent = e.target.value);
-  document.getElementById('name2').addEventListener('input', e => previewName2.textContent = e.target.value);
+  document.getElementById('name1').addEventListener('input', e => {
+    previewName1.textContent = e.target.value;
+    document.getElementById('av1').textContent = (e.target.value[0] || 'M').toUpperCase();
+    document.getElementById('av1Name').textContent = e.target.value;
+    autoSlug();
+  });
+  document.getElementById('name2').addEventListener('input', e => {
+    previewName2.textContent = e.target.value;
+    document.getElementById('av2').textContent = (e.target.value[0] || 'Y').toUpperCase();
+    document.getElementById('av2Name').textContent = e.target.value;
+    autoSlug();
+  });
+
+  function autoSlug() {
+    const n1 = document.getElementById('name1').value.trim();
+    const n2 = document.getElementById('name2').value.trim();
+    if (n1 && n2) {
+      const slug = slugify(n2) + '-and-' + slugify(n1);
+      document.getElementById('urlSlug').value = slug;
+      document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
+    }
+  }
+
+  document.getElementById('urlSlug').addEventListener('input', e => {
+    document.getElementById('sideUrl').textContent = 'loveflix.so/' + (e.target.value || 'yourname');
+  });
+
+  document.getElementById('name2').addEventListener('input', e => {
+    document.getElementById('sideAdminName').textContent = e.target.value || 'You';
+    document.getElementById('sideAvatar').textContent = (e.target.value[0] || 'Y').toUpperCase();
+  });
 
   document.getElementById('saveBtn').addEventListener('click', () => {
+    const name1 = document.getElementById('name1').value.trim();
+    const name2 = document.getElementById('name2').value.trim();
+    const slug = document.getElementById('urlSlug').value.trim();
+    const accentEl = colors.querySelector('.color-swatch.selected');
+    LoveFlix.saveSettings({
+      partnerName: name1 || 'My Love',
+      adminName: name2 || 'You',
+      urlSlug: slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
+      accentColor: accentEl ? accentEl.dataset.c : '#e50914',
+      loveNote: document.getElementById('loveNote').value.trim(),
+      attribution: document.getElementById('attr').value.trim(),
+    });
     const t = document.getElementById('toast');
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 1800);
