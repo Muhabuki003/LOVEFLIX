@@ -255,7 +255,7 @@ async function presignS3PutUrl({ accessKey, secretKey, region, service, host, bu
   const dateStamp = amzDate.slice(0, 8);
   const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
   const credential = `${accessKey}/${credentialScope}`;
-  const signedHeaders = 'host';
+  const signedHeaders = 'content-type;host';
 
   const canonicalUri = `/${bucket}/${encodeKey(key)}`;
   const params = new URLSearchParams();
@@ -270,7 +270,7 @@ async function presignS3PutUrl({ accessKey, secretKey, region, service, host, bu
     .map(([k, v]) => `${encodeRfc3986(k)}=${encodeRfc3986(v)}`)
     .join('&');
 
-  const canonicalHeaders = `host:${host}\n`;
+  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
   const payloadHash = 'UNSIGNED-PAYLOAD';
   const canonicalRequest = [
     'PUT',
