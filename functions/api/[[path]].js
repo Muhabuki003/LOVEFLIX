@@ -52,7 +52,7 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/health') return json({ ok: true });
 
-    if (method === 'GET' && path === '/api/videos') return listVideos(env, url);
+    if (method === 'GET' && path === '/api/videos') return listVideos(env, url, user);
     if (method === 'POST' && path === '/api/videos') return createVideo(env, request, user);
 
     const videoIdMatch = path.match(/^\/api\/videos\/([^/]+)$/);
@@ -92,8 +92,15 @@ async function authenticate(request, env) {
 }
 
 // ---------- Videos ----------
-async function listVideos(env, url) {
-  const tenantId = url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+async function listVideos(env, url, user) {
+  let tenantId = url.searchParams.get('tenant');
+  if (!tenantId && user) {
+    tenantId = user.id;
+  }
+  if (!tenantId) {
+    tenantId = env.DEFAULT_TENANT_ID || 'default';
+  }
+
   const stmt = env.DB.prepare(
     `SELECT id, tenant_id, title, description, date, category,
             thumbnail_url, video_url, duration_seconds, is_published,
@@ -120,7 +127,7 @@ async function getVideo(env, id) {
 async function createVideo(env, request, user) {
   const body = await request.json().catch(() => ({}));
   const id = body.id || `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const tenantId = body.tenant_id || env.DEFAULT_TENANT_ID || 'default';
+  const tenantId = body.tenant_id || user.id || env.DEFAULT_TENANT_ID || 'default';
   const isPublished = body.is_published === false ? 0 : 1;
 
   await env.DB.prepare(
@@ -204,6 +211,13 @@ async function saveProgress(env, request, user) {
 
 // ---------- Presigned R2 upload URL (S3-compatible, AWS SigV4) ----------
 async function getUploadUrl(env, url, user) {
+  if (!user || !user.id) {
+    return json({
+      error: 'unauthorized',
+      message: 'User not authenticated',
+    }, 401);
+  }
+
   const filename = (url.searchParams.get('filename') || `upload-${Date.now()}.bin`)
     .replace(/[^a-zA-Z0-9._-]/g, '_');
   const contentType = url.searchParams.get('type') || 'application/octet-stream';
