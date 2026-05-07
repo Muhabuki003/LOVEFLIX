@@ -321,7 +321,14 @@
     } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Sign In';
-      showErr(e.message || "Couldn't sign you in. Check your email and password.");
+      const msg = (e.message || '').toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        showErr('Check your inbox — click the confirmation link we sent, then try again.');
+      } else if (msg.includes('invalid login') || msg.includes('credentials')) {
+        showErr("That email and password don't match. Try again or sign up.");
+      } else {
+        showErr(e.message || "Couldn't sign you in. Check your email and password.");
+      }
     }
   }
 
