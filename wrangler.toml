@@ -1,6 +1,5 @@
 name = "loveflix"
 compatibility_date = "2025-05-01"
-account_id = "a9c77b1cff6d48f28930ed068bbba95e"
 pages_build_output_dir = "."
 
 # ---- D1 (database) ----
