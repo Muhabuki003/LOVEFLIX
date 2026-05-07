@@ -238,12 +238,15 @@
       <div class="step-eyebrow">Welcome to LoveFlix</div>
       <h1 class="step-title">Your site is live.</h1>
       <p class="step-sub">Now upload some videos. Then send the link. Then watch the face.</p>
+      <div id="confirmEmailNotice" class="hidden" style="background:#1f2937;border:1px solid #374151;border-radius:8px;padding:16px 20px;margin:20px auto;max-width:480px;text-align:left;font-size:14px;color:#cfcfcf;line-height:1.5">
+        <strong style="color:#fff">Almost there.</strong> Check your email for a confirmation link. Click it, then sign in to start watching.
+      </div>
       <div class="success-url">
         <span id="successUrl">loveflix.so/buki-and-love</span>
         <button class="copy-btn" onclick="this.textContent='Copied ✓'">COPY</button>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a href="admin_upload.html" class="btn btn-primary">Upload your first video →</a>
+        <a href="loveflix_login_screen.html" class="btn btn-primary" id="primaryCta">Sign in to your site →</a>
         <a href="home.html" class="btn btn-ghost">Preview the site</a>
       </div>
     </div>
@@ -255,6 +258,16 @@
   function goNext(step) {
     document.querySelectorAll('[data-pane]').forEach(p => p.classList.add('hidden'));
     document.querySelector(`[data-pane="${step}"]`).classList.remove('hidden');
+    if (step === 5) {
+      const notice = document.getElementById('confirmEmailNotice');
+      const cta = document.getElementById('primaryCta');
+      if (window._needsEmailConfirm) {
+        if (notice) notice.classList.remove('hidden');
+        if (cta) { cta.textContent = 'Sign in once confirmed →'; cta.href = 'loveflix_login_screen.html'; }
+      } else if (LoveFlix.getToken()) {
+        if (cta) { cta.textContent = 'Upload your first video →'; cta.href = 'admin_upload.html'; }
+      }
+    }
     document.querySelectorAll('.progress-step').forEach(s => {
       const n = parseInt(s.dataset.step, 10);
       s.classList.remove('active','done');
@@ -299,6 +312,30 @@
   const adminName = document.getElementById('adminName');
   adminName.addEventListener('input', e => document.getElementById('hisInitial').textContent = (e.target.value[0]||'B').toUpperCase());
 
+  // photo uploads (step 2) — using object URLs for preview before upload
+  const herFileInput = document.createElement('input');
+  herFileInput.type = 'file';
+  herFileInput.accept = 'image/*';
+  const himFileInput = document.createElement('input');
+  himFileInput.type = 'file';
+  himFileInput.accept = 'image/*';
+
+  document.querySelectorAll('.upload-tile').forEach((tile, i) => {
+    const fileInput = i === 0 ? herFileInput : himFileInput;
+    tile.style.cursor = 'pointer';
+    tile.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const pic = tile.querySelector('.av-pic');
+      pic.style.backgroundImage = `url(${url})`;
+      pic.style.backgroundSize = 'cover';
+      pic.style.backgroundPosition = 'center';
+      pic.textContent = '';
+    });
+  });
+
   // progress dots are clickable
   document.querySelectorAll('.progress-step').forEach(s => {
     s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
@@ -335,7 +372,9 @@
     btn.textContent = 'Creating account...';
 
     try {
-      await LoveFlix.signUp(email, pwd);
+      const result = await LoveFlix.signUp(email, pwd);
+      // If Supabase requires email confirmation, no access_token is returned.
+      window._needsEmailConfirm = !result.access_token;
       goNext(2);
     } catch (e) {
       btn.disabled = false;
