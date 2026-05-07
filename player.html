@@ -323,7 +323,9 @@
   try {
     const list = await LoveFlix.api('/api/videos');
     allVideos = list.videos || [];
-  } catch (_) {}
+  } catch (e) {
+    console.error('Failed to load videos:', e);
+  }
 
   if (id) {
     try {
