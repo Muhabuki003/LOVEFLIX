@@ -312,6 +312,30 @@
   const adminName = document.getElementById('adminName');
   adminName.addEventListener('input', e => document.getElementById('hisInitial').textContent = (e.target.value[0]||'B').toUpperCase());
 
+  // photo uploads (step 2) — using object URLs for preview before upload
+  const herFileInput = document.createElement('input');
+  herFileInput.type = 'file';
+  herFileInput.accept = 'image/*';
+  const himFileInput = document.createElement('input');
+  himFileInput.type = 'file';
+  himFileInput.accept = 'image/*';
+
+  document.querySelectorAll('.upload-tile').forEach((tile, i) => {
+    const fileInput = i === 0 ? herFileInput : himFileInput;
+    tile.style.cursor = 'pointer';
+    tile.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const pic = tile.querySelector('.av-pic');
+      pic.style.backgroundImage = `url(${url})`;
+      pic.style.backgroundSize = 'cover';
+      pic.style.backgroundPosition = 'center';
+      pic.textContent = '';
+    });
+  });
+
   // progress dots are clickable
   document.querySelectorAll('.progress-step').forEach(s => {
     s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
