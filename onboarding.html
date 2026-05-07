@@ -140,16 +140,16 @@
     </div>
     <div class="field">
       <label>Email</label>
-      <input type="email" placeholder="you@email.com">
+      <input type="email" id="adminEmail" placeholder="you@email.com" autocomplete="email">
     </div>
     <div class="field-grid">
-      <div class="field"><label>Password</label><input type="password" placeholder="Min 8 characters"></div>
-      <div class="field"><label>Confirm password</label><input type="password"></div>
+      <div class="field"><label>Password</label><input type="password" id="adminPw" placeholder="Min 8 characters" autocomplete="new-password"></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="adminPw2" autocomplete="new-password"></div>
     </div>
-    <div class="field-hint" style="text-align:center;margin-top:20px">By continuing you agree to our Terms &amp; Privacy.</div>
+    <div class="field-hint" style="text-align:center;margin-top:20px" id="step1Err">By continuing you agree to our Terms &amp; Privacy.</div>
     <div class="step-nav">
-      <a href="login.html" class="btn-link">Already have an account? Sign in</a>
-      <button class="btn btn-primary" onclick="goNext(2)">Continue →</button>
+      <a href="loveflix_login_screen.html" class="btn-link">Already have an account? Sign in</a>
+      <button class="btn btn-primary" id="step1Next">Continue →</button>
     </div>
   </div>
 
@@ -223,7 +223,7 @@
     <div class="field-hint" style="text-align:center;margin-bottom:8px">Free for 14 days, then your selected plan. Cancel any time before.</div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(3)">← Back</button>
-      <button class="btn btn-primary" onclick="goNext(5)">Create my LoveFlix →</button>
+      <button class="btn btn-primary" id="finishBtn">Create my LoveFlix →</button>
     </div>
   </div>
 
@@ -300,6 +300,76 @@
   // progress dots are clickable
   document.querySelectorAll('.progress-step').forEach(s => {
     s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
+  });
+</script>
+
+<script src="assets/loveflix.js"></script>
+<script>
+  // Already signed in? Skip signup entirely.
+  if (LoveFlix.getToken()) location.replace('whos_watching.html');
+
+  function setStep1Err(msg, ok) {
+    const el = document.getElementById('step1Err');
+    el.textContent = msg;
+    el.style.color = ok ? '#10b981' : '#fb923c';
+  }
+
+  // Step 1 → 2: create the Supabase account.
+  document.getElementById('step1Next').addEventListener('click', async () => {
+    const email = document.getElementById('adminEmail').value.trim();
+    const pw    = document.getElementById('adminPw').value;
+    const pw2   = document.getElementById('adminPw2').value;
+    const btn   = document.getElementById('step1Next');
+
+    if (!email || !/.+@.+\..+/.test(email)) return setStep1Err('Enter a valid email.');
+    if (pw.length < 8) return setStep1Err('Password must be at least 8 characters.');
+    if (pw !== pw2)    return setStep1Err("Passwords don't match.");
+
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    try {
+      // Try sign-up; if the user already exists, fall back to sign-in.
+      try {
+        await LoveFlix.signUp(email, pw);
+      } catch (e) {
+        const m = (e.message || '').toLowerCase();
+        if (m.includes('registered') || m.includes('already')) {
+          await LoveFlix.signIn(email, pw);
+        } else { throw e; }
+      }
+      setStep1Err('Account ready ✓', true);
+      goNext(2);
+    } catch (e) {
+      setStep1Err(e.message || "Couldn't create the account. Try again.");
+    } finally {
+      btn.disabled = false; btn.textContent = 'Continue →';
+    }
+  });
+
+  // Final step: persist tenant settings, then show success pane.
+  document.getElementById('finishBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('finishBtn');
+    if (!LoveFlix.getToken()) {
+      alert('Please complete step 1 (account) first.');
+      goNext(1); return;
+    }
+    btn.disabled = true; btn.textContent = 'Setting up your site…';
+
+    const coupleName = document.getElementById('theirName').value.trim() || 'My Love';
+    const accent = document.querySelector('#colors .color.selected')?.dataset.c || '#e50914';
+    const slug = (document.getElementById('urlSlug').value || 'my-loveflix').trim();
+
+    try {
+      await LoveFlix.upsertTenant({
+        subdomain: slug,
+        couple_name: coupleName,
+        accent_color: accent,
+      });
+      goNext(5);
+    } catch (e) {
+      alert("Couldn't save your settings: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create my LoveFlix →';
+    }
   });
 </script>
 </body>

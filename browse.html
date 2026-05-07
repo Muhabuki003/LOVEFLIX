@@ -144,8 +144,12 @@
   <div class="empty" id="empty">No videos match that.</div>
 </main>
 
+<script src="assets/loveflix.js"></script>
 <script>
-  const VIDEOS = [
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+</script>
+<script>
+  const SEED = [
     { t:'The Lisbon Trip · Day 3', cat:'trips', date:'May 2025', dur:'26:12', tint:'t-rose', fav:true },
     { t:'The Birthday Surprise', cat:'birthdays', date:'Aug 2024', dur:'12:04', tint:'t-amber', fav:true },
     { t:'Forest Picnic', cat:'moments', date:'Jun 2024', dur:'08:31', tint:'t-emerald', fav:false },
@@ -178,6 +182,23 @@
     { t:'Iceland Northern Lights', cat:'trips', date:'Feb 2025', dur:'12:34', tint:'t-ocean', fav:true },
   ];
 
+  const TINTS = ['t-rose','t-violet','t-amber','t-blue','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean','t-rose-deep','t-blue-deep','t-night','t-forest','t-orchid','t-rose2','t-rust'];
+  let VIDEOS = [];
+  const favSet = new Set();
+
+  function tintFor(id) {
+    let h = 0; for (let i = 0; i < (id || '').length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    return TINTS[Math.abs(h) % TINTS.length];
+  }
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDur(sec) {
+    if (!sec) return '—';
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
   const search = document.getElementById('search');
@@ -193,26 +214,52 @@
   function render() {
     const q = search.value.trim().toLowerCase();
     const list = VIDEOS.filter(v => {
-      const catOk = activeCat === 'all' ? true : (activeCat === 'favorites' ? v.fav : v.cat === activeCat);
-      const qOk = !q || v.t.toLowerCase().includes(q);
+      const cat = (v.category || '').toLowerCase();
+      const fav = favSet.has(v.id);
+      const catOk = activeCat === 'all' ? true : (activeCat === 'favorites' ? fav : cat === activeCat);
+      const qOk = !q || (v.title || '').toLowerCase().includes(q);
       return catOk && qOk;
     });
-    grid.innerHTML = list.map(v => `
-      <article class="card ${v.tint}" onclick="location.href='player.html'">
-        <div class="card-thumb">
-          <span class="card-thumb-date">${v.date}</span>
-          <span class="card-thumb-fav">${favIcon(v.fav)}</span>
-          <span class="card-thumb-text">${v.t.replace(/ · /, '<br>')}</span>
-          <span class="card-thumb-dur">${v.dur}</span>
+    grid.innerHTML = list.map(v => {
+      const tint = tintFor(v.id);
+      const thumbBg = v.thumbnail_url
+        ? `style="background:url('${escHtml(v.thumbnail_url)}') center/cover no-repeat"`
+        : '';
+      const fav = favSet.has(v.id);
+      const tParts = (v.title || 'Untitled').split(' · ');
+      return `
+      <article class="card ${tint}" data-id="${escHtml(v.id)}">
+        <div class="card-thumb" ${thumbBg}>
+          <span class="card-thumb-date">${escHtml(v.date || '')}</span>
+          <span class="card-thumb-fav" data-fav="${escHtml(v.id)}" role="button">${favIcon(fav)}</span>
+          <span class="card-thumb-text">${escHtml(tParts[0])}${tParts[1] ? '<br>' + escHtml(tParts[1]) : ''}</span>
+          <span class="card-thumb-dur">${fmtDur(v.duration_seconds)}</span>
         </div>
         <div class="card-body">
-          <div class="card-title">${v.t}</div>
-          <div class="card-meta"><span class="card-cat">${v.cat}</span> · <span>${v.date}</span> · <span>${v.dur}</span></div>
+          <div class="card-title">${escHtml(v.title || 'Untitled')}</div>
+          <div class="card-meta"><span class="card-cat">${escHtml(v.category || '')}</span> · <span>${escHtml(v.date || '')}</span> · <span>${fmtDur(v.duration_seconds)}</span></div>
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
     empty.style.display = list.length ? 'none' : 'block';
   }
+
+  grid.addEventListener('click', async e => {
+    const favBtn = e.target.closest('[data-fav]');
+    if (favBtn) {
+      e.stopPropagation();
+      const id = favBtn.dataset.fav;
+      const isOn = favSet.has(id);
+      if (isOn) favSet.delete(id); else favSet.add(id);
+      render();
+      try { await LoveFlix.toggleFavorite(id, !isOn); }
+      catch (_) { if (isOn) favSet.add(id); else favSet.delete(id); render(); }
+      return;
+    }
+    const card = e.target.closest('.card[data-id]');
+    if (card) location.href = `player.html?id=${encodeURIComponent(card.dataset.id)}`;
+  });
 
   filtersEl.addEventListener('click', e => {
     const btn = e.target.closest('.chip');
@@ -224,7 +271,21 @@
   });
   search.addEventListener('input', render);
 
-  render();
+  (async function load() {
+    try {
+      const [videos, favorites] = await Promise.all([
+        LoveFlix.listVideos(),
+        LoveFlix.listFavorites(),
+      ]);
+      VIDEOS = videos;
+      favorites.forEach(f => favSet.add(f.video_id));
+    } catch (e) {
+      empty.style.display = 'block';
+      empty.textContent = "Couldn't load: " + e.message;
+      return;
+    }
+    render();
+  })();
 </script>
 </body>
 </html>

@@ -323,6 +323,15 @@
   </div>
 </div>
 
+<script src="assets/loveflix.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+  LoveFlix.getMe().then(({ tenant }) => {
+    if (tenant && tenant.couple_name) {
+      document.getElementById('herName').textContent = tenant.couple_name;
+    }
+  }).catch(() => {});
+</script>
 <script>
   const CORRECT_PIN = '1234';
   let pinValue = '';

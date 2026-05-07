@@ -224,10 +224,53 @@
   document.getElementById('name1').addEventListener('input', e => previewName1.textContent = e.target.value);
   document.getElementById('name2').addEventListener('input', e => previewName2.textContent = e.target.value);
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
+  function showToast(msg) {
     const t = document.getElementById('toast');
+    t.textContent = msg || 'Saved.';
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 1800);
+  }
+</script>
+
+<script src="assets/loveflix.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  // Hydrate the form from the tenant.
+  (async function hydrate() {
+    try {
+      const { tenant } = await LoveFlix.getMe();
+      if (!tenant) return;
+      if (tenant.couple_name) {
+        document.getElementById('name1').value = tenant.couple_name;
+        document.getElementById('name1').dispatchEvent(new Event('input'));
+      }
+      if (tenant.accent_color) {
+        const sw = document.querySelector(`.color-swatch[data-c="${tenant.accent_color}"]`);
+        if (sw) sw.click();
+      }
+    } catch (_) {}
+  })();
+
+  // Save → push to /api/tenant
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = 'Saving…';
+    try {
+      const accent = document.querySelector('#colors .color-swatch.selected')?.dataset.c || '#e50914';
+      await LoveFlix.upsertTenant({
+        couple_name: document.getElementById('name1').value.trim(),
+        accent_color: accent,
+      });
+      showToast('Saved.');
+    } catch (e) {
+      showToast('Could not save: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
   });
 </script>
 </body>

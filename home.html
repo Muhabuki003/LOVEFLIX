@@ -530,6 +530,8 @@
     return m < 1 ? '<1 min' : m + ' min';
   }
 
+  const favSet = new Set();
+
   function renderCard(v, progressRow) {
     const card = document.createElement('div');
     const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
@@ -546,6 +548,10 @@
       const pct = Math.min(100, Math.round((progressRow.progress_seconds / total) * 100));
       progressBar = `<div class="card-progress" style="--p:${pct}%"></div>`;
     }
+    const fav = favSet.has(v.id);
+    const favBtnIcon = fav
+      ? '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z" fill="#e50914"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#fff"/></svg>';
     card.innerHTML = `
       <div class="card-thumb" ${thumbStyle}>
         <div class="card-thumb-inner">
@@ -557,7 +563,7 @@
       <div class="card-overlay">
         <div class="card-controls">
           <button class="card-ctrl play" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-          <button class="card-ctrl" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+          <button class="card-ctrl card-fav" data-fav="${escapeHtml(v.id)}" aria-label="Favorite">${favBtnIcon}</button>
         </div>
         <div class="card-title">${escapeHtml(v.title || 'Untitled')}</div>
         <div class="card-row">
@@ -566,6 +572,19 @@
           <span>${total ? fmtMin(total) : 'New'}</span>
         </div>
       </div>`;
+
+    card.querySelector('.card-fav').addEventListener('click', async e => {
+      e.stopPropagation();
+      const btn = e.currentTarget;
+      const id = btn.dataset.fav;
+      const wasOn = favSet.has(id);
+      if (wasOn) favSet.delete(id); else favSet.add(id);
+      btn.innerHTML = favSet.has(id)
+        ? '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z" fill="#e50914"/></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#fff"/></svg>';
+      try { await LoveFlix.toggleFavorite(id, !wasOn); }
+      catch (_) { if (wasOn) favSet.add(id); else favSet.delete(id); }
+    });
     card.addEventListener('click', () => location.href = `player.html?id=${encodeURIComponent(v.id)}`);
     return card;
   }
@@ -602,12 +621,15 @@
     let videos = [];
     let progressById = {};
     try {
-      const [videosRes, progressRes] = await Promise.all([
+      const [videosRes, progressRes, favRes] = await Promise.all([
         LoveFlix.api('/api/videos'),
         LoveFlix.api('/api/progress').catch(() => ({ progress: [] })),
+        LoveFlix.api('/api/favorites').catch(() => ({ favorites: [] })),
       ]);
       videos = videosRes.videos || [];
       (progressRes.progress || []).forEach(p => { progressById[p.video_id] = p; });
+      favSet.clear();
+      (favRes.favorites || []).forEach(f => favSet.add(f.video_id));
     } catch (e) {
       rowsWrap.appendChild(emptyRow("Couldn't load your library: " + e.message));
       return;
@@ -635,6 +657,12 @@
 
     if (inProgress.length) {
       rowsWrap.appendChild(buildRow('Continue Watching', inProgress, progressById));
+    }
+
+    // Favorites
+    const favVideos = videos.filter(v => favSet.has(v.id));
+    if (favVideos.length) {
+      rowsWrap.appendChild(buildRow('Your Favorites ♥', favVideos, progressById));
     }
 
     // Group by category

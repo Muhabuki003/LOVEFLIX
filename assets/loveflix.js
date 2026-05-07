@@ -117,6 +117,24 @@
     });
   }
 
+  // High-level helpers used across pages
+  async function listVideos() { return (await api('/api/videos')).videos || []; }
+  async function getMe() { return await api('/api/me'); }
+  async function listProgress() { try { return (await api('/api/progress')).progress || []; } catch { return []; } }
+  async function listFavorites() { try { return (await api('/api/favorites')).favorites || []; } catch { return []; } }
+  async function toggleFavorite(videoId, on) {
+    if (on) return api('/api/favorites', { method: 'POST', body: { video_id: videoId } });
+    return api(`/api/favorites/${encodeURIComponent(videoId)}`, { method: 'DELETE' });
+  }
+  async function saveProgress(videoId, seconds, completed) {
+    return api('/api/progress', { method: 'POST', body: {
+      video_id: videoId,
+      progress_seconds: Math.max(0, Math.floor(seconds || 0)),
+      completed: !!completed,
+    }});
+  }
+  async function upsertTenant(payload) { return api('/api/tenant', { method: 'PUT', body: payload }); }
+
   global.LoveFlix = {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
@@ -130,5 +148,12 @@
     requireAuth,
     api,
     putWithProgress,
+    listVideos,
+    getMe,
+    listProgress,
+    listFavorites,
+    toggleFavorite,
+    saveProgress,
+    upsertTenant,
   };
 })(window);

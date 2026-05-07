@@ -367,7 +367,7 @@
     if (!videoData) return;
     if (!isFinite(video.duration) || video.duration <= 0) return;
     const now = Date.now();
-    if (!force && now - lastSavedAt < 5000) return;
+    if (!force && now - lastSavedAt < 10000) return;
     lastSavedAt = now;
     const completed = video.duration > 0 && video.currentTime >= video.duration - 1;
     try {

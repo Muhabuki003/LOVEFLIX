@@ -532,6 +532,30 @@
     </div>
   </div>
 
+<script src="assets/loveflix.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+  // Personalize profile names from the tenant once it loads.
+  LoveFlix.getMe().then(({ tenant, user }) => {
+    if (!tenant) return;
+    const her = document.querySelector('.profile[data-profile="her"]');
+    if (her && tenant.couple_name) {
+      her.dataset.name = tenant.couple_name;
+      const initial = (tenant.couple_name[0] || 'M').toUpperCase();
+      her.querySelector('.avatar-initial').textContent = initial;
+      her.querySelector('.profile-name').textContent = tenant.couple_name;
+      her.setAttribute('aria-label', `Select profile ${tenant.couple_name}`);
+    }
+    if (user && user.email) {
+      const buki = document.querySelector('.profile[data-profile="buki"]');
+      if (buki) {
+        const adminLetter = (user.email[0] || 'B').toUpperCase();
+        buki.querySelector('.avatar-initial').textContent = adminLetter;
+      }
+    }
+  }).catch(() => {});
+</script>
+
 <script>
 (function() {
   'use strict';

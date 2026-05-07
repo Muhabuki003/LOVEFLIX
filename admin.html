@@ -164,20 +164,20 @@
       <div class="stat">
         <div class="icon" style="color:var(--red)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
         <div class="label">Total Videos</div>
-        <div class="num">86</div>
-        <div class="delta"><span>▲</span> +4 this month</div>
+        <div class="num" id="statVideos">—</div>
+        <div class="delta" id="statVideosDelta">Live count</div>
       </div>
       <div class="stat">
         <div class="icon" style="color:#a855f7"><svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 4l7.5 13H4.5L12 6z" /></svg></div>
         <div class="label">Total Watch Time</div>
-        <div class="num">14h 22m</div>
-        <div class="delta"><span>▲</span> +2h 12m</div>
+        <div class="num" id="statRuntime">—</div>
+        <div class="delta">Across all videos</div>
       </div>
       <div class="stat">
         <div class="icon" style="color:#3a7bff"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
         <div class="label">Favorites</div>
-        <div class="num">23</div>
-        <div class="delta"><span>▲</span> +3 last week</div>
+        <div class="num" id="statFavorites">—</div>
+        <div class="delta">Marked by viewers</div>
       </div>
       <div class="stat">
         <div class="icon" style="color:#10b981"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H5V8h14v13z"/></svg></div>
@@ -207,40 +207,8 @@
           <div class="panel-title">Recent Uploads</div>
           <a href="admin_videos.html" class="panel-link">Manage all ›</a>
         </div>
-        <div class="upload-row">
-          <div class="up-thumb t-rose">Lisbon</div>
-          <div class="up-meta"><div class="t">The Lisbon Trip · Day 3</div><div class="s">Uploaded May 16, 2025 · 26:12 · 1080p</div></div>
-          <div class="up-cat">Trips</div>
-          <div class="up-status"><span class="dot"></span> Published</div>
-          <button class="up-action" onclick="location.href='admin_videos.html'"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
-        </div>
-        <div class="upload-row">
-          <div class="up-thumb t-amber">B-Day</div>
-          <div class="up-meta"><div class="t">Your 30th Birthday</div><div class="s">Uploaded Mar 22, 2025 · 15:21 · 4K</div></div>
-          <div class="up-cat">Birthdays</div>
-          <div class="up-status"><span class="dot"></span> Published</div>
-          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
-        </div>
-        <div class="upload-row">
-          <div class="up-thumb t-violet">Anniv</div>
-          <div class="up-meta"><div class="t">2nd Anniversary Cut</div><div class="s">Uploaded May 14, 2025 · 22:00 · 4K HDR</div></div>
-          <div class="up-cat">Anniversary</div>
-          <div class="up-status draft"><span class="dot"></span> Draft</div>
-          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
-        </div>
-        <div class="upload-row">
-          <div class="up-thumb t-emerald">Cabin</div>
-          <div class="up-meta"><div class="t">Forest Cabin Weekend</div><div class="s">Uploaded Mar 8, 2025 · 16:10 · 1080p</div></div>
-          <div class="up-cat">Trips</div>
-          <div class="up-status"><span class="dot"></span> Published</div>
-          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
-        </div>
-        <div class="upload-row">
-          <div class="up-thumb t-coral">Pasta</div>
-          <div class="up-meta"><div class="t">Pasta Night Disaster</div><div class="s">Uploaded Feb 24, 2025 · 8:09 · 1080p</div></div>
-          <div class="up-cat">Cooking</div>
-          <div class="up-status"><span class="dot"></span> Published</div>
-          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        <div id="recentUploads">
+          <div style="padding:24px;color:var(--text-dim);font-size:13px">Loading…</div>
         </div>
       </div>
 
@@ -282,6 +250,81 @@
 
   </main>
 </div>
+
+<script src="assets/loveflix.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDur(sec) {
+    if (!sec) return '—';
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function fmtRuntime(totalSec) {
+    if (!totalSec) return '0m';
+    const h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+  const TINTS = ['t-rose','t-violet','t-amber','t-blue','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean'];
+  function tintFor(id) {
+    let h = 0; for (let i = 0; i < (id || '').length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    return TINTS[Math.abs(h) % TINTS.length];
+  }
+
+  (async function loadDashboard() {
+    try {
+      const [videos, favRes] = await Promise.all([
+        LoveFlix.listVideos(),
+        LoveFlix.api('/api/favorites').catch(() => ({ favorites: [] })),
+      ]);
+      const totalRuntime = videos.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
+      const published = videos.filter(v => v.is_published).length;
+
+      document.getElementById('statVideos').textContent = String(videos.length);
+      document.getElementById('statVideosDelta').textContent = `${published} published`;
+      document.getElementById('statRuntime').textContent = fmtRuntime(totalRuntime);
+      document.getElementById('statFavorites').textContent = String((favRes.favorites || []).length);
+
+      const recent = [...videos]
+        .sort((a, b) => (b.created_at || 0) - (a.created_at || 0))
+        .slice(0, 5);
+
+      const recentEl = document.getElementById('recentUploads');
+      if (!recent.length) {
+        recentEl.innerHTML = `<div style="padding:24px;color:var(--text-dim);font-size:13px">No videos yet. <a href="admin_upload.html" style="color:#fff">Upload your first one</a>.</div>`;
+        return;
+      }
+
+      recentEl.innerHTML = recent.map(v => {
+        const tint = v.thumbnail_url ? '' : tintFor(v.id);
+        const thumbBg = v.thumbnail_url
+          ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+          : '';
+        const thumbLabel = v.thumbnail_url ? '' : (v.title || 'V').split(' ')[0].slice(0, 6);
+        const status = v.is_published
+          ? '<div class="up-status"><span class="dot"></span> Published</div>'
+          : '<div class="up-status draft"><span class="dot"></span> Draft</div>';
+        return `
+          <div class="upload-row">
+            <div class="up-thumb ${tint}" ${thumbBg}>${escapeHtml(thumbLabel)}</div>
+            <div class="up-meta">
+              <div class="t">${escapeHtml(v.title || 'Untitled')}</div>
+              <div class="s">${escapeHtml(v.date || '')} · ${fmtDur(v.duration_seconds)}</div>
+            </div>
+            <div class="up-cat">${escapeHtml(v.category || '—')}</div>
+            ${status}
+            <button class="up-action" onclick="location.href='admin_videos.html'"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+          </div>`;
+      }).join('');
+    } catch (e) {
+      document.getElementById('recentUploads').innerHTML =
+        `<div style="padding:24px;color:#fb923c;font-size:13px">Couldn't load: ${escapeHtml(e.message)}</div>`;
+    }
+  })();
+</script>
 
 </body>
 </html>
