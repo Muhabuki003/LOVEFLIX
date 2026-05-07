@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Upload Video</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;transition:background .15s,color .15s;border-left:3px solid transparent}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+  .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff}
+
+  main{padding:32px 40px 60px;max-width:1200px}
+  .crumbs{font-size:12px;color:var(--text-dim);margin-bottom:14px;letter-spacing:1px}
+  .crumbs a{color:var(--text-dim)}
+  .crumbs a:hover{color:#fff}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:8px}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-bottom:30px}
+
+  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px}
+  .panel h2{font-size:14px;font-weight:600;margin-bottom:14px;letter-spacing:.3px}
+
+  /* dropzone */
+  .drop{
+    border:2px dashed #333;border-radius:8px;
+    padding:48px 24px;text-align:center;
+    background:rgba(255,255,255,0.02);
+    transition:border-color .2s,background .2s;
+    cursor:pointer; position:relative
+  }
+  .drop:hover, .drop.over{border-color:var(--red);background:rgba(229,9,20,0.05)}
+  .drop .icon{width:64px;height:64px;border-radius:50%;background:rgba(229,9,20,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border:1px solid rgba(229,9,20,0.4)}
+  .drop .icon svg{width:30px;height:30px;fill:var(--red)}
+  .drop .t{font-size:18px;font-weight:600;margin-bottom:6px}
+  .drop .s{font-size:13px;color:var(--text-dim);margin-bottom:16px}
+  .drop .browse{display:inline-block;padding:10px 22px;border-radius:4px;background:#fff;color:#000;font-size:13px;font-weight:600}
+  .drop .specs{margin-top:18px;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+
+  /* uploaded preview */
+  .uploaded{display:none;align-items:center;gap:18px}
+  .uploaded.show{display:flex}
+  .uploaded-thumb{width:120px;height:68px;border-radius:4px;background:linear-gradient(135deg,#ff7aa2,#5a0a23);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:rgba(255,255,255,0.85);font-size:14px}
+  .uploaded-meta{flex:1}
+  .uploaded-meta .t{font-weight:600;margin-bottom:4px;font-size:14px}
+  .uploaded-meta .s{font-size:12px;color:var(--text-dim);margin-bottom:8px}
+  .upload-bar{height:4px;border-radius:2px;background:#2a2a2a;overflow:hidden}
+  .upload-bar div{height:100%;background:var(--red);width:0%;transition:width 0.4s linear}
+  .uploaded-x{background:none;border:1px solid #333;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s}
+  .uploaded-x:hover{border-color:#fff}
+  .uploaded-x svg{width:14px;height:14px;fill:#fff}
+
+  /* form */
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:12px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+  .field input, .field textarea, .field select{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;
+    padding:11px 14px;color:#fff;font:inherit;font-size:14px;
+    transition:border-color .15s
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{outline:none;border-color:#666}
+  .field textarea{min-height:90px;resize:vertical;font-family:inherit}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .checkbox-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-light);cursor:pointer;padding:10px 0}
+  .checkbox-row input{accent-color:var(--red);width:16px;height:16px}
+
+  /* thumbnail picker */
+  .thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .thumb-opt{aspect-ratio:16/9;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;background:var(--bgg);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:rgba(255,255,255,0.7);letter-spacing:1px}
+  .thumb-opt.selected{border-color:var(--red)}
+  .thumb-opt:hover{border-color:rgba(255,255,255,0.4)}
+  .thumb-upload{display:flex;align-items:center;justify-content:center;border:2px dashed #333;border-radius:4px;aspect-ratio:16/9;font-size:11px;color:var(--text-dim);text-align:center;cursor:pointer}
+  .thumb-upload:hover{border-color:#fff;color:#fff}
+
+  /* footer actions */
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
+  .actions-right{display:flex;gap:10px}
+  .btn{padding:11px 22px;border-radius:4px;font-size:13px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s,color .15s;cursor:pointer}
+  .btn svg{width:16px;height:16px;fill:currentColor}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:#fff;color:#fff}
+
+  /* tip */
+  .tip{font-size:12px;color:var(--text-dim);background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:6px;padding:12px 14px;line-height:1.5}
+  .tip strong{color:#fff}
+
+  @media (max-width: 1000px){.grid{grid-template-columns:1fr}}
+  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.field-grid{grid-template-columns:1fr}.thumb-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <div class="side-foot">
+      <div class="av">B</div><div><div style="color:#fff;font-weight:500;font-size:13px">Buki</div><div>Admin · loveflix.so</div></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="crumbs"><a href="admin.html">Dashboard</a> › Upload Video</div>
+    <h1 class="page-title">Upload a Video</h1>
+    <p class="page-sub">Drop a memory in. We'll handle the rest.</p>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>1 · Video File</h2>
+        <div class="drop" id="drop">
+          <input type="file" id="fileInput" accept="video/*" hidden>
+          <div id="dropEmpty">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
+            <div class="t">Drag and drop a video here</div>
+            <div class="s">or click to browse — MP4, MOV, up to 4GB</div>
+            <span class="browse">Choose File</span>
+            <div class="specs">1080p · 4K · HDR Supported</div>
+          </div>
+          <div class="uploaded" id="uploaded">
+            <div class="uploaded-thumb" id="uploadedThumb">VIDEO</div>
+            <div class="uploaded-meta">
+              <div class="t" id="uploadedName">lisbon-day3-final.mp4</div>
+              <div class="s" id="uploadedStatus">Uploading… 0%</div>
+              <div class="upload-bar"><div id="uploadFill"></div></div>
+            </div>
+            <button class="uploaded-x" id="cancelUpload" aria-label="Cancel"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+          </div>
+        </div>
+
+        <h2 style="margin-top:30px">2 · Details</h2>
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="vTitle" placeholder="The Lisbon Trip · Day 3" value="The Lisbon Trip · Day 3">
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="vDesc" placeholder="Tell us what happened that day...">Yellow trams, hilltop sunsets, and that one pastéis de nata you wouldn't share. Day three of Lisbon and we still hadn't slept.</textarea>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Category</label>
+            <select id="vCat">
+              <option>Trips</option>
+              <option>Anniversary</option>
+              <option>Birthdays</option>
+              <option>Moments</option>
+              <option>Letters</option>
+              <option>Cooking Together</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Date Recorded</label>
+            <input type="date" value="2025-05-14">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Season (optional)</label>
+            <input type="text" placeholder="3" value="3">
+          </div>
+          <div class="field">
+            <label>Episode (optional)</label>
+            <input type="text" placeholder="4" value="4">
+          </div>
+        </div>
+
+        <label class="checkbox-row"><input type="checkbox" checked> Add to "Continue Watching" eligibility</label>
+        <label class="checkbox-row"><input type="checkbox"> Mark as Favorite ♥</label>
+        <label class="checkbox-row"><input type="checkbox"> Notify My Love when published</label>
+      </div>
+
+      <div>
+        <div class="panel" style="margin-bottom:20px">
+          <h2>3 · Thumbnail</h2>
+          <div class="thumb-grid" id="thumbGrid">
+            <div class="thumb-opt selected" data-tint="linear-gradient(135deg,#ff7aa2,#5a0a23)" style="--bgg:linear-gradient(135deg,#ff7aa2,#5a0a23)">Auto 1</div>
+            <div class="thumb-opt" data-tint="linear-gradient(135deg,#a855f7,#2e1065)" style="--bgg:linear-gradient(135deg,#a855f7,#2e1065)">Auto 2</div>
+            <div class="thumb-opt" data-tint="linear-gradient(135deg,#f59e0b,#6b3a02)" style="--bgg:linear-gradient(135deg,#f59e0b,#6b3a02)">Auto 3</div>
+            <div class="thumb-opt" data-tint="linear-gradient(135deg,#0ea5e9,#082f49)" style="--bgg:linear-gradient(135deg,#0ea5e9,#082f49)">Auto 4</div>
+          </div>
+          <div class="thumb-upload" style="margin-top:10px">+ Upload custom thumbnail (JPG / PNG)</div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px">
+          <h2>Preview</h2>
+          <div style="aspect-ratio:16/9;border-radius:6px;background:linear-gradient(135deg,#ff7aa2,#5a0a23);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;text-shadow:0 2px 12px rgba(0,0,0,0.5)" id="previewBox">The Lisbon Trip<br>Day 3</div>
+          <div style="margin-top:10px;font-size:13px"><span style="color:var(--text-dim)">Will appear in:</span> Continue Watching, Trips, Season 3</div>
+        </div>
+
+        <div class="tip">
+          <strong>Tip:</strong> The first 15 seconds become the auto-preview on hover. Make them count.
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="location.href='admin.html'">Cancel</button>
+      <div class="actions-right">
+        <button class="btn btn-ghost" id="saveDraft">Save as Draft</button>
+        <button class="btn btn-primary" id="publish">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Publish
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const drop = document.getElementById('drop');
+  const fileInput = document.getElementById('fileInput');
+  const dropEmpty = document.getElementById('dropEmpty');
+  const uploaded = document.getElementById('uploaded');
+  const fill = document.getElementById('uploadFill');
+  const status = document.getElementById('uploadedStatus');
+  const cancelUp = document.getElementById('cancelUpload');
+  const uploadedName = document.getElementById('uploadedName');
+  const vTitle = document.getElementById('vTitle');
+  const previewBox = document.getElementById('previewBox');
+
+  function startUpload(name) {
+    dropEmpty.style.display = 'none';
+    uploaded.classList.add('show');
+    uploadedName.textContent = name || 'lisbon-day3-final.mp4';
+    let p = 0;
+    const i = setInterval(() => {
+      p += Math.random() * 8 + 2;
+      if (p >= 100) { p = 100; clearInterval(i); status.textContent = 'Ready to publish · 1080p · 268 MB'; }
+      else status.textContent = 'Uploading… ' + Math.floor(p) + '%';
+      fill.style.width = p + '%';
+    }, 220);
+  }
+  drop.addEventListener('click', e => { if (e.target.closest('.uploaded')) return; fileInput.click(); });
+  fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) startUpload(f.name); });
+  ;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) startUpload(f.name); });
+  cancelUp.addEventListener('click', e => { e.stopPropagation(); uploaded.classList.remove('show'); dropEmpty.style.display = ''; fill.style.width = '0%'; });
+
+  // simulate uploaded state by default for visual richness
+  startUpload('lisbon-day3-final.mp4');
+
+  // thumbnail picker
+  document.getElementById('thumbGrid').addEventListener('click', e => {
+    const el = e.target.closest('.thumb-opt');
+    if (!el) return;
+    document.querySelectorAll('.thumb-opt').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    previewBox.style.background = el.dataset.tint;
+    document.getElementById('uploadedThumb').style.background = el.dataset.tint;
+  });
+
+  // live preview
+  vTitle.addEventListener('input', () => {
+    previewBox.innerHTML = vTitle.value.replace(/ · /, '<br>') || 'Untitled';
+  });
+
+  document.getElementById('publish').addEventListener('click', () => {
+    location.href = 'admin_videos.html';
+  });
+  document.getElementById('saveDraft').addEventListener('click', () => {
+    location.href = 'admin_videos.html';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Who's Watching?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #141414;
+    --red: #e50914;
+    --text-dim: #808080;
+    --text-light: #b3b3b3;
+    --text-white: #fff;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- subtle bg collage matching login ---------- */
+  .bg-collage {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 3px; opacity: 0.18; filter: blur(2px);
+    z-index: 0; transform: scale(1.05);
+    pointer-events: none;
+  }
+  .bg-tile { position: relative; overflow: hidden; }
+  .bg-tile::after { content: ''; position: absolute; inset: 0; background: var(--c); opacity: 0.6; }
+  .t1  { --c: linear-gradient(135deg,#e50914,#831010); }
+  .t2  { --c: linear-gradient(135deg,#1a1a4e,#0d0d2b); }
+  .t3  { --c: linear-gradient(135deg,#2d1b0e,#5c3317); }
+  .t4  { --c: linear-gradient(135deg,#0e1a2d,#112240); }
+  .t5  { --c: linear-gradient(135deg,#1a0a0a,#3d1515); }
+  .t6  { --c: linear-gradient(135deg,#0d1b0d,#1a3a1a); }
+  .t7  { --c: linear-gradient(135deg,#2b0d2b,#4a1a4a); }
+  .t8  { --c: linear-gradient(135deg,#1a1000,#3d2d00); }
+  .t9  { --c: linear-gradient(135deg,#0a0a1a,#1a1a3d); }
+  .t10 { --c: linear-gradient(135deg,#1a0505,#3d0f0f); }
+  .t11 { --c: linear-gradient(135deg,#05100a,#0f2d1a); }
+  .t12 { --c: linear-gradient(135deg,#15051a,#2b0a3d); }
+  .t13 { --c: linear-gradient(135deg,#e50914,#831010); }
+  .t14 { --c: linear-gradient(135deg,#0d0d3d,#1a1a5c); }
+  .t15 { --c: linear-gradient(135deg,#1a0a00,#3d2000); }
+  .bg-overlay {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%);
+    z-index: 1; pointer-events: none;
+  }
+
+  /* ---------- top nav ---------- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 24px 48px; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nf-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: var(--red);
+    letter-spacing: 3px;
+    line-height: 1;
+    text-decoration: none;
+    user-select: none;
+  }
+  .nf-logo .heart {
+    color: #fff;
+    font-size: 26px;
+    vertical-align: middle;
+    margin: 0 2px;
+    display: inline-block;
+    transform: translateY(-2px);
+  }
+
+  /* ---------- main selector layout ---------- */
+  .selector-page {
+    position: relative; z-index: 5;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 60px;
+    padding: 120px 24px 60px;
+    animation: fadeIn 0.6s ease both;
+  }
+
+  .selector-title {
+    font-size: clamp(40px, 4.8vw, 64px);
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: #e5e5e5;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  .profiles-row {
+    display: flex;
+    gap: 36px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .profile {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    background: none; border: none;
+    color: inherit; font: inherit;
+    padding: 0;
+  }
+
+  .avatar {
+    position: relative;
+    width: 160px; height: 160px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color 0.18s ease, transform 0.18s ease;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 76px;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.92);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  }
+
+  .avatar.rose {
+    background:
+      radial-gradient(circle at 30% 25%, #ffb3c7 0%, transparent 55%),
+      linear-gradient(135deg, #ff5f8f 0%, #d6336c 55%, #8f1d4a 100%);
+  }
+  .avatar.blue {
+    background:
+      radial-gradient(circle at 30% 25%, #9fc7ff 0%, transparent 55%),
+      linear-gradient(135deg, #3a7bff 0%, #1d4ed8 55%, #1e3a8a 100%);
+  }
+
+  /* heart for her avatar */
+  .avatar .heart-mark {
+    position: absolute;
+    right: 16px; bottom: 14px;
+    width: 22px; height: 22px;
+    opacity: 0.85;
+  }
+  /* lock for buki */
+  .avatar .lock-overlay {
+    position: absolute;
+    inset: auto 0 0 auto;
+    margin: 0 10px 10px 0;
+    width: 26px; height: 26px;
+    background: rgba(0,0,0,0.55);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .avatar .lock-overlay svg { width: 14px; height: 14px; fill: #fff; }
+
+  /* manage pencil — top right of avatar, on hover */
+  .manage-pencil {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 30px; height: 30px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.85);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+  }
+  .manage-pencil svg { width: 14px; height: 14px; fill: #fff; }
+
+  .profile-name {
+    font-size: 16px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    transition: color 0.18s ease;
+  }
+  .profile-lock-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .profile-lock-row svg { width: 11px; height: 11px; fill: var(--text-dim); transition: fill 0.18s ease; opacity: 0.85; }
+
+  /* hover */
+  .profile:hover .avatar { border-color: #fff; transform: translateY(-2px); }
+  .profile:hover .profile-name { color: #fff; }
+  .profile:hover .profile-lock-row svg { fill: #fff; }
+  .profile:hover .manage-pencil { opacity: 1; transform: scale(1); }
+  .profile:focus-visible { outline: none; }
+  .profile:focus-visible .avatar { border-color: #fff; }
+  .profile:focus-visible .profile-name { color: #fff; }
+
+  /* manage profiles button */
+  .manage-btn {
+    margin-top: 16px;
+    background: transparent;
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 11px 26px;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease;
+  }
+  .manage-btn:hover { color: #fff; border-color: #fff; }
+
+  /* ---------- PIN overlay ---------- */
+  .pin-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.86);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .pin-overlay.active { opacity: 1; pointer-events: auto; }
+
+  .pin-card {
+    width: 100%; max-width: 520px;
+    text-align: center;
+    transform: translateY(8px);
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+  }
+  .pin-overlay.active .pin-card { transform: translateY(0); }
+
+  .pin-eyebrow {
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 16px;
+  }
+  .pin-title {
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .pin-sub {
+    font-size: 15px;
+    color: var(--text-light);
+    margin-bottom: 36px;
+  }
+
+  .pin-dots {
+    display: flex; justify-content: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .pin-dot {
+    width: 56px; height: 64px;
+    border-bottom: 2px solid #4a4a4a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    font-weight: 500;
+    color: #fff;
+    transition: border-color 0.18s ease, color 0.18s ease;
+  }
+  .pin-dot.filled { border-bottom-color: #fff; }
+  .pin-dot.filled::after {
+    content: '';
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .pin-dot.filled { color: transparent; }
+
+  .pin-dots.error .pin-dot { border-bottom-color: var(--red); }
+  .pin-dots.error .pin-dot.filled::after { background: var(--red); }
+  .pin-dots.shake { animation: shake 0.45s cubic-bezier(.36,.07,.19,.97); }
+
+  .pin-error {
+    height: 18px;
+    font-size: 13px;
+    color: var(--red);
+    margin-bottom: 16px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .pin-error.show { opacity: 1; }
+
+  /* numpad */
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 72px);
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .pin-key {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-key:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
+  .pin-key:active { transform: scale(0.94); }
+  .pin-key.ghost { background: transparent; border-color: transparent; cursor: default; }
+  .pin-key.ghost:hover { background: transparent; }
+  .pin-key.action { font-size: 18px; color: var(--text-light); }
+
+  .pin-cancel {
+    background: transparent; border: none;
+    color: var(--text-dim);
+    font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer;
+    padding: 8px 12px;
+  }
+  .pin-cancel:hover { color: #fff; }
+
+  /* ---------- success state ---------- */
+  .success-overlay {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .success-overlay.active { opacity: 1; pointer-events: auto; }
+
+  .success-ring {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 2px solid var(--red);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    animation: ringPop 0.6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .success-ring::before {
+    content: '';
+    position: absolute; inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(229,9,20,0.35);
+    animation: ringPulse 1.6s ease-in-out infinite;
+  }
+  .success-check {
+    width: 56px; height: 56px;
+  }
+  .success-check path {
+    stroke: #fff; stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 60; stroke-dashoffset: 60;
+    animation: drawCheck 0.5s 0.25s ease forwards;
+  }
+  .success-eyebrow {
+    font-size: 11px; letter-spacing: 6px; text-transform: uppercase;
+    color: var(--red); font-weight: 600;
+  }
+  .success-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 84px);
+    letter-spacing: 4px;
+    color: #fff;
+    line-height: 1;
+  }
+  .success-sub {
+    font-size: 15px; color: var(--text-light);
+    max-width: 420px; text-align: center;
+    line-height: 1.5;
+  }
+  .success-actions {
+    display: flex; gap: 12px; margin-top: 8px;
+  }
+  .success-btn {
+    background: var(--red); color: #fff; border: none;
+    font: inherit; font-size: 14px; font-weight: 600;
+    letter-spacing: 1px;
+    padding: 12px 28px; border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.18s ease;
+  }
+  .success-btn:hover { background: #f6121d; }
+  .success-btn.ghost { background: transparent; border: 1px solid #444; color: #b3b3b3; }
+  .success-btn.ghost:hover { border-color: #fff; color: #fff; }
+
+  /* enter-selected animation when "her" profile is clicked */
+  .selector-page.fade-out { animation: fadeOut 0.5s ease forwards; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeOut { to { opacity: 0; transform: scale(1.04); } }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-8px); }
+    40%, 60% { transform: translateX(8px); }
+  }
+  @keyframes ringPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 0; }
+  }
+  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+
+  @media (max-width: 560px) {
+    nav { padding: 18px 24px; }
+    .nf-logo { font-size: 30px; }
+    .avatar { width: 130px; height: 130px; font-size: 60px; }
+    .selector-page { gap: 40px; }
+    .pin-pad { grid-template-columns: repeat(3, 64px); gap: 10px; }
+    .pin-key { width: 64px; height: 64px; font-size: 22px; }
+    .pin-dot { width: 44px; height: 56px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- background -->
+  <div class="bg-collage" aria-hidden="true">
+    <div class="bg-tile t1"></div><div class="bg-tile t2"></div><div class="bg-tile t3"></div><div class="bg-tile t4"></div><div class="bg-tile t5"></div>
+    <div class="bg-tile t6"></div><div class="bg-tile t7"></div><div class="bg-tile t8"></div><div class="bg-tile t9"></div><div class="bg-tile t10"></div>
+    <div class="bg-tile t11"></div><div class="bg-tile t12"></div><div class="bg-tile t13"></div><div class="bg-tile t14"></div><div class="bg-tile t15"></div>
+  </div>
+  <div class="bg-overlay"></div>
+
+  <nav>
+    <a href="#" class="nf-logo" aria-label="LoveFlix home">LOVE<span class="heart">♥</span>FLIX</a>
+  </nav>
+
+  <main class="selector-page" id="selectorPage">
+    <h1 class="selector-title">Who's watching?</h1>
+
+    <div class="profiles-row">
+      <!-- Profile 1: Her — replace name in data-name and the avatar initial -->
+      <button class="profile" data-profile="her" data-name="My Love" aria-label="Select profile My Love">
+        <div class="avatar rose">
+          <span class="avatar-initial">M</span>
+          <svg class="heart-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+          <div class="manage-pencil" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </div>
+        </div>
+        <span class="profile-name">My Love</span>
+      </button>
+
+      <!-- Profile 2: Buki — locked admin -->
+      <button class="profile" data-profile="buki" data-name="Buki" aria-label="Select profile Buki (locked)">
+        <div class="avatar blue">
+          <span class="avatar-initial">B</span>
+          <div class="lock-overlay" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm9 14H6V10h12v10zm-6-3a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+            </div>
+          <div class="manage-pencil" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </div>
+        </div>
+        <div class="profile-lock-row">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6z"/></svg>
+          <span class="profile-name">Buki</span>
+        </div>
+      </button>
+    </div>
+
+    <button class="manage-btn" type="button">Manage Profiles</button>
+  </main>
+
+  <!-- PIN OVERLAY -->
+  <div class="pin-overlay" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+    <div class="pin-card">
+      <div class="pin-eyebrow">Profile Lock</div>
+      <h2 class="pin-title" id="pinTitle">Enter your PIN</h2>
+      <p class="pin-sub">A 4-digit PIN is required to access Buki's profile.</p>
+
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <div class="pin-error" id="pinError">Whoops, wrong PIN. Try again.</div>
+
+      <div class="pin-pad" id="pinPad">
+        <button class="pin-key" data-key="1">1</button>
+        <button class="pin-key" data-key="2">2</button>
+        <button class="pin-key" data-key="3">3</button>
+        <button class="pin-key" data-key="4">4</button>
+        <button class="pin-key" data-key="5">5</button>
+        <button class="pin-key" data-key="6">6</button>
+        <button class="pin-key" data-key="7">7</button>
+        <button class="pin-key" data-key="8">8</button>
+        <button class="pin-key" data-key="9">9</button>
+        <button class="pin-key ghost" tabindex="-1" aria-hidden="true"></button>
+        <button class="pin-key" data-key="0">0</button>
+        <button class="pin-key action" data-key="back" aria-label="Delete">⌫</button>
+      </div>
+
+      <button class="pin-cancel" id="pinCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS OVERLAY (Buki / admin) -->
+  <div class="success-overlay" id="successOverlay" role="dialog" aria-modal="true">
+    <div class="success-eyebrow">Admin Access Granted</div>
+    <div class="success-ring">
+      <svg class="success-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
+    </div>
+    <h2 class="success-title">Welcome back, Buki</h2>
+    <p class="success-sub">You're signed in as the creator. Continue to the admin dashboard or browse as a viewer.</p>
+    <div class="success-actions">
+      <button class="success-btn" id="goAdmin">Go to Dashboard</button>
+      <button class="success-btn ghost" id="goHome">Browse as viewer</button>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  const PIN = '1234';
+  const overlay = document.getElementById('pinOverlay');
+  const pad = document.getElementById('pinPad');
+  const dotsEl = document.getElementById('pinDots');
+  const dots = [...dotsEl.querySelectorAll('.pin-dot')];
+  const errorEl = document.getElementById('pinError');
+  const cancelBtn = document.getElementById('pinCancel');
+  const successOverlay = document.getElementById('successOverlay');
+  const selectorPage = document.getElementById('selectorPage');
+
+  let entry = '';
+  let locked = false;
+
+  function renderDots() {
+    dots.forEach((d, i) => d.classList.toggle('filled', i < entry.length));
+  }
+  function clearError() {
+    dotsEl.classList.remove('error');
+    errorEl.classList.remove('show');
+  }
+  function reset() {
+    entry = '';
+    renderDots();
+    clearError();
+  }
+  function openPin() {
+    reset();
+    overlay.classList.add('active');
+    setTimeout(() => {
+      const first = pad.querySelector('.pin-key:not(.ghost)');
+      if (first) first.focus();
+    }, 200);
+  }
+  function closePin() {
+    overlay.classList.remove('active');
+    reset();
+  }
+
+  function press(key) {
+    if (locked) return;
+    clearError();
+    if (key === 'back') {
+      entry = entry.slice(0, -1);
+      renderDots();
+      return;
+    }
+    if (entry.length >= 4) return;
+    entry += key;
+    renderDots();
+    if (entry.length === 4) check();
+  }
+
+  function check() {
+    locked = true;
+    if (entry === PIN) {
+      // success
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        successOverlay.classList.add('active');
+        locked = false;
+      }, 250);
+    } else {
+      // wrong
+      dotsEl.classList.add('error', 'shake');
+      errorEl.classList.add('show');
+      setTimeout(() => {
+        dotsEl.classList.remove('shake');
+        entry = '';
+        renderDots();
+        // keep red border briefly until next key
+        locked = false;
+      }, 600);
+    }
+  }
+
+  // numpad clicks
+  pad.addEventListener('click', e => {
+    const btn = e.target.closest('.pin-key');
+    if (!btn || btn.classList.contains('ghost')) return;
+    press(btn.dataset.key);
+  });
+
+  // keyboard input while overlay open
+  document.addEventListener('keydown', e => {
+    if (!overlay.classList.contains('active')) return;
+    if (e.key >= '0' && e.key <= '9') { press(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { press('back'); e.preventDefault(); }
+    else if (e.key === 'Escape') closePin();
+  });
+
+  cancelBtn.addEventListener('click', closePin);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePin(); });
+
+  // profile clicks
+  document.querySelectorAll('.profile').forEach(p => {
+    p.addEventListener('click', () => {
+      const which = p.dataset.profile;
+      if (which === 'buki') {
+        openPin();
+      } else {
+        // her profile -> proceed to home
+        selectorPage.classList.add('fade-out');
+        setTimeout(() => {
+          // Wire to home.html when built
+          // window.location.href = 'home.html';
+          selectorPage.classList.remove('fade-out');
+        }, 500);
+      }
+    });
+  });
+
+  // success buttons
+  document.getElementById('goAdmin').addEventListener('click', () => {
+    // window.location.href = 'admin.html';
+    successOverlay.classList.remove('active');
+  });
+  document.getElementById('goHome').addEventListener('click', () => {
+    // window.location.href = 'home.html';
+    successOverlay.classList.remove('active');
+  });
+
+  // manage profiles button
+  document.querySelector('.manage-btn').addEventListener('click', () => {
+    document.querySelectorAll('.manage-pencil').forEach(p => {
+      p.style.opacity = p.style.opacity === '1' ? '' : '1';
+      p.style.transform = p.style.opacity === '1' ? 'scale(1)' : '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

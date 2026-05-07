@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Set Up Your Site</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  /* top bar */
+  .top{padding:20px 40px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:20px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .top-right{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--text-dim)}
+  .save-status{display:flex;align-items:center;gap:6px}
+  .save-status .dot{width:6px;height:6px;border-radius:50%;background:#10b981}
+
+  /* progress */
+  .progress-wrap{padding:30px 40px 0}
+  .progress-bar{display:flex;gap:8px;max-width:720px;margin:0 auto}
+  .progress-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:opacity .15s}
+  .progress-step:hover{opacity:.85}
+  .progress-step .dot{width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-dim);transition:all .2s}
+  .progress-step .label{font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
+  .progress-step.active .dot{background:var(--red);border-color:var(--red);color:#fff}
+  .progress-step.active .label{color:#fff}
+  .progress-step.done .dot{background:transparent;border-color:var(--red);color:var(--red)}
+  .progress-step.done .dot::before{content:'✓'}
+  .progress-step.done .dot span{display:none}
+
+  /* main */
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+  .step-card{width:100%;max-width:680px}
+  .step-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px;text-align:center}
+  .step-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,64px);letter-spacing:1px;line-height:1;margin-bottom:14px;text-align:center}
+  .step-sub{font-size:16px;color:var(--text-light);text-align:center;margin-bottom:40px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5}
+
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+  .field input,.field select{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px 16px;color:#fff;font:inherit;font-size:15px;transition:border-color .15s}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--red)}
+  .field-hint{font-size:12px;color:var(--text-dim);margin-top:6px}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .url-field{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .url-field:focus-within{border-color:var(--red)}
+  .url-field .prefix{padding:14px 16px;background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:15px;font-family:monospace;border-right:1px solid var(--border)}
+  .url-field input{border:none;background:none;flex:1;padding:14px 16px;color:#fff;font:inherit;font-size:15px;outline:none}
+
+  /* color picker */
+  .colors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:20px 0}
+  .color{width:56px;height:56px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:transform .15s;position:relative}
+  .color:hover{transform:scale(1.08)}
+  .color.selected{border-color:#fff}
+  .color.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+
+  /* preview chip */
+  .preview-chip{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .preview-chip .chip-label{font-size:11px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px}
+  .preview-chip .chip-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;line-height:1;color:var(--accent,#e50914)}
+  .preview-chip .chip-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;transform:translateY(-2px);display:inline-block}
+  .preview-chip .chip-url{font-family:monospace;font-size:13px;color:var(--text-light);background:rgba(255,255,255,0.05);padding:6px 10px;border-radius:4px}
+
+  /* upload tiles */
+  .uploads{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px}
+  .upload-tile{background:var(--panel);border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:border-color .15s}
+  .upload-tile:hover{border-color:#666}
+  .upload-tile .av-pic{width:90px;height:90px;border-radius:10px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:42px;color:#fff}
+  .upload-tile .av-pic.her{background:linear-gradient(135deg,#ff5f8f,#8f1d4a)}
+  .upload-tile .av-pic.him{background:linear-gradient(135deg,#3a7bff,#1e3a8a)}
+  .upload-tile .av-name{font-size:14px;font-weight:600;margin-bottom:4px}
+  .upload-tile .av-cta{font-size:11px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+
+  /* plan cards (step 4) */
+  .plan-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+  .plan-card{background:var(--panel);border:2px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+  .plan-card:hover{border-color:#444}
+  .plan-card.selected{border-color:var(--red);background:rgba(229,9,20,0.06)}
+  .plan-card .pname{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .plan-card .pprice{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1;margin-bottom:4px}
+  .plan-card .pper{font-size:11px;color:var(--text-dim);margin-bottom:10px}
+  .plan-card .pdesc{font-size:11px;color:var(--text-light);line-height:1.4}
+
+  /* success state */
+  .success-card{text-align:center;max-width:540px;margin:0 auto}
+  .success-pulse{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--red),#8f1d4a);margin:0 auto 30px;display:flex;align-items:center;justify-content:center;animation:pulse 2s ease-out infinite;position:relative}
+  .success-pulse svg{width:60px;height:60px;fill:#fff}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,9,20,0.4)}50%{box-shadow:0 0 0 30px rgba(229,9,20,0)}}
+  .success-url{display:inline-flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 20px;font-family:monospace;font-size:15px;margin:20px 0 30px}
+  .success-url .copy-btn{background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer}
+
+  /* footer / nav */
+  .step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:40px;gap:14px}
+  .btn{padding:13px 26px;border-radius:6px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover:not(:disabled){background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}.btn-ghost:hover{border-color:#fff;color:#fff}
+  .btn-link{background:none;border:none;color:var(--text-dim);font-size:13px}.btn-link:hover{color:#fff}
+
+  .hidden{display:none !important}
+
+  @media (max-width: 720px){.uploads,.plan-cards,.field-grid{grid-template-columns:1fr}.top{padding:14px 20px}.progress-step .label{font-size:10px}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="top-right">
+    <div class="save-status"><div class="dot"></div>Draft saved</div>
+    <a href="login.html" class="btn-link" style="cursor:pointer">Save &amp; exit</a>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-step active" data-step="1"><div class="dot"><span>1</span></div><div class="label">Account</div></div>
+    <div class="progress-step" data-step="2"><div class="dot"><span>2</span></div><div class="label">Couple</div></div>
+    <div class="progress-step" data-step="3"><div class="dot"><span>3</span></div><div class="label">Theme</div></div>
+    <div class="progress-step" data-step="4"><div class="dot"><span>4</span></div><div class="label">Plan</div></div>
+    <div class="progress-step" data-step="5"><div class="dot"><span>5</span></div><div class="label">Done</div></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- STEP 1: Account -->
+  <div class="step-card" data-pane="1">
+    <div class="step-eyebrow">Step 1 of 4</div>
+    <h1 class="step-title">Make your account.</h1>
+    <p class="step-sub">First the boring bit. We'll use this to send you the link to your site.</p>
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="adminName" placeholder="e.g. Buki">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" placeholder="you@email.com">
+    </div>
+    <div class="field-grid">
+      <div class="field"><label>Password</label><input type="password" placeholder="Min 8 characters"></div>
+      <div class="field"><label>Confirm password</label><input type="password"></div>
+    </div>
+    <div class="field-hint" style="text-align:center;margin-top:20px">By continuing you agree to our Terms &amp; Privacy.</div>
+    <div class="step-nav">
+      <a href="login.html" class="btn-link">Already have an account? Sign in</a>
+      <button class="btn btn-primary" onclick="goNext(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Couple -->
+  <div class="step-card hidden" data-pane="2">
+    <div class="step-eyebrow">Step 2 of 4</div>
+    <h1 class="step-title">Who's it for?</h1>
+    <p class="step-sub">Tell us your names so we can put theirs in lights.</p>
+    <div class="field-grid">
+      <div class="field"><label>Their name (the surprise-ee)</label><input type="text" id="theirName" placeholder="My Love" value="My Love"></div>
+      <div class="field"><label>Your name (you again)</label><input type="text" placeholder="Buki" value="Buki"></div>
+    </div>
+    <div class="field"><label>Anniversary date</label><input type="date" value="2023-05-14"></div>
+    <p class="step-sub" style="margin-top:34px;margin-bottom:20px">Add profile photos (optional — you can skip and use the gradient avatars).</p>
+    <div class="uploads">
+      <div class="upload-tile"><div class="av-pic her" id="herInitial">M</div><div class="av-name">Their Photo</div><div class="av-cta">+ Upload</div></div>
+      <div class="upload-tile"><div class="av-pic him" id="hisInitial">B</div><div class="av-name">Your Photo</div><div class="av-cta">+ Upload</div></div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-ghost" onclick="goNext(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goNext(3)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Theme -->
+  <div class="step-card hidden" data-pane="3">
+    <div class="step-eyebrow">Step 3 of 4</div>
+    <h1 class="step-title">Pick a vibe.</h1>
+    <p class="step-sub">Your accent color, your custom URL. You can change all of this later in settings.</p>
+    <div class="field"><label>Your accent color</label></div>
+    <div class="colors" id="colors">
+      <div class="color selected" data-c="#e50914" style="background:#e50914"></div>
+      <div class="color" data-c="#ec4899" style="background:#ec4899"></div>
+      <div class="color" data-c="#a855f7" style="background:#a855f7"></div>
+      <div class="color" data-c="#3b82f6" style="background:#3b82f6"></div>
+      <div class="color" data-c="#10b981" style="background:#10b981"></div>
+      <div class="color" data-c="#f59e0b" style="background:#f59e0b"></div>
+      <div class="color" data-c="#fb7185" style="background:#fb7185"></div>
+    </div>
+    <div class="field" style="margin-top:24px">
+      <label>Your custom URL</label>
+      <div class="url-field">
+        <span class="prefix">loveflix.so/</span>
+        <input type="text" id="urlSlug" placeholder="yourname" value="buki-and-love">
+      </div>
+      <div class="field-hint">This is what you'll send them. <span style="color:#10b981">✓ Available</span></div>
+    </div>
+    <div class="preview-chip">
+      <div>
+        <div class="chip-label">Preview</div>
+        <div class="chip-logo" id="chipLogo">LOVE<span class="heart">♥</span>FLIX</div>
+      </div>
+      <div class="chip-url" id="chipUrl">loveflix.so/buki-and-love</div>
+    </div>
+    <div class="step-nav">
+      <button class="btn btn-ghost" onclick="goNext(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goNext(4)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Plan -->
+  <div class="step-card hidden" data-pane="4">
+    <div class="step-eyebrow">Step 4 of 4</div>
+    <h1 class="step-title">Pick a plan.</h1>
+    <p class="step-sub">All plans include a 14-day free trial. No card needed today.</p>
+    <div class="plan-cards" id="planCards">
+      <div class="plan-card" data-plan="crush"><div class="pname">Crush</div><div class="pprice">$6</div><div class="pper">/ month</div><div class="pdesc">25 videos · 1080p</div></div>
+      <div class="plan-card selected" data-plan="sweetheart"><div class="pname">Sweetheart ★</div><div class="pprice">$12</div><div class="pper">/ month</div><div class="pdesc">Unlimited · 4K · custom URL</div></div>
+      <div class="plan-card" data-plan="forever"><div class="pname">Forever</div><div class="pprice">$24</div><div class="pper">/ month</div><div class="pdesc">All features · concierge</div></div>
+    </div>
+    <div class="field-hint" style="text-align:center;margin-bottom:8px">Free for 14 days, then your selected plan. Cancel any time before.</div>
+    <div class="step-nav">
+      <button class="btn btn-ghost" onclick="goNext(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goNext(5)">Create my LoveFlix →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Success -->
+  <div class="step-card hidden" data-pane="5">
+    <div class="success-card">
+      <div class="success-pulse">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <div class="step-eyebrow">Welcome to LoveFlix</div>
+      <h1 class="step-title">Your site is live.</h1>
+      <p class="step-sub">Now upload some videos. Then send the link. Then watch the face.</p>
+      <div class="success-url">
+        <span id="successUrl">loveflix.so/buki-and-love</span>
+        <button class="copy-btn" onclick="this.textContent='Copied ✓'">COPY</button>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="admin_upload.html" class="btn btn-primary">Upload your first video →</a>
+        <a href="home.html" class="btn btn-ghost">Preview the site</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function goNext(step) {
+    document.querySelectorAll('[data-pane]').forEach(p => p.classList.add('hidden'));
+    document.querySelector(`[data-pane="${step}"]`).classList.remove('hidden');
+    document.querySelectorAll('.progress-step').forEach(s => {
+      const n = parseInt(s.dataset.step, 10);
+      s.classList.remove('active','done');
+      if (n < step) s.classList.add('done');
+      else if (n === step) s.classList.add('active');
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // color picker (step 3)
+  const colors = document.getElementById('colors');
+  const chipLogo = document.getElementById('chipLogo');
+  colors.addEventListener('click', e => {
+    const c = e.target.closest('.color'); if (!c) return;
+    colors.querySelectorAll('.color').forEach(x => x.classList.remove('selected'));
+    c.classList.add('selected');
+    chipLogo.style.color = c.dataset.c;
+  });
+
+  // url slug live preview (step 3)
+  const urlSlug = document.getElementById('urlSlug');
+  const chipUrl = document.getElementById('chipUrl');
+  const successUrl = document.getElementById('successUrl');
+  urlSlug.addEventListener('input', e => {
+    const v = e.target.value || 'yourname';
+    chipUrl.textContent = `loveflix.so/${v}`;
+    successUrl.textContent = `loveflix.so/${v}`;
+  });
+
+  // plan picker (step 4)
+  const planCards = document.getElementById('planCards');
+  planCards.addEventListener('click', e => {
+    const card = e.target.closest('.plan-card'); if (!card) return;
+    planCards.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+
+  // sync initials (step 2)
+  const theirName = document.getElementById('theirName');
+  const herInitial = document.getElementById('herInitial');
+  theirName.addEventListener('input', e => herInitial.textContent = (e.target.value[0]||'M').toUpperCase());
+  const adminName = document.getElementById('adminName');
+  adminName.addEventListener('input', e => document.getElementById('hisInitial').textContent = (e.target.value[0]||'B').toUpperCase());
+
+  // progress dots are clickable
+  document.querySelectorAll('.progress-step').forEach(s => {
+    s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
+  });
+</script>
+</body>
+</html>

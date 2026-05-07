@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+  /* sidebar */
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;transition:background .15s,color .15s;border-left:3px solid transparent}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+  .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff}
+
+  /* main */
+  main{padding:32px 40px 60px;max-width:1500px}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:30px;gap:20px;flex-wrap:wrap}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-top:6px}
+  .head-actions{display:flex;gap:10px}
+  .btn{padding:10px 20px;border-radius:4px;font-size:13px;font-weight:600;border:none;letter-spacing:.3px;display:inline-flex;align-items:center;gap:8px;transition:background .15s,border-color .15s,color .15s}
+  .btn svg{width:16px;height:16px;fill:currentColor}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:#fff;color:#fff}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;position:relative;overflow:hidden}
+  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--red))}
+  .stat .label{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+  .stat .num{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:1px;line-height:1}
+  .stat .delta{font-size:12px;margin-top:8px;color:#4ade80;display:flex;align-items:center;gap:4px}
+  .stat .delta.down{color:#f87171}
+  .stat .icon{position:absolute;top:18px;right:18px;width:24px;height:24px;opacity:.4}
+  .stat .icon svg{width:100%;height:100%;fill:currentColor}
+  .stat:nth-child(1){--accent:#e50914}
+  .stat:nth-child(2){--accent:#a855f7}
+  .stat:nth-child(3){--accent:#3a7bff}
+  .stat:nth-child(4){--accent:#10b981}
+
+  /* split: recent uploads + quick actions */
+  .split{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:36px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .panel-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-title{font-size:15px;font-weight:600}
+  .panel-link{font-size:12px;color:var(--text-dim);transition:color .15s}
+  .panel-link:hover{color:#fff}
+
+  .upload-row{display:grid;grid-template-columns:80px 1fr auto auto auto;gap:14px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--border);transition:background .15s}
+  .upload-row:last-child{border-bottom:none}
+  .upload-row:hover{background:rgba(255,255,255,0.02)}
+  .up-thumb{width:80px;height:46px;border-radius:3px;background:var(--thumb,#333);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.85)}
+  .up-meta .t{font-size:14px;font-weight:500;margin-bottom:3px}
+  .up-meta .s{font-size:12px;color:var(--text-dim)}
+  .up-cat{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-light);background:rgba(255,255,255,0.06);padding:4px 10px;border-radius:999px}
+  .up-status{font-size:12px;display:flex;align-items:center;gap:6px}
+  .up-status .dot{width:7px;height:7px;border-radius:50%;background:#4ade80}
+  .up-status.draft{color:var(--text-dim)}
+  .up-status.draft .dot{background:#f59e0b}
+  .up-action{color:var(--text-dim);background:none;border:none;padding:6px}
+  .up-action:hover{color:#fff}
+  .up-action svg{width:18px;height:18px;fill:currentColor}
+
+  .t-rose{--thumb:linear-gradient(135deg,#ff7aa2,#5a0a23)}
+  .t-blue{--thumb:linear-gradient(135deg,#3a7bff,#1e3a8a)}
+  .t-amber{--thumb:linear-gradient(135deg,#f59e0b,#6b3a02)}
+  .t-violet{--thumb:linear-gradient(135deg,#a855f7,#2e1065)}
+  .t-emerald{--thumb:linear-gradient(135deg,#10b981,#064e3b)}
+  .t-coral{--thumb:linear-gradient(135deg,#ff8c69,#3d0f08)}
+
+  /* quick actions */
+  .quick{padding:8px}
+  .quick-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:6px;background:transparent;border:none;color:#fff;width:100%;text-align:left;transition:background .15s;cursor:pointer}
+  .quick-btn:hover{background:rgba(255,255,255,0.04)}
+  .quick-icon{width:38px;height:38px;border-radius:8px;background:var(--qbg,rgba(229,9,20,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .quick-icon svg{width:18px;height:18px;fill:var(--qfg,var(--red))}
+  .quick-body .t{font-size:14px;font-weight:600;margin-bottom:2px}
+  .quick-body .s{font-size:12px;color:var(--text-dim)}
+
+  /* activity */
+  .activity{padding:14px 22px 18px}
+  .act-row{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px dashed var(--border);font-size:13px}
+  .act-row:last-child{border-bottom:none}
+  .act-dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:6px;flex-shrink:0}
+  .act-row .body{flex:1}
+  .act-row .body strong{font-weight:600}
+  .act-row .time{color:var(--text-dim);font-size:11px}
+
+  /* love note panel */
+  .love-note{background:linear-gradient(135deg,rgba(229,9,20,0.15),rgba(168,85,247,0.1));border:1px solid rgba(229,9,20,0.3);border-radius:8px;padding:24px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+  .love-note .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:8px}
+  .love-note .t{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.1;margin-bottom:6px}
+  .love-note .s{font-size:13px;color:var(--text-light)}
+
+  @media (max-width: 1000px){.split{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.page-title{font-size:36px}.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+
+    <div class="side-eyebrow" style="margin-top:18px">Live Site</div>
+    <a href="home.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>View Home</a>
+    <a href="browse.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4z"/></svg>Browse Library</a>
+
+    <div class="side-foot">
+      <div class="av">B</div>
+      <div>
+        <div style="color:#fff;font-weight:500;font-size:13px">Buki</div>
+        <div>Admin · loveflix.so</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <div class="page-sub">Welcome back, Buki. Here's what's happening on your site.</div>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-ghost" onclick="location.href='home.html'">
+          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+          Preview Site
+        </button>
+        <button class="btn btn-primary" onclick="location.href='admin_upload.html'">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          New Upload
+        </button>
+      </div>
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="icon" style="color:var(--red)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="label">Total Videos</div>
+        <div class="num">86</div>
+        <div class="delta"><span>▲</span> +4 this month</div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="color:#a855f7"><svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 4l7.5 13H4.5L12 6z" /></svg></div>
+        <div class="label">Total Watch Time</div>
+        <div class="num">14h 22m</div>
+        <div class="delta"><span>▲</span> +2h 12m</div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="color:#3a7bff"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
+        <div class="label">Favorites</div>
+        <div class="num">23</div>
+        <div class="delta"><span>▲</span> +3 last week</div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="color:#10b981"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H5V8h14v13z"/></svg></div>
+        <div class="label">Days Together</div>
+        <div class="num">1,094</div>
+        <div class="delta">▲ +1 every day</div>
+      </div>
+    </div>
+
+    <!-- love note -->
+    <div class="love-note" style="margin-bottom:30px">
+      <div>
+        <div class="eyebrow">Featured Love Note</div>
+        <div class="t">"Every day with you<br>is a new episode."</div>
+        <div class="s">Currently shown on the home hero · last updated 2 days ago</div>
+      </div>
+      <button class="btn btn-ghost" onclick="location.href='admin_settings.html'">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+        Edit
+      </button>
+    </div>
+
+    <!-- split -->
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Recent Uploads</div>
+          <a href="admin_videos.html" class="panel-link">Manage all ›</a>
+        </div>
+        <div class="upload-row">
+          <div class="up-thumb t-rose">Lisbon</div>
+          <div class="up-meta"><div class="t">The Lisbon Trip · Day 3</div><div class="s">Uploaded May 16, 2025 · 26:12 · 1080p</div></div>
+          <div class="up-cat">Trips</div>
+          <div class="up-status"><span class="dot"></span> Published</div>
+          <button class="up-action" onclick="location.href='admin_videos.html'"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        </div>
+        <div class="upload-row">
+          <div class="up-thumb t-amber">B-Day</div>
+          <div class="up-meta"><div class="t">Your 30th Birthday</div><div class="s">Uploaded Mar 22, 2025 · 15:21 · 4K</div></div>
+          <div class="up-cat">Birthdays</div>
+          <div class="up-status"><span class="dot"></span> Published</div>
+          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        </div>
+        <div class="upload-row">
+          <div class="up-thumb t-violet">Anniv</div>
+          <div class="up-meta"><div class="t">2nd Anniversary Cut</div><div class="s">Uploaded May 14, 2025 · 22:00 · 4K HDR</div></div>
+          <div class="up-cat">Anniversary</div>
+          <div class="up-status draft"><span class="dot"></span> Draft</div>
+          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        </div>
+        <div class="upload-row">
+          <div class="up-thumb t-emerald">Cabin</div>
+          <div class="up-meta"><div class="t">Forest Cabin Weekend</div><div class="s">Uploaded Mar 8, 2025 · 16:10 · 1080p</div></div>
+          <div class="up-cat">Trips</div>
+          <div class="up-status"><span class="dot"></span> Published</div>
+          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        </div>
+        <div class="upload-row">
+          <div class="up-thumb t-coral">Pasta</div>
+          <div class="up-meta"><div class="t">Pasta Night Disaster</div><div class="s">Uploaded Feb 24, 2025 · 8:09 · 1080p</div></div>
+          <div class="up-cat">Cooking</div>
+          <div class="up-status"><span class="dot"></span> Published</div>
+          <button class="up-action"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Quick Actions</div></div>
+        <div class="quick">
+          <button class="quick-btn" onclick="location.href='admin_upload.html'">
+            <div class="quick-icon" style="--qbg:rgba(229,9,20,0.15);--qfg:#e50914"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
+            <div class="quick-body"><div class="t">Upload a Video</div><div class="s">Drop in a new memory</div></div>
+          </button>
+          <button class="quick-btn" onclick="location.href='admin_videos.html'">
+            <div class="quick-icon" style="--qbg:rgba(168,85,247,0.15);--qfg:#a855f7"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></div>
+            <div class="quick-body"><div class="t">Edit a Video</div><div class="s">Update titles, thumbs, dates</div></div>
+          </button>
+          <button class="quick-btn" onclick="location.href='admin_settings.html'">
+            <div class="quick-icon" style="--qbg:rgba(58,123,255,0.15);--qfg:#3a7bff"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div class="quick-body"><div class="t">Update Profile Photos</div><div class="s">Change avatars on the home screen</div></div>
+          </button>
+          <button class="quick-btn">
+            <div class="quick-icon" style="--qbg:rgba(16,185,129,0.15);--qfg:#10b981"><svg viewBox="0 0 24 24"><path d="M21 6h-3.17L16 4h-6v2h5.12l1.83 2H21v12H5v-9H3v9c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM8 14c0 2.76 2.24 5 5 5s5-2.24 5-5-2.24-5-5-5-5 2.24-5 5z"/></svg></div>
+            <div class="quick-body"><div class="t">Replace Hero Banner</div><div class="s">Pick a new featured video</div></div>
+          </button>
+          <button class="quick-btn">
+            <div class="quick-icon" style="--qbg:rgba(245,158,11,0.15);--qfg:#f59e0b"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></div>
+            <div class="quick-body"><div class="t">Add a New Row</div><div class="s">Curate a new collection</div></div>
+          </button>
+        </div>
+        <div class="panel-head" style="border-top:1px solid var(--border);border-bottom:none">
+          <div class="panel-title" style="font-size:13px">Recent Activity</div>
+        </div>
+        <div class="activity">
+          <div class="act-row"><span class="act-dot"></span><div class="body"><strong>My Love</strong> watched <strong>The Lisbon Trip · Day 3</strong>.<div class="time">14 min ago</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#a855f7"></span><div class="body"><strong>My Love</strong> ❤️ favorited <strong>One Year Letter</strong>.<div class="time">2 hours ago</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#3a7bff"></span><div class="body"><strong>You</strong> uploaded <strong>2nd Anniversary Cut</strong>.<div class="time">Yesterday</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#10b981"></span><div class="body"><strong>My Love</strong> finished <strong>Season 2</strong>.<div class="time">3 days ago</div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>

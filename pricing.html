@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Pricing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.05)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+  .btn-lg{padding:14px 28px;font-size:15px}
+
+  .hero{padding:140px 24px 40px;text-align:center;max-width:840px;margin:0 auto;position:relative}
+  .hero::before{content:'';position:absolute;inset:-100px 0 0 0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.18),transparent 60%);pointer-events:none;z-index:-1}
+  .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:16px}
+  h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,8vw,108px);letter-spacing:1px;line-height:.95;margin-bottom:18px}
+  .sub{font-size:18px;color:var(--text-light);max-width:600px;margin:0 auto 32px;line-height:1.5}
+
+  .toggle-wrap{display:inline-flex;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px;gap:4px;margin-bottom:60px}
+  .toggle-btn{padding:9px 20px;border-radius:999px;background:none;border:none;color:var(--text-light);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+  .toggle-btn.active{background:#fff;color:#000}
+  .toggle-btn .save{font-size:10px;color:var(--red);margin-left:6px;letter-spacing:1px}
+  .toggle-btn.active .save{color:#e50914}
+
+  .plans{max-width:1200px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .plan{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px 32px;display:flex;flex-direction:column;position:relative;transition:transform .2s,border-color .2s}
+  .plan:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.15)}
+  .plan.featured{border-color:var(--red);background:linear-gradient(180deg,rgba(229,9,20,0.08) 0%,var(--panel) 60%);box-shadow:0 20px 60px rgba(229,9,20,0.15)}
+  .featured-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--red);font-size:10px;font-weight:700;letter-spacing:2px;padding:6px 14px;border-radius:999px;text-transform:uppercase}
+  .plan-name{font-size:13px;font-weight:600;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+  .plan-tagline{font-size:14px;color:var(--text-light);margin-bottom:24px;line-height:1.5;min-height:42px}
+  .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  .price{font-family:'Bebas Neue',sans-serif;font-size:72px;letter-spacing:1px;line-height:.9}
+  .price-cents{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--text-dim)}
+  .price-per{font-size:13px;color:var(--text-dim);margin-bottom:24px}
+  .plan .btn{width:100%;justify-content:center;margin-bottom:28px}
+  .features-list{list-style:none;display:grid;gap:10px;border-top:1px solid var(--border);padding-top:24px}
+  .features-list li{font-size:14px;color:var(--text-light);padding-left:26px;position:relative;line-height:1.45}
+  .features-list li::before{content:'';position:absolute;left:0;top:5px;width:16px;height:16px;background:rgba(229,9,20,0.15);border-radius:50%}
+  .features-list li::after{content:'✓';position:absolute;left:3px;top:3px;color:var(--red);font-size:11px;font-weight:700}
+  .features-list li.muted{color:var(--text-dim)}
+  .features-list li.muted::before{background:rgba(255,255,255,0.05)}
+  .features-list li.muted::after{content:'—';color:var(--text-dim);left:4px;top:4px}
+
+  /* compare */
+  .compare-wrap{max-width:1100px;margin:60px auto;padding:0 24px}
+  .compare-title{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;text-align:center;margin-bottom:30px}
+  .compare-table{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;width:100%;border-collapse:collapse}
+  .compare-table th,.compare-table td{padding:16px 20px;text-align:center;font-size:14px;border-bottom:1px solid var(--border)}
+  .compare-table th{background:rgba(255,255,255,0.02);font-weight:600;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+  .compare-table th.featured-col{color:var(--red)}
+  .compare-table td:first-child{text-align:left;font-size:14px;color:var(--text-light)}
+  .compare-table .yes{color:#10b981;font-weight:700}
+  .compare-table .no{color:var(--text-dim)}
+  .compare-table tbody tr:last-child td{border-bottom:none}
+
+  /* faq */
+  .faq-wrap{max-width:780px;margin:60px auto;padding:0 24px}
+  .faq-item{border-bottom:1px solid var(--border);padding:20px 0;cursor:pointer}
+  .faq-q{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600}
+  .faq-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:20px;transition:transform .2s}
+  .faq-item.open .faq-icon{transform:rotate(45deg)}
+  .faq-a{font-size:14px;color:var(--text-light);line-height:1.6;max-height:0;overflow:hidden;transition:max-height .25s,padding .25s}
+  .faq-item.open .faq-a{padding-top:14px;max-height:200px}
+
+  /* CTA */
+  .cta{margin:80px 24px 60px;max-width:1200px;margin-left:auto;margin-right:auto;background:linear-gradient(135deg,#5a0a23 0%,#1a0712 100%);border-radius:16px;padding:60px 48px;text-align:center;border:1px solid rgba(229,9,20,0.3)}
+  .cta h2{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:1px;line-height:1;margin-bottom:12px}
+  .cta p{font-size:16px;color:var(--text-light);margin-bottom:24px}
+
+  footer{padding:40px 48px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px;text-align:center}
+
+  @media (max-width: 900px){.plans{grid-template-columns:1fr}.compare-table{font-size:12px}.compare-table th,.compare-table td{padding:10px 8px}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="landing.html#how">How It Works</a>
+    <a href="landing.html#features">Features</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="landing.html#testimonials">Stories</a>
+  </div>
+  <div class="nav-cta">
+    <a href="login.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Pricing</div>
+  <h1>Cheaper than dinner.<br>Lasts longer.</h1>
+  <p class="sub">Start free for 14 days, no credit card. Pick the plan that fits how big your love story has gotten.</p>
+  <div class="toggle-wrap" id="toggle">
+    <button class="toggle-btn active" data-bill="monthly">Monthly</button>
+    <button class="toggle-btn" data-bill="yearly">Yearly <span class="save">SAVE 25%</span></button>
+  </div>
+</header>
+
+<div class="plans">
+  <div class="plan">
+    <div class="plan-name">Crush</div>
+    <div class="plan-tagline">For new couples making their first scrapbook in binge form.</div>
+    <div class="price-row"><span class="price">$<span data-monthly="6" data-yearly="4">6</span></span><span class="price-cents">.00</span></div>
+    <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
+    <a href="onboarding.html" class="btn btn-ghost">Start free trial</a>
+    <ul class="features-list">
+      <li>Up to 25 videos</li>
+      <li>1080p streaming</li>
+      <li>2 profiles · 1 admin</li>
+      <li>Custom accent color</li>
+      <li class="muted">Custom domain</li>
+      <li class="muted">4K HDR streaming</li>
+    </ul>
+  </div>
+  <div class="plan featured">
+    <div class="featured-tag">★ Most Popular</div>
+    <div class="plan-name">Sweetheart</div>
+    <div class="plan-tagline">For real couples with real history. The crowd-pleaser.</div>
+    <div class="price-row"><span class="price">$<span data-monthly="12" data-yearly="9">12</span></span><span class="price-cents">.00</span></div>
+    <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
+    <a href="onboarding.html" class="btn btn-primary">Start free trial</a>
+    <ul class="features-list">
+      <li>Unlimited videos</li>
+      <li>4K HDR streaming</li>
+      <li>2 profiles · 1 admin</li>
+      <li>Custom accent + theme</li>
+      <li>Custom subdomain (loveflix.so/yours)</li>
+      <li class="muted">White-label custom domain</li>
+    </ul>
+  </div>
+  <div class="plan">
+    <div class="plan-name">Forever</div>
+    <div class="plan-tagline">For the long haul. Anniversaries, kids, the whole reel.</div>
+    <div class="price-row"><span class="price">$<span data-monthly="24" data-yearly="18">24</span></span><span class="price-cents">.00</span></div>
+    <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
+    <a href="onboarding.html" class="btn btn-ghost">Start free trial</a>
+    <ul class="features-list">
+      <li>Unlimited everything</li>
+      <li>4K HDR streaming</li>
+      <li>Up to 6 profiles</li>
+      <li>White-label custom domain</li>
+      <li>Priority editing &amp; support</li>
+      <li>Yearly anniversary cuts (we edit them)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="compare-wrap">
+  <h2 class="compare-title">Compare every feature</h2>
+  <table class="compare-table">
+    <thead>
+      <tr><th></th><th>Crush</th><th class="featured-col">Sweetheart ★</th><th>Forever</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Video uploads</td><td>25</td><td>Unlimited</td><td>Unlimited</td></tr>
+      <tr><td>Streaming quality</td><td>1080p</td><td>4K HDR</td><td>4K HDR</td></tr>
+      <tr><td>Profiles</td><td>2</td><td>2</td><td>6</td></tr>
+      <tr><td>Custom accent color</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+      <tr><td>loveflix.so/yourname URL</td><td class="no">○</td><td class="yes">●</td><td class="yes">●</td></tr>
+      <tr><td>White-label custom domain</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td></tr>
+      <tr><td>Anniversary cuts edited by us</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td></tr>
+      <tr><td>Storage</td><td>10 GB</td><td>250 GB</td><td>2 TB</td></tr>
+      <tr><td>Support</td><td>Email</td><td>Email + chat</td><td>Priority + concierge</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="faq-wrap">
+  <h2 class="compare-title" style="font-size:36px;margin-bottom:20px">Common questions</h2>
+  <div class="faq-item"><div class="faq-q">Can I cancel any time? <span class="faq-icon">+</span></div><div class="faq-a">Yes — cancel from your dashboard. You'll keep access until the end of your billing period and can export everything before you go.</div></div>
+  <div class="faq-item"><div class="faq-q">Who can see my videos? <span class="faq-icon">+</span></div><div class="faq-a">Only the people you give the link AND password to. Your site is private by default; videos never appear in search or any public feed.</div></div>
+  <div class="faq-item"><div class="faq-q">What happens after my free trial? <span class="faq-icon">+</span></div><div class="faq-a">Your site goes into a read-only state for 30 days while you decide. Nothing is deleted — pick up exactly where you left off when you're ready.</div></div>
+  <div class="faq-item"><div class="faq-q">Can I switch plans later? <span class="faq-icon">+</span></div><div class="faq-a">Up or down, any time. Upgrades are prorated; downgrades take effect at the next billing cycle.</div></div>
+  <div class="faq-item"><div class="faq-q">Do you have a gift option? <span class="faq-icon">+</span></div><div class="faq-a">Yes! Pre-pay any plan as a gift and we'll send a beautifully designed reveal card on the day of your choosing.</div></div>
+</div>
+
+<div class="cta">
+  <h2>Still thinking about it?</h2>
+  <p>The free trial doesn't ask for a card. Just start.</p>
+  <a href="onboarding.html" class="btn btn-primary btn-lg">Start your LoveFlix →</a>
+</div>
+
+<footer>© 2026 LoveFlix · made with ♥</footer>
+
+<script>
+  // billing toggle
+  const toggle = document.getElementById('toggle');
+  toggle.addEventListener('click', e => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const bill = btn.dataset.bill;
+    document.querySelectorAll('[data-monthly]').forEach(span => {
+      span.textContent = bill === 'monthly' ? span.dataset.monthly : span.dataset.yearly;
+    });
+    document.querySelectorAll('[data-billed-monthly]').forEach(el => {
+      el.textContent = bill === 'monthly' ? 'billed monthly' : 'billed yearly · save 25%';
+    });
+  });
+
+  // faq
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', () => item.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>

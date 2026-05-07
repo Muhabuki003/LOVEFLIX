@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Manage Videos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;border-left:3px solid transparent;transition:background .15s,color .15s}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+  .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px}
+
+  main{padding:32px 40px 60px}
+  .crumbs{font-size:12px;color:var(--text-dim);margin-bottom:14px;letter-spacing:1px}
+  .crumbs a:hover{color:#fff}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;gap:20px;flex-wrap:wrap}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-top:6px}
+  .btn{padding:10px 20px;border-radius:4px;font-size:13px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+  .btn svg{width:16px;height:16px;fill:currentColor}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:#fff;color:#fff}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+  .search{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:8px 12px;width:280px}
+  .search:focus-within{border-color:#666}
+  .search svg{width:16px;height:16px;fill:var(--text-dim)}
+  .search input{background:none;border:none;outline:none;color:#fff;font:inherit;font-size:13px;flex:1}
+  .filter{background:var(--panel-2);border:1px solid var(--border);color:#fff;padding:8px 12px;border-radius:4px;font:inherit;font-size:13px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .table{width:100%;border-collapse:collapse}
+  .table thead th{font-size:11px;color:var(--text-dim);font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:14px 18px;text-align:left;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border)}
+  .table tbody td{padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+  .table tbody tr{transition:background .12s}
+  .table tbody tr:hover{background:rgba(255,255,255,0.025)}
+  .table tbody tr.dragging{opacity:.4}
+  .table tbody tr.drop-target{box-shadow:inset 0 2px 0 var(--red)}
+
+  .grip{cursor:grab;color:#555;width:18px;display:flex;align-items:center}
+  .grip:hover{color:#fff}
+  .grip svg{width:16px;height:16px;fill:currentColor}
+
+  .v-thumb{width:90px;height:50px;border-radius:3px;background:var(--thumb,#333);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:rgba(255,255,255,0.85)}
+  .v-name{font-weight:500;color:#fff}
+  .v-sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+  .cat-chip{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;background:rgba(255,255,255,0.06);color:var(--text-light);padding:4px 9px;border-radius:999px;display:inline-block}
+
+  .toggle{position:relative;width:36px;height:20px;background:#3a3a3a;border-radius:999px;cursor:pointer;transition:background .2s}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s}
+  .toggle.on{background:var(--red)}
+  .toggle.on::after{left:18px}
+
+  .actions-cell{display:flex;gap:6px;justify-content:flex-end}
+  .icon-btn{background:none;border:1px solid transparent;border-radius:4px;width:32px;height:32px;color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .15s,border-color .15s}
+  .icon-btn:hover{color:#fff;border-color:var(--border)}
+  .icon-btn.danger:hover{color:#f87171;border-color:rgba(248,113,113,0.4)}
+  .icon-btn svg{width:16px;height:16px;fill:currentColor}
+
+  .footer-row{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border)}
+
+  .t-rose{--thumb:linear-gradient(135deg,#ff7aa2,#5a0a23)}
+  .t-blue{--thumb:linear-gradient(135deg,#3a7bff,#1e3a8a)}
+  .t-blue2{--thumb:linear-gradient(135deg,#0ea5e9,#082f49)}
+  .t-amber{--thumb:linear-gradient(135deg,#f59e0b,#6b3a02)}
+  .t-violet{--thumb:linear-gradient(135deg,#a855f7,#2e1065)}
+  .t-emerald{--thumb:linear-gradient(135deg,#10b981,#064e3b)}
+  .t-coral{--thumb:linear-gradient(135deg,#ff8c69,#3d0f08)}
+  .t-mauve{--thumb:linear-gradient(135deg,#c084fc,#2e0a4d)}
+  .t-twilight{--thumb:linear-gradient(135deg,#fbbf24,#1e1b4b)}
+  .t-ocean{--thumb:linear-gradient(135deg,#22d3ee,#0c0a1f)}
+
+  @media (max-width: 1100px){.table thead th:nth-child(4),.table tbody td:nth-child(4){display:none}}
+  @media (max-width: 900px){.search{width:200px}.table thead th:nth-child(5),.table tbody td:nth-child(5){display:none}}
+  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.page-title{font-size:36px}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <div class="side-foot"><div class="av">B</div><div><div style="color:#fff;font-weight:500;font-size:13px">Buki</div><div>Admin · loveflix.so</div></div></div>
+  </aside>
+
+  <main>
+    <div class="crumbs"><a href="admin.html">Dashboard</a> › Manage Videos</div>
+    <div class="head">
+      <div>
+        <h1 class="page-title">Manage Videos</h1>
+        <div class="page-sub">86 videos · drag the grip to reorder · click the toggle to publish</div>
+      </div>
+      <button class="btn btn-primary" onclick="location.href='admin_upload.html'">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        New Upload
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input id="search" placeholder="Search videos by title...">
+      </div>
+      <select class="filter" id="filterCat">
+        <option value="all">All Categories</option>
+        <option value="Trips">Trips</option>
+        <option value="Anniversary">Anniversary</option>
+        <option value="Birthdays">Birthdays</option>
+        <option value="Moments">Moments</option>
+        <option value="Letters">Letters</option>
+        <option value="Cooking">Cooking</option>
+      </select>
+      <select class="filter" id="filterStatus">
+        <option value="all">All Statuses</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+      </select>
+      <select class="filter">
+        <option>Sort: Newest first</option>
+        <option>Sort: Oldest first</option>
+        <option>Sort: Title A→Z</option>
+        <option>Sort: Most watched</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:30px"></th>
+            <th>Video</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Duration</th>
+            <th>Published</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="footer-row">
+        <span>Showing <strong id="visCount">10</strong> of 86 videos</span>
+        <span><a href="#" style="color:var(--text-dim)">Bulk edit</a> · <a href="#" style="color:var(--text-dim)">Export CSV</a></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const VIDEOS = [
+    { id:1, t:'The Lisbon Trip · Day 3', cat:'Trips', date:'May 14, 2025', dur:'26:12', pub:true, tint:'t-rose' },
+    { id:2, t:'2nd Anniversary Cut', cat:'Anniversary', date:'May 14, 2025', dur:'22:00', pub:false, tint:'t-violet' },
+    { id:3, t:'Your 30th Birthday', cat:'Birthdays', date:'Mar 22, 2025', dur:'15:21', pub:true, tint:'t-amber' },
+    { id:4, t:'Forest Cabin Weekend', cat:'Trips', date:'Mar 8, 2025', dur:'16:10', pub:true, tint:'t-emerald' },
+    { id:5, t:'Pasta Night Disaster', cat:'Cooking', date:'Feb 24, 2025', dur:'08:09', pub:true, tint:'t-coral' },
+    { id:6, t:'Iceland Northern Lights', cat:'Trips', date:'Feb 12, 2025', dur:'12:34', pub:true, tint:'t-ocean' },
+    { id:7, t:'The Pancake Tradition', cat:'Cooking', date:'Jan 18, 2025', dur:'04:38', pub:true, tint:'t-twilight' },
+    { id:8, t:'Sunset Bike Ride', cat:'Moments', date:'Nov 12, 2024', dur:'03:44', pub:true, tint:'t-twilight' },
+    { id:9, t:'Stars in Joshua Tree', cat:'Trips', date:'Oct 3, 2024', dur:'07:14', pub:true, tint:'t-blue' },
+    { id:10, t:'Ocean Vows', cat:'Anniversary', date:'Aug 28, 2024', dur:'05:55', pub:true, tint:'t-blue2' },
+    { id:11, t:'The Birthday Surprise', cat:'Birthdays', date:'Aug 12, 2024', dur:'12:04', pub:true, tint:'t-amber' },
+    { id:12, t:'Dance in the Rain', cat:'Moments', date:'Jul 11, 2024', dur:'03:08', pub:true, tint:'t-violet' },
+    { id:13, t:'One Year Letter', cat:'Letters', date:'May 14, 2024', dur:'02:44', pub:true, tint:'t-rose' },
+    { id:14, t:'Surprise Proposal', cat:'Anniversary', date:'Feb 14, 2024', dur:'04:02', pub:true, tint:'t-amber' },
+  ];
+
+  const rows = document.getElementById('rows');
+  const search = document.getElementById('search');
+  const fCat = document.getElementById('filterCat');
+  const fStat = document.getElementById('filterStatus');
+  const visCount = document.getElementById('visCount');
+
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const cat = fCat.value;
+    const stat = fStat.value;
+    const list = VIDEOS.filter(v => {
+      if (q && !v.t.toLowerCase().includes(q)) return false;
+      if (cat !== 'all' && v.cat !== cat) return false;
+      if (stat === 'published' && !v.pub) return false;
+      if (stat === 'draft' && v.pub) return false;
+      return true;
+    });
+    visCount.textContent = list.length;
+    rows.innerHTML = list.map(v => `
+      <tr data-id="${v.id}" draggable="true">
+        <td><div class="grip"><svg viewBox="0 0 24 24"><path d="M9 4h2v2H9zM9 9h2v2H9zM9 14h2v2H9zM9 19h2v2H9zM13 4h2v2h-2zM13 9h2v2h-2zM13 14h2v2h-2zM13 19h2v2h-2z"/></svg></div></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="v-thumb ${v.tint}">${v.t.split(' ')[0].slice(0,5).toUpperCase()}</div>
+            <div><div class="v-name">${v.t}</div><div class="v-sub">ID #${String(v.id).padStart(4,'0')} · 1080p${v.id%4===0?' · ♥ Favorite':''}</div></div>
+          </div>
+        </td>
+        <td><span class="cat-chip">${v.cat}</span></td>
+        <td style="color:var(--text-light)">${v.date}</td>
+        <td style="color:var(--text-light);font-variant-numeric:tabular-nums">${v.dur}</td>
+        <td><div class="toggle ${v.pub?'on':''}" data-id="${v.id}"></div></td>
+        <td>
+          <div class="actions-cell">
+            <button class="icon-btn" title="Preview" onclick="location.href='player.html'"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="icon-btn" title="Edit"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+            <button class="icon-btn danger" title="Delete" data-del="${v.id}"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+  render();
+
+  search.addEventListener('input', render);
+  fCat.addEventListener('change', render);
+  fStat.addEventListener('change', render);
+
+  rows.addEventListener('click', e => {
+    const tog = e.target.closest('.toggle');
+    if (tog) {
+      const id = parseInt(tog.dataset.id, 10);
+      const v = VIDEOS.find(x => x.id === id);
+      if (v) { v.pub = !v.pub; tog.classList.toggle('on', v.pub); }
+    }
+    const del = e.target.closest('[data-del]');
+    if (del) {
+      const id = parseInt(del.dataset.del, 10);
+      if (confirm('Delete this video? This cannot be undone.')) {
+        const i = VIDEOS.findIndex(x => x.id === id);
+        if (i >= 0) VIDEOS.splice(i, 1);
+        render();
+      }
+    }
+  });
+
+  // drag reorder
+  let dragging = null;
+  rows.addEventListener('dragstart', e => {
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    dragging = tr;
+    tr.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  rows.addEventListener('dragend', e => {
+    if (dragging) dragging.classList.remove('dragging');
+    rows.querySelectorAll('.drop-target').forEach(r => r.classList.remove('drop-target'));
+    // commit order to VIDEOS array
+    const newOrder = [...rows.querySelectorAll('tr')].map(r => parseInt(r.dataset.id, 10));
+    VIDEOS.sort((a,b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+    dragging = null;
+  });
+  rows.addEventListener('dragover', e => {
+    e.preventDefault();
+    const tr = e.target.closest('tr');
+    if (!tr || tr === dragging) return;
+    rows.querySelectorAll('.drop-target').forEach(r => r.classList.remove('drop-target'));
+    tr.classList.add('drop-target');
+    const r = tr.getBoundingClientRect();
+    const before = (e.clientY - r.top) < r.height / 2;
+    rows.insertBefore(dragging, before ? tr : tr.nextSibling);
+  });
+</script>
+</body>
+</html>

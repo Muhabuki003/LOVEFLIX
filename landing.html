@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — A Streaming Service of Two</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.05)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+  .btn-lg{padding:14px 28px;font-size:15px}
+
+  /* hero */
+  .hero{position:relative;padding:160px 24px 100px;text-align:center;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.25),transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(168,85,247,0.18),transparent 50%);pointer-events:none}
+  .hero-content{position:relative;z-index:2;max-width:900px;margin:0 auto}
+  .hero-eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);padding:8px 14px;border-radius:999px;margin-bottom:24px}
+  .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,9vw,128px);letter-spacing:1px;line-height:.95;margin-bottom:24px}
+  .hero h1 .accent{background:linear-gradient(135deg,#ff5f8f,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.sub{font-size:clamp(17px,1.6vw,21px);color:var(--text-light);max-width:640px;margin:0 auto 36px;line-height:1.5;text-wrap:pretty}
+  .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:60px}
+  .hero-mock{position:relative;max-width:980px;margin:0 auto;aspect-ratio:16/9;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 30px 80px rgba(229,9,20,0.25),0 60px 120px rgba(0,0,0,0.6)}
+  .hero-mock-bg{position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,#ff5f8f,transparent 50%),radial-gradient(circle at 75% 65%,#7c3aed,transparent 50%),linear-gradient(135deg,#1a0712 0%,#0a0612 100%)}
+  .hero-mock-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.3) 50%,transparent 100%)}
+  .hero-mock-content{position:absolute;left:32px;bottom:32px;right:32px;z-index:2}
+  .hero-mock-eyebrow{font-size:10px;letter-spacing:3px;color:var(--red);font-weight:700;margin-bottom:8px;text-transform:uppercase}
+  .hero-mock-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,56px);letter-spacing:1px;line-height:.95;margin-bottom:8px}
+  .hero-mock-meta{font-size:12px;color:var(--text-light);margin-bottom:14px}
+  .hero-mock-row{display:flex;gap:6px;position:absolute;left:32px;right:32px;bottom:-130px}
+  .hero-mock-card{flex:0 0 18%;aspect-ratio:16/9;border-radius:4px;background:var(--c)}
+  .hero-trust{margin-top:40px;font-size:12px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+
+  /* section base */
+  section{padding:100px 24px;max-width:1200px;margin:0 auto}
+  .section-eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--red);font-weight:700;text-align:center;margin-bottom:14px}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,72px);letter-spacing:1px;text-align:center;line-height:1;margin-bottom:18px}
+  .section-sub{font-size:17px;color:var(--text-light);text-align:center;max-width:640px;margin:0 auto 60px;line-height:1.5}
+
+  /* how it works */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .step{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:32px 28px;position:relative;transition:transform .2s,border-color .2s}
+  .step:hover{transform:translateY(-4px);border-color:rgba(229,9,20,0.4)}
+  .step-num{font-family:'Bebas Neue',sans-serif;font-size:80px;color:rgba(229,9,20,0.2);line-height:.85;letter-spacing:1px}
+  .step h3{font-size:20px;font-weight:700;margin-bottom:10px;margin-top:8px}
+  .step p{font-size:14px;color:var(--text-light);line-height:1.55}
+  .step-icon{width:42px;height:42px;border-radius:8px;background:rgba(229,9,20,0.12);display:flex;align-items:center;justify-content:center;margin-top:16px}
+  .step-icon svg{width:20px;height:20px;fill:var(--red)}
+
+  /* features */
+  .features{display:grid;grid-template-columns:repeat(2,1fr);gap:60px;align-items:center}
+  .features.flip{direction:rtl}.features.flip>*{direction:ltr}
+  .feat-art{aspect-ratio:4/3;border-radius:12px;background:var(--c,linear-gradient(135deg,#ff5f8f,#5a0a23));position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;color:rgba(255,255,255,0.85);text-shadow:0 4px 24px rgba(0,0,0,0.5)}
+  .feat-art::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.4))}
+  .feat-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px}
+  .feat h2{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:1px;line-height:1;margin-bottom:18px}
+  .feat p{font-size:16px;color:var(--text-light);line-height:1.6;margin-bottom:20px}
+  .feat ul{list-style:none;display:grid;gap:8px}
+  .feat ul li{font-size:14px;color:var(--text-light);padding-left:24px;position:relative}
+  .feat ul li::before{content:'♥';color:var(--red);position:absolute;left:0;top:0;font-size:14px}
+
+  .feat-block{margin-bottom:80px}
+  .feat-block:last-child{margin-bottom:0}
+
+  /* testimonials */
+  .quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .quote{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px 26px}
+  .quote-stars{display:flex;gap:2px;margin-bottom:14px}
+  .quote-stars svg{width:14px;height:14px;fill:var(--red)}
+  .quote p{font-size:15px;color:var(--text-light);line-height:1.6;margin-bottom:18px;text-wrap:pretty}
+  .quote-by{display:flex;align-items:center;gap:12px}
+  .quote-av{width:40px;height:40px;border-radius:50%;background:var(--c);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px}
+  .quote-name{font-size:13px;font-weight:600}
+  .quote-role{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px}
+
+  /* CTA banner */
+  .cta-banner{margin:80px 24px;max-width:1200px;margin-left:auto;margin-right:auto;background:linear-gradient(135deg,#5a0a23 0%,#1a0712 100%);border-radius:16px;padding:72px 48px;text-align:center;border:1px solid rgba(229,9,20,0.3);position:relative;overflow:hidden}
+  .cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(229,9,20,0.2),transparent 60%)}
+  .cta-banner > *{position:relative;z-index:1}
+  .cta-banner h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,72px);letter-spacing:1px;line-height:1;margin-bottom:14px}
+  .cta-banner p{font-size:17px;color:var(--text-light);margin-bottom:30px}
+
+  /* footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  @media (max-width: 900px){.steps,.features,.quotes{grid-template-columns:1fr}.features.flip{direction:ltr}.ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}.hero{padding:130px 20px 70px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="#testimonials">Stories</a>
+  </div>
+  <div class="nav-cta">
+    <a href="login.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">♥ A streaming service of two</div>
+    <h1>Your love story.<br><span class="accent">In binge form.</span></h1>
+    <p class="sub">Upload your videos, photos, voice notes — every moment that mattered. LoveFlix turns them into a private streaming site that looks like the real thing. For her. For you. Forever.</p>
+    <div class="hero-actions">
+      <a href="onboarding.html" class="btn btn-primary btn-lg">Start Your Site — Free for 14 days</a>
+      <a href="home.html" class="btn btn-ghost btn-lg">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        See a demo
+      </a>
+    </div>
+
+    <div class="hero-mock">
+      <div class="hero-mock-bg"></div>
+      <div class="hero-mock-content">
+        <div class="hero-mock-eyebrow">LOVEFLIX ORIGINAL</div>
+        <div class="hero-mock-title">Three Years<br>Of Us</div>
+        <div class="hero-mock-meta">2026 · 24 chapters · 4K HDR</div>
+        <div style="display:flex;gap:8px"><span class="btn btn-primary" style="background:#fff;color:#000;font-size:12px;padding:8px 16px">▶ Play</span><span class="btn btn-ghost" style="font-size:12px;padding:8px 16px">More Info</span></div>
+      </div>
+    </div>
+    <div class="hero-trust">★★★★★ &nbsp; 2,400+ couples · trusted with their memories</div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="section-eyebrow">How It Works</div>
+  <h2 class="section-title">Three steps to your<br>private Loveflix.</h2>
+  <p class="section-sub">No code, no Cloud uploads to figure out. Just drop in memories and we make it streamable.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Pick a name &amp; theme</h3>
+      <p>Tell us who you are and who you're making it for. Choose your accent color, upload profile photos, set your anniversary date.</p>
+      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Upload your moments</h3>
+      <p>Drag in videos, photos, voice notes. Tag them by trip, anniversary, birthday. We build the rows automatically.</p>
+      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Share the link. Watch the face.</h3>
+      <p>Send your loveflix.so/yourname URL. They sign in. They see "Who's Watching?" with their name. They cry. Probably.</p>
+      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section-eyebrow">Why LoveFlix</div>
+  <h2 class="section-title">Everything you'd want<br>from a real streaming app.</h2>
+  <p class="section-sub">Because the gift IS the experience — not just the videos.</p>
+
+  <div class="feat-block features feat">
+    <div class="feat-art" style="--c:linear-gradient(135deg,#ff5f8f,#5a0a23)">Who's Watching?</div>
+    <div>
+      <div class="feat-eyebrow">Profile Selector</div>
+      <h2>Their name. On the screen. Like Netflix.</h2>
+      <p>The "Who's Watching?" page that opens with their name in big white letters. Plus a hidden admin profile for you, locked with a PIN.</p>
+      <ul>
+        <li>Two profiles · custom names &amp; gradient avatars</li>
+        <li>PIN-protected creator account</li>
+        <li>Smooth Netflix-style hover &amp; transitions</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="feat-block features feat flip">
+    <div class="feat-art" style="--c:linear-gradient(135deg,#a855f7,#2e1065)">Continue Watching</div>
+    <div>
+      <div class="feat-eyebrow">Smart Rows</div>
+      <h2>Continue Watching, Our Story, Favorites.</h2>
+      <p>Auto-organized rows by category and tag. Hover cards expand. Progress bars track where they left off. They'll spend hours here.</p>
+      <ul>
+        <li>Hero banner + 4 themed content rows</li>
+        <li>Hover-to-preview · click-to-play</li>
+        <li>Progress saved across devices</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="feat-block features feat">
+    <div class="feat-art" style="--c:linear-gradient(135deg,#0ea5e9,#082f49)">Custom Player</div>
+    <div>
+      <div class="feat-eyebrow">Real Player</div>
+      <h2>Fullscreen, scrubbable, next-up cards.</h2>
+      <p>Not a YouTube embed. A proper player with scrubber, keyboard shortcuts, and a next-up card 12 seconds from the end — just like the real thing.</p>
+      <ul>
+        <li>4K · HDR · keyboard shortcuts</li>
+        <li>Skip Intro &amp; Next Episode chaining</li>
+        <li>Picks up where you left off</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials">
+  <div class="section-eyebrow">Stories</div>
+  <h2 class="section-title">Couples are weeping.<br>In a good way.</h2>
+  <p class="section-sub">A small selection from the inbox.</p>
+
+  <div class="quotes">
+    <div class="quote">
+      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <p>I gave her loveflix.so/sarah for our 5th anniversary. She saw "Who's Watching, Sarah?" and just lost it. Best 12 dollars I ever spent.</p>
+      <div class="quote-by">
+        <div class="quote-av" style="--c:linear-gradient(135deg,#3a7bff,#1e3a8a)">M</div>
+        <div><div class="quote-name">Marcus &amp; Sarah</div><div class="quote-role">Together 5 years</div></div>
+      </div>
+    </div>
+    <div class="quote">
+      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <p>The hover effect on the cards. The little Bebas Neue logo. The zoom-out title screen. It felt EXACTLY like the real thing. Twelve out of ten.</p>
+      <div class="quote-by">
+        <div class="quote-av" style="--c:linear-gradient(135deg,#ff5f8f,#8f1d4a)">L</div>
+        <div><div class="quote-name">Lena &amp; Theo</div><div class="quote-role">Engaged · NYC</div></div>
+      </div>
+    </div>
+    <div class="quote">
+      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <p>We've kept adding to it for 11 months. It's our love diary now. The "Continue Watching" row alone makes me grin every time I open it.</p>
+      <div class="quote-by">
+        <div class="quote-av" style="--c:linear-gradient(135deg,#10b981,#064e3b)">P</div>
+        <div><div class="quote-name">Priya &amp; James</div><div class="quote-role">Married · 2 years</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-banner">
+  <h2>Make her gasp on<br>your next anniversary.</h2>
+  <p>14-day free trial. No credit card. Cancel anytime.</p>
+  <a href="onboarding.html" class="btn btn-primary btn-lg">Start Your LoveFlix →</a>
+</div>
+
+<footer>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="home.html">See a demo</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="login.html">Sign in</a>
+      <a href="onboarding.html">Sign up</a>
+      <a href="creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>© 2026 LoveFlix · made with ♥</span>
+    <span>loveflix.so</span>
+  </div>
+</footer>
+</body>
+</html>

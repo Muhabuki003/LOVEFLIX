@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #000; min-height: 100vh; overflow: hidden; }
+
+  .bg-collage {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 3px;
+    opacity: 0.35;
+    filter: blur(1px);
+    z-index: 0;
+    transform: scale(1.05);
+  }
+  .bg-tile { position: relative; overflow: hidden; }
+  .bg-tile::after { content: ''; position: absolute; inset: 0; background: var(--c); opacity: 0.6; }
+  .t1  { --c: linear-gradient(135deg,#e50914,#831010); }
+  .t2  { --c: linear-gradient(135deg,#1a1a4e,#0d0d2b); }
+  .t3  { --c: linear-gradient(135deg,#2d1b0e,#5c3317); }
+  .t4  { --c: linear-gradient(135deg,#0e1a2d,#112240); }
+  .t5  { --c: linear-gradient(135deg,#1a0a0a,#3d1515); }
+  .t6  { --c: linear-gradient(135deg,#0d1b0d,#1a3a1a); }
+  .t7  { --c: linear-gradient(135deg,#2b0d2b,#4a1a4a); }
+  .t8  { --c: linear-gradient(135deg,#1a1000,#3d2d00); }
+  .t9  { --c: linear-gradient(135deg,#0a0a1a,#1a1a3d); }
+  .t10 { --c: linear-gradient(135deg,#1a0505,#3d0f0f); }
+  .t11 { --c: linear-gradient(135deg,#05100a,#0f2d1a); }
+  .t12 { --c: linear-gradient(135deg,#15051a,#2b0a3d); }
+  .t13 { --c: linear-gradient(135deg,#e50914,#831010); }
+  .t14 { --c: linear-gradient(135deg,#0d0d3d,#1a1a5c); }
+  .t15 { --c: linear-gradient(135deg,#1a0a00,#3d2000); }
+
+  .bg-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.45) 70%, rgba(0,0,0,0.85) 100%);
+    z-index: 1;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 24px 48px; z-index: 10;
+    display: flex; align-items: center;
+  }
+
+  .nf-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px; color: #e50914;
+    letter-spacing: 3px; text-decoration: none; line-height: 1;
+  }
+
+  .nf-logo .heart { color: #fff; font-size: 28px; vertical-align: middle; margin: 0 1px; }
+
+  .page {
+    position: relative; z-index: 5;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 100px 24px 80px;
+  }
+
+  .login-card {
+    background: rgba(0,0,0,0.82);
+    border-radius: 6px;
+    padding: 60px 68px 40px;
+    width: 100%; max-width: 450px;
+    backdrop-filter: blur(4px);
+    animation: fadeUp 0.45s ease forwards;
+  }
+
+  .login-card h1 { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 28px; letter-spacing: -0.3px; }
+
+  .form-group { position: relative; margin-bottom: 16px; }
+
+  .form-group input {
+    width: 100%; height: 56px;
+    background: #333; border: none; border-radius: 4px;
+    padding: 20px 16px 8px;
+    font-size: 16px; color: #fff;
+    font-family: 'Inter', sans-serif;
+    outline: none; transition: background 0.15s;
+    caret-color: #fff;
+  }
+  .form-group input:focus { background: #454545; outline: 2px solid rgba(255,255,255,0.15); outline-offset: -2px; }
+  .form-group label {
+    position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px; color: #aaa;
+    pointer-events: none; transition: all 0.15s ease;
+    transform-origin: left center;
+  }
+  .form-group input:focus + label,
+  .form-group input:not(:placeholder-shown) + label {
+    top: 14px; transform: translateY(0) scale(0.75); color: #aaa;
+  }
+  .form-group input::placeholder { color: transparent; }
+
+  .show-pw {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: #aaa; font-size: 13px; cursor: pointer;
+    user-select: none; font-weight: 500; letter-spacing: 0.3px;
+  }
+  .show-pw:hover { color: #fff; }
+
+  .btn-signin {
+    width: 100%; height: 50px;
+    background: #e50914; color: #fff; border: none; border-radius: 4px;
+    font-size: 16px; font-weight: 600; font-family: 'Inter', sans-serif;
+    cursor: pointer; margin-top: 8px; margin-bottom: 12px;
+    letter-spacing: 0.3px; transition: background 0.15s, transform 0.1s;
+  }
+  .btn-signin:hover { background: #f40612; }
+  .btn-signin:active { transform: scale(0.99); }
+  .btn-signin.loading { background: #b0070f; cursor: not-allowed; position: relative; overflow: hidden; }
+  .btn-signin.loading::after {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    animation: shimmer 1s infinite;
+  }
+
+  .or-row { display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; }
+  .or-line { flex: 1; height: 1px; background: #555; }
+  .or-text { color: #888; font-size: 13px; }
+
+  .btn-code {
+    width: 100%; height: 50px;
+    background: transparent; color: #fff;
+    border: 1px solid #555; border-radius: 4px;
+    font-size: 15px; font-weight: 500; font-family: 'Inter', sans-serif;
+    cursor: pointer; letter-spacing: 0.2px;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 20px;
+  }
+  .btn-code:hover { border-color: #999; background: rgba(255,255,255,0.05); }
+
+  .remember-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .remember-row label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #b3b3b3; cursor: pointer; }
+  .remember-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #e50914; cursor: pointer; }
+
+  .need-help { font-size: 13px; color: #b3b3b3; text-decoration: none; transition: color 0.15s; }
+  .need-help:hover { color: #fff; text-decoration: underline; }
+
+  .signup-row { font-size: 15px; color: #737373; margin-bottom: 16px; }
+  .signup-row a { color: #fff; text-decoration: none; font-weight: 500; }
+  .signup-row a:hover { text-decoration: underline; }
+
+  .recaptcha-note { font-size: 12px; color: #737373; line-height: 1.5; }
+  .recaptcha-note a { color: #0071eb; text-decoration: none; }
+  .recaptcha-note a:hover { text-decoration: underline; }
+
+  .error-msg {
+    background: #e87c03; color: #fff;
+    padding: 10px 14px; border-radius: 4px;
+    font-size: 14px; margin-bottom: 16px;
+    display: none; line-height: 1.4;
+  }
+  .error-msg.show { display: block; }
+
+  footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.75);
+    padding: 20px 48px; z-index: 10;
+  }
+  footer p { font-size: 13px; color: #737373; margin-bottom: 12px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .footer-links a { font-size: 12px; color: #737373; text-decoration: none; }
+  .footer-links a:hover { text-decoration: underline; color: #fff; }
+
+  @keyframes shimmer { to { left: 100%; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="bg-collage">
+  <div class="bg-tile t1"></div><div class="bg-tile t2"></div><div class="bg-tile t3"></div>
+  <div class="bg-tile t4"></div><div class="bg-tile t5"></div><div class="bg-tile t6"></div>
+  <div class="bg-tile t7"></div><div class="bg-tile t8"></div><div class="bg-tile t9"></div>
+  <div class="bg-tile t10"></div><div class="bg-tile t11"></div><div class="bg-tile t12"></div>
+  <div class="bg-tile t13"></div><div class="bg-tile t14"></div><div class="bg-tile t15"></div>
+</div>
+<div class="bg-overlay"></div>
+
+<nav>
+  <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
+</nav>
+
+<div class="page">
+  <div class="login-card">
+    <h1>Sign In</h1>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="form-group">
+      <input type="email" id="emailInput" placeholder=" " autocomplete="email">
+      <label for="emailInput">Email or phone number</label>
+    </div>
+
+    <div class="form-group">
+      <input type="password" id="pwInput" placeholder=" " autocomplete="current-password">
+      <label for="pwInput">Password</label>
+      <span class="show-pw" id="showPw" onclick="togglePw()">SHOW</span>
+    </div>
+
+    <button class="btn-signin" id="signinBtn" onclick="handleSignin()">Sign In</button>
+
+    <div class="or-row">
+      <div class="or-line"></div>
+      <span class="or-text">OR</span>
+      <div class="or-line"></div>
+    </div>
+
+    <button class="btn-code">Use a sign-in code</button>
+
+    <div class="remember-row">
+      <label><input type="checkbox" checked> Remember me</label>
+      <a href="#" class="need-help">Need help?</a>
+    </div>
+
+    <p class="signup-row">New to LoveFlix? <a href="#">Sign up now.</a></p>
+
+    <p class="recaptcha-note">This page is protected and only accessible to members. <a href="#">Learn more.</a></p>
+  </div>
+</div>
+
+<footer>
+  <p>Questions? Visit loveflix.app/help</p>
+  <div class="footer-links">
+    <a href="#">FAQ</a>
+    <a href="#">Help Centre</a>
+    <a href="#">Terms of Use</a>
+    <a href="#">Privacy</a>
+    <a href="#">Cookie Preferences</a>
+    <a href="#">About LoveFlix</a>
+  </div>
+</footer>
+
+<script>
+  function togglePw() {
+    const input = document.getElementById('pwInput');
+    const btn = document.getElementById('showPw');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? 'SHOW' : 'HIDE';
+  }
+
+  function handleSignin() {
+    const email = document.getElementById('emailInput').value.trim();
+    const pw = document.getElementById('pwInput').value;
+    const btn = document.getElementById('signinBtn');
+    const err = document.getElementById('errorMsg');
+    err.classList.remove('show');
+
+    if (!email || !pw) {
+      err.style.background = '#e87c03';
+      err.textContent = 'Please enter your email and password.';
+      err.classList.add('show');
+      return;
+    }
+
+    btn.classList.add('loading');
+    btn.textContent = 'Signing in...';
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.textContent = 'Sign In';
+      if (email === 'demo@loveflix.app' && pw === 'iloveyou') {
+        err.style.background = '#1d7a3a';
+        err.textContent = '💕 Welcome back. Loading your memories...';
+        err.classList.add('show');
+      } else {
+        err.style.background = '#e87c03';
+        err.textContent = "Sorry, we can't find an account with this email address or phone number. Please try again or reset your password.";
+        err.classList.add('show');
+      }
+    }, 1800);
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignin(); });
+</script>
+</body>
+</html>

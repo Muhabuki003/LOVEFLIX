@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  :root { --red:#e50914; }
+  html, body { height:100%; }
+  body {
+    font-family:'Inter',system-ui,sans-serif; background:#000; color:#fff;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+    cursor: default;
+  }
+  body.cursor-hidden { cursor: none; }
+  body.cursor-hidden .ui { pointer-events: none; opacity: 0; }
+
+  /* fake "video" canvas */
+  .stage {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,90,140,0.35), transparent 55%),
+      radial-gradient(circle at 75% 65%, rgba(80,30,140,0.5), transparent 55%),
+      linear-gradient(135deg, #2a0a18 0%, #0a0612 100%);
+    overflow: hidden;
+  }
+  .stage::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
+    pointer-events: none;
+  }
+  .stage-vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+  }
+
+  .stage-marker {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    letter-spacing: 4px;
+  }
+  .stage-marker .ep { font-size: 18px; letter-spacing: 6px; color: rgba(255,255,255,0.55); margin-bottom: 8px; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .stage-marker .ttl { font-size: clamp(48px, 7vw, 110px); line-height: 1; }
+  .stage-marker .date { font-size: 14px; letter-spacing: 5px; color: rgba(255,255,255,0.55); margin-top: 14px; font-family: 'Inter', sans-serif; font-weight: 400; }
+
+  /* paused indicator */
+  .paused-badge {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(20,20,20,0.7);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .paused-badge.show { opacity: 1; }
+  .paused-badge svg { width: 56px; height: 56px; fill: #fff; }
+
+  /* ---------- top bar ---------- */
+  .ui { transition: opacity 0.3s ease; }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    padding: 22px 36px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+    display: flex; align-items: center; gap: 18px;
+  }
+  .back-btn {
+    background: none; border: none; color: #fff;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s ease;
+    border-radius: 50%;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.12); }
+  .back-btn svg { width: 28px; height: 28px; fill: #fff; }
+  .topbar-title { font-size: 17px; font-weight: 500; color: rgba(255,255,255,0.9); }
+  .topbar-eyebrow {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  /* ---------- bottom controls ---------- */
+  .controls {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+    padding: 24px 36px 28px;
+    background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+  }
+
+  .scrub {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px; font-variant-numeric: tabular-nums;
+  }
+  .scrub-track {
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .scrub-fill {
+    height: 100%; width: 32%;
+    background: var(--red);
+    border-radius: 2px;
+    position: relative;
+    transition: width 0.1s linear;
+  }
+  .scrub-fill::after {
+    content: '';
+    position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px;
+    background: var(--red); border-radius: 50%;
+    opacity: 0; transition: opacity 0.15s ease;
+  }
+  .scrub-track:hover .scrub-fill::after { opacity: 1; }
+  .scrub-track:hover { height: 6px; }
+
+  .ctrl-row {
+    display: flex; align-items: center; gap: 22px;
+  }
+  .ctrl-left, .ctrl-right { display: flex; align-items: center; gap: 22px; }
+  .ctrl-right { margin-left: auto; }
+
+  .ctrl-btn {
+    background: none; border: none; color: #fff;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, color 0.15s ease;
+    position: relative;
+  }
+  .ctrl-btn:hover { transform: scale(1.15); }
+  .ctrl-btn svg { width: 28px; height: 28px; fill: #fff; }
+  .ctrl-btn.play svg { width: 32px; height: 32px; }
+
+  .ctrl-tooltip {
+    position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,0.95); color: #000;
+    font-size: 12px; font-weight: 500;
+    padding: 6px 10px; border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .ctrl-btn:hover .ctrl-tooltip { opacity: 1; }
+
+  .ep-meta {
+    display: flex; flex-direction: column;
+    margin-left: 8px;
+  }
+  .ep-meta .e { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
+  .ep-meta .t { font-size: 15px; font-weight: 500; }
+
+  /* volume */
+  .vol-wrap { display: flex; align-items: center; gap: 8px; }
+  .vol-track {
+    width: 0; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;
+    overflow: hidden; transition: width 0.25s ease;
+  }
+  .vol-fill { height: 100%; width: 70%; background: #fff; }
+  .vol-wrap:hover .vol-track { width: 80px; }
+
+  /* ---------- next-up card ---------- */
+  .next-up {
+    position: fixed; right: 36px; bottom: 130px;
+    width: 380px;
+    background: rgba(20,20,20,0.96);
+    backdrop-filter: blur(12px);
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 25;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+    transform: translateY(20px); opacity: 0;
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1), opacity 0.4s ease;
+    pointer-events: none;
+  }
+  .next-up.show {
+    transform: translateY(0); opacity: 1;
+    pointer-events: auto;
+  }
+  .next-up-thumb {
+    height: 200px;
+    background: linear-gradient(135deg, #ff7aa2 0%, #5a0a23 100%);
+    position: relative;
+    display: flex; align-items: flex-end; padding: 16px;
+  }
+  .next-up-thumb::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 60%);
+  }
+  .next-up-thumb-text {
+    position: relative; z-index: 1;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px; letter-spacing: 2px;
+  }
+  .next-up-body { padding: 18px 20px 20px; }
+  .next-up-eyebrow {
+    font-size: 11px; color: var(--red); letter-spacing: 3px; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .next-up-eyebrow .ring {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--red);
+    border-right-color: transparent;
+    animation: spin 1.4s linear infinite;
+  }
+  .next-up-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .next-up-desc { font-size: 13px; color: #b3b3b3; line-height: 1.5; margin-bottom: 14px; }
+  .next-up-actions { display: flex; gap: 10px; }
+  .next-btn {
+    padding: 9px 18px; border-radius: 3px;
+    font: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .next-btn.primary { background: #fff; color: #000; }
+  .next-btn.primary:hover { background: rgba(255,255,255,0.8); }
+  .next-btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+  .next-btn.ghost:hover { border-color: #fff; }
+  .next-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 14px 18px; }
+    .controls { padding: 18px 18px 22px; }
+    .next-up { right: 14px; left: 14px; width: auto; bottom: 120px; }
+    .ctrl-row { gap: 14px; }
+    .ctrl-left, .ctrl-right { gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-marker">
+    <div class="ep">Season 3 · Episode 04</div>
+    <div class="ttl">The Lisbon<br>Trip</div>
+    <div class="date">May 14, 2025 · Day 3</div>
+  </div>
+  <div class="stage-vignette"></div>
+
+  <div class="paused-badge" id="pausedBadge">
+    <svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
+  </div>
+</div>
+
+<div class="ui">
+  <header class="topbar">
+    <button class="back-btn" onclick="location.href='home.html'" aria-label="Back">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+    </button>
+    <div>
+      <div class="topbar-eyebrow">LoveFlix Original</div>
+      <div class="topbar-title">Three Years of Us · S3:E4 — The Lisbon Trip</div>
+    </div>
+  </header>
+
+  <footer class="controls">
+    <div class="scrub">
+      <span id="curTime">00:08:24</span>
+      <div class="scrub-track" id="scrubTrack">
+        <div class="scrub-fill" id="scrubFill"></div>
+      </div>
+      <span id="totalTime">00:26:12</span>
+    </div>
+
+    <div class="ctrl-row">
+      <div class="ctrl-left">
+        <button class="ctrl-btn play" id="playBtn">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
+          <span class="ctrl-tooltip" id="playTip">Pause (k)</span>
+        </button>
+        <button class="ctrl-btn">
+          <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z" transform="rotate(180 12 12)"/></svg>
+          <span class="ctrl-tooltip">Back 10s</span>
+        </button>
+        <button class="ctrl-btn">
+          <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z"/></svg>
+          <span class="ctrl-tooltip">Forward 10s</span>
+        </button>
+        <div class="vol-wrap">
+          <button class="ctrl-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
+          </button>
+          <div class="vol-track"><div class="vol-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="ep-meta">
+        <span class="e">Now Playing</span>
+        <span class="t">The Lisbon Trip · Day 3</span>
+      </div>
+
+      <div class="ctrl-right">
+        <button class="ctrl-btn">
+          <svg viewBox="0 0 24 24"><path d="M5 5h5V3H3v7h2zm5 14H5v-5H3v7h7zm11-9V3h-7v2h5v5zm-5 11h5v-5h2v7h-7z"/></svg>
+          <span class="ctrl-tooltip">Skip Intro</span>
+        </button>
+        <button class="ctrl-btn" id="nextBtn">
+          <svg viewBox="0 0 24 24"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z"/></svg>
+          <span class="ctrl-tooltip">Next Episode</span>
+        </button>
+        <button class="ctrl-btn">
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          <span class="ctrl-tooltip">Fullscreen</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- next-up card -->
+<aside class="next-up" id="nextUp">
+  <div class="next-up-thumb">
+    <div class="next-up-thumb-text">Day 4<br>The Tram Ride</div>
+  </div>
+  <div class="next-up-body">
+    <div class="next-up-eyebrow"><span class="ring"></span> Next Episode in <span id="nextCountdown">12</span>s</div>
+    <div class="next-up-title">S3:E5 — The Tram Ride</div>
+    <div class="next-up-desc">Yellow trams, hill-top sunsets, and that one pastéis de nata you wouldn't share.</div>
+    <div class="next-up-actions">
+      <button class="next-btn primary" id="playNext">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        Play Next
+      </button>
+      <button class="next-btn ghost" id="cancelNext">Cancel</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function() {
+  const playBtn = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon');
+  const playTip = document.getElementById('playTip');
+  const fill = document.getElementById('scrubFill');
+  const track = document.getElementById('scrubTrack');
+  const cur = document.getElementById('curTime');
+  const total = document.getElementById('totalTime');
+  const paused = document.getElementById('pausedBadge');
+  const nextUp = document.getElementById('nextUp');
+  const countdown = document.getElementById('nextCountdown');
+
+  const TOTAL = 26 * 60 + 12; // seconds
+  // remember position
+  let t = parseFloat(localStorage.getItem('lf_player_t') || '8.4') * 60; // minutes->seconds, default 8:24
+  let playing = true;
+  let nextShown = false;
+  let nextTimer = 12;
+
+  function fmt(s) {
+    s = Math.max(0, Math.floor(s));
+    const h = Math.floor(s / 3600).toString().padStart(2,'0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2,'0');
+    const sec = (s % 60).toString().padStart(2,'0');
+    return `${h}:${m}:${sec}`;
+  }
+  function render() {
+    const p = Math.min(1, t / TOTAL);
+    fill.style.width = (p * 100) + '%';
+    cur.textContent = fmt(t);
+    total.textContent = fmt(TOTAL);
+    localStorage.setItem('lf_player_t', (t / 60).toString());
+  }
+  function setPlaying(v) {
+    playing = v;
+    if (playing) {
+      playIcon.innerHTML = '<path d="M8 5h3v14H8zM13 5h3v14h-3z"/>';
+      playTip.textContent = 'Pause (k)';
+      paused.classList.remove('show');
+    } else {
+      playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+      playTip.textContent = 'Play (k)';
+      paused.classList.add('show');
+    }
+  }
+  setPlaying(true);
+  render();
+
+  // tick
+  setInterval(() => {
+    if (playing && !nextShown) {
+      t += 1;
+      if (t >= TOTAL - 12) {
+        nextShown = true;
+        nextUp.classList.add('show');
+        let c = 12;
+        countdown.textContent = c;
+        const ci = setInterval(() => {
+          if (!nextUp.classList.contains('show')) { clearInterval(ci); return; }
+          c--;
+          countdown.textContent = c;
+          if (c <= 0) { clearInterval(ci); location.reload(); }
+        }, 1000);
+      }
+      render();
+    }
+  }, 1000);
+
+  // play/pause
+  playBtn.addEventListener('click', () => setPlaying(!playing));
+  document.querySelector('.stage').addEventListener('click', () => setPlaying(!playing));
+
+  // scrub
+  track.addEventListener('click', e => {
+    const r = track.getBoundingClientRect();
+    const p = (e.clientX - r.left) / r.width;
+    t = Math.max(0, Math.min(TOTAL, p * TOTAL));
+    nextShown = false;
+    nextUp.classList.remove('show');
+    render();
+  });
+
+  // next-up
+  document.getElementById('playNext').addEventListener('click', () => location.reload());
+  document.getElementById('cancelNext').addEventListener('click', () => {
+    nextUp.classList.remove('show');
+    t = TOTAL - 30;
+    render();
+  });
+
+  // keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key.toLowerCase() === 'k') { setPlaying(!playing); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { t = Math.max(0, t - 10); render(); }
+    if (e.key === 'ArrowRight') { t = Math.min(TOTAL, t + 10); render(); }
+    if (e.key === 'Escape') location.href = 'home.html';
+  });
+
+  // hide cursor when idle
+  let idle;
+  function wake() {
+    document.body.classList.remove('cursor-hidden');
+    clearTimeout(idle);
+    idle = setTimeout(() => { if (playing) document.body.classList.add('cursor-hidden'); }, 2800);
+  }
+  document.addEventListener('mousemove', wake);
+  wake();
+})();
+</script>
+</body>
+</html>

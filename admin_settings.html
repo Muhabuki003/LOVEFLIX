@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Site Settings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;border-left:3px solid transparent;transition:background .15s,color .15s}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+  .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px}
+
+  main{padding:32px 40px 60px;max-width:1200px}
+  .crumbs{font-size:12px;color:var(--text-dim);margin-bottom:14px}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:8px}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-bottom:30px}
+
+  .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px}
+  .panel h2{font-size:14px;font-weight:600;margin-bottom:4px;letter-spacing:.3px}
+  .panel .desc{font-size:12px;color:var(--text-dim);margin-bottom:16px}
+
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+  .field input,.field textarea{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:11px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s}
+  .field input:focus,.field textarea:focus{outline:none;border-color:#666}
+  .field textarea{min-height:100px;resize:vertical}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  /* color picker */
+  .colors{display:flex;gap:10px;flex-wrap:wrap}
+  .color-swatch{width:48px;height:48px;border-radius:8px;cursor:pointer;border:2px solid transparent;position:relative;transition:transform .15s}
+  .color-swatch:hover{transform:scale(1.08)}
+  .color-swatch.selected{border-color:#fff}
+  .color-swatch.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+
+  /* avatar uploaders */
+  .avatar-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .avatar-card{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:18px;text-align:center}
+  .avatar-pic{width:120px;height:120px;border-radius:8px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:60px;letter-spacing:2px;color:#fff;cursor:pointer;position:relative;overflow:hidden}
+  .avatar-pic::after{content:'Click to change';position:absolute;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:1px;color:#fff;opacity:0;transition:opacity .15s}
+  .avatar-pic:hover::after{opacity:1}
+  .avatar-pic.her{background:radial-gradient(circle at 30% 25%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,#ff5f8f 0%,#d6336c 55%,#8f1d4a 100%)}
+  .avatar-pic.him{background:radial-gradient(circle at 30% 25%,#9fc7ff 0%,transparent 55%),linear-gradient(135deg,#3a7bff 0%,#1d4ed8 55%,#1e3a8a 100%)}
+  .avatar-card .name{font-size:13px;font-weight:600;margin-bottom:2px}
+  .avatar-card .role{font-size:11px;color:var(--text-dim)}
+
+  /* preview card */
+  .preview-card{background:#141414;border:1px solid var(--border);border-radius:8px;overflow:hidden;position:sticky;top:20px}
+  .preview-frame{aspect-ratio:16/9;background:linear-gradient(135deg,var(--accent,#e50914),#1a0712);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+  .preview-frame .lf{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent,#e50914);letter-spacing:3px;text-shadow:0 0 30px rgba(229,9,20,0.5)}
+  .preview-frame .lf .heart{color:#fff;font-size:28px;vertical-align:middle;margin:0 3px;display:inline-block;transform:translateY(-2px)}
+  .preview-frame .tagline{font-family:'Bebas Neue',sans-serif;font-size:18px;color:rgba(255,255,255,0.7);letter-spacing:2px;margin-top:8px}
+  .preview-body{padding:18px}
+  .preview-eyebrow{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .preview-note{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1.1;color:#fff;margin-bottom:10px}
+  .preview-meta{font-size:12px;color:var(--text-dim)}
+
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+  .btn{padding:11px 22px;border-radius:4px;font-size:13px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+  .btn svg{width:16px;height:16px;fill:currentColor}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}.btn-ghost:hover{border-color:#fff;color:#fff}
+
+  .saved-toast{position:fixed;bottom:30px;right:30px;background:#10b981;color:#000;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+  .saved-toast.show{opacity:1;transform:translateY(0)}
+
+  .danger{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.3)}
+  .danger h2{color:#fca5a5}
+  .btn-danger{background:transparent;border:1px solid rgba(248,113,113,0.5);color:#fca5a5}
+  .btn-danger:hover{background:rgba(248,113,113,0.12);border-color:#fca5a5;color:#fff}
+
+  @media (max-width: 1000px){.grid{grid-template-columns:1fr}}
+  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.page-title{font-size:36px}.field-grid,.avatar-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <div class="side-foot"><div class="av">B</div><div><div style="color:#fff;font-weight:500;font-size:13px">Buki</div><div>Admin · loveflix.so</div></div></div>
+  </aside>
+
+  <main>
+    <div class="crumbs"><a href="admin.html" style="color:var(--text-dim)">Dashboard</a> › Site Settings</div>
+    <h1 class="page-title">Site Settings</h1>
+    <p class="page-sub">Personalize your private streaming service.</p>
+
+    <div class="grid">
+      <div>
+
+        <div class="panel">
+          <h2>Couple Names</h2>
+          <p class="desc">These appear on profile selectors and across your site.</p>
+          <div class="field-grid">
+            <div class="field"><label>Partner 1 Name</label><input id="name1" type="text" value="My Love"></div>
+            <div class="field"><label>Partner 2 Name (you)</label><input id="name2" type="text" value="Buki"></div>
+          </div>
+          <div class="field"><label>Site Tagline</label><input type="text" value="A private streaming service of two."></div>
+          <div class="field"><label>Anniversary Date</label><input type="date" value="2023-05-14"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Profile Photos</h2>
+          <p class="desc">The two avatars on the "Who's Watching?" screen.</p>
+          <div class="avatar-row">
+            <div class="avatar-card">
+              <div class="avatar-pic her" id="av1">M</div>
+              <div class="name">My Love</div>
+              <div class="role">Viewer profile</div>
+            </div>
+            <div class="avatar-card">
+              <div class="avatar-pic him" id="av2">B</div>
+              <div class="name">Buki</div>
+              <div class="role">Admin profile · PIN protected</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Brand Accent Color</h2>
+          <p class="desc">The signature red used in your logo and CTA buttons.</p>
+          <div class="colors" id="colors">
+            <div class="color-swatch selected" style="background:#e50914" data-c="#e50914"></div>
+            <div class="color-swatch" style="background:#ec4899" data-c="#ec4899"></div>
+            <div class="color-swatch" style="background:#a855f7" data-c="#a855f7"></div>
+            <div class="color-swatch" style="background:#3b82f6" data-c="#3b82f6"></div>
+            <div class="color-swatch" style="background:#10b981" data-c="#10b981"></div>
+            <div class="color-swatch" style="background:#f59e0b" data-c="#f59e0b"></div>
+            <div class="color-swatch" style="background:#fb7185" data-c="#fb7185"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Featured Love Note</h2>
+          <p class="desc">Shown on the home page hero. Make it good.</p>
+          <div class="field"><label>Love Note</label><textarea id="loveNote">Every day with you is a new episode.</textarea></div>
+          <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" value="— Buki, Day 1,094"></div>
+        </div>
+
+        <div class="panel danger">
+          <h2>Danger Zone</h2>
+          <p class="desc">Irreversible. Be sure.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-danger">Reset Watch History</button>
+            <button class="btn btn-danger">Export All Videos</button>
+            <button class="btn btn-danger">Delete Site</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-ghost" onclick="location.href='admin.html'">Cancel</button>
+          <button class="btn btn-primary" id="saveBtn">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Save Changes
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="preview-card">
+          <div class="preview-frame" id="previewFrame">
+            <div class="lf" id="previewLogo">LOVE<span class="heart">♥</span>FLIX</div>
+            <div class="tagline">A PRIVATE STREAMING SERVICE OF TWO</div>
+          </div>
+          <div class="preview-body">
+            <div class="preview-eyebrow">Live Preview · Home Hero</div>
+            <div class="preview-note" id="previewNote">"Every day with you is a new episode."</div>
+            <div class="preview-meta" id="previewMeta">— Buki, Day 1,094</div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim)">Featuring <span id="previewName1" style="color:#fff">My Love</span> &amp; <span id="previewName2" style="color:#fff">Buki</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="saved-toast" id="toast">Saved.</div>
+
+<script>
+  const colors = document.getElementById('colors');
+  const previewLogo = document.getElementById('previewLogo');
+  const previewFrame = document.getElementById('previewFrame');
+  const previewNote = document.getElementById('previewNote');
+  const previewMeta = document.getElementById('previewMeta');
+  const previewName1 = document.getElementById('previewName1');
+  const previewName2 = document.getElementById('previewName2');
+
+  colors.addEventListener('click', e => {
+    const sw = e.target.closest('.color-swatch');
+    if (!sw) return;
+    colors.querySelectorAll('.color-swatch').forEach(c => c.classList.remove('selected'));
+    sw.classList.add('selected');
+    const c = sw.dataset.c;
+    previewLogo.style.color = c;
+    previewFrame.style.setProperty('--accent', c);
+  });
+
+  document.getElementById('loveNote').addEventListener('input', e => previewNote.textContent = '"' + e.target.value + '"');
+  document.getElementById('attr').addEventListener('input', e => previewMeta.textContent = e.target.value);
+  document.getElementById('name1').addEventListener('input', e => previewName1.textContent = e.target.value);
+  document.getElementById('name2').addEventListener('input', e => previewName2.textContent = e.target.value);
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  });
+</script>
+</body>
+</html>
