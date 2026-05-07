@@ -102,6 +102,10 @@
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
       if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+      const token = getToken();
+      if (token && new URL(url, location.href).origin === location.origin) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
       xhr.upload.onprogress = e => {
         if (e.lengthComputable && typeof onProgress === 'function') {
           onProgress(e.loaded / e.total, e.loaded, e.total);

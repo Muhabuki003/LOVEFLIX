@@ -4,6 +4,7 @@
 //   POST   /api/videos
 //   DELETE /api/videos/:id
 //   GET    /api/upload-url?filename=...&type=...
+//   PUT    /api/upload-object?key=...
 //   GET    /api/progress
 //   POST   /api/progress
 //   GET    /api/health
@@ -24,7 +25,7 @@ const json = (data, status = 200, extra = {}) =>
 function corsHeaders() {
   return {
     'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'GET,POST,DELETE,OPTIONS',
+    'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
     'access-control-allow-headers': 'authorization,content-type',
     'access-control-max-age': '86400',
   };
@@ -60,6 +61,7 @@ export async function onRequest(context) {
     if (videoIdMatch && method === 'GET') return getVideo(env, videoIdMatch[1]);
 
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
+    if (method === 'PUT' && path === '/api/upload-object') return uploadObject(env, request, url, user);
 
     if (method === 'GET' && path === '/api/progress') return listProgress(env, user);
     if (method === 'POST' && path === '/api/progress') return saveProgress(env, request, user);
@@ -202,7 +204,7 @@ async function saveProgress(env, request, user) {
   return json({ ok: true });
 }
 
-// ---------- Presigned R2 upload URL (S3-compatible, AWS SigV4) ----------
+// ---------- R2 upload URL ----------
 async function getUploadUrl(env, url, user) {
   const filename = (url.searchParams.get('filename') || `upload-${Date.now()}.bin`)
     .replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -210,15 +212,33 @@ async function getUploadUrl(env, url, user) {
   const folder = url.searchParams.get('folder') || 'videos';
   const key = `${folder}/${user.id}/${Date.now()}-${filename}`;
 
+  const publicUrl = env.R2_PUBLIC_URL
+    ? `${env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`
+    : null;
+
+  // Prefer the Cloudflare Pages R2 binding. This is already configured in
+  // wrangler.toml/Pages as binding `VIDEOS` => bucket `loveflix-videos`, and
+  // avoids requiring separate R2 S3 API secrets for browser uploads.
+  if (env.VIDEOS) {
+    return json({
+      upload_url: `${url.origin}/api/upload-object?key=${encodeURIComponent(key)}`,
+      key,
+      public_url: publicUrl,
+      content_type: contentType,
+      expires_in: 3600,
+      upload_method: 'binding',
+    });
+  }
+
   const accessKey = env.R2_ACCESS_KEY_ID;
   const secretKey = env.R2_SECRET_ACCESS_KEY;
   const accountId = env.R2_ACCOUNT_ID;
   const bucket = env.R2_BUCKET_NAME;
 
-  if (!accessKey || !secretKey) {
+  if (!accessKey || !secretKey || !accountId || !bucket) {
     return json({
       error: 'r2_not_configured',
-      message: 'Set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY via `wrangler pages secret put`.',
+      message: 'R2 binding `VIDEOS` or R2 S3 API credentials are not configured.',
     }, 500);
   }
 
@@ -235,17 +255,36 @@ async function getUploadUrl(env, url, user) {
     contentType,
   });
 
-  const publicUrl = env.R2_PUBLIC_URL
-    ? `${env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`
-    : `https://${host}/${bucket}/${key}`;
-
   return json({
     upload_url: presigned,
     key,
-    public_url: publicUrl,
+    public_url: publicUrl || `https://${host}/${bucket}/${key}`,
     content_type: contentType,
     expires_in: 3600,
+    upload_method: 's3_presigned',
   });
+}
+
+async function uploadObject(env, request, url, user) {
+  if (!env.VIDEOS) {
+    return json({ error: 'r2_not_configured', message: 'R2 binding `VIDEOS` is not configured.' }, 500);
+  }
+
+  const key = url.searchParams.get('key');
+  if (!key) return json({ error: 'missing_key' }, 400);
+
+  // Constrain uploads to the authenticated user's folder to prevent arbitrary
+  // overwrites if an upload URL is copied or modified.
+  if (!key.startsWith(`videos/${user.id}/`) && !key.startsWith(`images/${user.id}/`)) {
+    return json({ error: 'forbidden_key' }, 403);
+  }
+
+  const contentType = request.headers.get('content-type') || 'application/octet-stream';
+  await env.VIDEOS.put(key, request.body, {
+    httpMetadata: { contentType },
+  });
+
+  return json({ ok: true, key });
 }
 
 // AWS SigV4 query-string presign for `PUT s3://bucket/key`.
