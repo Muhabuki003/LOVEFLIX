@@ -265,17 +265,17 @@
     <!-- HER PROFILE -->
     <div class="profile-card" onclick="selectHer()">
       <div class="profile-avatar her-avatar">
-        <span class="emoji-bg">🌸</span>
+        <span class="emoji-bg" id="herEmoji">🌸</span>
       </div>
-      <span class="profile-name" id="herName">Her Name</span>
+      <span class="profile-name" id="herName">My Love</span>
     </div>
 
     <!-- HIS PROFILE (ADMIN) -->
     <div class="profile-card" onclick="selectHim()">
       <div class="profile-avatar his-avatar">
-        <span class="initials">B</span>
+        <span class="initials" id="hisInitial">Y</span>
       </div>
-      <span class="profile-name" id="hisName">Buki</span>
+      <span class="profile-name" id="hisName">You</span>
     </div>
 
   </div>
@@ -323,14 +323,51 @@
   </div>
 </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
   const CORRECT_PIN = '1234';
   let pinValue = '';
   let pinLocked = false;
+  let userProfile = { herName: 'My Love', hisName: 'You', hisInitial: 'Y' };
+
+  async function loadUserProfile() {
+    try {
+      const token = localStorage.getItem('loveflix_token');
+      if (!token) {
+        location.replace('loveflix_login_screen.html');
+        return;
+      }
+
+      const res = await fetch('https://jeblgjjutyzzdursjqnn.supabase.co/auth/v1/user', {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko',
+          'authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        if (user.user_metadata) {
+          if (user.user_metadata.her_name) userProfile.herName = user.user_metadata.her_name;
+          if (user.user_metadata.his_name) userProfile.hisName = user.user_metadata.his_name;
+          if (user.user_metadata.his_initial) userProfile.hisInitial = user.user_metadata.his_initial;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load profile:', e);
+    }
+
+    updateProfileDisplay();
+  }
+
+  function updateProfileDisplay() {
+    document.getElementById('herName').textContent = userProfile.herName;
+    document.getElementById('hisName').textContent = userProfile.hisName;
+    document.getElementById('hisInitial').textContent = userProfile.hisInitial;
+  }
 
   function selectHer() {
-    const name = document.getElementById('herName').textContent;
-    showSuccess(name, false);
+    showSuccess(userProfile.herName, false);
   }
 
   function selectHim() {
@@ -379,7 +416,7 @@
       }
       setTimeout(() => {
         closePin();
-        showSuccess('Buki', true);
+        showSuccess(userProfile.hisName, true);
       }, 600);
     } else {
       pinLocked = true;
@@ -408,6 +445,9 @@
       document.getElementById('successName').textContent = isAdmin
         ? name + ' — Admin'
         : name;
+      setTimeout(() => {
+        location.href = isAdmin ? 'admin.html' : 'home.html';
+      }, 1200);
     }, 200);
   }
 
@@ -417,6 +457,9 @@
     if (e.key === 'Backspace') pinDelete();
     if (e.key === 'Escape') closePin();
   });
+
+  // Load profile on page load
+  loadUserProfile();
 </script>
 </body>
 </html>
