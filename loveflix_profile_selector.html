@@ -398,17 +398,28 @@
   }
 
   function showSuccess(name, isAdmin) {
+    // persist auth state BEFORE navigating so the destination sees it
+    try {
+      sessionStorage.setItem('loveflix_profile', name);
+      sessionStorage.setItem('loveflix_is_admin', isAdmin ? '1' : '0');
+      if (isAdmin) sessionStorage.setItem('loveflix_admin_authed', '1');
+    } catch (_) { /* storage disabled — still navigate */ }
+
     const screen = document.getElementById('successScreen');
     document.getElementById('successName').textContent = name;
     screen.classList.add('show');
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       document.getElementById('loadingBar').style.width = '100%';
-    }, 100);
+    });
     setTimeout(() => {
       document.getElementById('successName').textContent = isAdmin
         ? name + ' — Admin'
         : name;
     }, 200);
+
+    // wait for the loading bar to fill (2s CSS transition), then route
+    const target = isAdmin ? 'admin.html' : 'home.html';
+    setTimeout(() => { window.location.href = target; }, 2100);
   }
 
   document.addEventListener('keydown', e => {

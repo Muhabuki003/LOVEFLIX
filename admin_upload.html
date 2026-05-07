@@ -139,7 +139,7 @@
             <div class="icon"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
             <div class="t">Drag and drop a video here</div>
             <div class="s">or click to browse — MP4, MOV, up to 4GB</div>
-            <span class="browse">Choose File</span>
+            <button type="button" class="browse" id="browseBtn">Choose File</button>
             <div class="specs">1080p · 4K · HDR Supported</div>
           </div>
           <div class="uploaded" id="uploaded">
@@ -204,7 +204,8 @@
             <div class="thumb-opt" data-tint="linear-gradient(135deg,#f59e0b,#6b3a02)" style="--bgg:linear-gradient(135deg,#f59e0b,#6b3a02)">Auto 3</div>
             <div class="thumb-opt" data-tint="linear-gradient(135deg,#0ea5e9,#082f49)" style="--bgg:linear-gradient(135deg,#0ea5e9,#082f49)">Auto 4</div>
           </div>
-          <div class="thumb-upload" style="margin-top:10px">+ Upload custom thumbnail (JPG / PNG)</div>
+          <input type="file" id="thumbInput" accept="image/*" hidden>
+          <button type="button" class="thumb-upload" id="thumbUpload" style="margin-top:10px;width:100%;color:inherit;background:transparent">+ Upload custom thumbnail (JPG / PNG)</button>
         </div>
 
         <div class="panel" style="margin-bottom:20px">
@@ -234,60 +235,203 @@
 </div>
 
 <script>
+  const STORAGE_KEY = 'loveflix_videos';
+  const TINTS = [
+    'linear-gradient(135deg,#ff7aa2,#5a0a23)',
+    'linear-gradient(135deg,#a855f7,#2e1065)',
+    'linear-gradient(135deg,#f59e0b,#6b3a02)',
+    'linear-gradient(135deg,#0ea5e9,#082f49)'
+  ];
+  const TINT_CLASSES = ['t-rose','t-violet','t-amber','t-blue2'];
+
   const drop = document.getElementById('drop');
   const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const thumbInput = document.getElementById('thumbInput');
+  const thumbUploadBtn = document.getElementById('thumbUpload');
   const dropEmpty = document.getElementById('dropEmpty');
   const uploaded = document.getElementById('uploaded');
   const fill = document.getElementById('uploadFill');
   const status = document.getElementById('uploadedStatus');
   const cancelUp = document.getElementById('cancelUpload');
   const uploadedName = document.getElementById('uploadedName');
+  const uploadedThumb = document.getElementById('uploadedThumb');
   const vTitle = document.getElementById('vTitle');
+  const vDesc = document.getElementById('vDesc');
+  const vCat = document.getElementById('vCat');
   const previewBox = document.getElementById('previewBox');
 
-  function startUpload(name) {
+  let selectedFile = null;
+  let selectedThumbDataUrl = null;
+  let selectedTint = TINTS[0];
+  let selectedTintClass = TINT_CLASSES[0];
+  let uploadComplete = false;
+  let uploadTimer = null;
+
+  function readableSize(bytes) {
+    if (!bytes) return '';
+    const mb = bytes / (1024 * 1024);
+    if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+    return mb.toFixed(0) + ' MB';
+  }
+
+  function startUpload(file) {
+    selectedFile = file;
+    uploadComplete = false;
+    if (uploadTimer) { clearInterval(uploadTimer); uploadTimer = null; }
     dropEmpty.style.display = 'none';
     uploaded.classList.add('show');
-    uploadedName.textContent = name || 'lisbon-day3-final.mp4';
+    uploadedName.textContent = file.name;
+    fill.style.width = '0%';
     let p = 0;
-    const i = setInterval(() => {
-      p += Math.random() * 8 + 2;
-      if (p >= 100) { p = 100; clearInterval(i); status.textContent = 'Ready to publish · 1080p · 268 MB'; }
-      else status.textContent = 'Uploading… ' + Math.floor(p) + '%';
+    uploadTimer = setInterval(() => {
+      p += Math.random() * 12 + 4;
+      if (p >= 100) {
+        p = 100;
+        clearInterval(uploadTimer);
+        uploadTimer = null;
+        uploadComplete = true;
+        status.textContent = 'Ready to publish · ' + readableSize(file.size);
+      } else {
+        status.textContent = 'Uploading… ' + Math.floor(p) + '%';
+      }
       fill.style.width = p + '%';
-    }, 220);
+    }, 180);
   }
-  drop.addEventListener('click', e => { if (e.target.closest('.uploaded')) return; fileInput.click(); });
-  fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) startUpload(f.name); });
+
+  function resetUpload() {
+    if (uploadTimer) { clearInterval(uploadTimer); uploadTimer = null; }
+    selectedFile = null;
+    uploadComplete = false;
+    uploaded.classList.remove('show');
+    dropEmpty.style.display = '';
+    fill.style.width = '0%';
+    fileInput.value = '';
+  }
+
+  // file picker wiring — explicitly trigger the hidden input
+  browseBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+  drop.addEventListener('click', e => {
+    if (e.target.closest('.uploaded') || e.target.closest('#browseBtn')) return;
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) startUpload(f);
+  });
   ;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
   ;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) startUpload(f.name); });
-  cancelUp.addEventListener('click', e => { e.stopPropagation(); uploaded.classList.remove('show'); dropEmpty.style.display = ''; fill.style.width = '0%'; });
+  drop.addEventListener('drop', e => {
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) startUpload(f);
+  });
+  cancelUp.addEventListener('click', e => { e.stopPropagation(); resetUpload(); });
 
-  // simulate uploaded state by default for visual richness
-  startUpload('lisbon-day3-final.mp4');
+  // custom thumbnail picker
+  thumbUploadBtn.addEventListener('click', e => { e.stopPropagation(); thumbInput.click(); });
+  thumbInput.addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      selectedThumbDataUrl = ev.target.result;
+      const url = `url(${JSON.stringify(selectedThumbDataUrl)}) center/cover no-repeat`;
+      previewBox.style.background = url;
+      previewBox.innerHTML = '';
+      uploadedThumb.style.background = url;
+      uploadedThumb.textContent = '';
+      document.querySelectorAll('.thumb-opt').forEach(t => t.classList.remove('selected'));
+    };
+    reader.readAsDataURL(f);
+  });
 
-  // thumbnail picker
+  // preset thumbnail picker
   document.getElementById('thumbGrid').addEventListener('click', e => {
     const el = e.target.closest('.thumb-opt');
     if (!el) return;
     document.querySelectorAll('.thumb-opt').forEach(t => t.classList.remove('selected'));
     el.classList.add('selected');
-    previewBox.style.background = el.dataset.tint;
-    document.getElementById('uploadedThumb').style.background = el.dataset.tint;
+    selectedTint = el.dataset.tint;
+    const idx = [...el.parentNode.children].indexOf(el);
+    selectedTintClass = TINT_CLASSES[idx] || TINT_CLASSES[0];
+    selectedThumbDataUrl = null;
+    previewBox.style.background = selectedTint;
+    uploadedThumb.style.background = selectedTint;
+    uploadedThumb.textContent = 'VIDEO';
   });
 
   // live preview
   vTitle.addEventListener('input', () => {
-    previewBox.innerHTML = vTitle.value.replace(/ · /, '<br>') || 'Untitled';
+    if (selectedThumbDataUrl) return;
+    previewBox.innerHTML = (vTitle.value || 'Untitled').replace(/ · /, '<br>');
   });
 
-  document.getElementById('publish').addEventListener('click', () => {
-    location.href = 'admin_videos.html';
-  });
-  document.getElementById('saveDraft').addEventListener('click', () => {
-    location.href = 'admin_videos.html';
-  });
+  // "database" — localStorage persistence
+  function loadVideos() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveVideo(record) {
+    return new Promise((resolve, reject) => {
+      try {
+        const all = loadVideos();
+        all.unshift(record);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+        // confirm the write actually landed before resolving
+        const verify = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (verify[0] && verify[0].id === record.id) resolve(record);
+        else reject(new Error('Write not confirmed'));
+      } catch (err) { reject(err); }
+    });
+  }
+
+  function buildRecord(isDraft) {
+    const now = new Date();
+    const monthShort = now.toLocaleString('en-US', { month: 'short' });
+    return {
+      id: 'u_' + now.getTime(),
+      t: vTitle.value.trim() || (selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : 'Untitled'),
+      cat: vCat.value || 'Moments',
+      date: `${monthShort} ${now.getDate()}, ${now.getFullYear()}`,
+      dur: '—',
+      pub: !isDraft,
+      tint: selectedTintClass,
+      tintCss: selectedTint,
+      thumbDataUrl: selectedThumbDataUrl,
+      desc: vDesc.value.trim(),
+      fileName: selectedFile ? selectedFile.name : null,
+      fileSize: selectedFile ? selectedFile.size : null,
+      createdAt: now.toISOString(),
+      isUserUpload: true
+    };
+  }
+
+  async function commitAndRedirect(isDraft) {
+    if (!selectedFile) {
+      alert('Pick a video file before publishing.');
+      return;
+    }
+    if (!uploadComplete) {
+      alert('Hold on — the upload hasn\'t finished yet.');
+      return;
+    }
+    const btn = isDraft ? document.getElementById('saveDraft') : document.getElementById('publish');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = isDraft ? 'Saving…' : 'Publishing…';
+    try {
+      await saveVideo(buildRecord(isDraft));
+      // only redirect after the database write is confirmed
+      location.href = 'admin_videos.html';
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = original;
+      alert('Could not save the video: ' + err.message);
+    }
+  }
+
+  document.getElementById('publish').addEventListener('click', () => commitAndRedirect(false));
+  document.getElementById('saveDraft').addEventListener('click', () => commitAndRedirect(true));
 </script>
 </body>
 </html>

@@ -508,6 +508,72 @@
     });
   });
 
+  // surface user-uploaded videos at the top of the rows
+  (function injectUploads() {
+    let uploads = [];
+    try { uploads = JSON.parse(localStorage.getItem('loveflix_videos')) || []; }
+    catch { uploads = []; }
+    const published = uploads.filter(v => v.pub);
+    if (!published.length) return;
+
+    const rowsWrap = document.querySelector('.rows-wrap');
+    if (!rowsWrap) return;
+
+    const section = document.createElement('section');
+    section.className = 'row';
+    section.innerHTML = `
+      <div class="row-head">
+        <h2 class="row-title">New from Buki</h2>
+        <span class="row-explore">View All ›</span>
+      </div>
+      <div class="row-scroll-wrap">
+        <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+        <div class="row-scroll" id="uploadsScroll"></div>
+        <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
+      </div>`;
+    rowsWrap.insertBefore(section, rowsWrap.firstElementChild);
+
+    const scroll = section.querySelector('#uploadsScroll');
+    published.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const thumbStyle = v.thumbDataUrl
+        ? `background:url('${v.thumbDataUrl}') center/cover no-repeat`
+        : (v.tintCss || 'linear-gradient(135deg,#ff7aa2,#5a0a23)');
+      const titleParts = (v.t || 'Untitled').split(' · ');
+      const headline = titleParts[0] || 'Untitled';
+      const sub = titleParts[1] || (v.cat || '');
+      card.innerHTML = `
+        <div class="card-thumb" style="background:${thumbStyle}">
+          <div class="card-thumb-inner">
+            <span>${headline}${sub ? '<br>' + sub : ''}</span>
+            <span class="date">${v.date || ''}</span>
+          </div>
+        </div>
+        <div class="card-overlay">
+          <div class="card-controls">
+            <button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+          </div>
+          <div class="card-title">${v.t || 'Untitled'}</div>
+          <div class="card-row"><span class="card-tag">New</span><span class="card-dot"></span><span>${v.cat || ''}</span></div>
+        </div>`;
+      scroll.appendChild(card);
+    });
+
+    // re-bind scroll arrows + card clicks for the new section
+    section.querySelectorAll('.scroll-arrow').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const scroller = btn.closest('.row-scroll-wrap').querySelector('.row-scroll');
+        const dir = parseInt(btn.dataset.dir, 10);
+        scroller.scrollBy({ left: dir * (scroller.clientWidth - 120), behavior: 'smooth' });
+      });
+    });
+    section.querySelectorAll('.card').forEach(c => {
+      c.addEventListener('click', () => location.href = 'player.html');
+    });
+  })();
+
   // card click → player (placeholder)
   document.querySelectorAll('.card').forEach(c => {
     c.addEventListener('click', () => location.href = 'player.html');
