@@ -108,6 +108,7 @@
 </style>
 </head>
 <body>
+<script src="assets/loveflix.js"></script>
 
 <div class="top">
   <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
@@ -140,16 +141,17 @@
     </div>
     <div class="field">
       <label>Email</label>
-      <input type="email" placeholder="you@email.com">
+      <input type="email" id="signupEmail" placeholder="you@email.com">
     </div>
     <div class="field-grid">
-      <div class="field"><label>Password</label><input type="password" placeholder="Min 8 characters"></div>
-      <div class="field"><label>Confirm password</label><input type="password"></div>
+      <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="Min 8 characters"></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="signupPasswordConfirm"></div>
     </div>
+    <div id="signupError" class="error-msg" style="background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:14px;margin-bottom:16px;display:none;line-height:1.4"></div>
     <div class="field-hint" style="text-align:center;margin-top:20px">By continuing you agree to our Terms &amp; Privacy.</div>
     <div class="step-nav">
-      <a href="login.html" class="btn-link">Already have an account? Sign in</a>
-      <button class="btn btn-primary" onclick="goNext(2)">Continue →</button>
+      <a href="loveflix_login_screen.html" class="btn-link">Already have an account? Sign in</a>
+      <button class="btn btn-primary" id="step1Btn" onclick="handleStep1Signup()">Continue →</button>
     </div>
   </div>
 
@@ -301,6 +303,47 @@
   document.querySelectorAll('.progress-step').forEach(s => {
     s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
   });
+
+  // signup handler (step 1)
+  async function handleStep1Signup() {
+    const email = document.getElementById('signupEmail').value.trim();
+    const pwd = document.getElementById('signupPassword').value;
+    const pwdConfirm = document.getElementById('signupPasswordConfirm').value;
+    const errorDiv = document.getElementById('signupError');
+    const btn = document.getElementById('step1Btn');
+    errorDiv.style.display = 'none';
+
+    if (!email || !pwd || !pwdConfirm) {
+      errorDiv.textContent = 'Please fill in all fields.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (pwd !== pwdConfirm) {
+      errorDiv.textContent = 'Passwords do not match.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    if (pwd.length < 8) {
+      errorDiv.textContent = 'Password must be at least 8 characters.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      await LoveFlix.signUp(email, pwd);
+      goNext(2);
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Continue →';
+      errorDiv.textContent = e.message || 'Failed to create account. Try another email.';
+      errorDiv.style.display = 'block';
+    }
+  }
 </script>
 </body>
 </html>
