@@ -211,7 +211,7 @@
       <span class="show-pw" id="showPw" onclick="togglePw()">SHOW</span>
     </div>
 
-    <button class="btn-signin" id="signinBtn" onclick="handleSignin()">Sign In</button>
+    <button class="btn-signin" id="signinBtn" type="button">Sign In</button>
 
     <div class="or-row">
       <div class="or-line"></div>
@@ -244,7 +244,11 @@
   </div>
 </footer>
 
+<script src="assets/loveflix.js"></script>
 <script>
+  // If already signed in, skip the login screen.
+  if (LoveFlix.getToken()) location.replace('whos_watching.html');
+
   function togglePw() {
     const input = document.getElementById('pwInput');
     const btn = document.getElementById('showPw');
@@ -252,7 +256,14 @@
     btn.textContent = input.type === 'password' ? 'SHOW' : 'HIDE';
   }
 
-  function handleSignin() {
+  function showErr(msg, tone) {
+    const err = document.getElementById('errorMsg');
+    err.style.background = tone === 'ok' ? '#1d7a3a' : '#e87c03';
+    err.textContent = msg;
+    err.classList.add('show');
+  }
+
+  async function handleSignin() {
     const email = document.getElementById('emailInput').value.trim();
     const pw = document.getElementById('pwInput').value;
     const btn = document.getElementById('signinBtn');
@@ -260,30 +271,24 @@
     err.classList.remove('show');
 
     if (!email || !pw) {
-      err.style.background = '#e87c03';
-      err.textContent = 'Please enter your email and password.';
-      err.classList.add('show');
+      showErr('Please enter your email and password.');
       return;
     }
 
     btn.classList.add('loading');
     btn.textContent = 'Signing in...';
-
-    setTimeout(() => {
+    try {
+      await LoveFlix.signIn(email, pw);
+      showErr('💕 Welcome back. Loading your memories...', 'ok');
+      setTimeout(() => location.replace('whos_watching.html'), 600);
+    } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Sign In';
-      if (email === 'demo@loveflix.app' && pw === 'iloveyou') {
-        err.style.background = '#1d7a3a';
-        err.textContent = '💕 Welcome back. Loading your memories...';
-        err.classList.add('show');
-      } else {
-        err.style.background = '#e87c03';
-        err.textContent = "Sorry, we can't find an account with this email address or phone number. Please try again or reset your password.";
-        err.classList.add('show');
-      }
-    }, 1800);
+      showErr(e.message || "Couldn't sign you in. Check your email and password.");
+    }
   }
 
+  document.getElementById('signinBtn').addEventListener('click', handleSignin);
   document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignin(); });
 </script>
 </body>

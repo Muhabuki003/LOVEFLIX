@@ -13,63 +13,47 @@
   html, body { height:100%; }
   body {
     font-family:'Inter',system-ui,sans-serif; background:#000; color:#fff;
-    overflow:hidden; -webkit-font-smoothing:antialiased;
-    cursor: default;
+    overflow:hidden; -webkit-font-smoothing:antialiased; cursor: default;
   }
   body.cursor-hidden { cursor: none; }
   body.cursor-hidden .ui { pointer-events: none; opacity: 0; }
 
-  /* fake "video" canvas */
-  .stage {
-    position: fixed; inset: 0;
-    background:
-      radial-gradient(circle at 30% 40%, rgba(255,90,140,0.35), transparent 55%),
-      radial-gradient(circle at 75% 65%, rgba(80,30,140,0.5), transparent 55%),
-      linear-gradient(135deg, #2a0a18 0%, #0a0612 100%);
-    overflow: hidden;
-  }
-  .stage::after {
-    content: '';
+  .stage { position: fixed; inset: 0; background: #000; }
+  #videoEl {
     position: absolute; inset: 0;
-    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
-    pointer-events: none;
+    width: 100%; height: 100%;
+    object-fit: contain; background: #000;
   }
-  .stage-vignette {
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
-    pointer-events: none;
-  }
+  .stage.fallback #videoEl { display: none; }
 
-  .stage-marker {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
+  /* Placeholder when video URL is missing or broken */
+  .placeholder {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: #000; text-align: center; padding: 40px;
+  }
+  .stage.fallback .placeholder { display: flex; }
+  .placeholder .nf-logo {
     font-family: 'Bebas Neue', sans-serif;
-    color: rgba(255,255,255,0.85);
-    text-shadow: 0 4px 24px rgba(0,0,0,0.6);
-    letter-spacing: 4px;
+    font-size: 64px; color: var(--red);
+    letter-spacing: 4px; line-height: 1; margin-bottom: 24px;
   }
-  .stage-marker .ep { font-size: 18px; letter-spacing: 6px; color: rgba(255,255,255,0.55); margin-bottom: 8px; font-family: 'Inter', sans-serif; font-weight: 500; }
-  .stage-marker .ttl { font-size: clamp(48px, 7vw, 110px); line-height: 1; }
-  .stage-marker .date { font-size: 14px; letter-spacing: 5px; color: rgba(255,255,255,0.55); margin-top: 14px; font-family: 'Inter', sans-serif; font-weight: 400; }
+  .placeholder .nf-logo .heart { color: #fff; font-size: 44px; vertical-align: middle; margin: 0 4px; }
+  .placeholder .msg {
+    font-size: 18px; color: rgba(255,255,255,0.75);
+    letter-spacing: 0.3px;
+  }
 
-  /* paused indicator */
   .paused-badge {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    background: rgba(20,20,20,0.7);
-    backdrop-filter: blur(8px);
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(20,20,20,0.7); backdrop-filter: blur(8px);
     display: flex; align-items: center; justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
+    opacity: 0; transition: opacity 0.2s ease; pointer-events: none;
   }
   .paused-badge.show { opacity: 1; }
   .paused-badge svg { width: 56px; height: 56px; fill: #fff; }
 
-  /* ---------- top bar ---------- */
   .ui { transition: opacity 0.3s ease; }
 
   .topbar {
@@ -82,58 +66,43 @@
     background: none; border: none; color: #fff;
     width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: background 0.15s ease;
-    border-radius: 50%;
+    cursor: pointer; transition: background 0.15s ease; border-radius: 50%;
   }
   .back-btn:hover { background: rgba(255,255,255,0.12); }
   .back-btn svg { width: 28px; height: 28px; fill: #fff; }
   .topbar-title { font-size: 17px; font-weight: 500; color: rgba(255,255,255,0.9); }
   .topbar-eyebrow {
     font-size: 11px; color: rgba(255,255,255,0.5);
-    letter-spacing: 3px; text-transform: uppercase;
-    margin-bottom: 2px;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 2px;
   }
 
-  /* ---------- bottom controls ---------- */
   .controls {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
     padding: 24px 36px 28px;
     background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
   }
-
   .scrub {
-    display: flex; align-items: center; gap: 14px;
-    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
     color: rgba(255,255,255,0.85);
     font-size: 13px; font-variant-numeric: tabular-nums;
   }
   .scrub-track {
-    flex: 1; height: 4px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 2px;
-    cursor: pointer;
-    position: relative;
+    flex: 1; height: 4px; background: rgba(255,255,255,0.25);
+    border-radius: 2px; cursor: pointer; position: relative;
   }
   .scrub-fill {
-    height: 100%; width: 32%;
-    background: var(--red);
-    border-radius: 2px;
-    position: relative;
-    transition: width 0.1s linear;
+    height: 100%; width: 0%; background: var(--red);
+    border-radius: 2px; position: relative; transition: width 0.1s linear;
   }
   .scrub-fill::after {
-    content: '';
-    position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
-    width: 14px; height: 14px;
-    background: var(--red); border-radius: 50%;
+    content: ''; position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; background: var(--red); border-radius: 50%;
     opacity: 0; transition: opacity 0.15s ease;
   }
   .scrub-track:hover .scrub-fill::after { opacity: 1; }
   .scrub-track:hover { height: 6px; }
 
-  .ctrl-row {
-    display: flex; align-items: center; gap: 22px;
-  }
+  .ctrl-row { display: flex; align-items: center; gap: 22px; }
   .ctrl-left, .ctrl-right { display: flex; align-items: center; gap: 22px; }
   .ctrl-right { margin-left: auto; }
 
@@ -141,68 +110,53 @@
     background: none; border: none; color: #fff;
     width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: transform 0.12s ease, color 0.15s ease;
+    cursor: pointer; transition: transform 0.12s ease, color 0.15s ease;
     position: relative;
   }
   .ctrl-btn:hover { transform: scale(1.15); }
   .ctrl-btn svg { width: 28px; height: 28px; fill: #fff; }
   .ctrl-btn.play svg { width: 32px; height: 32px; }
-
   .ctrl-tooltip {
     position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
     background: rgba(255,255,255,0.95); color: #000;
-    font-size: 12px; font-weight: 500;
-    padding: 6px 10px; border-radius: 3px;
-    white-space: nowrap;
-    opacity: 0; pointer-events: none;
+    font-size: 12px; font-weight: 500; padding: 6px 10px; border-radius: 3px;
+    white-space: nowrap; opacity: 0; pointer-events: none;
     transition: opacity 0.15s ease;
   }
   .ctrl-btn:hover .ctrl-tooltip { opacity: 1; }
 
-  .ep-meta {
-    display: flex; flex-direction: column;
-    margin-left: 8px;
-  }
+  .ep-meta { display: flex; flex-direction: column; margin-left: 8px; }
   .ep-meta .e { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
   .ep-meta .t { font-size: 15px; font-weight: 500; }
 
-  /* volume */
   .vol-wrap { display: flex; align-items: center; gap: 8px; }
   .vol-track {
     width: 0; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;
     overflow: hidden; transition: width 0.25s ease;
   }
-  .vol-fill { height: 100%; width: 70%; background: #fff; }
+  .vol-fill { height: 100%; width: 100%; background: #fff; }
   .vol-wrap:hover .vol-track { width: 80px; }
 
-  /* ---------- next-up card ---------- */
+  /* next-up card */
   .next-up {
     position: fixed; right: 36px; bottom: 130px;
     width: 380px;
-    background: rgba(20,20,20,0.96);
-    backdrop-filter: blur(12px);
-    border-radius: 6px;
-    overflow: hidden;
-    z-index: 25;
+    background: rgba(20,20,20,0.96); backdrop-filter: blur(12px);
+    border-radius: 6px; overflow: hidden; z-index: 25;
     box-shadow: 0 24px 48px rgba(0,0,0,0.5);
     transform: translateY(20px); opacity: 0;
     transition: transform 0.4s cubic-bezier(.2,.8,.2,1), opacity 0.4s ease;
     pointer-events: none;
   }
-  .next-up.show {
-    transform: translateY(0); opacity: 1;
-    pointer-events: auto;
-  }
+  .next-up.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
   .next-up-thumb {
     height: 200px;
     background: linear-gradient(135deg, #ff7aa2 0%, #5a0a23 100%);
-    position: relative;
-    display: flex; align-items: flex-end; padding: 16px;
+    position: relative; display: flex; align-items: flex-end; padding: 16px;
+    background-size: cover; background-position: center;
   }
   .next-up-thumb::after {
-    content: '';
-    position: absolute; inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 60%);
   }
   .next-up-thumb-text {
@@ -213,14 +167,7 @@
   .next-up-body { padding: 18px 20px 20px; }
   .next-up-eyebrow {
     font-size: 11px; color: var(--red); letter-spacing: 3px; text-transform: uppercase;
-    font-weight: 700; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .next-up-eyebrow .ring {
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 2px solid var(--red);
-    border-right-color: transparent;
-    animation: spin 1.4s linear infinite;
+    font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
   }
   .next-up-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
   .next-up-desc { font-size: 13px; color: #b3b3b3; line-height: 1.5; margin-bottom: 14px; }
@@ -237,8 +184,6 @@
   .next-btn.ghost:hover { border-color: #fff; }
   .next-btn svg { width: 14px; height: 14px; fill: currentColor; }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-
   @media (max-width: 720px) {
     .topbar { padding: 14px 18px; }
     .controls { padding: 18px 18px 22px; }
@@ -250,14 +195,12 @@
 </head>
 <body>
 
-<div class="stage">
-  <div class="stage-marker">
-    <div class="ep">Season 3 · Episode 04</div>
-    <div class="ttl">The Lisbon<br>Trip</div>
-    <div class="date">May 14, 2025 · Day 3</div>
+<div class="stage" id="stage">
+  <video id="videoEl" playsinline preload="metadata"></video>
+  <div class="placeholder">
+    <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+    <div class="msg">Video coming soon 💕</div>
   </div>
-  <div class="stage-vignette"></div>
-
   <div class="paused-badge" id="pausedBadge">
     <svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
   </div>
@@ -269,57 +212,49 @@
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
     </button>
     <div>
-      <div class="topbar-eyebrow">LoveFlix Original</div>
-      <div class="topbar-title">Three Years of Us · S3:E4 — The Lisbon Trip</div>
+      <div class="topbar-eyebrow" id="topEyebrow">LoveFlix Original</div>
+      <div class="topbar-title" id="topTitle">Loading…</div>
     </div>
   </header>
 
   <footer class="controls">
     <div class="scrub">
-      <span id="curTime">00:08:24</span>
+      <span id="curTime">00:00</span>
       <div class="scrub-track" id="scrubTrack">
         <div class="scrub-fill" id="scrubFill"></div>
       </div>
-      <span id="totalTime">00:26:12</span>
+      <span id="totalTime">00:00</span>
     </div>
 
     <div class="ctrl-row">
       <div class="ctrl-left">
         <button class="ctrl-btn play" id="playBtn">
-          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
-          <span class="ctrl-tooltip" id="playTip">Pause (k)</span>
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span class="ctrl-tooltip" id="playTip">Play (k)</span>
         </button>
-        <button class="ctrl-btn">
+        <button class="ctrl-btn" id="back10">
           <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z" transform="rotate(180 12 12)"/></svg>
           <span class="ctrl-tooltip">Back 10s</span>
         </button>
-        <button class="ctrl-btn">
+        <button class="ctrl-btn" id="fwd10">
           <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z"/></svg>
           <span class="ctrl-tooltip">Forward 10s</span>
         </button>
         <div class="vol-wrap">
-          <button class="ctrl-btn">
-            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
+          <button class="ctrl-btn" id="muteBtn">
+            <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
           </button>
-          <div class="vol-track"><div class="vol-fill"></div></div>
+          <div class="vol-track"><div class="vol-fill" id="volFill"></div></div>
         </div>
       </div>
 
       <div class="ep-meta">
         <span class="e">Now Playing</span>
-        <span class="t">The Lisbon Trip · Day 3</span>
+        <span class="t" id="nowPlaying">—</span>
       </div>
 
       <div class="ctrl-right">
-        <button class="ctrl-btn">
-          <svg viewBox="0 0 24 24"><path d="M5 5h5V3H3v7h2zm5 14H5v-5H3v7h7zm11-9V3h-7v2h5v5zm-5 11h5v-5h2v7h-7z"/></svg>
-          <span class="ctrl-tooltip">Skip Intro</span>
-        </button>
-        <button class="ctrl-btn" id="nextBtn">
-          <svg viewBox="0 0 24 24"><path d="M6 6l8.5 6L6 18V6zm10 0h2v12h-2z"/></svg>
-          <span class="ctrl-tooltip">Next Episode</span>
-        </button>
-        <button class="ctrl-btn">
+        <button class="ctrl-btn" id="fsBtn">
           <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
           <span class="ctrl-tooltip">Fullscreen</span>
         </button>
@@ -328,15 +263,14 @@
   </footer>
 </div>
 
-<!-- next-up card -->
 <aside class="next-up" id="nextUp">
-  <div class="next-up-thumb">
-    <div class="next-up-thumb-text">Day 4<br>The Tram Ride</div>
+  <div class="next-up-thumb" id="nextThumb">
+    <div class="next-up-thumb-text" id="nextThumbText">Up Next</div>
   </div>
   <div class="next-up-body">
-    <div class="next-up-eyebrow"><span class="ring"></span> Next Episode in <span id="nextCountdown">12</span>s</div>
-    <div class="next-up-title">S3:E5 — The Tram Ride</div>
-    <div class="next-up-desc">Yellow trams, hill-top sunsets, and that one pastéis de nata you wouldn't share.</div>
+    <div class="next-up-eyebrow">Up Next</div>
+    <div class="next-up-title" id="nextTitle">—</div>
+    <div class="next-up-desc" id="nextDesc"></div>
     <div class="next-up-actions">
       <button class="next-btn primary" id="playNext">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -347,8 +281,13 @@
   </div>
 </aside>
 
+<script src="assets/loveflix.js"></script>
 <script>
-(function() {
+(async function () {
+  if (!LoveFlix.requireAuth()) return;
+
+  const stage = document.getElementById('stage');
+  const video = document.getElementById('videoEl');
   const playBtn = document.getElementById('playBtn');
   const playIcon = document.getElementById('playIcon');
   const playTip = document.getElementById('playTip');
@@ -356,105 +295,219 @@
   const track = document.getElementById('scrubTrack');
   const cur = document.getElementById('curTime');
   const total = document.getElementById('totalTime');
-  const paused = document.getElementById('pausedBadge');
+  const pausedBadge = document.getElementById('pausedBadge');
   const nextUp = document.getElementById('nextUp');
-  const countdown = document.getElementById('nextCountdown');
-
-  const TOTAL = 26 * 60 + 12; // seconds
-  // remember position
-  let t = parseFloat(localStorage.getItem('lf_player_t') || '8.4') * 60; // minutes->seconds, default 8:24
-  let playing = true;
-  let nextShown = false;
-  let nextTimer = 12;
+  const volFill = document.getElementById('volFill');
+  const muteBtn = document.getElementById('muteBtn');
+  const fsBtn = document.getElementById('fsBtn');
 
   function fmt(s) {
-    s = Math.max(0, Math.floor(s));
-    const h = Math.floor(s / 3600).toString().padStart(2,'0');
-    const m = Math.floor((s % 3600) / 60).toString().padStart(2,'0');
-    const sec = (s % 60).toString().padStart(2,'0');
-    return `${h}:${m}:${sec}`;
+    if (!isFinite(s) || s < 0) return '00:00';
+    s = Math.floor(s);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const pad = n => n.toString().padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
   }
-  function render() {
-    const p = Math.min(1, t / TOTAL);
-    fill.style.width = (p * 100) + '%';
-    cur.textContent = fmt(t);
-    total.textContent = fmt(TOTAL);
-    localStorage.setItem('lf_player_t', (t / 60).toString());
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-  function setPlaying(v) {
-    playing = v;
+
+  // --- Load video by id ----------------------------------------------------
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+
+  let videoData = null;
+  let allVideos = [];
+  try {
+    const list = await LoveFlix.api('/api/videos');
+    allVideos = list.videos || [];
+  } catch (_) {}
+
+  if (id) {
+    try {
+      const r = await LoveFlix.api(`/api/videos/${encodeURIComponent(id)}`);
+      videoData = r.video;
+    } catch (_) {
+      videoData = allVideos.find(v => v.id === id) || null;
+    }
+  } else if (allVideos.length) {
+    videoData = allVideos[0];
+  }
+
+  // Topbar text
+  document.getElementById('topTitle').textContent = videoData ? (videoData.title || 'Untitled') : 'No video selected';
+  document.getElementById('nowPlaying').textContent = videoData ? (videoData.title || 'Untitled') : '—';
+
+  // Show placeholder when there is no playable URL.
+  const url = videoData && videoData.video_url ? videoData.video_url : '';
+  if (!url) {
+    stage.classList.add('fallback');
+  } else {
+    video.src = url;
+  }
+
+  // --- Watch progress ------------------------------------------------------
+  let progressById = {};
+  try {
+    const r = await LoveFlix.api('/api/progress');
+    (r.progress || []).forEach(p => { progressById[p.video_id] = p; });
+  } catch (_) {}
+
+  const existing = videoData && progressById[videoData.id];
+  if (existing && existing.progress_seconds && !existing.completed) {
+    video.addEventListener('loadedmetadata', () => {
+      try { video.currentTime = Math.max(0, existing.progress_seconds - 2); } catch (_) {}
+    }, { once: true });
+  }
+
+  let lastSavedAt = 0;
+  async function saveProgress(force) {
+    if (!videoData) return;
+    if (!isFinite(video.duration) || video.duration <= 0) return;
+    const now = Date.now();
+    if (!force && now - lastSavedAt < 5000) return;
+    lastSavedAt = now;
+    const completed = video.duration > 0 && video.currentTime >= video.duration - 1;
+    try {
+      await LoveFlix.api('/api/progress', {
+        method: 'POST',
+        body: {
+          video_id: videoData.id,
+          progress_seconds: Math.floor(video.currentTime),
+          completed: !!completed,
+        },
+      });
+    } catch (_) { /* keep playing even if save fails */ }
+  }
+
+  // --- Next-up card --------------------------------------------------------
+  const nextVideo = (() => {
+    if (!videoData) return null;
+    const idx = allVideos.findIndex(v => v.id === videoData.id);
+    if (idx === -1) return allVideos[0] || null;
+    return allVideos[idx + 1] || null;
+  })();
+
+  if (nextVideo) {
+    document.getElementById('nextTitle').textContent = nextVideo.title || 'Up Next';
+    document.getElementById('nextDesc').textContent = nextVideo.description || '';
+    document.getElementById('nextThumbText').innerHTML = escapeHtml(nextVideo.title || '').replace(/ · /, '<br>');
+    if (nextVideo.thumbnail_url) {
+      document.getElementById('nextThumb').style.backgroundImage = `url('${nextVideo.thumbnail_url}')`;
+    }
+  }
+
+  document.getElementById('playNext').addEventListener('click', () => {
+    if (nextVideo) location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+  });
+  document.getElementById('cancelNext').addEventListener('click', () => nextUp.classList.remove('show'));
+
+  // --- Custom controls -----------------------------------------------------
+  function setPlayingUI(playing) {
     if (playing) {
       playIcon.innerHTML = '<path d="M8 5h3v14H8zM13 5h3v14h-3z"/>';
       playTip.textContent = 'Pause (k)';
-      paused.classList.remove('show');
+      pausedBadge.classList.remove('show');
     } else {
       playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
       playTip.textContent = 'Play (k)';
-      paused.classList.add('show');
+      pausedBadge.classList.add('show');
     }
   }
-  setPlaying(true);
-  render();
 
-  // tick
-  setInterval(() => {
-    if (playing && !nextShown) {
-      t += 1;
-      if (t >= TOTAL - 12) {
-        nextShown = true;
-        nextUp.classList.add('show');
-        let c = 12;
-        countdown.textContent = c;
-        const ci = setInterval(() => {
-          if (!nextUp.classList.contains('show')) { clearInterval(ci); return; }
-          c--;
-          countdown.textContent = c;
-          if (c <= 0) { clearInterval(ci); location.reload(); }
-        }, 1000);
-      }
-      render();
+  function togglePlay() {
+    if (!url) return;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  }
+
+  playBtn.addEventListener('click', togglePlay);
+  stage.addEventListener('click', e => {
+    if (e.target.closest('.ui') || e.target.closest('.next-up')) return;
+    togglePlay();
+  });
+
+  video.addEventListener('play', () => setPlayingUI(true));
+  video.addEventListener('pause', () => setPlayingUI(false));
+  video.addEventListener('error', () => stage.classList.add('fallback'));
+
+  video.addEventListener('loadedmetadata', () => {
+    total.textContent = fmt(video.duration);
+  });
+
+  video.addEventListener('timeupdate', () => {
+    const d = video.duration || 0;
+    const c = video.currentTime || 0;
+    cur.textContent = fmt(c);
+    if (d > 0) fill.style.width = ((c / d) * 100) + '%';
+    saveProgress(false);
+
+    if (d > 0 && d - c <= 30 && nextVideo && !nextUp.classList.contains('show')) {
+      nextUp.classList.add('show');
     }
-  }, 1000);
+    if (d > 0 && d - c > 35) {
+      nextUp.classList.remove('show');
+    }
+  });
 
-  // play/pause
-  playBtn.addEventListener('click', () => setPlaying(!playing));
-  document.querySelector('.stage').addEventListener('click', () => setPlaying(!playing));
+  video.addEventListener('ended', async () => {
+    await saveProgress(true);
+    if (nextVideo) location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+  });
 
-  // scrub
   track.addEventListener('click', e => {
+    if (!isFinite(video.duration) || video.duration <= 0) return;
     const r = track.getBoundingClientRect();
     const p = (e.clientX - r.left) / r.width;
-    t = Math.max(0, Math.min(TOTAL, p * TOTAL));
-    nextShown = false;
-    nextUp.classList.remove('show');
-    render();
+    video.currentTime = Math.max(0, Math.min(video.duration, p * video.duration));
   });
 
-  // next-up
-  document.getElementById('playNext').addEventListener('click', () => location.reload());
-  document.getElementById('cancelNext').addEventListener('click', () => {
-    nextUp.classList.remove('show');
-    t = TOTAL - 30;
-    render();
+  document.getElementById('back10').addEventListener('click', () => { video.currentTime = Math.max(0, video.currentTime - 10); });
+  document.getElementById('fwd10').addEventListener('click', () => { video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); });
+
+  // Volume
+  function paintVol() {
+    volFill.style.width = (video.muted ? 0 : video.volume) * 100 + '%';
+  }
+  muteBtn.addEventListener('click', () => { video.muted = !video.muted; paintVol(); });
+  video.addEventListener('volumechange', paintVol);
+  paintVol();
+
+  // Fullscreen
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
   });
 
-  // keyboard
+  // Keyboard
   document.addEventListener('keydown', e => {
-    if (e.key === ' ' || e.key.toLowerCase() === 'k') { setPlaying(!playing); e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { t = Math.max(0, t - 10); render(); }
-    if (e.key === 'ArrowRight') { t = Math.min(TOTAL, t + 10); render(); }
-    if (e.key === 'Escape') location.href = 'home.html';
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key === ' ' || e.key.toLowerCase() === 'k') { togglePlay(); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { video.currentTime = Math.max(0, video.currentTime - 10); }
+    else if (e.key === 'ArrowRight') { video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); }
+    else if (e.key.toLowerCase() === 'f') { fsBtn.click(); }
+    else if (e.key.toLowerCase() === 'm') { muteBtn.click(); }
+    else if (e.key === 'Escape') { if (!document.fullscreenElement) location.href = 'home.html'; }
   });
 
-  // hide cursor when idle
+  // Save on exit
+  window.addEventListener('pagehide', () => saveProgress(true));
+  window.addEventListener('beforeunload', () => saveProgress(true));
+
+  // Hide cursor when idle
   let idle;
   function wake() {
     document.body.classList.remove('cursor-hidden');
     clearTimeout(idle);
-    idle = setTimeout(() => { if (playing) document.body.classList.add('cursor-hidden'); }, 2800);
+    idle = setTimeout(() => { if (!video.paused) document.body.classList.add('cursor-hidden'); }, 2800);
   }
   document.addEventListener('mousemove', wake);
   wake();
+
+  // Try autoplay (will fail silently if browser blocks it).
+  if (url) video.play().catch(() => setPlayingUI(false));
 })();
 </script>
 </body>

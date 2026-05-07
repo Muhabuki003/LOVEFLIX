@@ -491,93 +491,167 @@
   <div style="margin-top: 8px;">© 2026 · <a href="whos_watching.html" style="color:#a3a3a3; text-decoration: underline;">Switch profile</a></div>
 </footer>
 
+<script src="assets/loveflix.js"></script>
 <script>
-  // nav scroll bg
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
   const nav = document.getElementById('topnav');
   window.addEventListener('scroll', () => {
     nav.classList.toggle('scrolled', window.scrollY > 60);
   });
 
-  // arrows
-  document.querySelectorAll('.scroll-arrow').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const wrap = btn.closest('.row-scroll-wrap');
-      const scroller = wrap.querySelector('.row-scroll');
-      const dir = parseInt(btn.dataset.dir, 10);
-      scroller.scrollBy({ left: dir * (scroller.clientWidth - 120), behavior: 'smooth' });
-    });
-  });
-
-  // surface user-uploaded videos at the top of the rows
-  (function injectUploads() {
-    let uploads = [];
-    try { uploads = JSON.parse(localStorage.getItem('loveflix_videos')) || []; }
-    catch { uploads = []; }
-    const published = uploads.filter(v => v.pub);
-    if (!published.length) return;
-
-    const rowsWrap = document.querySelector('.rows-wrap');
-    if (!rowsWrap) return;
-
-    const section = document.createElement('section');
-    section.className = 'row';
-    section.innerHTML = `
-      <div class="row-head">
-        <h2 class="row-title">New from Buki</h2>
-        <span class="row-explore">View All ›</span>
-      </div>
-      <div class="row-scroll-wrap">
-        <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
-        <div class="row-scroll" id="uploadsScroll"></div>
-        <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
-      </div>`;
-    rowsWrap.insertBefore(section, rowsWrap.firstElementChild);
-
-    const scroll = section.querySelector('#uploadsScroll');
-    published.forEach(v => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      const thumbStyle = v.thumbDataUrl
-        ? `background:url('${v.thumbDataUrl}') center/cover no-repeat`
-        : (v.tintCss || 'linear-gradient(135deg,#ff7aa2,#5a0a23)');
-      const titleParts = (v.t || 'Untitled').split(' · ');
-      const headline = titleParts[0] || 'Untitled';
-      const sub = titleParts[1] || (v.cat || '');
-      card.innerHTML = `
-        <div class="card-thumb" style="background:${thumbStyle}">
-          <div class="card-thumb-inner">
-            <span>${headline}${sub ? '<br>' + sub : ''}</span>
-            <span class="date">${v.date || ''}</span>
-          </div>
-        </div>
-        <div class="card-overlay">
-          <div class="card-controls">
-            <button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-            <button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-          </div>
-          <div class="card-title">${v.t || 'Untitled'}</div>
-          <div class="card-row"><span class="card-tag">New</span><span class="card-dot"></span><span>${v.cat || ''}</span></div>
-        </div>`;
-      scroll.appendChild(card);
-    });
-
-    // re-bind scroll arrows + card clicks for the new section
-    section.querySelectorAll('.scroll-arrow').forEach(btn => {
+  function bindArrows(root) {
+    (root || document).querySelectorAll('.scroll-arrow').forEach(btn => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
       btn.addEventListener('click', () => {
         const scroller = btn.closest('.row-scroll-wrap').querySelector('.row-scroll');
         const dir = parseInt(btn.dataset.dir, 10);
         scroller.scrollBy({ left: dir * (scroller.clientWidth - 120), behavior: 'smooth' });
       });
     });
-    section.querySelectorAll('.card').forEach(c => {
-      c.addEventListener('click', () => location.href = 'player.html');
-    });
-  })();
+  }
+  bindArrows();
 
-  // card click → player (placeholder)
-  document.querySelectorAll('.card').forEach(c => {
-    c.addEventListener('click', () => location.href = 'player.html');
-  });
+  const TINTS = ['t-rose','t-violet','t-amber','t-blue','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean','t-rose-deep','t-blue-deep'];
+  const tintFor = id => TINTS[Math.abs(hashStr(id)) % TINTS.length];
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < (s || '').length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return h;
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtMin(sec) {
+    if (!sec) return '';
+    const m = Math.round(sec / 60);
+    return m < 1 ? '<1 min' : m + ' min';
+  }
+
+  function renderCard(v, progressRow) {
+    const card = document.createElement('div');
+    const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
+    card.className = 'card' + (tintClass ? ' ' + tintClass : '');
+    const titleParts = (v.title || 'Untitled').split(' · ');
+    const headline = escapeHtml(titleParts[0] || 'Untitled');
+    const sub = escapeHtml(titleParts[1] || v.category || '');
+    const thumbStyle = v.thumbnail_url
+      ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+      : '';
+    const total = v.duration_seconds || 0;
+    let progressBar = '';
+    if (progressRow && total > 0 && !progressRow.completed) {
+      const pct = Math.min(100, Math.round((progressRow.progress_seconds / total) * 100));
+      progressBar = `<div class="card-progress" style="--p:${pct}%"></div>`;
+    }
+    card.innerHTML = `
+      <div class="card-thumb" ${thumbStyle}>
+        <div class="card-thumb-inner">
+          <span>${headline}${sub ? '<br>' + sub : ''}</span>
+          <span class="date">${escapeHtml(v.date || '')}</span>
+        </div>
+      </div>
+      ${progressBar}
+      <div class="card-overlay">
+        <div class="card-controls">
+          <button class="card-ctrl play" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+          <button class="card-ctrl" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+        </div>
+        <div class="card-title">${escapeHtml(v.title || 'Untitled')}</div>
+        <div class="card-row">
+          <span class="card-tag">${escapeHtml(v.category || 'Moment')}</span>
+          <span class="card-dot"></span>
+          <span>${total ? fmtMin(total) : 'New'}</span>
+        </div>
+      </div>`;
+    card.addEventListener('click', () => location.href = `player.html?id=${encodeURIComponent(v.id)}`);
+    return card;
+  }
+
+  function buildRow(title, videos, progressById) {
+    const section = document.createElement('section');
+    section.className = 'row';
+    section.innerHTML = `
+      <div class="row-head">
+        <h2 class="row-title">${escapeHtml(title)}</h2>
+        <span class="row-explore">View All ›</span>
+      </div>
+      <div class="row-scroll-wrap">
+        <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+        <div class="row-scroll"></div>
+        <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
+      </div>`;
+    const scroll = section.querySelector('.row-scroll');
+    videos.forEach(v => scroll.appendChild(renderCard(v, progressById && progressById[v.id])));
+    return section;
+  }
+
+  function emptyRow(message) {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:0 48px 40px;color:#a3a3a3;font-size:14px';
+    div.textContent = message;
+    return div;
+  }
+
+  async function loadHome() {
+    const rowsWrap = document.querySelector('.rows-wrap');
+    rowsWrap.innerHTML = '';
+
+    let videos = [];
+    let progressById = {};
+    try {
+      const [videosRes, progressRes] = await Promise.all([
+        LoveFlix.api('/api/videos'),
+        LoveFlix.api('/api/progress').catch(() => ({ progress: [] })),
+      ]);
+      videos = videosRes.videos || [];
+      (progressRes.progress || []).forEach(p => { progressById[p.video_id] = p; });
+    } catch (e) {
+      rowsWrap.appendChild(emptyRow("Couldn't load your library: " + e.message));
+      return;
+    }
+
+    if (!videos.length) {
+      rowsWrap.appendChild(emptyRow('No videos yet. Head to the Creator Studio and upload your first memory 💕'));
+      return;
+    }
+
+    // Hero — set first video as the featured banner.
+    const hero = videos[0];
+    const heroTitle = document.querySelector('.hero-title');
+    const heroDesc = document.querySelector('.hero-desc');
+    const heroPlay = document.querySelector('.hero-actions .btn-primary');
+    if (heroTitle) heroTitle.innerHTML = escapeHtml(hero.title || 'Three Years of Us').replace(/ · /, '<br>');
+    if (heroDesc && hero.description) heroDesc.textContent = hero.description;
+    if (heroPlay) heroPlay.onclick = () => location.href = `player.html?id=${encodeURIComponent(hero.id)}`;
+
+    // Continue Watching: anything with progress, not completed.
+    const inProgress = videos.filter(v => {
+      const p = progressById[v.id];
+      return p && !p.completed && p.progress_seconds > 5;
+    }).sort((a, b) => (progressById[b.id].last_watched_at || 0) - (progressById[a.id].last_watched_at || 0));
+
+    if (inProgress.length) {
+      rowsWrap.appendChild(buildRow('Continue Watching', inProgress, progressById));
+    }
+
+    // Group by category
+    const byCat = new Map();
+    videos.forEach(v => {
+      const k = v.category || 'Moments';
+      if (!byCat.has(k)) byCat.set(k, []);
+      byCat.get(k).push(v);
+    });
+    for (const [cat, list] of byCat) {
+      rowsWrap.appendChild(buildRow(cat, list, progressById));
+    }
+
+    bindArrows(rowsWrap);
+  }
+
+  loadHome();
 </script>
 </body>
 </html>

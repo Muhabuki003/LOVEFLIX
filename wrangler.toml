@@ -1,0 +1,30 @@
+name = "loveflix"
+compatibility_date = "2025-05-01"
+account_id = "daba2b39-0ff8-4ef0-b28a-e586bb1fd6a6"
+pages_build_output_dir = "."
+
+# ---- D1 (database) ----
+[[d1_databases]]
+binding = "DB"
+database_name = "loveflix-db"
+database_id = "REPLACE_WITH_D1_ID_AFTER_CREATE"
+
+# ---- R2 (video + image storage) ----
+[[r2_buckets]]
+binding = "VIDEOS"
+bucket_name = "loveflix-videos"
+
+# ---- Public env (safe to expose) ----
+[vars]
+SUPABASE_URL = "https://jeblgjjutyzzdursjqnn.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko"
+R2_ACCOUNT_ID = "daba2b39-0ff8-4ef0-b28a-e586bb1fd6a6"
+R2_BUCKET_NAME = "loveflix-videos"
+# Public R2 URL — set this once you enable R2 public access or attach a custom domain.
+# Example: "https://pub-<hash>.r2.dev" or "https://media.yoursite.com"
+R2_PUBLIC_URL = ""
+DEFAULT_TENANT_ID = "default"
+
+# Secrets (set via `wrangler pages secret put <NAME>`):
+#   R2_ACCESS_KEY_ID        — for presigned uploads (S3 API)
+#   R2_SECRET_ACCESS_KEY    — for presigned uploads (S3 API)
