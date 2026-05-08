@@ -68,7 +68,9 @@ export async function onRequest(context) {
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
-    return json({ error: 'server_error', message: err.message }, 500);
+    const message = err && err.message ? err.message : String(err);
+    console.error('API route failed', { method, path, message, stack: err && err.stack });
+    return json({ error: 'server_error', message }, 500);
   }
 }
 
@@ -124,6 +126,14 @@ async function createVideo(env, request, user) {
   const id = body.id || `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const tenantId = user.id;
   const isPublished = body.is_published === false ? 0 : 1;
+  const thumbnailUrl = body.thumbnail_url || '';
+
+  if (thumbnailUrl.startsWith('data:')) {
+    return json({
+      error: 'thumbnail_not_uploaded',
+      message: 'Custom thumbnails must be uploaded to R2 and saved as a public URL, not stored inline as a data URL.',
+    }, 400);
+  }
 
   await env.DB.prepare(
     `INSERT INTO videos
@@ -137,7 +147,7 @@ async function createVideo(env, request, user) {
     body.description || '',
     body.date || '',
     body.category || 'Moments',
-    body.thumbnail_url || '',
+    thumbnailUrl,
     body.video_url || '',
     parseInt(body.duration_seconds || 0, 10) || 0,
     isPublished,

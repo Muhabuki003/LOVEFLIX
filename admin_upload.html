@@ -264,7 +264,9 @@
   const previewBox = document.getElementById('previewBox');
 
   let selectedFile = null;
-  let selectedThumbDataUrl = null;
+  let selectedThumbFile = null;
+  let selectedThumbPreviewUrl = null;
+  let uploadedThumbUrl = null;
   let selectedTint = TINTS[0];
   let selectedTintClass = TINT_CLASSES[0];
   let uploadComplete = false;
@@ -368,8 +370,10 @@
     if (!f) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      selectedThumbDataUrl = ev.target.result;
-      const url = `url(${JSON.stringify(selectedThumbDataUrl)}) center/cover no-repeat`;
+      selectedThumbFile = f;
+      uploadedThumbUrl = null;
+      selectedThumbPreviewUrl = ev.target.result;
+      const url = `url(${JSON.stringify(selectedThumbPreviewUrl)}) center/cover no-repeat`;
       previewBox.style.background = url;
       previewBox.innerHTML = '';
       uploadedThumb.style.background = url;
@@ -388,7 +392,9 @@
     selectedTint = el.dataset.tint;
     const idx = [...el.parentNode.children].indexOf(el);
     selectedTintClass = TINT_CLASSES[idx] || TINT_CLASSES[0];
-    selectedThumbDataUrl = null;
+    selectedThumbFile = null;
+    selectedThumbPreviewUrl = null;
+    uploadedThumbUrl = null;
     previewBox.style.background = selectedTint;
     uploadedThumb.style.background = selectedTint;
     uploadedThumb.textContent = 'VIDEO';
@@ -396,19 +402,32 @@
 
   // live preview
   vTitle.addEventListener('input', () => {
-    if (selectedThumbDataUrl) return;
+    if (selectedThumbPreviewUrl) return;
     previewBox.innerHTML = (vTitle.value || 'Untitled').replace(/ · /, '<br>');
   });
 
-  function buildRecord(isDraft) {
+  async function uploadThumbnailIfNeeded() {
+    if (!selectedThumbFile) return '';
+    if (uploadedThumbUrl) return uploadedThumbUrl;
+
+    const presign = await LoveFlix.api(
+      `/api/upload-url?folder=images&filename=${encodeURIComponent(selectedThumbFile.name)}&type=${encodeURIComponent(selectedThumbFile.type || 'image/jpeg')}`
+    );
+    await LoveFlix.putWithProgress(presign.upload_url, selectedThumbFile);
+    uploadedThumbUrl = presign.public_url;
+    return uploadedThumbUrl;
+  }
+
+  async function buildRecord(isDraft) {
     const now = new Date();
     const monthShort = now.toLocaleString('en-US', { month: 'short' });
+    const thumbnailUrl = await uploadThumbnailIfNeeded();
     return {
       title: vTitle.value.trim() || (selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : 'Untitled'),
       description: vDesc.value.trim(),
       category: vCat.value || 'Moments',
       date: `${monthShort} ${now.getDate()}, ${now.getFullYear()}`,
-      thumbnail_url: selectedThumbDataUrl || '',
+      thumbnail_url: thumbnailUrl,
       video_url: uploadedVideoUrl || '',
       duration_seconds: durationSeconds,
       is_published: !isDraft,
@@ -426,7 +445,12 @@
     btn.textContent = isDraft ? 'Saving…' : 'Publishing…';
 
     try {
-      await LoveFlix.api('/api/videos', { method: 'POST', body: buildRecord(isDraft) });
+      if (selectedThumbFile && !uploadedThumbUrl) {
+        btn.textContent = 'Uploading thumbnail…';
+      }
+      const record = await buildRecord(isDraft);
+      btn.textContent = isDraft ? 'Saving…' : 'Publishing…';
+      await LoveFlix.api('/api/videos', { method: 'POST', body: record });
       location.href = 'admin_videos.html';
     } catch (err) {
       btn.disabled = false;
