@@ -147,6 +147,11 @@
       <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="Min 8 characters"></div>
       <div class="field"><label>Confirm password</label><input type="password" id="signupPasswordConfirm"></div>
     </div>
+    <div class="field">
+      <label>Admin passcode</label>
+      <input type="password" id="adminPasscode" placeholder="4-digit PIN to access your profile" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
+      <div class="field-hint" style="margin-top:6px;font-size:12px;color:#888">You'll enter this PIN each time you access your admin profile.</div>
+    </div>
     <div id="signupError" class="error-msg" style="background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:14px;margin-bottom:16px;display:none;line-height:1.4"></div>
     <div class="field-hint" style="text-align:center;margin-top:20px">By continuing you agree to our Terms &amp; Privacy.</div>
     <div class="step-nav">
@@ -294,11 +299,13 @@
       const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
       const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
       const accentEl = document.querySelector('#colors .color.selected');
+      const savedPasscode = document.getElementById('adminPasscode').value.trim();
       LoveFlix.saveSettings({
         adminName: adminName || 'You',
         partnerName: partnerName,
         urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
+        adminPasscode: savedPasscode || '1234',
       });
       document.getElementById('successUrl').textContent = 'loveflix.so/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
@@ -411,6 +418,13 @@
 
     if (pwd.length < 8) {
       errorDiv.textContent = 'Password must be at least 8 characters.';
+      errorDiv.style.display = 'block';
+      return;
+    }
+
+    const passcode = document.getElementById('adminPasscode').value.trim();
+    if (!passcode || !/^\d{4}$/.test(passcode)) {
+      errorDiv.textContent = 'Admin passcode must be exactly 4 digits.';
       errorDiv.style.display = 'block';
       return;
     }

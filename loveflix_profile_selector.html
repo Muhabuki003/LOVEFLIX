@@ -324,7 +324,7 @@
 </div>
 
 <script>
-  const CORRECT_PIN = '1234';
+  const CORRECT_PIN = (function(){ try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}').adminPasscode || '1234'; } catch(e){ return '1234'; } })();
   let pinValue = '';
   let pinLocked = false;
 
