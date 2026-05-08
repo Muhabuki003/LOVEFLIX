@@ -291,12 +291,38 @@
 
   @keyframes heroIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
+  @media (max-width: 900px) {
+    nav.topnav { padding: 14px 24px; }
+    .hero { padding: 0 24px 100px; }
+  }
   @media (max-width: 720px) {
-    nav.topnav { padding: 14px 20px; }
+    nav.topnav { padding: 12px 16px; }
+    .nav-left { gap: 18px; }
+    .nf-logo { font-size: 28px; }
+    .nf-logo .heart { font-size: 20px; }
     .nav-links { display: none; }
-    .hero { padding: 0 20px 80px; min-height: 520px; }
-    .row-head, .rows-wrap .row-scroll { padding-left: 20px; padding-right: 20px; }
-    .card { width: 220px; }
+    .nav-right { gap: 12px; }
+    .hero { padding: 0 16px 70px; min-height: 480px; height: auto; }
+    .hero-title { font-size: clamp(40px, 11vw, 64px); }
+    .hero-desc { font-size: 14px; margin-bottom: 20px; }
+    .hero-meta { flex-wrap: wrap; gap: 8px; font-size: 12px; }
+    .btn { padding: 10px 22px; font-size: 14px; }
+    .row-head, .rows-wrap .row-scroll { padding-left: 16px; padding-right: 16px; }
+    .row-scroll { padding-top: 16px; padding-bottom: 32px; }
+    .row-title { font-size: 18px; }
+    .card { width: 180px; }
+    /* hover scaling steals tap area on touch — disable it */
+    .card:hover { transform: none; box-shadow: none; }
+    .row:hover .card:not(:hover) { opacity: 1; }
+    .card-overlay { transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding: 10px 10px 8px; }
+    .card-controls { display: none; }
+    .card-title { font-size: 12px; margin-bottom: 4px; }
+    .scroll-arrow { display: none; }
+    footer { padding: 30px 16px 40px; }
+  }
+  @media (max-width: 420px) {
+    .hero-title { font-size: 44px; }
+    .card { width: 150px; }
   }
 </style>
 </head>

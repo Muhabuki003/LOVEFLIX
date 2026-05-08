@@ -84,8 +84,25 @@
   .btn-danger{background:transparent;border:1px solid rgba(248,113,113,0.5);color:#fca5a5}
   .btn-danger:hover{background:rgba(248,113,113,0.12);border-color:#fca5a5;color:#fff}
 
-  @media (max-width: 1000px){.grid{grid-template-columns:1fr}}
-  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.page-title{font-size:36px}.field-grid,.avatar-row{grid-template-columns:1fr}}
+  @media (max-width: 1000px){.grid{grid-template-columns:1fr}.preview-card{position:static}}
+  @media (max-width: 720px){
+    .layout{grid-template-columns:1fr}
+    aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}
+    .side-logo,.side-foot,.side-eyebrow{display:none}
+    .side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+    .side-link.active{border-left:none;border-bottom-color:var(--red)}
+    main{padding:20px 16px 40px}
+    .page-title{font-size:32px}
+    .panel{padding:18px}
+    .field-grid,.avatar-row{grid-template-columns:1fr}
+    .colors{gap:8px}
+    .color-swatch{width:40px;height:40px}
+    .actions{flex-direction:column-reverse;gap:10px}
+    .actions .btn{width:100%;justify-content:center}
+    .danger>div{flex-direction:column}
+    .danger .btn{width:100%;justify-content:center}
+    .avatar-pic{width:100px;height:100px;font-size:48px}
+  }
 </style>
 </head>
 <body>

@@ -116,6 +116,9 @@
   .ctrl-btn:hover { transform: scale(1.15); }
   .ctrl-btn svg { width: 28px; height: 28px; fill: #fff; }
   .ctrl-btn.play svg { width: 32px; height: 32px; }
+  .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .ctrl-btn:disabled:hover { transform: none; }
+  .ctrl-btn.toggle.on svg { fill: var(--red); }
   .ctrl-tooltip {
     position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
     background: rgba(255,255,255,0.95); color: #000;
@@ -124,6 +127,13 @@
     transition: opacity 0.15s ease;
   }
   .ctrl-btn:hover .ctrl-tooltip { opacity: 1; }
+  @media (hover: none) { .ctrl-btn:hover .ctrl-tooltip { opacity: 0; } }
+
+  .autoplay-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: rgba(255,255,255,0.85);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
 
   .ep-meta { display: flex; flex-direction: column; margin-left: 8px; }
   .ep-meta .e { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; }
@@ -184,12 +194,34 @@
   .next-btn.ghost:hover { border-color: #fff; }
   .next-btn svg { width: 14px; height: 14px; fill: currentColor; }
 
+  @media (max-width: 900px) {
+    .ep-meta { display: none; }
+  }
   @media (max-width: 720px) {
-    .topbar { padding: 14px 18px; }
-    .controls { padding: 18px 18px 22px; }
-    .next-up { right: 14px; left: 14px; width: auto; bottom: 120px; }
-    .ctrl-row { gap: 14px; }
-    .ctrl-left, .ctrl-right { gap: 14px; }
+    .topbar { padding: 12px 14px; gap: 10px; }
+    .topbar-title { font-size: 14px; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar-eyebrow { font-size: 9px; letter-spacing: 2px; }
+    .controls { padding: 14px 14px 18px; }
+    .scrub { gap: 10px; font-size: 12px; margin-bottom: 12px; }
+    .next-up { right: 10px; left: 10px; width: auto; bottom: 110px; }
+    .next-up-thumb { height: 130px; }
+    .next-up-thumb-text { font-size: 22px; }
+    .next-up-body { padding: 14px 16px 16px; }
+    .next-up-title { font-size: 16px; }
+    .ctrl-row { gap: 6px; flex-wrap: wrap; }
+    .ctrl-left, .ctrl-right { gap: 8px; }
+    .ctrl-btn { width: 32px; height: 32px; }
+    .ctrl-btn svg { width: 22px; height: 22px; }
+    .ctrl-btn.play svg { width: 26px; height: 26px; }
+    .vol-wrap .vol-track { display: none; }
+    .autoplay-label .autoplay-text { display: none; }
+    .placeholder .nf-logo { font-size: 44px; }
+    .placeholder .msg { font-size: 14px; }
+  }
+  @media (max-width: 420px) {
+    .ctrl-left { flex: 1 1 auto; justify-content: space-between; }
+    .ctrl-right { gap: 6px; }
+    .scrub span { font-size: 11px; }
   }
 </style>
 </head>
@@ -228,9 +260,17 @@
 
     <div class="ctrl-row">
       <div class="ctrl-left">
+        <button class="ctrl-btn" id="prevBtn" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          <span class="ctrl-tooltip">Previous</span>
+        </button>
         <button class="ctrl-btn play" id="playBtn">
           <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           <span class="ctrl-tooltip" id="playTip">Play (k)</span>
+        </button>
+        <button class="ctrl-btn" id="nextBtn" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+          <span class="ctrl-tooltip">Next</span>
         </button>
         <button class="ctrl-btn" id="back10">
           <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z" transform="rotate(180 12 12)"/></svg>
@@ -254,6 +294,10 @@
       </div>
 
       <div class="ctrl-right">
+        <button class="ctrl-btn toggle" id="autoplayBtn" title="Autoplay next">
+          <svg viewBox="0 0 24 24"><path d="M3 5v14l8-7zm9 0v14l8-7z"/></svg>
+          <span class="ctrl-tooltip" id="autoplayTip">Autoplay: On</span>
+        </button>
         <button class="ctrl-btn" id="fsBtn">
           <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
           <span class="ctrl-tooltip">Fullscreen</span>
@@ -384,14 +428,39 @@
     } catch (_) { /* keep playing even if save fails */ }
   }
 
-  // --- Next-up card --------------------------------------------------------
-  const nextVideo = (() => {
-    if (!videoData) return null;
-    const idx = allVideos.findIndex(v => v.id === videoData.id);
-    if (idx === -1) return allVideos[0] || null;
-    return allVideos[idx + 1] || null;
-  })();
+  // --- Prev / Next + Autoplay ---------------------------------------------
+  const currentIdx = videoData ? allVideos.findIndex(v => v.id === videoData.id) : -1;
+  const nextVideo = currentIdx >= 0 ? (allVideos[currentIdx + 1] || null) : (allVideos[0] || null);
+  const prevVideo = currentIdx > 0 ? allVideos[currentIdx - 1] : null;
 
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  if (prevVideo) {
+    prevBtn.disabled = false;
+    prevBtn.addEventListener('click', () => location.href = `player.html?id=${encodeURIComponent(prevVideo.id)}`);
+  }
+  if (nextVideo) {
+    nextBtn.disabled = false;
+    nextBtn.addEventListener('click', () => location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`);
+  }
+
+  const AUTOPLAY_KEY = 'loveflix_autoplay';
+  let autoplayOn = localStorage.getItem(AUTOPLAY_KEY) !== '0';
+  const autoplayBtn = document.getElementById('autoplayBtn');
+  const autoplayTip = document.getElementById('autoplayTip');
+  function paintAutoplay() {
+    autoplayBtn.classList.toggle('on', autoplayOn);
+    autoplayTip.textContent = 'Autoplay: ' + (autoplayOn ? 'On' : 'Off');
+    autoplayBtn.setAttribute('aria-pressed', String(autoplayOn));
+  }
+  autoplayBtn.addEventListener('click', () => {
+    autoplayOn = !autoplayOn;
+    localStorage.setItem(AUTOPLAY_KEY, autoplayOn ? '1' : '0');
+    paintAutoplay();
+  });
+  paintAutoplay();
+
+  // --- Next-up card --------------------------------------------------------
   if (nextVideo) {
     document.getElementById('nextTitle').textContent = nextVideo.title || 'Up Next';
     document.getElementById('nextDesc').textContent = nextVideo.description || '';
@@ -401,10 +470,14 @@
     }
   }
 
+  let nextUpDismissed = false;
   document.getElementById('playNext').addEventListener('click', () => {
     if (nextVideo) location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
   });
-  document.getElementById('cancelNext').addEventListener('click', () => nextUp.classList.remove('show'));
+  document.getElementById('cancelNext').addEventListener('click', () => {
+    nextUp.classList.remove('show');
+    nextUpDismissed = true;
+  });
 
   // --- Custom controls -----------------------------------------------------
   function setPlayingUI(playing) {
@@ -439,6 +512,16 @@
     total.textContent = fmt(video.duration);
   });
 
+  // Show the Up Next card only in the final stretch of the video — and
+  // never longer than ~15s of content. For very short clips, fall back to
+  // 25% of remaining time so it still has time to appear.
+  function nextUpThreshold(d) {
+    if (!isFinite(d) || d <= 0) return 10;
+    if (d < 30) return Math.max(3, d * 0.25);
+    if (d < 90) return 8;
+    return 12;
+  }
+
   video.addEventListener('timeupdate', () => {
     const d = video.duration || 0;
     const c = video.currentTime || 0;
@@ -446,17 +529,25 @@
     if (d > 0) fill.style.width = ((c / d) * 100) + '%';
     saveProgress(false);
 
-    if (d > 0 && d - c <= 30 && nextVideo && !nextUp.classList.contains('show')) {
+    if (!nextVideo) return;
+    const threshold = nextUpThreshold(d);
+    const remaining = d - c;
+    if (d > 0 && remaining <= threshold && remaining > 0 && !nextUpDismissed && !nextUp.classList.contains('show')) {
       nextUp.classList.add('show');
     }
-    if (d > 0 && d - c > 35) {
+    // If the user scrubs back well before the threshold, allow the card
+    // to re-appear next time it gets close to the end.
+    if (d > 0 && remaining > threshold + 10) {
       nextUp.classList.remove('show');
+      nextUpDismissed = false;
     }
   });
 
   video.addEventListener('ended', async () => {
     await saveProgress(true);
-    if (nextVideo) location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+    if (autoplayOn && nextVideo) {
+      location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+    }
   });
 
   track.addEventListener('click', e => {
