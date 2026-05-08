@@ -113,7 +113,7 @@
     </div>
   </div>
   <div class="nav-right">
-    <a href="whos_watching.html" class="nav-avatar">M</a>
+    <a href="whos_watching.html" class="nav-avatar" id="navAvatar">M</a>
   </div>
 </nav>
 
@@ -121,7 +121,7 @@
   <div class="page-head">
     <div>
       <h1 class="page-title">All Videos</h1>
-      <p class="page-sub">86 videos · 14 hours of us · sorted by newest</p>
+      <p class="page-sub" id="pageSub">Loading…</p>
     </div>
     <div class="search">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -144,44 +144,42 @@
   <div class="empty" id="empty">No videos match that.</div>
 </main>
 
+<script src="assets/loveflix.js"></script>
 <script>
-  const VIDEOS = [
-    { t:'The Lisbon Trip · Day 3', cat:'trips', date:'May 2025', dur:'26:12', tint:'t-rose', fav:true },
-    { t:'The Birthday Surprise', cat:'birthdays', date:'Aug 2024', dur:'12:04', tint:'t-amber', fav:true },
-    { t:'Forest Picnic', cat:'moments', date:'Jun 2024', dur:'08:31', tint:'t-emerald', fav:false },
-    { t:'Beach Sunrise', cat:'moments', date:'Apr 2024', dur:'04:15', tint:'t-coral', fav:true },
-    { t:'Rooftop Anniversary', cat:'anniversary', date:'Feb 2024', dur:'18:22', tint:'t-violet', fav:true },
-    { t:'Snowy Christmas', cat:'moments', date:'Dec 2023', dur:'14:08', tint:'t-blue', fav:false },
-    { t:'Ep. 01 — The Coffee', cat:'moments', date:'May 2023', dur:'06:40', tint:'t-rose2', fav:false },
-    { t:'Ep. 02 — First Walk', cat:'moments', date:'Jun 2023', dur:'09:11', tint:'t-twilight', fav:false },
-    { t:'Ep. 03 — The Mixtape', cat:'letters', date:'Jul 2023', dur:'03:55', tint:'t-mauve', fav:true },
-    { t:'Ep. 04 — I Love You', cat:'moments', date:'Sep 2023', dur:'05:22', tint:'t-sunset', fav:false },
-    { t:'Ep. 05 — Moving In', cat:'moments', date:'Nov 2023', dur:'10:48', tint:'t-ocean', fav:false },
-    { t:'Ep. 06 — The Question', cat:'anniversary', date:'Feb 2024', dur:'07:30', tint:'t-emerald', fav:true },
-    { t:'Ep. 07 — Yes', cat:'anniversary', date:'Feb 2024', dur:'02:18', tint:'t-coral', fav:true },
-    { t:'Surprise Proposal', cat:'anniversary', date:'Feb 2024', dur:'04:02', tint:'t-amber', fav:true },
-    { t:'One Year Letter', cat:'letters', date:'May 2024', dur:'02:44', tint:'t-rose', fav:true },
-    { t:'Dance in the Rain', cat:'moments', date:'Jul 2024', dur:'03:08', tint:'t-violet', fav:false },
-    { t:'Ocean Vows', cat:'anniversary', date:'Aug 2024', dur:'05:55', tint:'t-blue2', fav:true },
-    { t:'Stars in Joshua Tree', cat:'trips', date:'Oct 2024', dur:'07:14', tint:'t-night', fav:false },
-    { t:'Sunset Bike Ride', cat:'moments', date:'Nov 2024', dur:'03:44', tint:'t-twilight', fav:false },
-    { t:'Forest Cabin Weekend', cat:'trips', date:'Mar 2024', dur:'16:10', tint:'t-forest', fav:true },
-    { t:'The Tram Ride · Lisbon', cat:'trips', date:'May 2025', dur:'11:22', tint:'t-rust', fav:false },
-    { t:'Pastéis de Nata', cat:'cooking', date:'May 2025', dur:'05:48', tint:'t-amber', fav:false },
-    { t:'Pasta Night Disaster', cat:'cooking', date:'Feb 2025', dur:'08:09', tint:'t-rose2', fav:false },
-    { t:'The Pancake Tradition', cat:'cooking', date:'Jan 2025', dur:'04:38', tint:'t-twilight', fav:true },
-    { t:'2nd Anniversary', cat:'anniversary', date:'May 2025', dur:'22:00', tint:'t-orchid', fav:true },
-    { t:'Your 30th Birthday', cat:'birthdays', date:'Mar 2025', dur:'15:21', tint:'t-coral', fav:true },
-    { t:'My Birthday Hike', cat:'birthdays', date:'Sep 2024', dur:'09:48', tint:'t-emerald', fav:false },
-    { t:'Letter from Day 100', cat:'letters', date:'Aug 2023', dur:'01:48', tint:'t-mauve', fav:false },
-    { t:'Letter from Day 365', cat:'letters', date:'May 2024', dur:'02:12', tint:'t-rose', fav:false },
-    { t:'Iceland Northern Lights', cat:'trips', date:'Feb 2025', dur:'12:34', tint:'t-ocean', fav:true },
-  ];
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  LoveFlix.paintNavAvatar(document.getElementById('navAvatar'));
+
+  let VIDEOS = [];
+
+  const TINTS = ['t-rose','t-rose2','t-blue','t-blue2','t-violet','t-amber','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean','t-night','t-forest','t-rust','t-orchid'];
+  function tintFor(id) {
+    let h = 0;
+    for (let i = 0; i < (id || '').length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    return TINTS[Math.abs(h) % TINTS.length];
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmtDur(sec) {
+    if (!sec) return '—';
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function fmtTotal(totalSec) {
+    if (!totalSec) return '0 min';
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.round((totalSec % 3600) / 60);
+    if (h && m) return `${h}h ${m}m`;
+    if (h) return `${h}h`;
+    return `${m} min`;
+  }
 
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
   const search = document.getElementById('search');
   const filtersEl = document.getElementById('filters');
+  const pageSub = document.getElementById('pageSub');
   let activeCat = 'all';
 
   function favIcon(on){
@@ -193,24 +191,36 @@
   function render() {
     const q = search.value.trim().toLowerCase();
     const list = VIDEOS.filter(v => {
-      const catOk = activeCat === 'all' ? true : (activeCat === 'favorites' ? v.fav : v.cat === activeCat);
-      const qOk = !q || v.t.toLowerCase().includes(q);
+      const cat = (v.category || '').toLowerCase();
+      const catOk = activeCat === 'all'
+        ? true
+        : (activeCat === 'favorites' ? !!v.is_favorite : cat === activeCat || cat === activeCat.replace(/-/g, ' '));
+      const qOk = !q || (v.title || '').toLowerCase().includes(q);
       return catOk && qOk;
     });
-    grid.innerHTML = list.map(v => `
-      <article class="card ${v.tint}" onclick="location.href='player.html'">
-        <div class="card-thumb">
-          <span class="card-thumb-date">${v.date}</span>
-          <span class="card-thumb-fav">${favIcon(v.fav)}</span>
-          <span class="card-thumb-text">${v.t.replace(/ · /, '<br>')}</span>
-          <span class="card-thumb-dur">${v.dur}</span>
+    grid.innerHTML = list.map(v => {
+      const cat = (v.category || 'Moments');
+      const date = v.date || '';
+      const dur = fmtDur(v.duration_seconds);
+      const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
+      const thumbStyle = v.thumbnail_url
+        ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+        : '';
+      const titleHtml = escapeHtml(v.title || 'Untitled').replace(/ · /, '<br>');
+      return `
+      <article class="card ${tintClass}" data-id="${escapeHtml(v.id)}">
+        <div class="card-thumb" ${thumbStyle}>
+          <span class="card-thumb-date">${escapeHtml(date)}</span>
+          <span class="card-thumb-fav">${favIcon(!!v.is_favorite)}</span>
+          ${v.thumbnail_url ? '' : `<span class="card-thumb-text">${titleHtml}</span>`}
+          <span class="card-thumb-dur">${dur}</span>
         </div>
         <div class="card-body">
-          <div class="card-title">${v.t}</div>
-          <div class="card-meta"><span class="card-cat">${v.cat}</span> · <span>${v.date}</span> · <span>${v.dur}</span></div>
+          <div class="card-title">${escapeHtml(v.title || 'Untitled')}</div>
+          <div class="card-meta"><span class="card-cat">${escapeHtml(cat)}</span> · <span>${escapeHtml(date || '—')}</span> · <span>${dur}</span></div>
         </div>
-      </article>
-    `).join('');
+      </article>`;
+    }).join('');
     empty.style.display = list.length ? 'none' : 'block';
   }
 
@@ -224,7 +234,30 @@
   });
   search.addEventListener('input', render);
 
-  render();
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    location.href = `player.html?id=${encodeURIComponent(card.dataset.id)}`;
+  });
+
+  async function load() {
+    try {
+      const r = await LoveFlix.api('/api/videos');
+      VIDEOS = r.videos || [];
+    } catch (e) {
+      pageSub.textContent = "Couldn't load videos: " + e.message;
+      empty.style.display = 'block';
+      return;
+    }
+    const totalSec = VIDEOS.reduce((s, v) => s + (v.duration_seconds || 0), 0);
+    if (!VIDEOS.length) {
+      pageSub.textContent = 'No videos yet. Upload your first memory in the Creator Studio.';
+    } else {
+      pageSub.textContent = `${VIDEOS.length} video${VIDEOS.length === 1 ? '' : 's'} · ${fmtTotal(totalSec)} of us · sorted by newest`;
+    }
+    render();
+  }
+  load();
 </script>
 </body>
 </html>

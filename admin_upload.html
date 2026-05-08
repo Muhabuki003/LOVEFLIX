@@ -156,37 +156,37 @@
         <h2 style="margin-top:30px">2 · Details</h2>
         <div class="field">
           <label>Title</label>
-          <input type="text" id="vTitle" placeholder="The Lisbon Trip · Day 3" value="The Lisbon Trip · Day 3">
+          <input type="text" id="vTitle" placeholder="The Lisbon Trip · Day 3">
         </div>
         <div class="field">
           <label>Description</label>
-          <textarea id="vDesc" placeholder="Tell us what happened that day...">Yellow trams, hilltop sunsets, and that one pastéis de nata you wouldn't share. Day three of Lisbon and we still hadn't slept.</textarea>
+          <textarea id="vDesc" placeholder="Tell us what happened that day..."></textarea>
         </div>
         <div class="field-grid">
           <div class="field">
             <label>Category</label>
             <select id="vCat">
+              <option>Moments</option>
               <option>Trips</option>
               <option>Anniversary</option>
               <option>Birthdays</option>
-              <option>Moments</option>
               <option>Letters</option>
               <option>Cooking Together</option>
             </select>
           </div>
           <div class="field">
             <label>Date Recorded</label>
-            <input type="date" value="2025-05-14">
+            <input type="date" id="vDate">
           </div>
         </div>
         <div class="field-grid">
           <div class="field">
             <label>Season (optional)</label>
-            <input type="text" placeholder="3" value="3">
+            <input type="text" id="vSeason" placeholder="3">
           </div>
           <div class="field">
             <label>Episode (optional)</label>
-            <input type="text" placeholder="4" value="4">
+            <input type="text" id="vEpisode" placeholder="4">
           </div>
         </div>
 
@@ -210,7 +210,7 @@
 
         <div class="panel" style="margin-bottom:20px">
           <h2>Preview</h2>
-          <div style="aspect-ratio:16/9;border-radius:6px;background:linear-gradient(135deg,#ff7aa2,#5a0a23);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;text-shadow:0 2px 12px rgba(0,0,0,0.5)" id="previewBox">The Lisbon Trip<br>Day 3</div>
+          <div style="aspect-ratio:16/9;border-radius:6px;background:linear-gradient(135deg,#ff7aa2,#5a0a23);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;text-shadow:0 2px 12px rgba(0,0,0,0.5);text-align:center;padding:14px" id="previewBox">Untitled</div>
           <div style="margin-top:10px;font-size:13px"><span style="color:var(--text-dim)">Will appear in:</span> Continue Watching, Trips, Season 3</div>
         </div>
 
@@ -466,7 +466,12 @@
     const s = LoveFlix.getSettings();
     const name = s.adminName || 'You';
     const slug = s.urlSlug || '';
-    document.getElementById('sideAvatar').textContent = name[0].toUpperCase();
+    const av = document.getElementById('sideAvatar');
+    av.textContent = name[0].toUpperCase();
+    if (s.adminPhoto) {
+      av.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover no-repeat`;
+      av.style.color = 'transparent';
+    }
     document.getElementById('sideAdminName').textContent = name;
     document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
   })();

@@ -546,6 +546,22 @@
   document.getElementById('herName').textContent = partnerName;
   document.getElementById('herProfile').dataset.name = partnerName;
   document.getElementById('herProfile').setAttribute('aria-label', 'Select profile ' + partnerName);
+  if (settings.partnerPhoto) {
+    const av = document.querySelector('#herProfile .avatar');
+    if (av) {
+      av.style.background = `url(${JSON.stringify(settings.partnerPhoto)}) center/cover no-repeat`;
+      const init = document.getElementById('herInitial');
+      if (init) init.style.color = 'transparent';
+    }
+  }
+  if (settings.adminPhoto) {
+    const av = document.querySelector('#hisProfile .avatar');
+    if (av) {
+      av.style.background = `url(${JSON.stringify(settings.adminPhoto)}) center/cover no-repeat`;
+      const init = document.getElementById('hisInitial');
+      if (init) init.style.color = 'transparent';
+    }
+  }
 
   document.getElementById('hisInitial').textContent = adminName[0].toUpperCase();
   document.getElementById('hisName').textContent = adminName;

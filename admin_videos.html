@@ -287,7 +287,12 @@
     const s = LoveFlix.getSettings();
     const name = s.adminName || 'You';
     const slug = s.urlSlug || '';
-    document.getElementById('sideAvatar').textContent = name[0].toUpperCase();
+    const av = document.getElementById('sideAvatar');
+    av.textContent = name[0].toUpperCase();
+    if (s.adminPhoto) {
+      av.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover no-repeat`;
+      av.style.color = 'transparent';
+    }
     document.getElementById('sideAdminName').textContent = name;
     document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
   })();

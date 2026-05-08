@@ -37,6 +37,38 @@
     localStorage.removeItem(SETTINGS_KEY);
   }
 
+  // Active profile: 'his' (admin) or 'her' (partner). Falls back to admin
+  // since the upload/admin pages assume the creator is signed in.
+  function getActiveProfile() {
+    const settings = getSettings();
+    const adminName = settings.adminName || 'You';
+    const partnerName = settings.partnerName || 'My Love';
+    let profileName = '';
+    let isAdmin = '';
+    try {
+      profileName = sessionStorage.getItem('loveflix_profile') || '';
+      isAdmin = sessionStorage.getItem('loveflix_is_admin') || '';
+    } catch (_) {}
+    const isPartner = profileName && profileName === partnerName && isAdmin !== '1';
+    return {
+      role: isPartner ? 'her' : 'his',
+      name: isPartner ? partnerName : adminName,
+      photo: isPartner ? (settings.partnerPhoto || '') : (settings.adminPhoto || ''),
+      initial: ((isPartner ? partnerName : adminName)[0] || '?').toUpperCase(),
+    };
+  }
+
+  // Paint the top-right viewer avatar (home/browse) with the active profile.
+  function paintNavAvatar(el) {
+    if (!el) return;
+    const p = getActiveProfile();
+    el.textContent = p.initial;
+    if (p.photo) {
+      el.style.background = `url(${JSON.stringify(p.photo)}) center/cover no-repeat`;
+      el.style.color = 'transparent';
+    }
+  }
+
   async function signIn(email, password) {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
@@ -150,5 +182,7 @@
     requireAuth,
     api,
     putWithProgress,
+    getActiveProfile,
+    paintNavAvatar,
   };
 })(window);
