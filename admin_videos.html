@@ -89,7 +89,29 @@
 
   @media (max-width: 1100px){.table thead th:nth-child(4),.table tbody td:nth-child(4){display:none}}
   @media (max-width: 900px){.search{width:200px}.table thead th:nth-child(5),.table tbody td:nth-child(5){display:none}}
-  @media (max-width: 720px){.layout{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px}.side-logo,.side-foot,.side-eyebrow{display:none}.side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap}.side-link.active{border-left:none;border-bottom-color:var(--red)}main{padding:24px 20px}.page-title{font-size:36px}}
+  @media (max-width: 720px){
+    .layout{grid-template-columns:1fr}
+    aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}
+    .side-logo,.side-foot,.side-eyebrow{display:none}
+    .side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+    .side-link.active{border-left:none;border-bottom-color:var(--red)}
+    main{padding:20px 16px 40px}
+    .page-title{font-size:32px}
+    .head{margin-bottom:18px}
+    .toolbar{gap:8px}
+    .search{width:100%}
+    .filter{flex:1;min-width:0}
+    .table thead th,.table tbody td{padding:10px 12px}
+    .table thead th:nth-child(1),.table tbody td:nth-child(1){display:none}
+    .table thead th:nth-child(3),.table tbody td:nth-child(3){display:none}
+    .v-thumb{width:64px;height:36px;font-size:11px}
+    .v-name{font-size:13px}
+    .footer-row{padding:12px 14px;font-size:11px}
+  }
+  @media (max-width: 480px){
+    .v-thumb{width:54px;height:30px}
+    .actions-cell .icon-btn{width:28px;height:28px}
+  }
 </style>
 </head>
 <body>

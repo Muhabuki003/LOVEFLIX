@@ -91,12 +91,29 @@
 
   .empty{display:none;padding:60px;text-align:center;color:var(--text-dim);font-size:15px}
 
+  @media (max-width: 900px){
+    .page{padding:110px 24px 60px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  }
   @media (max-width: 720px) {
-    nav.topnav{padding:14px 20px}
+    nav.topnav{padding:12px 16px}
+    .nf-logo{font-size:28px}
+    .nf-logo .heart{font-size:20px}
     .nav-links{display:none}
-    .page{padding:100px 20px 60px}
-    .page-title{font-size:44px}
-    .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+    .page{padding:90px 16px 50px}
+    .page-head{flex-direction:column;align-items:stretch;gap:14px;margin-bottom:22px}
+    .page-title{font-size:40px}
+    .search{width:100%}
+    .filters{gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;margin:0 -16px;padding:0 16px 4px}
+    .chip{flex-shrink:0;padding:7px 14px;font-size:12px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .card-thumb-text{font-size:18px}
+    .card-body{padding:10px 10px 12px}
+    .card-title{font-size:13px}
+    .card-meta{font-size:10px;gap:6px}
+  }
+  @media (max-width: 420px){
+    .grid{grid-template-columns:repeat(2,1fr);gap:10px}
   }
 </style>
 </head>
