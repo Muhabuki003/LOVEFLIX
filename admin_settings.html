@@ -135,16 +135,20 @@
           <p class="desc">The two avatars on the "Who's Watching?" screen.</p>
           <div class="avatar-row">
             <div class="avatar-card">
-              <div class="avatar-pic her" id="av1">M</div>
+              <div class="avatar-pic her" id="av1" role="button" tabindex="0" aria-label="Change partner profile photo">M</div>
               <div class="name" id="av1Name">My Love</div>
               <div class="role">Viewer profile</div>
+              <button type="button" id="av1Reset" class="btn btn-ghost" style="margin-top:10px;font-size:11px;padding:6px 12px;display:none">Remove photo</button>
             </div>
             <div class="avatar-card">
-              <div class="avatar-pic him" id="av2">Y</div>
+              <div class="avatar-pic him" id="av2" role="button" tabindex="0" aria-label="Change admin profile photo">Y</div>
               <div class="name" id="av2Name">You</div>
               <div class="role">Admin profile · PIN protected</div>
+              <button type="button" id="av2Reset" class="btn btn-ghost" style="margin-top:10px;font-size:11px;padding:6px 12px;display:none">Remove photo</button>
             </div>
           </div>
+          <input type="file" id="av1File" accept="image/*" hidden>
+          <input type="file" id="av2File" accept="image/*" hidden>
         </div>
 
         <div class="panel">
@@ -221,6 +225,30 @@
   const previewName1 = document.getElementById('previewName1');
   const previewName2 = document.getElementById('previewName2');
 
+  let partnerPhoto = '';
+  let adminPhoto = '';
+
+  function applyAvatarPhoto(picEl, photoUrl) {
+    if (photoUrl) {
+      picEl.style.background = `url(${JSON.stringify(photoUrl)}) center/cover no-repeat`;
+      picEl.style.color = 'transparent';
+    } else {
+      picEl.style.background = '';
+      picEl.style.color = '';
+    }
+  }
+  function applySidebarAvatar(letter, photoUrl) {
+    const el = document.getElementById('sideAvatar');
+    el.textContent = letter;
+    if (photoUrl) {
+      el.style.background = `url(${JSON.stringify(photoUrl)}) center/cover no-repeat`;
+      el.style.color = 'transparent';
+    } else {
+      el.style.background = '';
+      el.style.color = '';
+    }
+  }
+
   // Load saved settings on page load
   (function loadSettings() {
     const s = LoveFlix.getSettings();
@@ -230,6 +258,9 @@
     const accent = s.accentColor || '#e50914';
     const note = s.loveNote || 'Every day with you is a new episode.';
     const attr = s.attribution || ('— ' + name2 + ', Day 1');
+    partnerPhoto = s.partnerPhoto || '';
+    adminPhoto = s.adminPhoto || '';
+    if (s.anniversaryDate) document.getElementById('anniversary').value = s.anniversaryDate;
 
     document.getElementById('name1').value = name1;
     document.getElementById('name2').value = name2;
@@ -238,13 +269,19 @@
     document.getElementById('attr').value = attr;
 
     // Avatar cards
-    document.getElementById('av1').textContent = name1[0].toUpperCase();
+    const av1 = document.getElementById('av1');
+    const av2 = document.getElementById('av2');
+    av1.textContent = name1[0].toUpperCase();
+    av2.textContent = name2[0].toUpperCase();
     document.getElementById('av1Name').textContent = name1;
-    document.getElementById('av2').textContent = name2[0].toUpperCase();
     document.getElementById('av2Name').textContent = name2;
+    applyAvatarPhoto(av1, partnerPhoto);
+    applyAvatarPhoto(av2, adminPhoto);
+    document.getElementById('av1Reset').style.display = partnerPhoto ? '' : 'none';
+    document.getElementById('av2Reset').style.display = adminPhoto ? '' : 'none';
 
     // Sidebar
-    document.getElementById('sideAvatar').textContent = name2[0].toUpperCase();
+    applySidebarAvatar(name2[0].toUpperCase(), adminPhoto);
     document.getElementById('sideAdminName').textContent = name2;
     document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
 
@@ -302,9 +339,70 @@
   });
 
   document.getElementById('name2').addEventListener('input', e => {
+    const letter = (e.target.value[0] || 'Y').toUpperCase();
     document.getElementById('sideAdminName').textContent = e.target.value || 'You';
-    document.getElementById('sideAvatar').textContent = (e.target.value[0] || 'Y').toUpperCase();
+    applySidebarAvatar(letter, adminPhoto);
   });
+
+  // --- Profile picture upload ---
+  function readImageFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        reject(new Error('Please choose an image file.'));
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        reject(new Error('Image is too large (max 4 MB).'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Could not read the file.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function wirePhotoPicker(picId, fileId, resetId, which) {
+    const pic = document.getElementById(picId);
+    const file = document.getElementById(fileId);
+    const reset = document.getElementById(resetId);
+    pic.style.cursor = 'pointer';
+    pic.addEventListener('click', () => file.click());
+    pic.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); }
+    });
+    file.addEventListener('change', async e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      try {
+        const dataUrl = await readImageFile(f);
+        if (which === 'partner') partnerPhoto = dataUrl;
+        else adminPhoto = dataUrl;
+        applyAvatarPhoto(pic, dataUrl);
+        reset.style.display = '';
+        if (which === 'admin') {
+          const letter = (document.getElementById('name2').value[0] || 'Y').toUpperCase();
+          applySidebarAvatar(letter, adminPhoto);
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        file.value = '';
+      }
+    });
+    reset.addEventListener('click', () => {
+      if (which === 'partner') partnerPhoto = '';
+      else adminPhoto = '';
+      applyAvatarPhoto(pic, '');
+      reset.style.display = 'none';
+      if (which === 'admin') {
+        const letter = (document.getElementById('name2').value[0] || 'Y').toUpperCase();
+        applySidebarAvatar(letter, '');
+      }
+    });
+  }
+  wirePhotoPicker('av1', 'av1File', 'av1Reset', 'partner');
+  wirePhotoPicker('av2', 'av2File', 'av2Reset', 'admin');
 
   document.getElementById('saveBtn').addEventListener('click', () => {
     const name1 = document.getElementById('name1').value.trim();
@@ -318,6 +416,9 @@
       accentColor: accentEl ? accentEl.dataset.c : '#e50914',
       loveNote: document.getElementById('loveNote').value.trim(),
       attribution: document.getElementById('attr').value.trim(),
+      anniversaryDate: document.getElementById('anniversary').value,
+      partnerPhoto: partnerPhoto || '',
+      adminPhoto: adminPhoto || '',
     });
     const t = document.getElementById('toast');
     t.classList.add('show');

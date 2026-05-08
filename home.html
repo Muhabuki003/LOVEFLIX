@@ -319,7 +319,7 @@
     <button class="icon-btn" aria-label="Notifications">
       <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
     </button>
-    <a href="whos_watching.html" class="nav-avatar" title="Switch profile">M</a>
+    <a href="whos_watching.html" class="nav-avatar" id="navAvatar" title="Switch profile">M</a>
   </div>
 </nav>
 
@@ -494,6 +494,8 @@
 <script src="assets/loveflix.js"></script>
 <script>
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  LoveFlix.paintNavAvatar(document.getElementById('navAvatar'));
 
   const nav = document.getElementById('topnav');
   window.addEventListener('scroll', () => {
