@@ -247,7 +247,7 @@
 <script src="assets/loveflix.js"></script>
 <script>
   // If already signed in, skip the login screen.
-  if (LoveFlix.getToken()) location.replace('whos_watching.html');
+  if (LoveFlix.getToken()) location.replace('intro.html');
 
   function togglePw() {
     const input = document.getElementById('pwInput');
@@ -280,7 +280,7 @@
     try {
       await LoveFlix.signIn(email, pw);
       showErr('💕 Welcome back. Loading your memories...', 'ok');
-      setTimeout(() => location.replace('whos_watching.html'), 600);
+      setTimeout(() => location.replace('intro.html'), 600);
     } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Sign In';
