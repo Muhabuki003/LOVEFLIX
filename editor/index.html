@@ -110,12 +110,14 @@
       #lf-header .lf-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 
       /* Hide hover tooltips on resolution/size pickers */
-      /*[data-tooltip][title*="x"]::after,
-      [data-radix-tooltip-content] { display: none !important; }
-      button[title^="Custom"], button[title*=" × "], button[title*="x1080"], button[title*=""] { }
-      button[title*=""]:hover::after,
-      button[title*=""]:hover::after,
-      button[title*=""]:hover::after { display: none !important; }
+      [data-radix-tooltip-content],
+      [role="tooltip"] { display: none !important; }
+
+      /* Hide the bundle's own header strip (duplicate "Back to Dashboard" link). */
+      div[style*="min-height: 40px"]:has(> a[href="/admin.html"]),
+      div[style*="minHeight: 40px"]:has(> a[href="/admin.html"]) {
+        display: none !important;
+      }
 
       /* Intro animation */
       #lf-intro {
@@ -216,11 +218,11 @@
             }
             return;
           }
-         // if (node.nodeType !== 1) return;
+          if (node.nodeType !== 1) return;
           // Remove tooltip attributes from resolution/size pickers
-         // var t = node.getAttribute && node.getAttribute('title');
-         // if (t && (/\b\d{3,4}\s*[x×]\s*\d{3,4}\b/i.test(t) || /\b(1080|720|1920|2160|4K)\b/.test(t))) {
-          //  node.removeAttribute('title');
+          var t = node.getAttribute && node.getAttribute('title');
+          if (t && (/\b\d{3,4}\s*[x×]\s*\d{3,4}\b/i.test(t) || /\b(1080|720|1920|2160|4K)\b/.test(t))) {
+            node.removeAttribute('title');
           }
           for (var i = 0; i < node.childNodes.length; i++) scrub(node.childNodes[i]);
         }
