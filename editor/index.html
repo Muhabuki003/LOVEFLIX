@@ -83,15 +83,16 @@
         padding: 0 20px;
         font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
       }
+      /* Same .nf-logo used in admin.html / home.html / landing.html */
       #lf-header .nf-logo {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 28px; color: #e50914;
+        font-size: 32px; color: #e50914;
         letter-spacing: 3px; line-height: 1;
         text-decoration: none; user-select: none;
         flex-shrink: 0;
       }
       #lf-header .nf-logo .heart {
-        color: #fff; font-size: 20px; vertical-align: middle;
+        color: #fff; font-size: 22px; vertical-align: middle;
         transform: translateY(-2px); display: inline-block; margin: 0 2px;
       }
       #lf-header .lf-sep { color: #555; font-size: 13px; }
@@ -439,13 +440,14 @@
         setTimeout(function(){ intro.parentNode && intro.parentNode.removeChild(intro); }, 4200);
       })();
 
-      // Strip lingering OpenReel/Open Reel branding from any DOM node the bundle injects.
+      // Wipe ALL Open Reel / OpenReel branding (text + sun icon) from any DOM
+      // node the bundle injects. Replace with LoveFlix.
       (function(){
-        var rxText = /\bOpen\s*Reel(?:\s*Video)?\b/gi;
-        function isBrandingRoot(el){
+        var rxText = /Open\s*Reel(?:\s*Video)?/gi;
+        var rxLower = /openreel/gi;
+        function onlyOpenReel(el){
           if (!el || el.nodeType !== 1) return false;
-          var txt = (el.textContent || '').trim();
-          // Match the toolbar branding pill: "Open Reel" / "Open Reel Video" with little else.
+          var txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
           return /^Open\s*Reel(?:\s*Video)?$/i.test(txt);
         }
         function scrub(node){
@@ -454,24 +456,41 @@
               var parent = node.parentElement;
               if (parent) parent.style.display = 'none';
             }
-            if (rxText.test(node.nodeValue)) {
-              node.nodeValue = node.nodeValue.replace(rxText, 'LoveFlix');
+            if (rxText.test(node.nodeValue) || rxLower.test(node.nodeValue)) {
+              node.nodeValue = node.nodeValue
+                .replace(rxText, 'LoveFlix')
+                .replace(rxLower, 'loveflix');
             }
             return;
           }
           if (node.nodeType !== 1) return;
-          // Hide the toolbar branding container (logo icon + "Open Reel" label).
-          if (isBrandingRoot(node)) {
-            var host = node.closest('a,button,div,span') || node;
-            // Walk up to the smallest container that includes the adjacent icon.
-            var p = host.parentElement;
-            if (p && p.children.length <= 3 && /open\s*reel/i.test(p.textContent || '')) host = p;
-            host.style.display = 'none';
-          }
-          // Remove tooltip attributes from resolution/size pickers only.
+          // Strip alt / aria / title attributes that reference Open Reel.
+          ['alt','title','aria-label'].forEach(function(a){
+            var v = node.getAttribute && node.getAttribute(a);
+            if (v && /open\s*reel/i.test(v)) {
+              node.setAttribute(a, v.replace(rxText, 'LoveFlix').replace(rxLower, 'loveflix'));
+            }
+          });
+          // Resolution-size tooltips.
           var t = node.getAttribute && node.getAttribute('title');
           if (t && (/\b\d{3,4}\s*[x×]\s*\d{3,4}\b/i.test(t) || /\b(1080|720|1920|2160|4K)\b/.test(t))) {
             node.removeAttribute('title');
+          }
+          // If this element's visible text is ONLY "Open Reel" / "Open Reel Video"
+          // (heading on the splash, pill in the toolbar, etc.) hide the sun-icon
+          // SVG that sits next to / inside it. Text gets replaced below.
+          if (onlyOpenReel(node)) {
+            node.querySelectorAll('svg, img').forEach(function(s){ s.style.display = 'none'; });
+            // Also hide icon siblings of the matching element.
+            var host = node;
+            var sib = host.previousElementSibling;
+            if (sib && (sib.tagName === 'SVG' || sib.tagName === 'IMG' ||
+                        (sib.children.length === 1 && sib.firstElementChild &&
+                         (sib.firstElementChild.tagName === 'SVG' || sib.firstElementChild.tagName === 'IMG')))) {
+              sib.style.display = 'none';
+            }
+            sib = host.nextElementSibling;
+            if (sib && (sib.tagName === 'SVG' || sib.tagName === 'IMG')) sib.style.display = 'none';
           }
           for (var i = 0; i < node.childNodes.length; i++) scrub(node.childNodes[i]);
         }
