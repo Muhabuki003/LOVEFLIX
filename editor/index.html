@@ -207,6 +207,10 @@
         var rxLow  = /\bopenreel\b/g;
         function scrub(node){
           if (node.nodeType === 3) {
+            if (/^\s*\d{3,4}\s*[x×]\s*\d{3,4}\s*$/.test(node.nodeValue)) {
+              var parent = node.parentElement;
+              if (parent) parent.style.display = 'none';
+            }
             if (rxText.test(node.nodeValue) || rxLow.test(node.nodeValue)) {
               node.nodeValue = node.nodeValue.replace(rxText, 'LoveFlix').replace(rxLow, 'loveflix');
             }
