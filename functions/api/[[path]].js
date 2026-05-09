@@ -5,6 +5,8 @@
 //   DELETE /api/videos/:id
 //   GET    /api/upload-url?filename=...&type=...
 //   PUT    /api/upload-object?key=...
+//   POST   /api/videos/presign       (editor save-to-LoveFlix)
+//   POST   /api/videos/confirm       (editor save-to-LoveFlix)
 //   GET    /api/progress
 //   POST   /api/progress
 //   GET    /api/health
@@ -62,6 +64,10 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
     if (method === 'PUT' && path === '/api/upload-object') return uploadObject(env, request, url, user);
+
+    // Editor "Save to LoveFlix" flow.
+    if (method === 'POST' && path === '/api/videos/presign') return presignVideoUpload(env, request, url, user);
+    if (method === 'POST' && path === '/api/videos/confirm') return confirmVideoUpload(env, request, user);
 
     if (method === 'GET' && path === '/api/progress') return listProgress(env, user);
     if (method === 'POST' && path === '/api/progress') return saveProgress(env, request, user);
@@ -181,6 +187,71 @@ function extractR2Key(urlOrKey, env) {
   } catch {
     return null;
   }
+}
+
+// ---------- Editor save-to-LoveFlix ----------
+async function presignVideoUpload(env, request, url, user) {
+  const body = await request.json().catch(() => ({}));
+  const rawName = (body.filename || `editor-${Date.now()}.mp4`).toString();
+  const filename = rawName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const contentType = body.contentType || 'video/mp4';
+  const videoId = `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const key = `videos/${user.id}/${Date.now()}-${filename}`;
+
+  // Insert a pending row so the dashboard can reflect it after confirm.
+  await env.DB.prepare(
+    `INSERT INTO videos
+       (id, tenant_id, title, description, date, category,
+        thumbnail_url, video_url, duration_seconds, is_published, display_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(
+    videoId, user.id, filename.slice(0, 200), '', '', 'Moments',
+    '', '', 0, 0, 0
+  ).run();
+
+  if (env.VIDEOS) {
+    return json({
+      videoId,
+      key,
+      uploadUrl: `${url.origin}/api/upload-object?key=${encodeURIComponent(key)}`,
+      contentType,
+    });
+  }
+
+  const accessKey = env.R2_ACCESS_KEY_ID;
+  const secretKey = env.R2_SECRET_ACCESS_KEY;
+  const accountId = env.R2_ACCOUNT_ID;
+  const bucket = env.R2_BUCKET_NAME;
+  if (!accessKey || !secretKey || !accountId || !bucket) {
+    return json({ error: 'r2_not_configured' }, 500);
+  }
+  const host = `${accountId}.r2.cloudflarestorage.com`;
+  const uploadUrl = await presignS3PutUrl({
+    accessKey, secretKey, region: 'auto', service: 's3',
+    host, bucket, key, expiresIn: 3600, contentType,
+  });
+  return json({ videoId, key, uploadUrl, contentType });
+}
+
+async function confirmVideoUpload(env, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const { videoId, key, filename } = body;
+  if (!videoId || !key) return json({ error: 'videoId and key required' }, 400);
+
+  const publicUrl = env.R2_PUBLIC_URL
+    ? `${env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`
+    : `/r2/${key}`;
+
+  const title = (filename || 'Edited video').toString().replace(/\.[^.]+$/, '').slice(0, 200);
+
+  const result = await env.DB.prepare(
+    `UPDATE videos
+        SET video_url = ?, title = ?, is_published = 1
+      WHERE id = ? AND tenant_id = ?`
+  ).bind(publicUrl, title, videoId, user.id).run();
+
+  if (!result.success) return json({ error: 'update_failed' }, 500);
+  return json({ ok: true, videoId, video_url: publicUrl });
 }
 
 // ---------- Watch progress ----------
