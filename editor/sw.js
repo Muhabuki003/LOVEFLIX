@@ -10,9 +10,9 @@
  * - 35.4: Inform user that AI requires internet connectivity
  */
 
-const CACHE_NAME = "loveflix-v1";
-const STATIC_CACHE_NAME = "loveflix-static-v1";
-const DYNAMIC_CACHE_NAME = "loveflix-dynamic-v1";
+const CACHE_NAME = "loveflix-v2";
+const STATIC_CACHE_NAME = "loveflix-static-v2";
+const DYNAMIC_CACHE_NAME = "loveflix-dynamic-v2";
 
 /**
  * Static assets to cache on install
