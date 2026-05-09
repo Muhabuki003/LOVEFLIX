@@ -11,6 +11,51 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Archivo+Black&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Caveat:wght@400;700&family=Cinzel:wght@400;700;900&family=Comfortaa:wght@300;400;700&family=Concert+One&family=Creepster&family=Dancing+Script:wght@400;700&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=Fredoka+One&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800;900&family=Lato:wght@300;400;700;900&family=Lexend:wght@300;400;500;600;700&family=Lobster&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;600;700;800&family=Open+Sans:wght@300;400;600;700;800&family=Oswald:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Press+Start+2P&family=Quicksand:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700;800&family=Righteous&family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@300;400;700&family=Roboto+Mono:wght@300;400;500;700&family=Roboto+Slab:wght@300;400;500;700&family=Rock+Salt&family=Rubik:wght@300;400;500;600;700;800&family=Sacramento&family=Satisfy&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Staatliches&family=Teko:wght@300;400;500;600;700&family=Titan+One&family=Ubuntu:wght@300;400;500;700&family=Work+Sans:wght@300;400;500;600;700;800&family=Yellowtail&family=Zilla+Slab:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>LoveFlix Video Editor</title>
+    <script>
+      // AudioContext autoplay-policy shim: must run BEFORE the module bundle so
+      // every AudioContext the editor creates is tracked and resumed on the
+      // first user gesture. Without this, browsers leave contexts created at
+      // module init in the 'suspended' state and the preview plays silently.
+      (function () {
+        if (typeof window === 'undefined') return;
+        var contexts = [];
+        var hasGesture = false;
+        function resumeOne(ctx) {
+          if (!ctx) return;
+          if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+            try { var p = ctx.resume(); if (p && p.catch) p.catch(function () {}); } catch (_) {}
+          }
+        }
+        function resumeAll() { for (var i = 0; i < contexts.length; i++) resumeOne(contexts[i]); }
+        function track(ctx) {
+          if (!ctx || contexts.indexOf(ctx) !== -1) return;
+          contexts.push(ctx);
+          if (hasGesture) resumeOne(ctx);
+        }
+        function wrap(orig) {
+          if (!orig || orig.__lfPatched) return orig;
+          function Patched() {
+            var inst = arguments.length === 0 ? new orig() : new orig(arguments[0]);
+            try { track(inst); } catch (_) {}
+            return inst;
+          }
+          Patched.prototype = orig.prototype;
+          Patched.__lfPatched = true;
+          Patched.__lfOriginal = orig;
+          return Patched;
+        }
+        if (window.AudioContext) window.AudioContext = wrap(window.AudioContext);
+        if (window.webkitAudioContext) window.webkitAudioContext = wrap(window.webkitAudioContext);
+        function onGesture() { hasGesture = true; resumeAll(); }
+        ['pointerdown', 'mousedown', 'touchstart', 'keydown'].forEach(function (evt) {
+          document.addEventListener(evt, onGesture, { capture: true, passive: true });
+        });
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden && hasGesture) resumeAll();
+        });
+        window.__loveflixAudioContexts = contexts;
+      })();
+    </script>
     <script type="module" crossorigin src="/editor/assets/index-0yra_ybq.js"></script>
     <link rel="modulepreload" crossorigin href="/editor/assets/react-PrC8YE5T.js">
     <link rel="modulepreload" crossorigin href="/editor/assets/zustand-uPrywue2.js">
