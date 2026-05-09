@@ -110,12 +110,12 @@
       #lf-header .lf-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 
       /* Hide hover tooltips on resolution/size pickers */
-      [data-tooltip][title*="x"]::after,
+      /*[data-tooltip][title*="x"]::after,
       [data-radix-tooltip-content] { display: none !important; }
-      button[title^="Custom"], button[title*=" × "], button[title*="x1080"], button[title*="x1920"] { }
-      button[title*=" × "]:hover::after,
-      button[title*="x1080"]:hover::after,
-      button[title*="x1920"]:hover::after { display: none !important; }
+      button[title^="Custom"], button[title*=" × "], button[title*="x1080"], button[title*=""] { }
+      button[title*=""]:hover::after,
+      button[title*=""]:hover::after,
+      button[title*=""]:hover::after { display: none !important; }
 
       /* Intro animation */
       #lf-intro {
