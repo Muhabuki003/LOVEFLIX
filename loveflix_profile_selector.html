@@ -122,6 +122,13 @@
     text-transform: uppercase;
   }
   .manage-btn:hover { color: #fff; border-color: #fff; }
+  .signout-btn {
+    font-size: 14px; color: #999; font-weight: 500;
+    background: transparent; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: color 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .signout-btn:hover { color: #fff; }
 
   /* PIN OVERLAY */
   .pin-overlay {
@@ -254,6 +261,7 @@
 
 <nav>
   <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
+  <button class="signout-btn" onclick="LoveFlix.signOut()">Sign Out</button>
 </nav>
 
 <!-- PROFILE SELECTOR -->
@@ -323,6 +331,7 @@
   </div>
 </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
   const CORRECT_PIN = (function(){ try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}').adminPasscode || '1234'; } catch(e){ return '1234'; } })();
   let pinValue = '';

@@ -218,6 +218,13 @@
     transition: color 0.18s ease, border-color 0.18s ease;
   }
   .manage-btn:hover { color: #fff; border-color: #fff; }
+  .signout-btn {
+    font-size: 14px; color: var(--text-dim); font-weight: 500;
+    background: transparent; border: none; cursor: pointer;
+    font-family: inherit; transition: color 0.18s ease;
+    letter-spacing: 0.5px;
+  }
+  .signout-btn:hover { color: #fff; }
 
   /* ---------- PIN overlay ---------- */
   .pin-overlay {
@@ -442,6 +449,7 @@
 
   <nav>
     <a href="#" class="nf-logo" aria-label="LoveFlix home">LOVE<span class="heart">♥</span>FLIX</a>
+    <button class="signout-btn" onclick="LoveFlix.signOut()">Sign Out</button>
   </nav>
 
   <main class="selector-page" id="selectorPage">
