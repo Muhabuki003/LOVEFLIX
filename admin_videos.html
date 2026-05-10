@@ -293,6 +293,27 @@
     const play = e.target.closest('[data-play]');
     if (play) { location.href = `player.html?id=${encodeURIComponent(play.dataset.play)}`; return; }
 
+    const tog = e.target.closest('.toggle');
+    if (tog) {
+      const id = tog.dataset.id;
+      const v = VIDEOS.find(v => String(v.id) === String(id));
+      if (!v) return;
+      const next = !v.is_published;
+      v.is_published = next;
+      tog.classList.toggle('on', next);
+      try {
+        await LoveFlix.api(`/api/videos/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: { is_published: next },
+        });
+      } catch (err) {
+        v.is_published = !next;
+        tog.classList.toggle('on', !next);
+        alert('Update failed: ' + err.message);
+      }
+      return;
+    }
+
     const del = e.target.closest('[data-del]');
     if (del) {
       const id = del.dataset.del;

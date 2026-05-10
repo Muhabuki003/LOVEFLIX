@@ -27,7 +27,7 @@ const json = (data, status = 200, extra = {}) =>
 function corsHeaders() {
   return {
     'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'access-control-allow-headers': 'authorization,content-type',
     'access-control-max-age': '86400',
   };
@@ -60,6 +60,7 @@ export async function onRequest(context) {
 
     const videoIdMatch = path.match(/^\/api\/videos\/([^/]+)$/);
     if (videoIdMatch && method === 'DELETE') return deleteVideo(env, videoIdMatch[1], user);
+    if (videoIdMatch && method === 'PATCH') return updateVideo(env, videoIdMatch[1], request, user);
     if (videoIdMatch && method === 'GET') return getVideo(env, videoIdMatch[1]);
 
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
@@ -104,15 +105,16 @@ async function authenticate(request, env) {
 // ---------- Videos ----------
 async function listVideos(env, url, user) {
   const tenantId = (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
-  const stmt = env.DB.prepare(
+  // Authenticated requests (admin) get all videos; unauthenticated get published only.
+  const whereClause = user ? 'WHERE tenant_id = ?' : 'WHERE tenant_id = ? AND is_published = 1';
+  const { results } = await env.DB.prepare(
     `SELECT id, tenant_id, title, description, date, category,
             thumbnail_url, video_url, duration_seconds, is_published,
             display_order, created_at
        FROM videos
-      WHERE tenant_id = ? AND is_published = 1
+      ${whereClause}
       ORDER BY display_order ASC, created_at DESC`
-  ).bind(tenantId);
-  const { results } = await stmt.all();
+  ).bind(tenantId).all();
   return json({ videos: results || [] });
 }
 
@@ -175,6 +177,19 @@ async function deleteVideo(env, id, user) {
     }
   }
   await env.DB.prepare(`DELETE FROM videos WHERE id = ?`).bind(id).run();
+  return json({ ok: true });
+}
+
+async function updateVideo(env, id, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const fields = {};
+  if (typeof body.is_published !== 'undefined') fields.is_published = body.is_published ? 1 : 0;
+  if (typeof body.title !== 'undefined') fields.title = String(body.title).slice(0, 200);
+  if (typeof body.display_order !== 'undefined') fields.display_order = parseInt(body.display_order, 10) || 0;
+  if (!Object.keys(fields).length) return json({ error: 'nothing_to_update' }, 400);
+  const set = Object.keys(fields).map(k => `${k} = ?`).join(', ');
+  await env.DB.prepare(`UPDATE videos SET ${set} WHERE id = ? AND tenant_id = ?`)
+    .bind(...Object.values(fields), id, user.id).run();
   return json({ ok: true });
 }
 
