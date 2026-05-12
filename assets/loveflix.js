@@ -29,12 +29,70 @@
     try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || {}; }
     catch { return {}; }
   }
+  function writeSettings(obj) {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj || {})); } catch (_) {}
+  }
   function saveSettings(updates) {
-    const current = getSettings();
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(Object.assign(current, updates)));
+    const merged = Object.assign(getSettings(), updates || {});
+    writeSettings(merged);
+    schedulePushSettings();
+    return merged;
   }
   function clearSettings() {
     localStorage.removeItem(SETTINGS_KEY);
+  }
+
+  // ----- Cross-device sync for LoveFlix.getSettings -----
+  // Photos are stored as data URLs and can be multi-MB. Strip them before
+  // pushing so we don't blow past D1 row limits; photos stay device-local.
+  const LARGE_FIELDS = ['partnerPhoto', 'adminPhoto'];
+  function stripLargeFields(settings) {
+    const out = {};
+    for (const k of Object.keys(settings || {})) {
+      if (LARGE_FIELDS.includes(k)) continue;
+      out[k] = settings[k];
+    }
+    return out;
+  }
+
+  let _pushTimer = null;
+  let _pushInFlight = false;
+  function schedulePushSettings() {
+    if (!getToken()) return; // anonymous → local only
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(pushSettings, 600);
+  }
+  async function pushSettings() {
+    if (!getToken()) return;
+    if (_pushInFlight) { schedulePushSettings(); return; }
+    _pushInFlight = true;
+    try {
+      await api('/api/settings', {
+        method: 'PUT',
+        body: { settings: stripLargeFields(getSettings()) },
+      });
+    } catch (e) {
+      console.warn('settings sync push failed', e && e.message);
+    } finally {
+      _pushInFlight = false;
+    }
+  }
+  async function pullSettings() {
+    try {
+      const data = await api('/api/settings');
+      if (data && data.settings && typeof data.settings === 'object') {
+        // Server is source of truth for synced fields; preserve local-only
+        // large fields (photos) that we never push.
+        const local = getSettings();
+        const merged = Object.assign({}, data.settings);
+        for (const k of LARGE_FIELDS) if (local[k]) merged[k] = local[k];
+        writeSettings(merged);
+        return merged;
+      }
+    } catch (e) {
+      console.warn('settings sync pull failed', e && e.message);
+    }
+    return getSettings();
   }
 
   // Active profile: 'his' (admin) or 'her' (partner). Falls back to admin
@@ -166,6 +224,16 @@
     });
   }
 
+  // Kick off a settings refresh on every page load. Pages that need to wait
+  // for it can `await LoveFlix.pullSettings()` explicitly.
+  if (typeof document !== 'undefined') {
+    const run = () => { pullSettings().catch(() => {}); };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else { run(); }
+    window.addEventListener('focus', () => pullSettings().catch(() => {}));
+  }
+
   global.LoveFlix = {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
@@ -176,6 +244,8 @@
     getSettings,
     saveSettings,
     clearSettings,
+    pullSettings,
+    pushSettings,
     signIn,
     signUp,
     signOut,

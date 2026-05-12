@@ -75,7 +75,21 @@
       radial-gradient(circle at 70% 35%, #c2185b 0%, transparent 55%),
       linear-gradient(135deg, #5d0a1f 0%, #1a0712 50%, #0a0a0f 100%);
     z-index: 1;
+    transition: opacity 0.8s ease;
   }
+  .hero.has-video::before { opacity: 0; }
+  .hero-video-layer {
+    position: absolute; inset: 0; z-index: 1;
+    overflow: hidden; pointer-events: none;
+  }
+  .hero-video-layer video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  .hero-video-layer video.active { opacity: 1; }
   .hero::after {
     content: '';
     position: absolute; inset: 0;
@@ -89,6 +103,8 @@
     max-width: 540px;
     animation: heroIn 0.7s cubic-bezier(.2,.8,.2,1) both;
   }
+  .hero-content.swap-out { opacity: 0; transform: translateY(8px); transition: opacity 0.5s, transform 0.5s; }
+  .hero-content.swap-in { opacity: 1; transform: translateY(0); transition: opacity 0.6s, transform 0.6s; }
   .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 10px;
     font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
@@ -350,7 +366,11 @@
 </nav>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="hero">
+  <div class="hero-video-layer" id="heroVideoLayer">
+    <video id="heroVideoA" muted playsinline preload="auto"></video>
+    <video id="heroVideoB" muted playsinline preload="auto"></video>
+  </div>
   <div class="hero-content">
     <div class="hero-eyebrow">LoveFlix Original · Featured</div>
     <h1 class="hero-title">Three Years<br>Of Us</h1>
@@ -646,14 +666,9 @@
       return;
     }
 
-    // Hero — set first video as the featured banner.
-    const hero = videos[0];
-    const heroTitle = document.querySelector('.hero-title');
-    const heroDesc = document.querySelector('.hero-desc');
-    const heroPlay = document.querySelector('.hero-actions .btn-primary');
-    if (heroTitle) heroTitle.innerHTML = escapeHtml(hero.title || 'Three Years of Us').replace(/ · /, '<br>');
-    if (heroDesc && hero.description) heroDesc.textContent = hero.description;
-    if (heroPlay) heroPlay.onclick = () => location.href = `player.html?id=${encodeURIComponent(hero.id)}`;
+    // Hero — cycle through every video, 15s preview each, crossfading both
+    // the background footage and the text content.
+    startHeroCycle(videos.filter(v => v && (v.video_url || v.title)));
 
     // Continue Watching: anything with progress, not completed.
     const inProgress = videos.filter(v => {
@@ -678,6 +693,108 @@
 
     bindArrows(rowsWrap);
   }
+
+  // ===== Hero cycling preview =====
+  const HERO_PREVIEW_MS = 15000;
+  const HERO_FADE_MS = 1000;
+  let heroTimer = null;
+  let heroCurrent = 'A';
+  let heroIdx = 0;
+  let heroList = [];
+  let heroPaused = false;
+
+  function setHeroText(v) {
+    const hero = document.getElementById('hero');
+    const content = hero.querySelector('.hero-content');
+    const heroTitle = hero.querySelector('.hero-title');
+    const heroDesc = hero.querySelector('.hero-desc');
+    const heroPlay = hero.querySelector('.hero-actions .btn-primary');
+    const heroMeta = hero.querySelector('.hero-meta');
+
+    content.classList.remove('swap-in');
+    content.classList.add('swap-out');
+    setTimeout(() => {
+      if (heroTitle) {
+        const t = v.title || 'Our Story';
+        heroTitle.innerHTML = escapeHtml(t).replace(/ · /, '<br>');
+      }
+      if (heroDesc) {
+        heroDesc.textContent = v.description || 'Press play. Every chapter, every quiet morning, every stupid laugh.';
+      }
+      if (heroMeta) {
+        const cat = v.category || 'Moments';
+        const date = v.date || '';
+        heroMeta.innerHTML = `
+          <span class="hero-tag">${escapeHtml(cat)}</span>
+          ${date ? `<span>${escapeHtml(date)}</span>` : ''}
+        `;
+      }
+      if (heroPlay) heroPlay.onclick = () => location.href = `player.html?id=${encodeURIComponent(v.id)}`;
+      content.classList.remove('swap-out');
+      content.classList.add('swap-in');
+    }, 450);
+  }
+
+  function showHeroVideo(v) {
+    const hero = document.getElementById('hero');
+    const a = document.getElementById('heroVideoA');
+    const b = document.getElementById('heroVideoB');
+    const incoming = heroCurrent === 'A' ? b : a;
+    const outgoing = heroCurrent === 'A' ? a : b;
+
+    if (v && v.video_url) {
+      incoming.src = v.video_url;
+      incoming.currentTime = 0;
+      const tryPlay = () => incoming.play().catch(() => {});
+      incoming.addEventListener('loadeddata', tryPlay, { once: true });
+      tryPlay();
+      incoming.classList.add('active');
+      hero.classList.add('has-video');
+      setTimeout(() => {
+        outgoing.classList.remove('active');
+        try { outgoing.pause(); } catch (_) {}
+        try { outgoing.removeAttribute('src'); outgoing.load(); } catch (_) {}
+      }, HERO_FADE_MS);
+      heroCurrent = heroCurrent === 'A' ? 'B' : 'A';
+    } else {
+      // No URL — fall back to gradient.
+      a.classList.remove('active'); b.classList.remove('active');
+      hero.classList.remove('has-video');
+    }
+  }
+
+  function advanceHero() {
+    if (!heroList.length) return;
+    const v = heroList[heroIdx % heroList.length];
+    setHeroText(v);
+    showHeroVideo(v);
+    heroIdx++;
+    heroTimer = setTimeout(advanceHero, HERO_PREVIEW_MS);
+  }
+
+  function startHeroCycle(list) {
+    heroList = list || [];
+    heroIdx = 0;
+    clearTimeout(heroTimer);
+    if (!heroList.length) return;
+    advanceHero();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    const a = document.getElementById('heroVideoA');
+    const b = document.getElementById('heroVideoB');
+    if (document.hidden) {
+      heroPaused = true;
+      clearTimeout(heroTimer);
+      try { a.pause(); } catch (_) {}
+      try { b.pause(); } catch (_) {}
+    } else if (heroPaused) {
+      heroPaused = false;
+      const active = a.classList.contains('active') ? a : (b.classList.contains('active') ? b : null);
+      if (active) active.play().catch(() => {});
+      heroTimer = setTimeout(advanceHero, HERO_PREVIEW_MS);
+    }
+  });
 
   loadHome();
 </script>
