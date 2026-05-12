@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS favorites (
   PRIMARY KEY (user_id, video_id)
 );
 
+CREATE TABLE IF NOT EXISTS tenant_settings (
+  tenant_id  TEXT PRIMARY KEY,
+  data       TEXT NOT NULL,
+  updated_at INTEGER DEFAULT (strftime('%s','now'))
+);
+
 -- Default tenant so the app works out of the box.
 INSERT OR IGNORE INTO tenants (id, subdomain, couple_name, accent_color)
 VALUES ('default', 'app', 'LoveFlix', '#e50914');

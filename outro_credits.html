@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;600&family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="assets/loveflix.js"></script>
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   :root { --red:#e50914; --bg:#000; --panel:#111; --border:rgba(255,255,255,0.1); }
@@ -327,8 +328,6 @@
     ["Script consultants", "Our everyday magic"],
   ];
 
-  const STORAGE_KEY = "loveflix_outro_credits_v3";
-
   const defaultState = () => ({
     title: "Our Love Story",
     credits: DEFAULT_CREDITS.map(([r, n]) => ({ role: r, name: n })),
@@ -338,21 +337,18 @@
     closing: "Made with love ❤️",
   });
 
-  let state = loadState();
-
   function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaultState();
-      const s = JSON.parse(raw);
-      return Object.assign(defaultState(), s);
-    } catch (e) {
-      return defaultState();
-    }
+    const all = (window.LoveFlix && window.LoveFlix.getSettings()) || {};
+    const stored = (all && all.outroCredits) || {};
+    return Object.assign(defaultState(), stored);
   }
   function saveState() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    if (window.LoveFlix) {
+      window.LoveFlix.saveSettings({ outroCredits: state });
+    }
   }
+
+  let state = loadState();
 
   const toastEl = document.getElementById('toast');
   let toastTimer;
@@ -547,6 +543,26 @@
     saveState();
     renderCreditRows();
   }
+
+  // Refresh from server so edits made on other devices show up.
+  (async function syncFromServer() {
+    if (!window.LoveFlix || !window.LoveFlix.pullSettings) return;
+    try {
+      await window.LoveFlix.pullSettings();
+      const before = JSON.stringify(state);
+      state = loadState();
+      if (JSON.stringify(state) !== before) renderSettings();
+    } catch (_) {}
+  })();
+  window.addEventListener('focus', async () => {
+    if (!window.LoveFlix || !window.LoveFlix.pullSettings) return;
+    try {
+      await window.LoveFlix.pullSettings();
+      const before = JSON.stringify(state);
+      state = loadState();
+      if (JSON.stringify(state) !== before) renderSettings();
+    } catch (_) {}
+  });
 </script>
 </body>
 </html>

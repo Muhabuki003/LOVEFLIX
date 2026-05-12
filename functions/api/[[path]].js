@@ -11,7 +11,7 @@
 //   POST   /api/progress
 //   GET    /api/health
 
-const PUBLIC_ROUTES = new Set(['GET /api/health', 'GET /api/videos']);
+const PUBLIC_ROUTES = new Set(['GET /api/health', 'GET /api/videos', 'GET /api/settings']);
 
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
@@ -71,6 +71,9 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/progress') return listProgress(env, user);
     if (method === 'POST' && path === '/api/progress') return saveProgress(env, request, user);
+
+    if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user);
+    if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
@@ -282,6 +285,36 @@ async function saveProgress(env, request, user) {
        last_watched_at  = excluded.last_watched_at`
   ).bind(id, user.id, videoId, seconds, completed).run();
 
+  return json({ ok: true });
+}
+
+// ---------- Tenant Settings ----------
+async function getSettings(env, url, user) {
+  const tenantId = (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+  const row = await env.DB.prepare(
+    `SELECT data, updated_at FROM tenant_settings WHERE tenant_id = ?`
+  ).bind(tenantId).first();
+  if (!row) return json({ settings: {}, updated_at: 0 });
+  let parsed = {};
+  try { parsed = JSON.parse(row.data) || {}; } catch (_) {}
+  return json({ settings: parsed, updated_at: row.updated_at || 0 });
+}
+
+async function putSettings(env, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const settings = (body && typeof body.settings === 'object' && body.settings) || {};
+  const tenantId = user.id;
+  const data = JSON.stringify(settings);
+  if (data.length > 900_000) {
+    return json({ error: 'settings_too_large', message: 'Settings payload exceeds 900KB. Trim photos or other large fields.' }, 413);
+  }
+  await env.DB.prepare(
+    `INSERT INTO tenant_settings (tenant_id, data, updated_at)
+     VALUES (?, ?, strftime('%s','now'))
+     ON CONFLICT(tenant_id) DO UPDATE SET
+       data = excluded.data,
+       updated_at = excluded.updated_at`
+  ).bind(tenantId, data).run();
   return json({ ok: true });
 }
 
