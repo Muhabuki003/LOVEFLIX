@@ -80,7 +80,6 @@
   .row-group { display: flex; gap: 12px; flex-wrap: wrap; }
   .row-group .field { flex: 1; min-width: 180px; }
 
-  /* Credit rows editor */
   .credit-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
   .credit-row {
     display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px;
@@ -111,95 +110,31 @@
   .btn-secondary { background: #2a2a2a; }
   .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* Video URLs */
-  .video-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-  .video-item {
-    display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center;
-  }
-  .video-item input {
-    padding: 9px 11px; background: #0a0a0a; border: 1px solid var(--border);
-    border-radius: 6px; color: #fff; font-family: inherit; font-size: 13px;
-  }
-  .video-item input:focus { outline: none; border-color: var(--red); }
-
   /* ===== Preview View ===== */
   .preview-view {
     height: 100%; position: relative; background: #000;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* Playlist player */
-  .playlist-stage {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: #000; transition: opacity 1.5s ease;
-  }
-  .playlist-stage.fading { opacity: 0; pointer-events: none; }
-  .playlist-stage video {
-    max-width: 100%; max-height: 100%; object-fit: contain;
-  }
-  .playlist-empty {
-    color: #666; text-align: center; padding: 40px;
-    font-family: 'Playfair Display', serif; font-size: 20px;
-  }
-  .playlist-empty .hint { font-size: 13px; color: #555; margin-top: 12px; font-family: 'Inter', sans-serif; }
-  .skip-btn {
-    position: absolute; bottom: 24px; right: 24px; z-index: 5;
-    background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3);
-    padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 13px;
-    font-family: inherit; backdrop-filter: blur(6px);
-  }
-  .skip-btn:hover { background: var(--red); border-color: var(--red); }
-  .now-playing {
-    position: absolute; top: 16px; left: 16px; z-index: 5;
-    background: rgba(0,0,0,0.6); color: #fff; padding: 8px 14px;
-    border-radius: 6px; font-size: 12px; backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.15);
+    overflow: hidden;
   }
 
   /* ===== Credits Screen ===== */
   .credits-screen {
-    position: absolute; inset: 0; display: none;
-    background: #000; opacity: 0; transition: opacity 2s ease;
-  }
-  .credits-screen.active { display: flex; opacity: 1; }
-  .credits-screen.fading-out { opacity: 0; }
-
-  .credits-left {
-    flex: 0 0 42%; position: relative; background: #000;
-    display: flex; align-items: center; justify-content: center;
-    border-right: 1px solid rgba(255,255,255,0.05); overflow: hidden;
-  }
-  .highlight-video {
-    width: 100%; height: 100%; object-fit: cover;
-    filter: brightness(0.85) contrast(1.05);
-  }
-  .highlight-slide {
-    position: absolute; inset: 0; background-size: cover; background-position: center;
-    opacity: 0; transition: opacity 1.5s ease;
-  }
-  .highlight-slide.active { opacity: 1; }
-  .highlight-slide.placeholder {
-    background: linear-gradient(135deg, #1a0a0a 0%, #0a0a1a 100%);
-    display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.3); font-family: 'Playfair Display', serif;
-    font-size: 18px; font-style: italic;
-  }
-  .left-overlay {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
-    pointer-events: none;
+    background: #000; opacity: 0; transition: opacity 1.5s ease;
+    overflow: hidden;
   }
+  .credits-screen.active { opacity: 1; }
 
-  .credits-right {
-    flex: 1; position: relative; overflow: hidden;
+  .credits-stage {
+    position: absolute; inset: 0; overflow: hidden;
     display: flex; align-items: flex-start; justify-content: center;
   }
   .credits-scroll {
-    width: 100%; padding: 0 40px; color: #fff; text-align: center;
+    width: 100%; max-width: 800px; padding: 0 40px;
+    color: #fff; text-align: center;
     transform: translateY(100vh);
   }
   .credits-title {
-    font-size: 48px; margin-bottom: 20px; font-weight: 600;
+    font-size: 56px; margin-bottom: 20px; font-weight: 600;
     letter-spacing: 4px; text-transform: uppercase;
     color: #fff;
   }
@@ -208,8 +143,8 @@
     margin: 0 auto 60px;
   }
   .credit-entry {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
-    margin-bottom: 32px; font-size: 22px; align-items: baseline;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    margin-bottom: 36px; font-size: 24px; align-items: baseline;
   }
   .credit-entry .role {
     text-align: right; color: rgba(255,255,255,0.55);
@@ -220,15 +155,16 @@
     text-align: left; color: #fff; font-weight: 500;
   }
   .credits-closing {
-    margin-top: 80px; font-size: 28px; font-style: italic;
+    margin-top: 90px; font-size: 30px; font-style: italic;
     color: rgba(255,255,255,0.85); padding-bottom: 80px;
     font-family: 'Playfair Display', serif;
   }
   .credits-end {
     margin-top: 60px; font-family: 'Bebas Neue', sans-serif;
-    font-size: 60px; letter-spacing: 8px; color: var(--red);
-    padding-bottom: 120px;
+    font-size: 72px; letter-spacing: 8px; color: var(--red);
+    padding-bottom: 140px;
   }
+  .credits-end .heart { color: #fff; font-size: 50px; vertical-align: middle; margin: 0 4px; }
 
   .credits-screen.font-serif .credits-title,
   .credits-screen.font-serif .credit-entry .name,
@@ -246,7 +182,6 @@
     font-family: 'Inter', sans-serif;
   }
 
-  /* Vignette */
   .credits-vignette {
     position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(180deg,
@@ -254,7 +189,6 @@
       rgba(0,0,0,0) 88%, rgba(0,0,0,1) 100%);
   }
 
-  /* Replay button */
   .replay-btn {
     position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
     z-index: 10; background: var(--red); color: #fff; border: none;
@@ -264,7 +198,6 @@
   }
   .replay-btn.visible { opacity: 1; pointer-events: auto; }
 
-  /* Toast */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #1a1a1a; border: 1px solid var(--border); color: #fff;
@@ -273,25 +206,21 @@
   }
   .toast.visible { opacity: 1; }
 
-  /* Mobile */
   @media (max-width: 720px) {
-    .credits-screen { flex-direction: column; }
-    .credits-left { flex: 0 0 35%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .credits-right { flex: 1; }
-    .credits-title { font-size: 32px; }
-    .credit-entry { font-size: 16px; gap: 16px; }
+    .credits-title { font-size: 36px; }
+    .credit-entry { font-size: 18px; gap: 20px; margin-bottom: 28px; }
     .credit-entry .role { font-size: 11px; letter-spacing: 1px; }
-    .credits-closing { font-size: 20px; }
-    .credits-end { font-size: 40px; }
+    .credits-closing { font-size: 22px; }
+    .credits-end { font-size: 48px; letter-spacing: 5px; }
+    .credits-end .heart { font-size: 34px; }
     .credit-row { grid-template-columns: 1fr 1fr auto; }
     .credit-row .drag-handle { display: none; }
-    .video-item { grid-template-columns: 1fr auto; }
-    .video-item input:nth-child(2) { grid-column: 1; }
     .settings-view { padding: 20px 16px 80px; }
     .settings-view h1 { font-size: 24px; }
     .section { padding: 18px; }
     .toolbar { padding: 0 12px; }
     .logo { font-size: 22px; }
+    .credits-scroll { padding: 0 20px; }
   }
 </style>
 </head>
@@ -309,22 +238,13 @@
   <!-- ===== Settings View ===== -->
   <div id="settingsView" class="settings-view">
     <h1>Outro Credits</h1>
-    <p class="subtitle">Configure your cinematic playlist outro. Settings are saved automatically.</p>
+    <p class="subtitle">Configure your cinematic credits roll. Settings are saved automatically.</p>
 
     <div class="section">
-      <h2>Playlist</h2>
+      <h2>Title</h2>
       <div class="field">
-        <label>Playlist Title</label>
+        <label>Playlist / Project Title</label>
         <input type="text" id="fTitle" placeholder="Our Love Story">
-      </div>
-      <div class="field">
-        <label>Videos</label>
-        <div id="videoList" class="video-list"></div>
-        <div class="btn-row">
-          <button class="btn btn-secondary" id="addVideoBtn">+ Add Video</button>
-          <button class="btn btn-secondary" id="loadSampleBtn">Load Sample Videos</button>
-        </div>
-        <p style="color:#666;font-size:11px;margin-top:8px;">Each video needs a URL. Optional thumbnail is used for the highlight slideshow.</p>
       </div>
     </div>
 
@@ -368,31 +288,15 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn" id="goPreviewBtn">▶ Preview Playlist & Credits</button>
-      <button class="btn btn-secondary" id="previewCreditsBtn">Preview Credits Only</button>
+      <button class="btn" id="goPreviewBtn">▶ Preview Credits</button>
     </div>
   </div>
 
   <!-- ===== Preview View ===== -->
   <div id="previewView" class="preview-view" style="display:none;">
-    <div class="playlist-stage" id="playlistStage">
-      <div class="now-playing" id="nowPlaying" style="display:none;"></div>
-      <video id="playerVideo" playsinline></video>
-      <div class="playlist-empty" id="playlistEmpty" style="display:none;">
-        No videos added yet
-        <div class="hint">Add videos in Settings, or click "Skip to Credits" below</div>
-      </div>
-      <button class="skip-btn" id="skipBtn">Skip to Credits →</button>
-    </div>
-
     <div class="credits-screen" id="creditsScreen">
-      <div class="credits-left">
-        <video id="highlightVideo" class="highlight-video" muted playsinline loop style="display:none;"></video>
-        <div id="highlightSlide" class="highlight-slide placeholder active">Memories</div>
-        <div class="left-overlay"></div>
-      </div>
-      <div class="credits-right">
-        <div class="credits-vignette"></div>
+      <div class="credits-vignette"></div>
+      <div class="credits-stage">
         <div id="creditsScroll" class="credits-scroll"></div>
       </div>
       <button class="replay-btn" id="replayBtn">↻ Replay</button>
@@ -403,7 +307,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ============ Defaults ============
   const DEFAULT_CREDITS = [
     ["Directed by", "God"],
     ["Boyfriend", "[Your name]"],
@@ -424,17 +327,10 @@
     ["Script consultants", "Our everyday magic"],
   ];
 
-  const SAMPLE_VIDEOS = [
-    { url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", thumb: "" },
-    { url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", thumb: "" },
-    { url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", thumb: "" },
-  ];
-
-  const STORAGE_KEY = "loveflix_outro_credits_v1";
+  const STORAGE_KEY = "loveflix_outro_credits_v3";
 
   const defaultState = () => ({
     title: "Our Love Story",
-    videos: [],
     credits: DEFAULT_CREDITS.map(([r, n]) => ({ role: r, name: n })),
     speed: "medium",
     font: "serif",
@@ -442,7 +338,6 @@
     closing: "Made with love ❤️",
   });
 
-  // ============ State ============
   let state = loadState();
 
   function loadState() {
@@ -459,7 +354,6 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
-  // ============ Toast ============
   const toastEl = document.getElementById('toast');
   let toastTimer;
   function toast(msg) {
@@ -469,8 +363,10 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 2000);
   }
 
-  // ============ Settings UI ============
   const $ = id => document.getElementById(id);
+
+  function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
+  function escHTML(s) { return String(s || '').replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
 
   function renderSettings() {
     $('fTitle').value = state.title;
@@ -479,7 +375,6 @@
     $('fBg').value = state.bg;
     $('fClosing').value = state.closing;
     renderCreditRows();
-    renderVideoList();
   }
 
   function renderCreditRows() {
@@ -532,40 +427,6 @@
     });
   }
 
-  function renderVideoList() {
-    const container = $('videoList');
-    container.innerHTML = '';
-    if (state.videos.length === 0) {
-      container.innerHTML = '<p style="color:#666;font-size:13px;padding:8px 0;">No videos yet. Add one or load samples.</p>';
-      return;
-    }
-    state.videos.forEach((v, idx) => {
-      const row = document.createElement('div');
-      row.className = 'video-item';
-      row.innerHTML = `
-        <input type="text" placeholder="Video URL (mp4)" value="${escAttr(v.url)}" data-field="url">
-        <input type="text" placeholder="Thumbnail URL (optional)" value="${escAttr(v.thumb || '')}" data-field="thumb">
-        <button class="icon-btn" title="Remove">✕</button>
-      `;
-      row.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('input', () => {
-          state.videos[idx][inp.dataset.field] = inp.value;
-          saveState();
-        });
-      });
-      row.querySelector('.icon-btn').addEventListener('click', () => {
-        state.videos.splice(idx, 1);
-        saveState();
-        renderVideoList();
-      });
-      container.appendChild(row);
-    });
-  }
-
-  function escAttr(s) { return String(s || '').replace(/"/g, '&quot;'); }
-  function escHTML(s) { return String(s || '').replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
-
-  // ============ Settings event wiring ============
   $('fTitle').addEventListener('input', e => { state.title = e.target.value; saveState(); });
   $('fSpeed').addEventListener('change', e => { state.speed = e.target.value; saveState(); });
   $('fFont').addEventListener('change', e => { state.font = e.target.value; saveState(); });
@@ -586,19 +447,7 @@
     renderCreditRows();
     toast('Defaults restored');
   });
-  $('addVideoBtn').addEventListener('click', () => {
-    state.videos.push({ url: "", thumb: "" });
-    saveState();
-    renderVideoList();
-  });
-  $('loadSampleBtn').addEventListener('click', () => {
-    state.videos = SAMPLE_VIDEOS.map(v => ({ ...v }));
-    saveState();
-    renderVideoList();
-    toast('Sample videos loaded');
-  });
 
-  // ============ Mode toggle ============
   const settingsView = $('settingsView');
   const previewView = $('previewView');
   const modeSettingsBtn = $('modeSettings');
@@ -610,106 +459,34 @@
       previewView.style.display = 'none';
       modeSettingsBtn.classList.add('active');
       modePreviewBtn.classList.remove('active');
-      stopAllPlayback();
+      stopCreditsAnimation();
+      creditsScreen.classList.remove('active');
     } else {
       settingsView.style.display = 'none';
-      previewView.style.display = 'flex';
+      previewView.style.display = 'block';
       modeSettingsBtn.classList.remove('active');
       modePreviewBtn.classList.add('active');
+      startCredits();
     }
   }
   modeSettingsBtn.addEventListener('click', () => setMode('settings'));
-  modePreviewBtn.addEventListener('click', () => { setMode('preview'); startPlaylist(); });
-  $('goPreviewBtn').addEventListener('click', () => { setMode('preview'); startPlaylist(); });
-  $('previewCreditsBtn').addEventListener('click', () => { setMode('preview'); skipToCredits(); });
-
-  // ============ Playlist Player ============
-  const playerVideo = $('playerVideo');
-  const playlistStage = $('playlistStage');
-  const playlistEmpty = $('playlistEmpty');
-  const nowPlayingEl = $('nowPlaying');
-  const skipBtn = $('skipBtn');
-  let currentIdx = 0;
-
-  function startPlaylist() {
-    creditsScreen.classList.remove('active', 'fading-out');
-    playlistStage.classList.remove('fading');
-    stopCreditsAnimation();
-    currentIdx = 0;
-
-    if (!state.videos.length || !state.videos.some(v => v.url)) {
-      playerVideo.style.display = 'none';
-      playlistEmpty.style.display = 'block';
-      nowPlayingEl.style.display = 'none';
-      return;
-    }
-    playlistEmpty.style.display = 'none';
-    playerVideo.style.display = 'block';
-    playNext();
-  }
-
-  function playNext() {
-    while (currentIdx < state.videos.length && !state.videos[currentIdx].url) currentIdx++;
-    if (currentIdx >= state.videos.length) {
-      transitionToCredits();
-      return;
-    }
-    const v = state.videos[currentIdx];
-    nowPlayingEl.textContent = `Playing ${currentIdx + 1} / ${state.videos.length}`;
-    nowPlayingEl.style.display = 'block';
-    playerVideo.src = v.url;
-    playerVideo.play().catch(() => {
-      playerVideo.muted = true;
-      playerVideo.play().catch(() => {});
-    });
-  }
-
-  playerVideo.addEventListener('ended', () => {
-    currentIdx++;
-    playNext();
-  });
-  playerVideo.addEventListener('error', () => {
-    currentIdx++;
-    setTimeout(playNext, 300);
-  });
-
-  skipBtn.addEventListener('click', skipToCredits);
-  function skipToCredits() {
-    try { playerVideo.pause(); } catch (e) {}
-    transitionToCredits();
-  }
-
-  function stopAllPlayback() {
-    try { playerVideo.pause(); } catch (e) {}
-    try { $('highlightVideo').pause(); } catch (e) {}
-    stopCreditsAnimation();
-  }
+  modePreviewBtn.addEventListener('click', () => setMode('preview'));
+  $('goPreviewBtn').addEventListener('click', () => setMode('preview'));
 
   // ============ Credits Screen ============
   const creditsScreen = $('creditsScreen');
   const creditsScroll = $('creditsScroll');
-  const highlightVideo = $('highlightVideo');
-  const highlightSlide = $('highlightSlide');
   const replayBtn = $('replayBtn');
   let creditsAnimId = null;
-  let highlightIdx = 0;
-  let slideshowTimer = null;
 
-  function transitionToCredits() {
-    playlistStage.classList.add('fading');
-    nowPlayingEl.style.display = 'none';
-    setTimeout(() => {
-      try { playerVideo.pause(); playerVideo.removeAttribute('src'); playerVideo.load(); } catch (e) {}
-      showCredits();
-    }, 1500);
-  }
-
-  function showCredits() {
+  function startCredits() {
+    stopCreditsAnimation();
+    creditsScreen.classList.remove('active');
     creditsScreen.style.background = state.bg;
     creditsScreen.classList.remove('font-serif', 'font-sans', 'font-cinzel');
     creditsScreen.classList.add('font-' + state.font);
     buildCreditsContent();
-    startHighlightReel();
+    void creditsScreen.offsetWidth;
     creditsScreen.classList.add('active');
     requestAnimationFrame(() => requestAnimationFrame(animateCreditsScroll));
   }
@@ -725,13 +502,13 @@
     if (state.closing) {
       html += `<div class="credits-closing">${escHTML(state.closing)}</div>`;
     }
-    html += `<div class="credits-end">Fin</div>`;
+    html += `<div class="credits-end">LOVE<span class="heart">♥</span>FLIX</div>`;
     creditsScroll.innerHTML = html;
     creditsScroll.style.transform = 'translateY(100vh)';
   }
 
   function animateCreditsScroll() {
-    const speedMap = { slow: 25, medium: 50, fast: 90 }; // pixels per second
+    const speedMap = { slow: 25, medium: 50, fast: 90 };
     const pxPerSec = speedMap[state.speed] || 50;
     const totalHeight = creditsScroll.offsetHeight;
     const startY = creditsScreen.offsetHeight;
@@ -757,67 +534,13 @@
 
   function stopCreditsAnimation() {
     if (creditsAnimId) { cancelAnimationFrame(creditsAnimId); creditsAnimId = null; }
-    if (slideshowTimer) { clearInterval(slideshowTimer); slideshowTimer = null; }
     replayBtn.classList.remove('visible');
   }
 
-  function startHighlightReel() {
-    const validVideos = state.videos.filter(v => v.url);
-    const validThumbs = state.videos.filter(v => v.thumb);
-
-    if (validVideos.length > 0) {
-      highlightVideo.style.display = 'block';
-      highlightSlide.classList.remove('active');
-      highlightIdx = 0;
-      playHighlightVideo();
-    } else if (validThumbs.length > 0) {
-      highlightVideo.style.display = 'none';
-      startSlideshow(validThumbs);
-    } else {
-      highlightVideo.style.display = 'none';
-      highlightSlide.classList.add('active', 'placeholder');
-      highlightSlide.textContent = 'Memories';
-      highlightSlide.style.backgroundImage = '';
-    }
-  }
-
-  function playHighlightVideo() {
-    const validVideos = state.videos.filter(v => v.url);
-    if (!validVideos.length) return;
-    const v = validVideos[highlightIdx % validVideos.length];
-    highlightVideo.src = v.url;
-    highlightVideo.muted = true;
-    highlightVideo.play().catch(() => {});
-  }
-  highlightVideo.addEventListener('ended', () => {
-    highlightIdx++;
-    playHighlightVideo();
-  });
-  highlightVideo.addEventListener('error', () => {
-    highlightIdx++;
-    setTimeout(playHighlightVideo, 200);
-  });
-
-  function startSlideshow(thumbs) {
-    let i = 0;
-    highlightSlide.classList.remove('placeholder');
-    highlightSlide.textContent = '';
-    const show = () => {
-      highlightSlide.style.backgroundImage = `url("${thumbs[i % thumbs.length].thumb}")`;
-      highlightSlide.classList.add('active');
-      i++;
-    };
-    show();
-    slideshowTimer = setInterval(show, 4000);
-  }
-
   replayBtn.addEventListener('click', () => {
-    stopCreditsAnimation();
-    creditsScreen.classList.remove('active');
-    setTimeout(() => startPlaylist(), 300);
+    startCredits();
   });
 
-  // ============ Init ============
   renderSettings();
   if (state.credits.length === 0) {
     state.credits = DEFAULT_CREDITS.map(([r, n]) => ({ role: r, name: n }));
