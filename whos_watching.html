@@ -545,41 +545,68 @@
 (function() {
   'use strict';
 
-  // Load names from settings
-  const settings = LoveFlix.getSettings();
-  const partnerName = settings.partnerName || 'My Love';
-  const adminName = settings.adminName || 'You';
+  // Names live in settings (synced from the server). We paint optimistically
+  // from local cache, then re-paint once the server pull resolves so a fresh
+  // session on a new device shows the right names — without the user having
+  // to bounce through settings every time.
+  let partnerName = '';
+  let adminName = '';
 
-  document.getElementById('herInitial').textContent = partnerName[0].toUpperCase();
-  document.getElementById('herName').textContent = partnerName;
-  document.getElementById('herProfile').dataset.name = partnerName;
-  document.getElementById('herProfile').setAttribute('aria-label', 'Select profile ' + partnerName);
-  if (settings.partnerPhoto) {
-    const av = document.querySelector('#herProfile .avatar');
-    if (av) {
-      av.style.background = `url(${JSON.stringify(settings.partnerPhoto)}) center/cover no-repeat`;
-      const init = document.getElementById('herInitial');
-      if (init) init.style.color = 'transparent';
+  function applyNames(settings) {
+    partnerName = settings.partnerName || 'My Love';
+    adminName = settings.adminName || 'You';
+
+    const herInit = document.getElementById('herInitial');
+    const herNameEl = document.getElementById('herName');
+    const hisInit = document.getElementById('hisInitial');
+    const hisNameEl = document.getElementById('hisName');
+    const herProfile = document.getElementById('herProfile');
+    const hisProfile = document.getElementById('hisProfile');
+
+    herInit.textContent = (partnerName[0] || '?').toUpperCase();
+    herNameEl.textContent = partnerName;
+    herProfile.dataset.name = partnerName;
+    herProfile.setAttribute('aria-label', 'Select profile ' + partnerName);
+
+    hisInit.textContent = (adminName[0] || '?').toUpperCase();
+    hisNameEl.textContent = adminName;
+    hisProfile.dataset.name = adminName;
+    hisProfile.setAttribute('aria-label', 'Select profile ' + adminName + ' (locked)');
+
+    const herAv = document.querySelector('#herProfile .avatar');
+    if (herAv) {
+      if (settings.partnerPhoto) {
+        herAv.style.background = `url(${JSON.stringify(settings.partnerPhoto)}) center/cover no-repeat`;
+        herInit.style.color = 'transparent';
+      } else {
+        herAv.style.background = '';
+        herInit.style.color = '';
+      }
     }
-  }
-  if (settings.adminPhoto) {
-    const av = document.querySelector('#hisProfile .avatar');
-    if (av) {
-      av.style.background = `url(${JSON.stringify(settings.adminPhoto)}) center/cover no-repeat`;
-      const init = document.getElementById('hisInitial');
-      if (init) init.style.color = 'transparent';
+    const hisAv = document.querySelector('#hisProfile .avatar');
+    if (hisAv) {
+      if (settings.adminPhoto) {
+        hisAv.style.background = `url(${JSON.stringify(settings.adminPhoto)}) center/cover no-repeat`;
+        hisInit.style.color = 'transparent';
+      } else {
+        hisAv.style.background = '';
+        hisInit.style.color = '';
+      }
     }
+
+    document.getElementById('pinSub').textContent =
+      'A 4-digit PIN is required to access ' + adminName + "'s profile.";
+    document.getElementById('successTitle').textContent = 'Welcome back, ' + adminName;
   }
 
-  document.getElementById('hisInitial').textContent = adminName[0].toUpperCase();
-  document.getElementById('hisName').textContent = adminName;
-  document.getElementById('hisProfile').dataset.name = adminName;
-  document.getElementById('hisProfile').setAttribute('aria-label', 'Select profile ' + adminName + ' (locked)');
+  // Optimistic paint from cache, then authoritative paint once synced.
+  applyNames(LoveFlix.getSettings());
+  LoveFlix.ensureSettingsReady().then(applyNames).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', () => applyNames(LoveFlix.getSettings()));
 
-  document.getElementById('pinSub').textContent = 'A 4-digit PIN is required to access ' + adminName + "'s profile.";
-  document.getElementById('successTitle').textContent = 'Welcome back, ' + adminName;
-
-  const PIN = (LoveFlix.getSettings().adminPasscode) || '1234';
+  function currentPin() {
+    return (LoveFlix.getSettings().adminPasscode) || '1234';
+  }
   const overlay = document.getElementById('pinOverlay');
   const pad = document.getElementById('pinPad');
   const dotsEl = document.getElementById('pinDots');
@@ -633,7 +660,7 @@
 
   function check() {
     locked = true;
-    if (entry === PIN) {
+    if (entry === currentPin()) {
       setTimeout(() => {
         overlay.classList.remove('active');
         successOverlay.classList.add('active');

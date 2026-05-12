@@ -266,11 +266,11 @@
         <div class="panel-head" style="border-top:1px solid var(--border);border-bottom:none">
           <div class="panel-title" style="font-size:13px">Recent Activity</div>
         </div>
-        <div class="activity">
-          <div class="act-row"><span class="act-dot"></span><div class="body"><strong>My Love</strong> watched <strong>The Lisbon Trip · Day 3</strong>.<div class="time">14 min ago</div></div></div>
-          <div class="act-row"><span class="act-dot" style="background:#a855f7"></span><div class="body"><strong>My Love</strong> ❤️ favorited <strong>One Year Letter</strong>.<div class="time">2 hours ago</div></div></div>
-          <div class="act-row"><span class="act-dot" style="background:#3a7bff"></span><div class="body"><strong>You</strong> uploaded <strong>2nd Anniversary Cut</strong>.<div class="time">Yesterday</div></div></div>
-          <div class="act-row"><span class="act-dot" style="background:#10b981"></span><div class="body"><strong>My Love</strong> finished <strong>Season 2</strong>.<div class="time">3 days ago</div></div></div>
+        <div class="activity" id="activityRows">
+          <div class="act-row"><span class="act-dot"></span><div class="body"><strong data-name-role="partner">My Love</strong> watched <strong>The Lisbon Trip · Day 3</strong>.<div class="time">14 min ago</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#a855f7"></span><div class="body"><strong data-name-role="partner">My Love</strong> ❤️ favorited <strong>One Year Letter</strong>.<div class="time">2 hours ago</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#3a7bff"></span><div class="body"><strong data-name-role="admin">You</strong> uploaded <strong>2nd Anniversary Cut</strong>.<div class="time">Yesterday</div></div></div>
+          <div class="act-row"><span class="act-dot" style="background:#10b981"></span><div class="body"><strong data-name-role="partner">My Love</strong> finished <strong>Season 2</strong>.<div class="time">3 days ago</div></div></div>
         </div>
       </div>
     </div>
@@ -282,20 +282,30 @@
 <script>
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
 
-  (function paintSidebar() {
-    const s = LoveFlix.getSettings();
+  function paintNames(s) {
+    s = s || LoveFlix.getSettings();
     const name = s.adminName || 'You';
+    const partner = s.partnerName || 'My Love';
     const slug = s.urlSlug || 'loveflix.so';
     const avatar = document.getElementById('sideAvatar');
-    avatar.textContent = name[0].toUpperCase();
+    avatar.textContent = (name[0] || '?').toUpperCase();
     if (s.adminPhoto) {
       avatar.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover no-repeat`;
       avatar.style.color = 'transparent';
+    } else {
+      avatar.style.background = '';
+      avatar.style.color = '';
     }
     document.getElementById('sideAdminName').textContent = name;
     document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
     document.getElementById('welcomeSub').textContent = 'Welcome back, ' + name + '. Here\'s what\'s happening on your site.';
-  })();
+    // Activity rows render with the current names instead of static placeholders.
+    document.querySelectorAll('#activityRows [data-name-role="partner"]').forEach(el => { el.textContent = partner; });
+    document.querySelectorAll('#activityRows [data-name-role="admin"]').forEach(el => { el.textContent = name; });
+  }
+  paintNames();
+  LoveFlix.ensureSettingsReady().then(paintNames).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', () => paintNames());
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

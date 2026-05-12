@@ -306,19 +306,25 @@
   });
 </script>
 <script>
-  (function() {
-    const s = LoveFlix.getSettings();
+  function paintSidebar(s) {
+    s = s || LoveFlix.getSettings();
     const name = s.adminName || 'You';
     const slug = s.urlSlug || '';
     const av = document.getElementById('sideAvatar');
-    av.textContent = name[0].toUpperCase();
+    av.textContent = (name[0] || '?').toUpperCase();
     if (s.adminPhoto) {
       av.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover no-repeat`;
       av.style.color = 'transparent';
+    } else {
+      av.style.background = '';
+      av.style.color = '';
     }
     document.getElementById('sideAdminName').textContent = name;
     document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
-  })();
+  }
+  paintSidebar();
+  LoveFlix.ensureSettingsReady().then(paintSidebar).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', () => paintSidebar());
 </script>
 </body>
 </html>

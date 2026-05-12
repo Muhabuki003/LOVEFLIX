@@ -333,7 +333,9 @@
 
 <script src="assets/loveflix.js"></script>
 <script>
-  const CORRECT_PIN = (function(){ try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}').adminPasscode || '1234'; } catch(e){ return '1234'; } })();
+  function correctPin() {
+    return (LoveFlix.getSettings().adminPasscode) || '1234';
+  }
   let pinValue = '';
   let pinLocked = false;
 
@@ -382,7 +384,7 @@
   }
 
   function checkPin() {
-    if (pinValue === CORRECT_PIN) {
+    if (pinValue === correctPin()) {
       for (let i = 0; i < 4; i++) {
         document.getElementById('dot' + i).className = 'pin-dot success';
       }
@@ -427,16 +429,19 @@
     if (e.key === 'Escape') closePin();
   });
 
-  // Load names from settings
-  (function() {
-    const raw = localStorage.getItem('loveflix_settings');
-    const s = raw ? JSON.parse(raw) : {};
+  // Load names from settings. Optimistic paint from cache, then re-paint
+  // once the server pull resolves so a new session/device shows the right
+  // names automatically.
+  function paintProfileNames(s) {
     const partnerName = s.partnerName || 'My Love';
     const adminName = s.adminName || 'You';
     document.getElementById('herName').textContent = partnerName;
     document.getElementById('hisName').textContent = adminName;
-    document.getElementById('hisInitial').textContent = adminName[0].toUpperCase();
-  })();
+    document.getElementById('hisInitial').textContent = (adminName[0] || '?').toUpperCase();
+  }
+  paintProfileNames(LoveFlix.getSettings());
+  LoveFlix.ensureSettingsReady().then(paintProfileNames).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', () => paintProfileNames(LoveFlix.getSettings()));
 </script>
 </body>
 </html>
