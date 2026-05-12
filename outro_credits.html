@@ -544,6 +544,12 @@
     renderCreditRows();
   }
 
+  // Allow ?preview=1 to land directly on the rolling credits (used by the
+  // player when autoplay finishes the last video).
+  if (new URLSearchParams(location.search).get('preview') === '1') {
+    setMode('preview');
+  }
+
   // Refresh from server so edits made on other devices show up.
   (async function syncFromServer() {
     if (!window.LoveFlix || !window.LoveFlix.pullSettings) return;

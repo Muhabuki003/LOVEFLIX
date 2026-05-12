@@ -885,6 +885,8 @@
     await saveProgress(true);
     if (autoplayOn && nextVideo) {
       location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+    } else if (autoplayOn && !nextVideo) {
+      location.href = `outro_credits.html?preview=1`;
     }
   });
 
@@ -947,8 +949,25 @@
       lIntroOverlay.classList.add('fade-out');
       setTimeout(() => lIntroOverlay.remove(), 400);
     }
-    if (url) video.play().catch(() => setPlayingUI(false));
+    if (url) startPlayback();
   }, L_INTRO_DURATION);
+
+  // Robust autoplay: browsers block unmuted autoplay after a navigation, so
+  // fall back to muted playback if the first attempt is rejected. The user
+  // can unmute via the mute button or "m" once it's playing.
+  async function startPlayback() {
+    try {
+      await video.play();
+    } catch (_) {
+      try {
+        video.muted = true;
+        paintVol();
+        await video.play();
+      } catch (__) {
+        setPlayingUI(false);
+      }
+    }
+  }
 })();
 </script>
 </body>
