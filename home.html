@@ -400,7 +400,7 @@
   <!-- Continue Watching -->
   <section class="row">
     <div class="row-head">
-      <h2 class="row-title">Continue Watching for My Love</h2>
+      <h2 class="row-title" id="continueWatchingTitle">Continue Watching</h2>
       <span class="row-explore">View All ›</span>
     </div>
     <div class="row-scroll-wrap">
@@ -542,6 +542,17 @@
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
 
   LoveFlix.paintNavAvatar(document.getElementById('navAvatar'));
+
+  // Personalize the "Continue Watching" row for whoever's signed in.
+  function paintContinueWatchingTitle() {
+    const el = document.getElementById('continueWatchingTitle');
+    if (!el) return;
+    const p = LoveFlix.getActiveProfile();
+    el.textContent = p && p.name ? `Continue Watching for ${p.name}` : 'Continue Watching';
+  }
+  paintContinueWatchingTitle();
+  LoveFlix.ensureSettingsReady().then(paintContinueWatchingTitle).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', paintContinueWatchingTitle);
 
   const nav = document.getElementById('topnav');
   window.addEventListener('scroll', () => {

@@ -8,6 +8,13 @@
   const TOKEN_KEY = 'loveflix_token';
   const USER_KEY = 'loveflix_user';
   const SETTINGS_KEY = 'loveflix_settings';
+  // Mirror of settings written while unauthenticated (e.g. signup before email
+  // confirm). Flushed to the server on the next successful sign-in.
+  const PENDING_KEY = 'loveflix_pending_settings';
+  // Client-side timestamp embedded inside the settings object. Used to resolve
+  // local vs server conflicts on pull so a freshly-saved name is never
+  // overwritten by stale server data.
+  const TS_FIELD = '__updatedAt';
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY) || '';
@@ -32,14 +39,34 @@
   function writeSettings(obj) {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj || {})); } catch (_) {}
   }
-  function saveSettings(updates) {
+  function writePending(obj) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(obj || {})); } catch (_) {}
+  }
+  function readPending() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }
+    catch { return null; }
+  }
+  function clearPending() {
+    try { localStorage.removeItem(PENDING_KEY); } catch (_) {}
+  }
+  function saveSettings(updates, options) {
+    const opts = options || {};
     const merged = Object.assign(getSettings(), updates || {});
+    merged[TS_FIELD] = Date.now();
     writeSettings(merged);
+    // Always stash a pending copy too: if the user isn't authenticated yet
+    // (e.g. mid-signup before email confirm) we still want these to land on
+    // the server after the first sign-in.
+    writePending(stripLargeFields(merged));
+    if (opts.flush) {
+      return flushPushSettings().then(() => merged);
+    }
     schedulePushSettings();
     return merged;
   }
   function clearSettings() {
     localStorage.removeItem(SETTINGS_KEY);
+    clearPending();
   }
 
   // ----- Cross-device sync for LoveFlix.getSettings -----
@@ -55,44 +82,119 @@
     return out;
   }
 
-  let _pushTimer = null;
-  let _pushInFlight = false;
-  function schedulePushSettings() {
-    if (!getToken()) return; // anonymous → local only
-    clearTimeout(_pushTimer);
-    _pushTimer = setTimeout(pushSettings, 600);
+  // Promise that resolves on the first completed pull (or its fallback). Pages
+  // that need accurate names — profile selectors, settings, anywhere a name is
+  // displayed — should `await LoveFlix.ensureSettingsReady()` before painting.
+  let _settingsReady;
+  let _settingsReadyResolve;
+  function resetSettingsReady() {
+    _settingsReady = new Promise(r => { _settingsReadyResolve = r; });
   }
-  async function pushSettings() {
-    if (!getToken()) return;
-    if (_pushInFlight) { schedulePushSettings(); return; }
-    _pushInFlight = true;
-    try {
-      await api('/api/settings', {
-        method: 'PUT',
-        body: { settings: stripLargeFields(getSettings()) },
-      });
-    } catch (e) {
-      console.warn('settings sync push failed', e && e.message);
-    } finally {
-      _pushInFlight = false;
+  resetSettingsReady();
+  function resolveSettingsReady(value) {
+    if (_settingsReadyResolve) {
+      _settingsReadyResolve(value);
+      _settingsReadyResolve = null;
     }
   }
+  function ensureSettingsReady() {
+    return _settingsReady;
+  }
+
+  let _pushTimer = null;
+  let _pushInFlight = null;
+  function schedulePushSettings() {
+    if (!getToken()) return; // unauthenticated → pending mirror only
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => { pushSettings().catch(() => {}); }, 400);
+  }
+  async function flushPushSettings() {
+    clearTimeout(_pushTimer);
+    return pushSettings();
+  }
+  async function pushSettings() {
+    if (!getToken()) return; // pending mirror will flush on next sign-in
+    if (_pushInFlight) {
+      // Coalesce concurrent pushes; the in-flight one already reads the
+      // latest local copy at send time.
+      return _pushInFlight;
+    }
+    _pushInFlight = (async () => {
+      try {
+        await api('/api/settings', {
+          method: 'PUT',
+          body: { settings: stripLargeFields(getSettings()) },
+        });
+        clearPending();
+      } catch (e) {
+        console.warn('settings sync push failed', e && e.message);
+      }
+    })();
+    try { await _pushInFlight; } finally { _pushInFlight = null; }
+  }
+
+  // Push any settings saved while unauthenticated. Called automatically after
+  // signIn/signUp and before pullSettings.
+  async function flushPendingIfAny() {
+    if (!getToken()) return;
+    const pending = readPending();
+    if (!pending || typeof pending !== 'object') return;
+    // Merge pending into local so subsequent reads see them immediately.
+    const local = getSettings();
+    const merged = Object.assign({}, local, pending);
+    // Keep whichever timestamp is newer.
+    const ts = Math.max(local[TS_FIELD] || 0, pending[TS_FIELD] || 0, Date.now());
+    merged[TS_FIELD] = ts;
+    writeSettings(merged);
+    try {
+      await api('/api/settings', { method: 'PUT', body: { settings: stripLargeFields(merged) } });
+      clearPending();
+    } catch (e) {
+      console.warn('pending settings flush failed', e && e.message);
+    }
+  }
+
   async function pullSettings() {
     try {
+      await flushPendingIfAny();
       const data = await api('/api/settings');
-      if (data && data.settings && typeof data.settings === 'object') {
-        // Server is source of truth for synced fields; preserve local-only
-        // large fields (photos) that we never push.
-        const local = getSettings();
-        const merged = Object.assign({}, data.settings);
-        for (const k of LARGE_FIELDS) if (local[k]) merged[k] = local[k];
-        writeSettings(merged);
-        return merged;
+      const serverSettings = (data && data.settings && typeof data.settings === 'object')
+        ? data.settings : null;
+      const local = getSettings();
+      const localTs = local[TS_FIELD] || 0;
+      const serverTs = serverSettings && serverSettings[TS_FIELD]
+        ? serverSettings[TS_FIELD]
+        : ((data && data.updated_at) || 0) * 1000;
+
+      let next;
+      const serverEmpty = !serverSettings || Object.keys(serverSettings).length === 0;
+      if (serverEmpty) {
+        // Nothing on the server yet — keep local, push if we have anything
+        // worth syncing.
+        next = local;
+        if (getToken() && Object.keys(local).length > 0) {
+          flushPushSettings().catch(() => {});
+        }
+      } else if (localTs && localTs > serverTs) {
+        // Local has unsaved/newer changes (e.g. user edited a name and we
+        // got here before the debounced push fired). Keep local and push.
+        next = local;
+        if (getToken()) flushPushSettings().catch(() => {});
+      } else {
+        // Server is authoritative. Adopt it but keep local-only fields
+        // (photos) that we never push.
+        next = Object.assign({}, serverSettings);
+        for (const k of LARGE_FIELDS) if (local[k]) next[k] = local[k];
+        writeSettings(next);
       }
+      resolveSettingsReady(next);
+      return next;
     } catch (e) {
       console.warn('settings sync pull failed', e && e.message);
     }
-    return getSettings();
+    const fallback = getSettings();
+    resolveSettingsReady(fallback);
+    return fallback;
   }
 
   // Active profile: 'his' (admin) or 'her' (partner). Falls back to admin
@@ -117,14 +219,22 @@
   }
 
   // Paint the top-right viewer avatar (home/browse) with the active profile.
+  // Re-paints automatically once settings finish syncing from the server.
   function paintNavAvatar(el) {
     if (!el) return;
-    const p = getActiveProfile();
-    el.textContent = p.initial;
-    if (p.photo) {
-      el.style.background = `url(${JSON.stringify(p.photo)}) center/cover no-repeat`;
-      el.style.color = 'transparent';
-    }
+    const apply = () => {
+      const p = getActiveProfile();
+      el.textContent = p.initial;
+      if (p.photo) {
+        el.style.background = `url(${JSON.stringify(p.photo)}) center/cover no-repeat`;
+        el.style.color = 'transparent';
+      } else {
+        el.style.background = '';
+        el.style.color = '';
+      }
+    };
+    apply();
+    ensureSettingsReady().then(apply).catch(() => {});
   }
 
   async function signIn(email, password) {
@@ -139,6 +249,9 @@
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign-in failed');
     setSession(data);
+    // Pull/merge settings before redirecting so the next page sees real names.
+    resetSettingsReady();
+    try { await pullSettings(); } catch (_) {}
     return data;
   }
 
@@ -153,7 +266,11 @@
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign-up failed');
-    if (data.access_token) setSession(data);
+    if (data.access_token) {
+      setSession(data);
+      // Flush anything entered before signup completed.
+      try { await flushPendingIfAny(); } catch (_) {}
+    }
     return data;
   }
 
@@ -225,13 +342,20 @@
   }
 
   // Kick off a settings refresh on every page load. Pages that need to wait
-  // for it can `await LoveFlix.pullSettings()` explicitly.
+  // for it can `await LoveFlix.ensureSettingsReady()`.
   if (typeof document !== 'undefined') {
     const run = () => { pullSettings().catch(() => {}); };
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', run, { once: true });
     } else { run(); }
     window.addEventListener('focus', () => pullSettings().catch(() => {}));
+    // Cross-tab updates: if another tab changes settings, mirror in this tab.
+    window.addEventListener('storage', e => {
+      if (e.key === SETTINGS_KEY) {
+        // Storage event already wrote the new value; just notify listeners.
+        try { window.dispatchEvent(new Event('loveflix:settings-changed')); } catch (_) {}
+      }
+    });
   }
 
   global.LoveFlix = {
@@ -246,6 +370,8 @@
     clearSettings,
     pullSettings,
     pushSettings,
+    flushPushSettings,
+    ensureSettingsReady,
     signIn,
     signUp,
     signOut,

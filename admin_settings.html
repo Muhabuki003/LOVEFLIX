@@ -135,8 +135,8 @@
           <h2>Couple Names</h2>
           <p class="desc">These appear on profile selectors and across your site.</p>
           <div class="field-grid">
-            <div class="field"><label>Partner 1 Name</label><input id="name1" type="text" value="My Love"></div>
-            <div class="field"><label>Partner 2 Name (you)</label><input id="name2" type="text" value="Buki"></div>
+            <div class="field"><label>Partner 1 Name</label><input id="name1" type="text" placeholder="My Love"></div>
+            <div class="field"><label>Partner 2 Name (you)</label><input id="name2" type="text" placeholder="You"></div>
           </div>
           <div class="field"><label>Site Tagline</label><input id="tagline" type="text" value="A private streaming service of two."></div>
           <div class="field"><label>Anniversary Date</label><input id="anniversary" type="date" value="2023-05-14"></div>
@@ -268,9 +268,11 @@
     }
   }
 
-  // Load saved settings on page load
-  (function loadSettings() {
-    const s = LoveFlix.getSettings();
+  // Load saved settings on page load. Paint optimistically from cache, then
+  // re-paint once the server pull resolves so this page never shows stale
+  // defaults on a fresh device or after the user changed names elsewhere.
+  function loadSettings(s) {
+    s = s || {};
     const name1 = s.partnerName || 'My Love';
     const name2 = s.adminName || 'You';
     const slug = s.urlSlug || (slugify(name2) + '-and-' + slugify(name1));
@@ -290,8 +292,8 @@
     // Avatar cards
     const av1 = document.getElementById('av1');
     const av2 = document.getElementById('av2');
-    av1.textContent = name1[0].toUpperCase();
-    av2.textContent = name2[0].toUpperCase();
+    av1.textContent = (name1[0] || '?').toUpperCase();
+    av2.textContent = (name2[0] || '?').toUpperCase();
     document.getElementById('av1Name').textContent = name1;
     document.getElementById('av2Name').textContent = name2;
     applyAvatarPhoto(av1, partnerPhoto);
@@ -300,7 +302,7 @@
     document.getElementById('av2Reset').style.display = adminPhoto ? '' : 'none';
 
     // Sidebar
-    applySidebarAvatar(name2[0].toUpperCase(), adminPhoto);
+    applySidebarAvatar((name2[0] || '?').toUpperCase(), adminPhoto);
     document.getElementById('sideAdminName').textContent = name2;
     document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
 
@@ -316,7 +318,10 @@
     colors.querySelectorAll('.color-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.c === accent);
     });
-  })();
+  }
+  loadSettings(LoveFlix.getSettings());
+  LoveFlix.ensureSettingsReady().then(loadSettings).catch(() => {});
+  window.addEventListener('loveflix:settings-changed', () => loadSettings(LoveFlix.getSettings()));
 
   colors.addEventListener('click', e => {
     const sw = e.target.closest('.color-swatch');
@@ -423,25 +428,44 @@
   wirePhotoPicker('av1', 'av1File', 'av1Reset', 'partner');
   wirePhotoPicker('av2', 'av2File', 'av2Reset', 'admin');
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('saveBtn');
+    const t = document.getElementById('toast');
     const name1 = document.getElementById('name1').value.trim();
     const name2 = document.getElementById('name2').value.trim();
     const slug = document.getElementById('urlSlug').value.trim();
     const accentEl = colors.querySelector('.color-swatch.selected');
-    LoveFlix.saveSettings({
-      partnerName: name1 || 'My Love',
-      adminName: name2 || 'You',
-      urlSlug: slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
-      accentColor: accentEl ? accentEl.dataset.c : '#e50914',
-      loveNote: document.getElementById('loveNote').value.trim(),
-      attribution: document.getElementById('attr').value.trim(),
-      anniversaryDate: document.getElementById('anniversary').value,
-      partnerPhoto: partnerPhoto || '',
-      adminPhoto: adminPhoto || '',
-    });
-    const t = document.getElementById('toast');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 1800);
+    const originalLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try {
+      // flush:true → returns a promise that resolves only after the server
+      // PUT completes (or fails). This is what locks the new name in across
+      // sessions and devices — no more silent debounce drops.
+      await LoveFlix.saveSettings({
+        partnerName: name1 || 'My Love',
+        adminName: name2 || 'You',
+        urlSlug: slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
+        accentColor: accentEl ? accentEl.dataset.c : '#e50914',
+        loveNote: document.getElementById('loveNote').value.trim(),
+        attribution: document.getElementById('attr').value.trim(),
+        anniversaryDate: document.getElementById('anniversary').value,
+        partnerPhoto: partnerPhoto || '',
+        adminPhoto: adminPhoto || '',
+      }, { flush: true });
+      t.textContent = 'Saved.';
+      t.style.background = '#10b981';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    } catch (err) {
+      t.textContent = 'Saved locally — sync will retry.';
+      t.style.background = '#e87c03';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalLabel;
+    }
   });
 </script>
 </body>

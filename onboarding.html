@@ -277,7 +277,7 @@
     document.getElementById('successUrl').textContent = 'loveflix.so/' + s;
   }
 
-  function goNext(step) {
+  async function goNext(step) {
     document.querySelectorAll('[data-pane]').forEach(p => p.classList.add('hidden'));
     document.querySelector(`[data-pane="${step}"]`).classList.remove('hidden');
 
@@ -294,19 +294,23 @@
     }
 
     if (step === 5) {
-      // Save all settings to localStorage
+      // Save all settings — written to localStorage AND a pending mirror so
+      // they survive an email-confirm gap and land server-side on first
+      // sign-in. If we're already authenticated we flush synchronously so the
+      // next page sees the names.
       const adminName = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
       const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
       const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
       const accentEl = document.querySelector('#colors .color.selected');
       const savedPasscode = document.getElementById('adminPasscode').value.trim();
-      LoveFlix.saveSettings({
+      const saving = LoveFlix.saveSettings({
         adminName: adminName || 'You',
         partnerName: partnerName,
         urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
         adminPasscode: savedPasscode || '1234',
-      });
+      }, { flush: !!LoveFlix.getToken() });
+      try { await saving; } catch (_) {}
       document.getElementById('successUrl').textContent = 'loveflix.so/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
       const cta = document.getElementById('primaryCta');
