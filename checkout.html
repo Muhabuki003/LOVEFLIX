@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Checkout</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--panel-2:#1c1c1c;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:sticky;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.05)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .secure-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
+  .secure-note svg{width:14px;height:14px;fill:currentColor}
+
+  .wrap{max-width:980px;margin:0 auto;padding:50px 24px 60px;display:grid;grid-template-columns:1.3fr 1fr;gap:32px}
+  .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px}
+  h1{font-family:'Bebas Neue',sans-serif;font-size:54px;letter-spacing:2px;line-height:.95;margin-bottom:8px}
+  .sub{font-size:14px;color:var(--text-dim);margin-bottom:28px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:26px}
+  .panel + .panel{margin-top:18px}
+  .panel h2{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+  .field input, .stripe-shell{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:13px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s,box-shadow .15s}
+  .field input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+  .stripe-shell.focused{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+  .stripe-shell.invalid{border-color:#f87171}
+
+  .pay-btn{width:100%;margin-top:10px;padding:15px 22px;border-radius:6px;font-size:14px;font-weight:700;border:none;background:var(--red);color:#fff;letter-spacing:1px;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:background .15s,opacity .15s}
+  .pay-btn:hover:not(:disabled){background:#f6121d}
+  .pay-btn:disabled{opacity:.65;cursor:not-allowed}
+  .pay-btn .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none}
+  .pay-btn.loading .spinner{display:inline-block}
+  .pay-btn.loading .pay-label{opacity:.7}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .error{display:none;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.35);color:#fca5a5;font-size:13px;padding:11px 14px;border-radius:6px;margin-top:14px;line-height:1.4}
+  .error.show{display:block}
+
+  .fineprint{font-size:11px;color:var(--text-dim);text-align:center;margin-top:14px;line-height:1.5}
+
+  /* Order summary */
+  .summary{background:linear-gradient(180deg,rgba(229,9,20,0.06) 0%,var(--panel) 60%);border:1px solid var(--border);border-radius:10px;padding:26px;position:sticky;top:88px}
+  .summary h2{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:18px}
+  .plan-row{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .plan-name{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;line-height:1}
+  .plan-blurb{font-size:12px;color:var(--text-dim);margin-top:4px}
+  .plan-price{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:#fff;line-height:1}
+  .plan-per{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
+  .line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-light);margin-bottom:10px}
+  .line.total{border-top:1px solid var(--border);padding-top:14px;margin-top:6px;font-size:14px;color:#fff;font-weight:600}
+  .line.total .amt{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--red)}
+  .change-link{font-size:12px;color:var(--text-dim);margin-top:14px;display:inline-block}
+  .change-link:hover{color:#fff}
+
+  .test-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:5px 10px;border-radius:999px;margin-bottom:14px}
+  .test-badge .dot{width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px #fbbf24}
+
+  @media (max-width:780px){
+    nav{padding:14px 20px}
+    .wrap{grid-template-columns:1fr;padding:30px 18px 40px;gap:20px}
+    h1{font-size:42px}
+    .summary{position:static}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="secure-note">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+    256-bit encrypted
+  </div>
+</nav>
+
+<div class="wrap">
+  <div>
+    <div class="test-badge"><span class="dot"></span>Test Mode</div>
+    <div class="eyebrow">Final step</div>
+    <h1>Confirm and pay.</h1>
+    <p class="sub">Your LoveFlix site goes live the moment payment clears.</p>
+
+    <form id="payForm" novalidate>
+      <div class="panel">
+        <h2>Card details</h2>
+        <div class="field">
+          <label for="cardName">Name on card</label>
+          <input type="text" id="cardName" name="cardName" autocomplete="cc-name" placeholder="Your full name" required>
+        </div>
+        <div class="field">
+          <label for="cardElement">Card number, expiry, CVC</label>
+          <div id="cardElement" class="stripe-shell"></div>
+        </div>
+        <div id="payError" class="error" role="alert"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Billing email</h2>
+        <div class="field">
+          <label for="billingEmail">Receipt sent to</label>
+          <input type="email" id="billingEmail" name="billingEmail" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+      </div>
+
+      <button type="submit" class="pay-btn" id="payBtn">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="pay-label">Pay <span id="payAmount">$12.00</span></span>
+      </button>
+      <p class="fineprint">By confirming, you agree to LoveFlix's Terms and authorize a recurring monthly charge until canceled.</p>
+    </form>
+  </div>
+
+  <aside>
+    <div class="summary">
+      <h2>Order summary</h2>
+      <div class="plan-row">
+        <div>
+          <div class="plan-name" id="planName">Sweetheart</div>
+          <div class="plan-blurb" id="planBlurb">Unlimited · 4K · custom URL</div>
+        </div>
+        <div style="text-align:right">
+          <div class="plan-price" id="planPrice">$12</div>
+          <div class="plan-per">per month</div>
+        </div>
+      </div>
+      <div class="line"><span>Subtotal</span><span id="sumSubtotal">$12.00</span></div>
+      <div class="line"><span>Tax</span><span>$0.00</span></div>
+      <div class="line total"><span>Total due today</span><span class="amt" id="sumTotal">$12.00</span></div>
+      <a href="onboarding.html" class="change-link">← Change plan</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // Plan catalog mirrors the backend. Source of truth for display.
+  const PLANS = {
+    crush:      { name: 'Crush',      price: 600,  blurb: '25 videos · 1080p' },
+    sweetheart: { name: 'Sweetheart', price: 1200, blurb: 'Unlimited · 4K · custom URL' },
+    forever:    { name: 'Forever',    price: 2400, blurb: 'All features · concierge' },
+  };
+
+  const params = new URLSearchParams(location.search);
+  const planId = (params.get('plan') || localStorage.getItem('loveflix.selectedPlan') || 'sweetheart').toLowerCase();
+  const plan = PLANS[planId] || PLANS.sweetheart;
+  localStorage.setItem('loveflix.selectedPlan', planId in PLANS ? planId : 'sweetheart');
+
+  const fmt = (cents) => '$' + (cents / 100).toFixed(2);
+  document.getElementById('planName').textContent = plan.name;
+  document.getElementById('planBlurb').textContent = plan.blurb;
+  document.getElementById('planPrice').textContent = '$' + Math.round(plan.price / 100);
+  document.getElementById('sumSubtotal').textContent = fmt(plan.price);
+  document.getElementById('sumTotal').textContent = fmt(plan.price);
+  document.getElementById('payAmount').textContent = fmt(plan.price);
+
+  let clientSecret = null;
+  let stripe = null;
+  let card = null;
+
+  async function bootstrap() {
+    // 1. Get a PaymentIntent client_secret from our backend.
+    try {
+      const res = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ plan: planId in PLANS ? planId : 'sweetheart' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Unable to start checkout.');
+      clientSecret = data.clientSecret;
+    } catch (e) {
+      showError('Could not start checkout. Refresh and try again.');
+      return;
+    }
+
+    // 2. Load Stripe.js and mount Elements.
+    let pk = window.LOVEFLIX_STRIPE_KEY || '';
+    if (!pk) {
+      try {
+        const cfg = await (await fetch('/api/stripe-config')).json();
+        pk = cfg.publishableKey || '';
+      } catch (_) {}
+    }
+    if (!pk) pk = 'pk_test_loveflix_placeholder';
+    try {
+      if (!window.Stripe) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://js.stripe.com/v3/';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      stripe = window.Stripe(pk);
+      const elements = stripe.elements({
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: '#e50914',
+            colorBackground: '#1c1c1c',
+            colorText: '#ffffff',
+            colorDanger: '#f87171',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontSizeBase: '14px',
+            borderRadius: '6px',
+            spacingUnit: '4px',
+          },
+        },
+      });
+      card = elements.create('card', {
+        hidePostalCode: true,
+        style: {
+          base: {
+            color: '#ffffff',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontSize: '14px',
+            fontSmoothing: 'antialiased',
+            '::placeholder': { color: '#6b6b6b' },
+            iconColor: '#cfcfcf',
+          },
+          invalid: { color: '#f87171', iconColor: '#f87171' },
+        },
+      });
+      card.mount('#cardElement');
+      const shell = document.getElementById('cardElement');
+      card.on('focus', () => shell.classList.add('focused'));
+      card.on('blur',  () => shell.classList.remove('focused'));
+      card.on('change', (e) => {
+        shell.classList.toggle('invalid', !!e.error);
+        if (e.error) showError(e.error.message);
+        else clearError();
+      });
+    } catch (e) {
+      // Stripe.js failed (offline / blocked). Fall back to a plain numeric stand-in so
+      // the test-mode flow remains usable.
+      mountFallbackCardInput();
+    }
+  }
+
+  function mountFallbackCardInput() {
+    const shell = document.getElementById('cardElement');
+    shell.innerHTML = '';
+    shell.style.padding = '0';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.autocomplete = 'cc-number';
+    input.placeholder = '4242 4242 4242 4242';
+    input.style.cssText = 'width:100%;background:transparent;border:none;color:#fff;font:inherit;font-size:14px;padding:13px 14px;outline:none';
+    input.addEventListener('focus', () => shell.classList.add('focused'));
+    input.addEventListener('blur',  () => shell.classList.remove('focused'));
+    input.addEventListener('input', () => { input.value = input.value.replace(/[^\d ]/g, '').slice(0, 19); clearError(); });
+    shell.appendChild(input);
+    card = { _fallback: true, _input: input };
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('payError');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function clearError() {
+    const el = document.getElementById('payError');
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = on;
+    btn.classList.toggle('loading', on);
+  }
+
+  document.getElementById('payForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const name = document.getElementById('cardName').value.trim();
+    const email = document.getElementById('billingEmail').value.trim();
+    if (!name) return showError('Enter the name on your card.');
+    if (!email || !/.+@.+\..+/.test(email)) return showError('Enter a valid billing email.');
+    if (!card) return showError('Payment form is still loading. Try again in a moment.');
+
+    setLoading(true);
+
+    // TEST MODE: simulate a 1.5s processing delay, treat as success.
+    // In live mode this would call stripe.confirmCardPayment(clientSecret, {...}).
+    await new Promise(r => setTimeout(r, 1500));
+
+    try {
+      localStorage.setItem('loveflix.paymentComplete', JSON.stringify({
+        plan: planId in PLANS ? planId : 'sweetheart',
+        amount: plan.price,
+        at: Date.now(),
+      }));
+    } catch (_) {}
+
+    location.href = '/setup/complete';
+  });
+
+  bootstrap();
+</script>
+</body>
+</html>

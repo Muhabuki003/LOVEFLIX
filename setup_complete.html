@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — You're all set</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{padding:18px 48px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 24px;position:relative}
+  main::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(229,9,20,0.12),transparent 65%);pointer-events:none}
+  .card{position:relative;max-width:560px;width:100%;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:50px 40px}
+
+  .pulse{width:84px;height:84px;border-radius:50%;background:rgba(16,185,129,0.12);border:2px solid #10b981;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:pulse 2.4s ease-in-out infinite}
+  .pulse svg{width:42px;height:42px;fill:#10b981}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.25)}50%{box-shadow:0 0 0 14px rgba(16,185,129,0)}}
+
+  .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#10b981;font-weight:700;margin-bottom:14px}
+  h1{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:2px;line-height:.95;margin-bottom:14px}
+  .sub{font-size:15px;color:var(--text-light);line-height:1.55;margin-bottom:28px}
+
+  .status-row{display:flex;justify-content:center;gap:24px;margin:24px 0 32px;flex-wrap:wrap}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-light);letter-spacing:1px;text-transform:uppercase}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981}
+
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{padding:14px 26px;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:.5px;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}
+  .btn-ghost:hover{border-color:#fff}
+
+  .receipt{margin-top:30px;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);line-height:1.6}
+  .receipt strong{color:var(--text-light);font-weight:500}
+
+  @media (max-width:600px){
+    nav{padding:14px 20px}
+    h1{font-size:42px}
+    .card{padding:36px 24px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+</nav>
+
+<main>
+  <div class="card">
+    <div class="pulse">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <div class="eyebrow">Account active</div>
+    <h1>Your space is live.</h1>
+    <p class="sub">Welcome to LoveFlix. Your <span id="planLabel">Sweetheart</span> plan is active and your private streaming service is ready to fill with memories.</p>
+
+    <div class="status-row">
+      <div class="status"><span class="dot"></span>Payment received</div>
+      <div class="status"><span class="dot"></span>Account provisioned</div>
+      <div class="status"><span class="dot"></span>Site online</div>
+    </div>
+
+    <div class="cta-row">
+      <a href="admin.html" class="btn btn-primary">Enter LoveFlix →</a>
+      <a href="admin_upload.html" class="btn btn-ghost">Upload your first video</a>
+    </div>
+
+    <div class="receipt">
+      Receipt: <strong id="receiptAmount">$12.00</strong> charged today · <strong id="receiptDate">today</strong><br>
+      Manage billing anytime in <a href="/settings/billing" style="color:var(--text-light);text-decoration:underline">Settings → Billing</a>.
+    </div>
+  </div>
+</main>
+
+<script>
+  // Guard: only reachable after a successful payment. If no marker, bounce back to checkout.
+  const PLANS = { crush:'Crush', sweetheart:'Sweetheart', forever:'Forever' };
+  let receipt = null;
+  try { receipt = JSON.parse(localStorage.getItem('loveflix.paymentComplete') || 'null'); } catch (_) {}
+
+  if (!receipt) {
+    location.replace('/checkout');
+  } else {
+    document.getElementById('planLabel').textContent = PLANS[receipt.plan] || 'Sweetheart';
+    document.getElementById('receiptAmount').textContent = '$' + (receipt.amount / 100).toFixed(2);
+    const d = new Date(receipt.at || Date.now());
+    document.getElementById('receiptDate').textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+</script>
+</body>
+</html>

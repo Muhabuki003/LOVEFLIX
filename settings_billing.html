@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Billing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;border-left:3px solid transparent;transition:background .15s,color .15s}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+
+  main{padding:32px 40px 60px;max-width:1100px}
+  .crumbs{font-size:12px;color:var(--text-dim);margin-bottom:14px}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:8px}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-bottom:30px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px}
+  .panel h2{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:18px}
+
+  /* Plan summary card */
+  .plan-summary{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start}
+  .plan-summary .left .name{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:6px}
+  .plan-summary .left .meta{font-size:13px;color:var(--text-dim);margin-bottom:18px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700}
+  .badge .dot{width:6px;height:6px;border-radius:50%}
+  .badge.active{background:rgba(16,185,129,0.14);color:#10b981;border:1px solid rgba(16,185,129,0.4)}
+  .badge.active .dot{background:#10b981;box-shadow:0 0 6px #10b981}
+  .badge.canceled{background:rgba(248,113,113,0.1);color:#fca5a5;border:1px solid rgba(248,113,113,0.4)}
+  .badge.canceled .dot{background:#fca5a5}
+  .badge.past_due{background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.4)}
+  .badge.past_due .dot{background:#fbbf24}
+  .price-block{text-align:right}
+  .price-block .price{font-family:'Bebas Neue',sans-serif;font-size:54px;letter-spacing:1px;line-height:.95}
+  .price-block .per{font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
+  .fact .label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .fact .value{font-size:14px;color:#fff;font-weight:500}
+  .fact .sub{font-size:12px;color:var(--text-dim);margin-top:2px}
+
+  .action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .btn{padding:11px 20px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:background .15s,border-color .15s,color .15s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}.btn-ghost:hover{border-color:#fff;color:#fff}
+  .btn-danger{background:transparent;border:1px solid rgba(248,113,113,0.5);color:#fca5a5}
+  .btn-danger:hover{background:rgba(248,113,113,0.12);border-color:#fca5a5;color:#fff}
+
+  /* Payment method */
+  .pm-row{display:flex;align-items:center;gap:16px}
+  .card-icon{width:56px;height:38px;border-radius:5px;background:linear-gradient(135deg,#1a1f71,#0a0e3a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;color:#fff;font-size:16px;letter-spacing:2px;flex-shrink:0}
+  .card-icon.mastercard{background:linear-gradient(135deg,#eb001b,#f79e1b)}
+  .card-icon.amex{background:linear-gradient(135deg,#2e77bb,#1d4e8a)}
+  .pm-info{flex:1}
+  .pm-info .line1{font-size:14px;font-weight:500}
+  .pm-info .line2{font-size:12px;color:var(--text-dim);margin-top:2px}
+
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .modal-backdrop.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:32px}
+  .modal h3{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin-bottom:8px}
+  .modal p.sub{font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.5}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+
+  /* Plan comparison cards inside upgrade modal */
+  .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  .plan-pick{background:var(--panel-2);border:2px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left}
+  .plan-pick:hover{border-color:#444}
+  .plan-pick.selected{border-color:var(--red);background:rgba(229,9,20,0.06)}
+  .plan-pick.current{opacity:.6;cursor:not-allowed}
+  .plan-pick .pname{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .plan-pick .pprice{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1}
+  .plan-pick .pper{font-size:11px;color:var(--text-dim);margin:2px 0 10px}
+  .plan-pick .pdesc{font-size:12px;color:var(--text-light);line-height:1.4}
+  .plan-pick .ptag{display:inline-block;font-size:9px;letter-spacing:1.5px;font-weight:700;background:rgba(229,9,20,0.15);color:var(--red);padding:3px 7px;border-radius:999px;margin-top:8px}
+
+  /* Update card inline form */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+  .field input,.stripe-shell{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s,box-shadow .15s}
+  .field input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+  .stripe-shell.focused{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+
+  .toast{position:fixed;bottom:30px;right:30px;background:#10b981;color:#000;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;z-index:200}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  .empty-pane{padding:40px 24px;text-align:center;color:var(--text-dim);font-size:14px}
+
+  @media (max-width: 900px){.plan-summary{grid-template-columns:1fr}.price-block{text-align:left}.facts{grid-template-columns:1fr}.plan-grid{grid-template-columns:1fr}}
+  @media (max-width: 720px){
+    .layout{grid-template-columns:1fr}
+    aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}
+    .side-logo,.side-eyebrow{display:none}
+    .side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+    .side-link.active{border-left:none;border-bottom-color:var(--red)}
+    main{padding:20px 16px 40px}
+    .page-title{font-size:32px}
+    .panel{padding:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="/editor/index.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <a href="/settings/billing" class="side-link active"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Billing</a>
+  </aside>
+
+  <main>
+    <div class="crumbs"><a href="admin.html" style="color:var(--text-dim)">Dashboard</a> › <a href="admin_settings.html" style="color:var(--text-dim)">Settings</a> › Billing</div>
+    <h1 class="page-title">Billing</h1>
+    <p class="page-sub">Manage your LoveFlix subscription, payment method, and invoices.</p>
+
+    <!-- Plan summary -->
+    <div class="panel" id="planPanel">
+      <h2>Current plan</h2>
+      <div class="plan-summary">
+        <div class="left">
+          <div class="name" id="planName">—</div>
+          <div class="meta" id="planMeta">Loading subscription…</div>
+          <span class="badge active" id="statusBadge"><span class="dot"></span><span id="statusText">Active</span></span>
+        </div>
+        <div class="price-block">
+          <div class="price" id="planPrice">—</div>
+          <div class="per" id="planPer">per month</div>
+        </div>
+      </div>
+
+      <div class="facts">
+        <div class="fact">
+          <div class="label">Next billing date</div>
+          <div class="value" id="nextDate">—</div>
+          <div class="sub" id="nextDateSub"></div>
+        </div>
+        <div class="fact">
+          <div class="label">Billing cycle</div>
+          <div class="value" id="cycleLabel">Monthly</div>
+          <div class="sub">Renews automatically</div>
+        </div>
+        <div class="fact">
+          <div class="label">Member since</div>
+          <div class="value" id="memberSince">—</div>
+          <div class="sub">Welcome to LoveFlix</div>
+        </div>
+      </div>
+
+      <div class="action-row" id="planActions">
+        <button class="btn btn-primary" id="upgradeBtn">Upgrade plan</button>
+        <button class="btn btn-danger"  id="cancelBtn">Cancel subscription</button>
+        <button class="btn btn-primary" id="renewBtn" style="display:none">Renew subscription</button>
+      </div>
+    </div>
+
+    <!-- Payment method -->
+    <div class="panel">
+      <h2>Payment method</h2>
+      <div class="pm-row">
+        <div class="card-icon" id="cardBrandIcon">VISA</div>
+        <div class="pm-info">
+          <div class="line1" id="cardLine1">Visa ending in 4242</div>
+          <div class="line2" id="cardLine2">Expires 12/2029</div>
+        </div>
+        <button class="btn btn-ghost" id="updateCardBtn">Update card</button>
+      </div>
+
+      <div id="updateCardForm" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="field">
+          <label for="newCardName">Name on card</label>
+          <input type="text" id="newCardName" placeholder="Your full name">
+        </div>
+        <div class="field">
+          <label for="newCardElement">Card number, expiry, CVC</label>
+          <div id="newCardElement" class="stripe-shell"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-ghost" id="cancelUpdateCardBtn">Cancel</button>
+          <button class="btn btn-primary" id="saveCardBtn">Save card</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoices -->
+    <div class="panel">
+      <h2>Recent invoices</h2>
+      <div class="empty-pane">No invoices yet — your first charge will appear here.</div>
+    </div>
+  </main>
+</div>
+
+<!-- Upgrade modal -->
+<div class="modal-backdrop" id="upgradeModal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Change your plan</h3>
+    <p class="sub">Switch tiers anytime. Upgrades are prorated; downgrades take effect at the end of the current period.</p>
+    <div class="plan-grid" id="planPickGrid"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" data-close>Keep current plan</button>
+      <button class="btn btn-primary" id="confirmUpgradeBtn" disabled>Confirm change</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel modal -->
+<div class="modal-backdrop" id="cancelModal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Cancel your subscription?</h3>
+    <p class="sub" id="cancelMessage">Your access continues until <strong id="cancelUntilDate">—</strong>. After that, your LoveFlix site will go offline and your videos will be archived for 30 days.</p>
+    <p class="sub">You can resubscribe anytime to restore everything.</p>
+    <div class="actions">
+      <button class="btn btn-ghost"  data-close>Keep my subscription</button>
+      <button class="btn btn-danger"  id="confirmCancelBtn">Cancel subscription</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const PLANS = {
+    crush:      { id:'crush',      name: 'Crush',      price: 600,  display: '$6',  blurb: '25 videos · 1080p' },
+    sweetheart: { id:'sweetheart', name: 'Sweetheart', price: 1200, display: '$12', blurb: 'Unlimited · 4K · custom URL' },
+    forever:    { id:'forever',    name: 'Forever',    price: 2400, display: '$24', blurb: 'All features · concierge' },
+  };
+
+  let state = {
+    plan: PLANS.sweetheart,
+    status: 'active',
+    cancelAtPeriodEnd: false,
+    nextBillingTs: Math.floor(Date.now()/1000) + 30 * 86400,
+    paymentMethod: { brand: 'visa', last4: '4242', expMonth: 12, expYear: 2029 },
+    memberSince: 'May 2026',
+  };
+
+  const fmt = (cents) => '$' + (cents/100).toFixed(2);
+  const fmtDate = (ts) => new Date(ts * 1000).toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+
+  function render() {
+    document.getElementById('planName').textContent = state.plan.name;
+    document.getElementById('planMeta').textContent = state.plan.blurb;
+    document.getElementById('planPrice').textContent = state.plan.display;
+    document.getElementById('planPer').textContent = state.cancelAtPeriodEnd ? 'access ends ' + fmtDate(state.nextBillingTs) : 'per month';
+
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    badge.classList.remove('active','canceled','past_due');
+    if (state.cancelAtPeriodEnd) { badge.classList.add('canceled'); text.textContent = 'Canceling'; }
+    else if (state.status === 'past_due') { badge.classList.add('past_due'); text.textContent = 'Past due'; }
+    else if (state.status === 'canceled') { badge.classList.add('canceled'); text.textContent = 'Canceled'; }
+    else { badge.classList.add('active'); text.textContent = 'Active'; }
+
+    document.getElementById('nextDate').textContent = fmtDate(state.nextBillingTs);
+    document.getElementById('nextDateSub').textContent = state.cancelAtPeriodEnd ? 'Subscription ends this date' : fmt(state.plan.price) + ' will be charged';
+    document.getElementById('memberSince').textContent = state.memberSince;
+
+    const pm = state.paymentMethod;
+    const brandLabel = (pm.brand || 'card').toUpperCase();
+    const icon = document.getElementById('cardBrandIcon');
+    icon.className = 'card-icon ' + (pm.brand === 'mastercard' ? 'mastercard' : pm.brand === 'amex' ? 'amex' : '');
+    icon.textContent = pm.brand === 'amex' ? 'AMEX' : pm.brand === 'mastercard' ? 'MC' : 'VISA';
+    document.getElementById('cardLine1').textContent = brandLabel.charAt(0) + brandLabel.slice(1).toLowerCase() + ' ending in ' + pm.last4;
+    document.getElementById('cardLine2').textContent = 'Expires ' + String(pm.expMonth).padStart(2,'0') + '/' + pm.expYear;
+
+    document.getElementById('renewBtn').style.display  = state.cancelAtPeriodEnd ? '' : 'none';
+    document.getElementById('cancelBtn').style.display = state.cancelAtPeriodEnd ? 'none' : '';
+    document.getElementById('upgradeBtn').style.display = state.cancelAtPeriodEnd ? 'none' : '';
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  async function loadSubscription() {
+    try {
+      const res = await fetch('/api/billing/subscription');
+      if (!res.ok) throw new Error('failed');
+      const d = await res.json();
+      const planMeta = PLANS[d.plan?.id] || PLANS.sweetheart;
+      state.plan = { ...planMeta, ...d.plan };
+      state.status = d.status || 'active';
+      state.cancelAtPeriodEnd = !!d.cancelAtPeriodEnd;
+      if (d.currentPeriodEnd) state.nextBillingTs = d.currentPeriodEnd;
+      if (d.paymentMethod) state.paymentMethod = d.paymentMethod;
+    } catch (_) { /* fall through to defaults */ }
+    render();
+  }
+
+  // ---- Modals ----
+  function openModal(id)  { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', e => {
+    e.target.closest('.modal-backdrop').classList.remove('show');
+  }));
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('show'); });
+  });
+
+  // ---- Upgrade ----
+  let pendingPlanId = null;
+  function renderPlanPicker() {
+    const grid = document.getElementById('planPickGrid');
+    grid.innerHTML = '';
+    Object.values(PLANS).forEach(p => {
+      const isCurrent = p.id === state.plan.id;
+      const el = document.createElement('div');
+      el.className = 'plan-pick' + (isCurrent ? ' current' : '');
+      el.innerHTML = `
+        <div class="pname">${p.name}</div>
+        <div class="pprice">${p.display}</div>
+        <div class="pper">/ month</div>
+        <div class="pdesc">${p.blurb}</div>
+        ${isCurrent ? '<div class="ptag">Current</div>' : ''}
+      `;
+      if (!isCurrent) {
+        el.addEventListener('click', () => {
+          grid.querySelectorAll('.plan-pick').forEach(n => n.classList.remove('selected'));
+          el.classList.add('selected');
+          pendingPlanId = p.id;
+          document.getElementById('confirmUpgradeBtn').disabled = false;
+        });
+      }
+      grid.appendChild(el);
+    });
+    pendingPlanId = null;
+    document.getElementById('confirmUpgradeBtn').disabled = true;
+  }
+  document.getElementById('upgradeBtn').addEventListener('click', () => {
+    renderPlanPicker();
+    openModal('upgradeModal');
+  });
+  document.getElementById('confirmUpgradeBtn').addEventListener('click', async () => {
+    if (!pendingPlanId) return;
+    const btn = document.getElementById('confirmUpgradeBtn');
+    btn.disabled = true; btn.textContent = 'Updating…';
+    await new Promise(r => setTimeout(r, 900));
+    state.plan = PLANS[pendingPlanId];
+    closeModal('upgradeModal');
+    btn.textContent = 'Confirm change';
+    render();
+    toast('Plan updated to ' + state.plan.name);
+  });
+
+  // ---- Cancel / renew ----
+  document.getElementById('cancelBtn').addEventListener('click', () => {
+    document.getElementById('cancelUntilDate').textContent = fmtDate(state.nextBillingTs);
+    openModal('cancelModal');
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('confirmCancelBtn');
+    btn.disabled = true; btn.textContent = 'Canceling…';
+    await new Promise(r => setTimeout(r, 800));
+    state.cancelAtPeriodEnd = true;
+    closeModal('cancelModal');
+    btn.disabled = false; btn.textContent = 'Cancel subscription';
+    render();
+    toast('Subscription canceled. Access continues until ' + fmtDate(state.nextBillingTs) + '.');
+  });
+  document.getElementById('renewBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('renewBtn');
+    btn.disabled = true; btn.textContent = 'Renewing…';
+    await new Promise(r => setTimeout(r, 700));
+    state.cancelAtPeriodEnd = false;
+    btn.disabled = false; btn.textContent = 'Renew subscription';
+    render();
+    toast('Subscription renewed — welcome back.');
+  });
+
+  // ---- Update card ----
+  let newCardStripe = null, newCardEl = null;
+  document.getElementById('updateCardBtn').addEventListener('click', async () => {
+    const form = document.getElementById('updateCardForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    if (form.style.display === 'block' && !newCardEl) {
+      await mountUpdateCardElement();
+    }
+  });
+  document.getElementById('cancelUpdateCardBtn').addEventListener('click', () => {
+    document.getElementById('updateCardForm').style.display = 'none';
+  });
+
+  async function mountUpdateCardElement() {
+    try {
+      if (!window.Stripe) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script'); s.src = 'https://js.stripe.com/v3/';
+          s.onload = res; s.onerror = rej; document.head.appendChild(s);
+        });
+      }
+      let pk = window.LOVEFLIX_STRIPE_KEY || '';
+      if (!pk) {
+        try { pk = (await (await fetch('/api/stripe-config')).json()).publishableKey || ''; } catch (_) {}
+      }
+      newCardStripe = window.Stripe(pk || 'pk_test_loveflix_placeholder');
+      const elements = newCardStripe.elements({
+        appearance: { theme: 'night', variables: {
+          colorPrimary: '#e50914', colorBackground: '#1f1f1f', colorText: '#fff',
+          colorDanger: '#f87171', fontFamily: 'Inter, system-ui, sans-serif',
+          fontSizeBase: '14px', borderRadius: '6px',
+        } },
+      });
+      newCardEl = elements.create('card', {
+        hidePostalCode: true,
+        style: { base: { color:'#fff', fontFamily:'Inter, system-ui, sans-serif', fontSize:'14px', '::placeholder':{color:'#6b6b6b'} },
+                 invalid: { color:'#f87171' } },
+      });
+      newCardEl.mount('#newCardElement');
+      const shell = document.getElementById('newCardElement');
+      newCardEl.on('focus', () => shell.classList.add('focused'));
+      newCardEl.on('blur',  () => shell.classList.remove('focused'));
+    } catch (_) {
+      const shell = document.getElementById('newCardElement');
+      shell.innerHTML = '<input type="text" placeholder="4242 4242 4242 4242" style="width:100%;background:transparent;border:none;color:#fff;font:inherit;outline:none">';
+    }
+  }
+
+  document.getElementById('saveCardBtn').addEventListener('click', async () => {
+    const name = document.getElementById('newCardName').value.trim();
+    if (!name) return toast('Enter the name on your card');
+    const btn = document.getElementById('saveCardBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    await new Promise(r => setTimeout(r, 1200));
+    state.paymentMethod = { brand: 'visa', last4: '4242', expMonth: 12, expYear: 2030 };
+    document.getElementById('updateCardForm').style.display = 'none';
+    btn.disabled = false; btn.textContent = 'Save card';
+    render();
+    toast('Payment method updated');
+  });
+
+  loadSubscription();
+</script>
+</body>
+</html>
