@@ -230,7 +230,7 @@
     <div class="field-hint" style="text-align:center;margin-bottom:8px">Free for 14 days, then your selected plan. Cancel any time before.</div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(3)">← Back</button>
-      <button class="btn btn-primary" onclick="goNext(5)">Create my LoveFlix →</button>
+      <button class="btn btn-primary" onclick="proceedToCheckout()">Continue to payment →</button>
     </div>
   </div>
 
@@ -275,6 +275,28 @@
     document.getElementById('urlSlug').value = s;
     document.getElementById('chipUrl').textContent = 'loveflix.so/' + s;
     document.getElementById('successUrl').textContent = 'loveflix.so/' + s;
+  }
+
+  async function proceedToCheckout() {
+    // Persist onboarding choices before leaving for /checkout (matches the previous
+    // step-5 save behavior, minus the success pane).
+    const adminName = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
+    const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
+    const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
+    const accentEl = document.querySelector('#colors .color.selected');
+    const savedPasscode = document.getElementById('adminPasscode').value.trim();
+    const selectedPlan = (document.querySelector('#planCards .plan-card.selected') || {}).dataset?.plan || 'sweetheart';
+    try {
+      await LoveFlix.saveSettings({
+        adminName: adminName || 'You',
+        partnerName: partnerName,
+        urlSlug: slug,
+        accentColor: accentEl ? accentEl.dataset.c : '#e50914',
+        adminPasscode: savedPasscode || '1234',
+      }, { flush: !!LoveFlix.getToken() });
+    } catch (_) {}
+    try { localStorage.setItem('loveflix.selectedPlan', selectedPlan); } catch (_) {}
+    location.href = '/checkout?plan=' + encodeURIComponent(selectedPlan);
   }
 
   async function goNext(step) {

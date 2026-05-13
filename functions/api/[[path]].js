@@ -11,7 +11,21 @@
 //   POST   /api/progress
 //   GET    /api/health
 
-const PUBLIC_ROUTES = new Set(['GET /api/health', 'GET /api/videos', 'GET /api/settings']);
+const PUBLIC_ROUTES = new Set([
+  'GET /api/health',
+  'GET /api/videos',
+  'GET /api/settings',
+  'POST /api/create-payment-intent',
+  'GET /api/billing/subscription',
+  'GET /api/stripe-config',
+]);
+
+// LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
+const LOVEFLIX_PLANS = {
+  crush:      { name: 'Crush',      price: 600,  display: '$6',  blurb: '25 videos · 1080p' },
+  sweetheart: { name: 'Sweetheart', price: 1200, display: '$12', blurb: 'Unlimited · 4K · custom URL' },
+  forever:    { name: 'Forever',    price: 2400, display: '$24', blurb: 'All features · concierge' },
+};
 
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
@@ -74,6 +88,12 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
+
+    if (method === 'POST' && path === '/api/create-payment-intent') return createPaymentIntent(env, request);
+    if (method === 'GET'  && path === '/api/billing/subscription') return getMockSubscription();
+    if (method === 'GET'  && path === '/api/stripe-config') {
+      return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', testMode: true });
+    }
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
@@ -471,4 +491,38 @@ async function hmac(key, data) {
 }
 function bytesToHex(bytes) {
   return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ---------- Stripe (test mode stub) ----------
+// Returns a fake client_secret. Test mode only — wire to real Stripe in follow-up.
+async function createPaymentIntent(env, request) {
+  const body = await request.json().catch(() => ({}));
+  const planId = (body.plan || '').toString().toLowerCase();
+  const plan = LOVEFLIX_PLANS[planId];
+  if (!plan) return json({ error: 'invalid_plan' }, 400);
+
+  const id = `pi_test_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const clientSecret = `${id}_secret_${Math.random().toString(36).slice(2, 16)}`;
+  return json({
+    clientSecret,
+    paymentIntentId: id,
+    amount: plan.price,
+    currency: 'usd',
+    plan: { id: planId, name: plan.name, display: plan.display },
+    testMode: true,
+  });
+}
+
+function getMockSubscription() {
+  // Mock data — real Stripe wiring lands in follow-up.
+  const next = new Date();
+  next.setMonth(next.getMonth() + 1);
+  return json({
+    plan: { id: 'sweetheart', name: 'Sweetheart', price: 1200, display: '$12', cycle: 'monthly' },
+    status: 'active',
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Math.floor(next.getTime() / 1000),
+    paymentMethod: { brand: 'visa', last4: '4242', expMonth: 12, expYear: 2029 },
+    testMode: true,
+  });
 }
