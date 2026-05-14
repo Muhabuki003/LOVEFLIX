@@ -388,6 +388,7 @@
       // display:none -> display:flex restarts CSS animations from t=0
       overlay.classList.add('show');
       if (audio) {
+        audio.currentTime = 0;
         audio.volume = 1;
         var p = audio.play();
         if (p && p.catch) p.catch(function(){});

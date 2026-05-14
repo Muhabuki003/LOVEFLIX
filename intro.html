@@ -399,7 +399,12 @@
   <script>
     (function(){
       var a = document.getElementById('lf-intro-audio');
-      if (a) { a.volume = 1; var p = a.play(); if (p && p.catch) p.catch(function(){}); }
+      if (a) { 
+        a.currentTime = 0;
+        a.volume = 1; 
+        var p = a.play(); 
+        if (p && p.catch) p.catch(function(){}); 
+      }
     })();
     setTimeout(() => {
       window.location.replace('whos_watching.html');

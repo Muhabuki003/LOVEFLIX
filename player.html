@@ -569,6 +569,7 @@
 
 <div class="stage" id="stage">
   <video id="videoEl" playsinline preload="metadata"></video>
+  <audio id="lf-intro-audio" src="/LOVEFLIXAUDIO.mp3" preload="auto"></audio>
   <div class="placeholder">
     <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
     <div class="msg">Video coming soon 💕</div>
@@ -945,7 +946,16 @@
   // (0.5s delay + 3.5s zoom-in, with a small buffer so the zoom fully
   // fills the screen before fading out).
   const lIntroOverlay = document.getElementById('lIntroOverlay');
+  const lIntroAudio = document.getElementById('lf-intro-audio');
   const L_INTRO_DURATION = 4200;
+
+  if (lIntroAudio) {
+    lIntroAudio.currentTime = 0;
+    lIntroAudio.volume = 1;
+    var p = lIntroAudio.play();
+    if (p && p.catch) p.catch(function(){});
+  }
+
   setTimeout(() => {
     if (lIntroOverlay) {
       lIntroOverlay.classList.add('fade-out');
