@@ -83,17 +83,30 @@
 </main>
 
 <script>
-  // Guard: only reachable after a successful payment. If no marker, bounce back to checkout.
   const PLANS = { crush:'Crush', sweetheart:'Sweetheart', forever:'Forever' };
-  let receipt = null;
-  try { receipt = JSON.parse(localStorage.getItem('loveflix.paymentComplete') || 'null'); } catch (_) {}
 
-  if (!receipt) {
-    location.replace('/checkout');
-  } else {
-    document.getElementById('planLabel').textContent = PLANS[receipt.plan] || 'Sweetheart';
-    document.getElementById('receiptAmount').textContent = '$' + (receipt.amount / 100).toFixed(2);
-    const d = new Date(receipt.at || Date.now());
+  // Primary: read receipt details from URL params (set by checkout on redirect).
+  // Fallback: localStorage (same-device, non-private sessions).
+  // If neither is available, show a generic success page — do NOT redirect back
+  // to checkout, which would cause an infinite redirect loop in Safari private mode.
+  const params = new URLSearchParams(location.search);
+  let planId = params.get('plan') || null;
+  let amount = params.get('amount') ? parseInt(params.get('amount'), 10) : null;
+  let at = Date.now();
+
+  if (!planId) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('loveflix.paymentComplete') || 'null');
+      if (stored) { planId = stored.plan; amount = stored.amount; at = stored.at || at; }
+    } catch (_) {}
+  }
+
+  if (planId) {
+    document.getElementById('planLabel').textContent = PLANS[planId] || 'Sweetheart';
+  }
+  if (amount) {
+    document.getElementById('receiptAmount').textContent = '$' + (amount / 100).toFixed(2);
+    const d = new Date(at);
     document.getElementById('receiptDate').textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
