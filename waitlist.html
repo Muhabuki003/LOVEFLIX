@@ -94,7 +94,7 @@
   #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1s ease}
   #lf-intro.show{display:flex}
   #lf-intro.hide{opacity:0;pointer-events:none}
-  #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;background-size:4000px;background-position:-1950px 0;animation:lf-zoom-in 3.5s 0.5s ease-in forwards}
+  #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;background-size:4000px;background-position:-1950px 0}
   #lf-intro netflixintro::before{content:"";position:absolute;display:block;background:#000;width:150%;height:30%;left:-25%;bottom:-27%;border-radius:50%;z-index:5;transform-origin:left center;background-size:4000px;background-position:-1950px 0}
   #lf-intro netflixintro[letter=L]{transform-origin:30% center}
   #lf-intro netflixintro[letter=L] .helper-1{width:19.5%;height:100%;background:rgba(228,9,19,.5);left:22%;top:0;transform:rotate(180deg);animation:lf-fade-box 2s .6s forwards}
@@ -138,7 +138,6 @@
   #lf-intro netflixintro [class*=helper-] .effect-brush .fur-30{left:92.8%;width:3.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 19%,rgba(0,0,0,0) 100%)}
   #lf-intro netflixintro [class*=helper-] .effect-brush .fur-31{left:96.3%;width:3.7%;background:linear-gradient(to bottom,#e40913 0%,#e40913 37%,rgba(0,0,0,0) 100%)}
   @keyframes lf-brush{0%{transform:translateY(0)}100%{transform:translateY(-100%)}}
-  @keyframes lf-zoom-in{0%{transform:scale(1)}50%{transform:scale(1.8)}}
   @keyframes lf-fade-box{0%{background:rgba(228,9,19,.5)}100%{background:rgba(228,9,19,0)}}
   #lf-intro-skip{position:absolute;bottom:24px;right:24px;font:500 11px/1 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);background:transparent;border:1px solid rgba(255,255,255,.15);padding:10px 16px;border-radius:4px;cursor:pointer;transition:color .2s,border-color .2s}
   #lf-intro-skip:hover{color:#fff;border-color:rgba(255,255,255,.4)}
@@ -245,7 +244,7 @@
         var p = audio.play();
         if (p && p.catch) p.catch(function(){});
       }
-      setTimeout(dismiss, 10000);
+      setTimeout(dismiss, 4000);
     }
 
     gate.addEventListener('click', start);
