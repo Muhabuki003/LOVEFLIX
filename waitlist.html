@@ -22,12 +22,12 @@
   .vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.75) 100%)}
 
   /* nav */
-  nav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;justify-content:center;align-items:center}
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:center;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
   .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--red);letter-spacing:3px;line-height:1;text-shadow:0 0 22px rgba(229,9,20,0.35)}
   .nf-logo .heart{color:#fff;font-size:24px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
 
   /* main */
-  main{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px 80px;position:relative}
+  main{min-height:calc(100vh - 100px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 80px;position:relative}
   .wrap{width:100%;max-width:520px;text-align:center;position:relative;z-index:2}
 
   .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);padding:8px 14px;border-radius:999px;margin-bottom:28px;opacity:0;transform:translateY(8px);animation:rise 1s .1s cubic-bezier(.2,.7,.2,1) forwards}
@@ -76,9 +76,9 @@
   .legal{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11px;color:#5a5a5a;letter-spacing:.16em;text-transform:uppercase}
 
   @media (max-width:640px){
-    nav{padding:16px 20px}
+    nav{padding:32px 20px 16px}
     .nf-logo{font-size:32px}
-    main{padding:100px 20px 80px}
+    main{padding:20px 20px 80px}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}

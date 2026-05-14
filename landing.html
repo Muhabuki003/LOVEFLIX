@@ -14,7 +14,7 @@
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
 
-  nav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.05)}
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
   .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
   .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
   .nav-links{display:flex;gap:28px}
@@ -29,7 +29,7 @@
   .btn-lg{padding:14px 28px;font-size:15px}
 
   /* hero */
-  .hero{position:relative;padding:160px 24px 100px;text-align:center;overflow:hidden}
+  .hero{position:relative;padding:80px 24px 100px;text-align:center;overflow:hidden}
   .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.25),transparent 60%),radial-gradient(ellipse at 70% 30%,rgba(168,85,247,0.18),transparent 50%);pointer-events:none}
   .hero-content{position:relative;z-index:2;max-width:900px;margin:0 auto}
   .hero-eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);padding:8px 14px;border-radius:999px;margin-bottom:24px}
@@ -105,7 +105,10 @@
   .ft-grid a:hover{color:#fff}
   .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
 
-  @media (max-width: 900px){.steps,.features,.quotes{grid-template-columns:1fr}.features.flip{direction:ltr}.ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}.hero{padding:130px 20px 70px}}
+  @media (max-width: 900px){
+    nav{padding:32px 20px 16px}
+    .steps,.features,.quotes{grid-template-columns:1fr}.features.flip{direction:ltr}.ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}.hero{padding:40px 20px 70px}
+  }
 </style>
 </head>
 <body>
