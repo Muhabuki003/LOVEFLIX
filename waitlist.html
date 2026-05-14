@@ -77,9 +77,78 @@
     *,*::before,*::after{animation:none!important;transition:none!important}
     .eyebrow,h1.title,p.tagline,form,.foot{opacity:1;transform:none}
   }
+
+  /* ===== L intro overlay ===== */
+  #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
+  #lf-intro.hide{opacity:0;pointer-events:none}
+  #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;animation:lf-zoom-in 3.5s 0.5s ease-in forwards;background-size:4000px;background-position:-1950px 0}
+  #lf-intro netflixintro::before{content:"";position:absolute;display:block;background:#000;width:150%;height:30%;left:-25%;bottom:-27%;border-radius:50%;z-index:5;transform-origin:left center;background-size:4000px;background-position:-1950px 0}
+  #lf-intro netflixintro[letter=L]{transform-origin:30% center}
+  #lf-intro netflixintro[letter=L] .helper-1{width:19.5%;height:100%;background:rgba(228,9,19,.5);left:22%;top:0;transform:rotate(180deg);animation:lf-fade-box 2s .6s forwards}
+  #lf-intro netflixintro[letter=L] .helper-1 .effect-brush{animation:lf-brush 2.5s .8s forwards}
+  #lf-intro netflixintro[letter=L] .helper-1 .effect-brush [class*=fur-]{bottom:0;height:40%}
+  #lf-intro netflixintro[letter=L] .helper-2{width:17.5%;height:50%;left:38%;top:196px;transform:rotate(270deg);overflow:hidden}
+  #lf-intro netflixintro[letter=L] .helper-2 .effect-brush{animation:lf-brush 2s .4s forwards}
+  #lf-intro netflixintro [class*=helper-]{position:absolute}
+  #lf-intro netflixintro [class*=helper-] .effect-brush{position:absolute;width:100%;height:300%;top:0;overflow:hidden}
+  #lf-intro netflixintro [class*=helper-] .effect-brush::before{display:block;content:"";position:absolute;background:#e40913;width:100%;height:70%;box-shadow:0 0 29px 24px #e40913}
+  #lf-intro netflixintro [class*=helper-] .effect-brush [class*=fur-]{display:block;position:absolute;bottom:10%;height:30%}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-1{left:0;width:3.8%;background:linear-gradient(to bottom,#e40913 0%,#e40913 15%,rgba(0,0,0,0) 81%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-2{left:3.8%;width:2.8%;background:linear-gradient(to bottom,#e40913 0%,#e40913 10%,rgba(0,0,0,0) 62%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-3{left:6.6%;width:4.8%;background:linear-gradient(to bottom,#e40913 0%,#e40913 37%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-4{left:11.4%;width:4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 23%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-5{left:15.4%;width:4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 15%,rgba(0,0,0,0) 86%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-6{left:19.4%;width:2.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 27%,rgba(0,0,0,0) 89%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-7{left:21.9%;width:4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 20%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-8{left:25.9%;width:2%;background:linear-gradient(to bottom,#e40913 0%,#e40913 30%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-9{left:27.9%;width:4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 35%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-10{left:31.9%;width:3.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 39%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-11{left:35.4%;width:2%;background:linear-gradient(to bottom,#e40913 0%,#e40913 34%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-12{left:37.4%;width:2.6%;background:linear-gradient(to bottom,#e40913 0%,#e40913 22%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-13{left:40%;width:6%;background:linear-gradient(to bottom,#e40913 0%,#e40913 47%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-14{left:46%;width:2%;background:linear-gradient(to bottom,#e40913 0%,#e40913 36%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-15{left:48%;width:5.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 29%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-16{left:53.5%;width:3%;background:linear-gradient(to bottom,#e40913 0%,#e40913 39%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-17{left:56.5%;width:4.1%;background:linear-gradient(to bottom,#e40913 0%,#e40913 45%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-18{left:60.6%;width:2.4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 34%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-19{left:63%;width:4%;background:linear-gradient(to bottom,#e40913 0%,#e40913 47%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-20{left:67%;width:1.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 27%,rgba(0,0,0,0) 95%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-21{left:68.5%;width:2.8%;background:linear-gradient(to bottom,#e40913 0%,#e40913 37%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-22{left:71.3%;width:2.3%;background:linear-gradient(to bottom,#e40913 0%,#e40913 9%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-23{left:73.6%;width:2.2%;background:linear-gradient(to bottom,#e40913 0%,#e40913 28%,rgba(0,0,0,0) 92%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-24{left:75.8%;width:1%;background:linear-gradient(to bottom,#e40913 0%,#e40913 37%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-25{left:76.8%;width:2.1%;background:linear-gradient(to bottom,#e40913 0%,#e40913 28%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-26{left:78.9%;width:4.1%;background:linear-gradient(to bottom,#e40913 0%,#e40913 34%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-27{left:83%;width:2.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 21%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-28{left:85.5%;width:4.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 39%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-29{left:90%;width:2.8%;background:linear-gradient(to bottom,#e40913 0%,#e40913 30%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-30{left:92.8%;width:3.5%;background:linear-gradient(to bottom,#e40913 0%,#e40913 19%,rgba(0,0,0,0) 100%)}
+  #lf-intro netflixintro [class*=helper-] .effect-brush .fur-31{left:96.3%;width:3.7%;background:linear-gradient(to bottom,#e40913 0%,#e40913 37%,rgba(0,0,0,0) 100%)}
+  @keyframes lf-brush{0%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+  @keyframes lf-zoom-in{0%{transform:scale(1)}100%{transform:scale(15)}}
+  @keyframes lf-fade-box{0%{background:rgba(228,9,19,.5)}100%{background:rgba(228,9,19,0)}}
+  #lf-intro-skip{position:absolute;bottom:24px;right:24px;font:500 11px/1 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);background:transparent;border:1px solid rgba(255,255,255,.15);padding:10px 16px;border-radius:4px;cursor:pointer;transition:color .2s,border-color .2s}
+  #lf-intro-skip:hover{color:#fff;border-color:rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
+  <div id="lf-intro" aria-hidden="true">
+    <netflixintro letter="L">
+      <div class="helper-1">
+        <div class="effect-brush">
+          <span class="fur-31"></span><span class="fur-30"></span><span class="fur-29"></span><span class="fur-28"></span><span class="fur-27"></span><span class="fur-26"></span><span class="fur-25"></span><span class="fur-24"></span><span class="fur-23"></span><span class="fur-22"></span><span class="fur-21"></span><span class="fur-20"></span><span class="fur-19"></span><span class="fur-18"></span><span class="fur-17"></span><span class="fur-16"></span><span class="fur-15"></span><span class="fur-14"></span><span class="fur-13"></span><span class="fur-12"></span><span class="fur-11"></span><span class="fur-10"></span><span class="fur-9"></span><span class="fur-8"></span><span class="fur-7"></span><span class="fur-6"></span><span class="fur-5"></span><span class="fur-4"></span><span class="fur-3"></span><span class="fur-2"></span><span class="fur-1"></span>
+        </div>
+      </div>
+      <div class="helper-2">
+        <div class="effect-brush">
+          <span class="fur-31"></span><span class="fur-30"></span><span class="fur-29"></span><span class="fur-28"></span><span class="fur-27"></span><span class="fur-26"></span><span class="fur-25"></span><span class="fur-24"></span><span class="fur-23"></span><span class="fur-22"></span><span class="fur-21"></span><span class="fur-20"></span><span class="fur-19"></span><span class="fur-18"></span><span class="fur-17"></span><span class="fur-16"></span><span class="fur-15"></span><span class="fur-14"></span><span class="fur-13"></span><span class="fur-12"></span><span class="fur-11"></span><span class="fur-10"></span><span class="fur-9"></span><span class="fur-8"></span><span class="fur-7"></span><span class="fur-6"></span><span class="fur-5"></span><span class="fur-4"></span><span class="fur-3"></span><span class="fur-2"></span><span class="fur-1"></span>
+        </div>
+      </div>
+    </netflixintro>
+    <button id="lf-intro-skip" type="button" aria-label="Skip intro">Skip</button>
+    <audio id="lf-intro-audio" src="/assets/audio/loveflix-intro.mp3" preload="auto"></audio>
+  </div>
+
   <div class="bg" aria-hidden="true"></div>
   <canvas id="particles" aria-hidden="true"></canvas>
   <div class="vignette" aria-hidden="true"></div>
@@ -117,6 +186,33 @@
     <div class="legal">© 2026 LoveFlix · loveflix.us</div>
   </main>
 
+<script>
+  // L intro overlay: play audio, fade out and remove after animation
+  (function(){
+    var overlay = document.getElementById('lf-intro');
+    var audio = document.getElementById('lf-intro-audio');
+    var skip = document.getElementById('lf-intro-skip');
+    if (!overlay) return;
+
+    var done = false;
+    function dismiss() {
+      if (done) return;
+      done = true;
+      overlay.classList.add('hide');
+      try { audio && audio.pause(); } catch(e){}
+      setTimeout(function(){ overlay && overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 700);
+    }
+
+    if (audio) {
+      audio.volume = 1;
+      var p = audio.play();
+      if (p && p.catch) p.catch(function(){ /* autoplay blocked — animation still plays */ });
+    }
+
+    setTimeout(dismiss, 4200);
+    skip && skip.addEventListener('click', dismiss);
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ===== CONFIG: fill these in =====
