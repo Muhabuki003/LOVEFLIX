@@ -91,7 +91,7 @@
   #lf-intro-gate .heart-pulse{width:64px;height:64px;border:1px solid rgba(229,9,20,.45);border-radius:50%;display:grid;place-items:center;color:#e50914;box-shadow:0 0 28px rgba(229,9,20,.35);animation:pulse 2s ease-in-out infinite}
   #lf-intro-gate .label{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:#fff;text-transform:uppercase}
   #lf-intro-gate .sub{font:500 11px/1 'Inter',sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a3a3a3}
-  #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
+  #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1s ease}
   #lf-intro.show{display:flex}
   #lf-intro.hide{opacity:0;pointer-events:none}
   #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;background-size:4000px;background-position:-1950px 0;animation:lf-zoom-in 3.5s 0.5s ease-in forwards}
@@ -231,7 +231,7 @@
       setTimeout(function(){
         overlay && overlay.parentNode && overlay.parentNode.removeChild(overlay);
         gate && gate.parentNode && gate.parentNode.removeChild(gate);
-      }, 700);
+      }, 1100);
     }
 
     function start() {
@@ -245,7 +245,7 @@
         var p = audio.play();
         if (p && p.catch) p.catch(function(){});
       }
-      setTimeout(dismiss, 4200);
+      setTimeout(dismiss, 5500);
     }
 
     gate.addEventListener('click', start);
