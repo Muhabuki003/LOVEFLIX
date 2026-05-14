@@ -395,9 +395,12 @@
     </netflixintro>
   </div>
 
+  <audio id="lf-intro-audio" src="/assets/audio/loveflix-intro.mp3" preload="auto"></audio>
   <script>
-    // zoom-in animation: 0.5s delay + 3.5s duration = finishes at 4s
-    // redirect slightly after so the zoom fully fills the screen
+    (function(){
+      var a = document.getElementById('lf-intro-audio');
+      if (a) { a.volume = 1; var p = a.play(); if (p && p.catch) p.catch(function(){}); }
+    })();
     setTimeout(() => {
       window.location.replace('whos_watching.html');
     }, 4200);
