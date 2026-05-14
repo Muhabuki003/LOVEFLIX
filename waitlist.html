@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Loveflix — Your private cinema, built for two.</title>
+<meta name="description" content="Loveflix is a private streaming experience built for couples. Join the waitlist." />
+<meta name="theme-color" content="#0a0000" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg-0: #060003;
+    --bg-1: #120006;
+    --red: #E50914;
+    --red-deep: #8B0014;
+    --crimson: #B3001B;
+    --ink: #f6efe8;
+    --muted: #b8a9a3;
+    --line: rgba(255, 255, 255, 0.08);
+    --field: rgba(255, 255, 255, 0.04);
+    --field-focus: rgba(229, 9, 20, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg-0);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+
+  .bg {
+    position: fixed; inset: 0; z-index: -2;
+    background:
+      radial-gradient(1200px 800px at 15% 10%, rgba(229, 9, 20, 0.18), transparent 60%),
+      radial-gradient(900px 700px at 90% 90%, rgba(139, 0, 20, 0.22), transparent 60%),
+      linear-gradient(180deg, #0a0003 0%, #060002 60%, #030001 100%);
+  }
+  .bg::before {
+    content: '';
+    position: absolute; inset: -20%;
+    background:
+      radial-gradient(600px 400px at 30% 70%, rgba(229, 9, 20, 0.10), transparent 70%),
+      radial-gradient(500px 500px at 80% 30%, rgba(179, 0, 27, 0.14), transparent 70%);
+    filter: blur(20px);
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0%   { transform: translate3d(0, 0, 0) scale(1); }
+    50%  { transform: translate3d(-3%, 2%, 0) scale(1.06); }
+    100% { transform: translate3d(2%, -2%, 0) scale(1.02); }
+  }
+
+  canvas#particles {
+    position: fixed; inset: 0; z-index: -1;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+  }
+
+  main {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px 56px;
+    position: relative;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    font-weight: 500;
+    font-size: clamp(40px, 8vw, 64px);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin: 0 0 8px;
+    opacity: 0; transform: translateY(8px);
+    animation: rise 1s 0.1s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .logo .love { color: var(--ink); font-style: italic; }
+  .logo .flix {
+    color: var(--red);
+    font-weight: 600;
+    text-shadow: 0 0 22px rgba(229, 9, 20, 0.35);
+  }
+
+  .rule {
+    width: 56px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    margin: 22px auto 24px;
+    opacity: 0;
+    animation: rise 1s 0.35s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  .tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(20px, 3.4vw, 26px);
+    color: var(--ink);
+    margin: 0 0 36px;
+    letter-spacing: 0.01em;
+    opacity: 0; transform: translateY(8px);
+    animation: rise 1s 0.5s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  form {
+    display: grid;
+    gap: 12px;
+    opacity: 0; transform: translateY(10px);
+    animation: rise 1.1s 0.75s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  .field {
+    position: relative;
+  }
+  .field input {
+    width: 100%;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    background: var(--field);
+    color: var(--ink);
+    font: 400 15px/1.2 'Inter', sans-serif;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
+    -webkit-appearance: none;
+  }
+  .field input::placeholder { color: #7a6c66; }
+  .field input:hover { border-color: rgba(255,255,255,0.18); }
+  .field input:focus {
+    border-color: var(--red);
+    background: var(--field-focus);
+    box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
+  }
+  .field input:-webkit-autofill {
+    -webkit-text-fill-color: var(--ink);
+    -webkit-box-shadow: 0 0 0 1000px #1a0408 inset;
+    caret-color: var(--ink);
+  }
+  .field.invalid input {
+    border-color: #ff5566;
+    box-shadow: 0 0 0 3px rgba(255, 85, 102, 0.12);
+  }
+
+  button.cta {
+    margin-top: 6px;
+    padding: 16px 22px;
+    border: 0;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--red) 0%, #b80710 100%);
+    color: #fff;
+    font: 600 14px/1 'Inter', sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
+    box-shadow: 0 8px 30px rgba(229, 9, 20, 0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  button.cta:hover { filter: brightness(1.08); box-shadow: 0 12px 40px rgba(229, 9, 20, 0.4), inset 0 1px 0 rgba(255,255,255,0.18); }
+  button.cta:active { transform: translateY(1px); }
+  button.cta:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.2); }
+
+  .foot {
+    margin-top: 18px;
+    font-size: 12.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    opacity: 0;
+    animation: rise 1s 1s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  .error {
+    margin-top: 14px;
+    color: #ff8290;
+    font-size: 13px;
+    min-height: 18px;
+  }
+
+  /* Success state */
+  .success {
+    display: none;
+    text-align: center;
+    padding: 8px 0;
+    animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .success.show { display: block; }
+  .success .heart {
+    width: 56px; height: 56px;
+    margin: 0 auto 18px;
+    display: grid; place-items: center;
+    border: 1px solid rgba(229, 9, 20, 0.4);
+    border-radius: 50%;
+    color: var(--red);
+    box-shadow: 0 0 24px rgba(229, 9, 20, 0.3);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .success h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 28px;
+    margin: 0 0 10px;
+  }
+  .success p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 24px rgba(229, 9, 20, 0.3); }
+    50%      { transform: scale(1.06); box-shadow: 0 0 36px rgba(229, 9, 20, 0.5); }
+  }
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .legal {
+    position: absolute;
+    bottom: 18px; left: 0; right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: #5a4a47;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .logo, .rule, .tagline, form, .foot { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <canvas id="particles" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main>
+    <div class="wrap">
+      <h1 class="logo"><span class="love">Love</span><span class="flix">flix</span></h1>
+      <div class="rule"></div>
+      <p class="tagline">Your private cinema, built for two.</p>
+
+      <form id="waitlist-form" novalidate>
+        <div class="field"><input id="name" name="name" type="text" autocomplete="name" placeholder="Full name" required /></div>
+        <div class="field"><input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required /></div>
+        <div class="field"><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required /></div>
+        <button type="submit" class="cta" id="submit-btn">Join the Waitlist</button>
+        <div class="error" id="error" role="alert" aria-live="polite"></div>
+        <div class="foot">Be first to know when we launch.</div>
+      </form>
+
+      <div class="success" id="success" aria-live="polite">
+        <div class="heart" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+        </div>
+        <h2>You're on the list.</h2>
+        <p>We'll be in touch when Loveflix opens its doors.</p>
+      </div>
+    </div>
+
+    <div class="legal">loveflix &middot; 2026</div>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== CONFIG: fill these in =====
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // =================================
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById('waitlist-form');
+  const btn = document.getElementById('submit-btn');
+  const errorEl = document.getElementById('error');
+  const successEl = document.getElementById('success');
+
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRe = /^[+\d][\d\s().-]{6,}$/;
+
+  function setInvalid(id, bad) {
+    const field = document.getElementById(id).parentElement;
+    field.classList.toggle('invalid', bad);
+  }
+
+  function validate(data) {
+    setInvalid('name', false); setInvalid('email', false); setInvalid('phone', false);
+    if (!data.name || data.name.trim().length < 2) { setInvalid('name', true); return 'Please enter your full name.'; }
+    if (!emailRe.test(data.email)) { setInvalid('email', true); return 'Please enter a valid email address.'; }
+    if (!phoneRe.test(data.phone)) { setInvalid('phone', true); return 'Please enter a valid phone number.'; }
+    return null;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const data = {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim().toLowerCase(),
+      phone: document.getElementById('phone').value.trim(),
+    };
+
+    const err = validate(data);
+    if (err) { errorEl.textContent = err; return; }
+
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Joining…';
+
+    try {
+      const { error } = await supabase.from('waitlist').insert([data]);
+      if (error) throw error;
+      form.style.display = 'none';
+      successEl.classList.add('show');
+    } catch (ex) {
+      const msg = (ex && ex.message) ? ex.message : 'Something went wrong. Please try again.';
+      errorEl.textContent = /duplicate|unique/i.test(msg)
+        ? "You're already on the list."
+        : msg;
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  });
+
+  // ===== Particle drift =====
+  (function particles() {
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let w, h, dpr, parts = [];
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.width = innerWidth * dpr;
+      h = canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      const count = Math.min(80, Math.floor((innerWidth * innerHeight) / 18000));
+      parts = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: (Math.random() * 1.6 + 0.3) * dpr,
+        vx: (Math.random() - 0.5) * 0.15 * dpr,
+        vy: (Math.random() * -0.25 - 0.05) * dpr,
+        a: Math.random() * 0.6 + 0.2,
+        hue: Math.random() < 0.35 ? 'red' : 'white',
+      }));
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, w, h);
+      for (const p of parts) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        if (p.x < -10) p.x = w + 10;
+        if (p.x > w + 10) p.x = -10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.hue === 'red'
+          ? `rgba(229, 9, 20, ${p.a * 0.7})`
+          : `rgba(255, 230, 220, ${p.a * 0.5})`;
+        ctx.shadowBlur = 8 * dpr;
+        ctx.shadowColor = p.hue === 'red' ? 'rgba(229, 9, 20, 0.6)' : 'rgba(255,255,255,0.3)';
+        ctx.fill();
+      }
+      if (!reduce) requestAnimationFrame(tick);
+    }
+
+    resize();
+    if (!reduce) tick();
+    else { ctx.clearRect(0,0,w,h); }
+    addEventListener('resize', resize);
+  })();
+</script>
+</body>
+</html>
