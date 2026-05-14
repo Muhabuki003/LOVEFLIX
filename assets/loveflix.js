@@ -26,6 +26,7 @@
   function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    try { localStorage.removeItem('loveflix_couple_id'); } catch (_) {}
   }
   function getUser() {
     try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); }
@@ -252,6 +253,7 @@
     // Pull/merge settings before redirecting so the next page sees real names.
     resetSettingsReady();
     try { await pullSettings(); } catch (_) {}
+    cacheCoupleId().catch(() => {});
     return data;
   }
 
@@ -270,6 +272,7 @@
       setSession(data);
       // Flush anything entered before signup completed.
       try { await flushPendingIfAny(); } catch (_) {}
+      cacheCoupleId().catch(() => {});
     }
     return data;
   }
@@ -358,10 +361,55 @@
     });
   }
 
+  function parseJwtUserId(token) {
+    try {
+      return JSON.parse(atob(token.split('.')[1])).sub;
+    } catch { return null; }
+  }
+
+  function getUserId() {
+    const u = getUser();
+    if (u && u.id) return u.id;
+    const token = getToken();
+    return token ? parseJwtUserId(token) : null;
+  }
+
+  function getCoupleId() {
+    try { return localStorage.getItem('loveflix_couple_id') || null; }
+    catch { return null; }
+  }
+
+  // After sign-in, look up the couple row for this user and cache its id so
+  // uploads can attach to the correct couple. Best-effort: failures are silent
+  // (the worker also derives couple_id from the user on the server side).
+  async function cacheCoupleId() {
+    const userId = getUserId();
+    const token = getToken();
+    if (!userId || !token) return;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/couples?or=(user1_id.eq.${userId},user2_id.eq.${userId})&select=id`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) return;
+      const rows = await res.json();
+      const id = rows && rows[0] && rows[0].id;
+      if (id) localStorage.setItem('loveflix_couple_id', id);
+    } catch (_) {}
+  }
+
   global.LoveFlix = {
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
     getToken,
+    getUserId,
+    getCoupleId,
+    cacheCoupleId,
     getUser,
     setSession,
     clearSession,

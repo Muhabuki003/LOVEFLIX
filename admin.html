@@ -214,6 +214,18 @@
       </div>
     </div>
 
+    <!-- storage usage -->
+    <div class="stat" style="margin-bottom:30px;padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px">
+        <span style="letter-spacing:2px;text-transform:uppercase;font-size:11px">Storage Used</span>
+        <span id="storageText">— / —</span>
+      </div>
+      <div style="height:4px;background:#2a2a2a;border-radius:2px">
+        <div id="storageFill" style="height:100%;background:#e50914;border-radius:2px;width:0%;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:11px;color:#555;margin-top:5px" id="storageTier"></div>
+    </div>
+
     <!-- love note -->
     <div class="love-note" style="margin-bottom:30px">
       <div>
@@ -406,6 +418,25 @@
   }
 
   loadDashboard();
+
+  async function loadStorageUsage() {
+    const userId = LoveFlix.getUserId();
+    if (!userId) return;
+    try {
+      const data = await fetch(`/api/storage-usage?user_id=${userId}`).then(r => r.json());
+      if (data.error) return;
+      document.getElementById('storageText').textContent =
+        `${data.used_readable} / ${data.limit_readable}`;
+      document.getElementById('storageFill').style.width = data.percent_used + '%';
+      document.getElementById('storageTier').textContent =
+        `${data.tier.charAt(0).toUpperCase() + data.tier.slice(1)} plan · ${data.percent_used}% used`;
+      if (data.percent_used >= 90) {
+        document.getElementById('storageFill').style.background = '#f6121d';
+        document.getElementById('storageText').style.color = '#f6121d';
+      }
+    } catch (e) { console.warn('Storage usage fetch failed', e); }
+  }
+  loadStorageUsage();
 </script>
 </body>
 </html>

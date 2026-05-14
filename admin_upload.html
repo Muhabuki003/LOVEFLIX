@@ -328,9 +328,24 @@
     status.textContent = 'Preparing upload…';
 
     try {
-      const presign = await LoveFlix.api(
-        `/api/upload-url?filename=${encodeURIComponent(file.name)}&type=${encodeURIComponent(file.type || 'video/mp4')}`
-      );
+      const presign = await fetch('/api/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: LoveFlix.getUserId(),
+          file_size: file.size,
+          filename: file.name,
+          type: file.type || 'video/mp4',
+        })
+      }).then(r => r.json());
+
+      if (presign.error) {
+        status.textContent = presign.error;
+        fill.style.background = '#b0070f';
+        uploadComplete = false;
+        return;
+      }
+
       uploadedKey = presign.key;
       uploadedVideoUrl = presign.public_url;
 
@@ -450,6 +465,8 @@
       duration_seconds: durationSeconds,
       is_published: !isDraft,
       display_order: 0,
+      file_size_bytes: selectedFile ? selectedFile.size : 0,
+      couple_id: LoveFlix.getCoupleId(),
     };
   }
 
