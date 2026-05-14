@@ -199,7 +199,7 @@
     <div class="field" style="margin-top:24px">
       <label>Your custom URL</label>
       <div class="url-field">
-        <span class="prefix">loveflix.so/</span>
+        <span class="prefix">loveflix.us/</span>
         <input type="text" id="urlSlug" placeholder="yourname" value="">
       </div>
       <div class="field-hint">This is what you'll send them. <span style="color:#10b981">✓ Available</span></div>
@@ -209,7 +209,7 @@
         <div class="chip-label">Preview</div>
         <div class="chip-logo" id="chipLogo">LOVE<span class="heart">♥</span>FLIX</div>
       </div>
-      <div class="chip-url" id="chipUrl">loveflix.so/yourname-and-love</div>
+      <div class="chip-url" id="chipUrl">loveflix.us/yourname-and-love</div>
     </div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(2)">← Back</button>
@@ -247,7 +247,7 @@
         <strong style="color:#fff">Almost there.</strong> Check your email for a confirmation link. Click it, then sign in to start watching.
       </div>
       <div class="success-url">
-        <span id="successUrl">loveflix.so/yourname-and-love</span>
+        <span id="successUrl">loveflix.us/yourname-and-love</span>
         <button class="copy-btn" onclick="this.textContent='Copied ✓'">COPY</button>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
@@ -273,8 +273,8 @@
   function refreshSlug() {
     const s = buildSlug();
     document.getElementById('urlSlug').value = s;
-    document.getElementById('chipUrl').textContent = 'loveflix.so/' + s;
-    document.getElementById('successUrl').textContent = 'loveflix.so/' + s;
+    document.getElementById('chipUrl').textContent = 'loveflix.us/' + s;
+    document.getElementById('successUrl').textContent = 'loveflix.us/' + s;
   }
 
   async function proceedToCheckout() {
@@ -333,7 +333,7 @@
         adminPasscode: savedPasscode || '1234',
       }, { flush: !!LoveFlix.getToken() });
       try { await saving; } catch (_) {}
-      document.getElementById('successUrl').textContent = 'loveflix.so/' + slug;
+      document.getElementById('successUrl').textContent = 'loveflix.us/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
       const cta = document.getElementById('primaryCta');
       if (window._needsEmailConfirm) {
@@ -369,8 +369,8 @@
   const successUrl = document.getElementById('successUrl');
   urlSlugEl.addEventListener('input', e => {
     const v = e.target.value || 'yourname';
-    chipUrl.textContent = `loveflix.so/${v}`;
-    successUrl.textContent = `loveflix.so/${v}`;
+    chipUrl.textContent = `loveflix.us/${v}`;
+    successUrl.textContent = `loveflix.us/${v}`;
   });
 
   // plan picker (step 4)
