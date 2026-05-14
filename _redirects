@@ -1,4 +1,6 @@
-/editor /editor/index.html 200
-/editor/ /editor/index.html 200
-/setup/complete /setup_complete.html 200
+/                /waitlist.html       200
+/index.html      /waitlist.html       301
+/editor          /editor/index.html   200
+/editor/         /editor/index.html   200
+/setup/complete  /setup_complete.html 200
 /settings/billing /settings_billing.html 200
