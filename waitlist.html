@@ -56,12 +56,19 @@
   .foot{margin-top:18px;font-size:12.5px;color:var(--text-dim);letter-spacing:.04em;text-align:center;opacity:0;animation:rise 1s 1s cubic-bezier(.2,.7,.2,1) forwards}
   .error{margin-top:14px;color:#ff8290;font-size:13px;min-height:18px;text-align:center}
 
-  /* success */
-  .success{display:none;text-align:center;padding:8px 0;animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
-  .success.show{display:block}
-  .success .heart-icon{width:64px;height:64px;margin:0 auto 22px;display:grid;place-items:center;border:1px solid rgba(229,9,20,0.4);border-radius:50%;color:var(--red);box-shadow:0 0 28px rgba(229,9,20,0.35);animation:pulse 2.2s ease-in-out infinite}
-  .success h2{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;margin-bottom:12px}
-  .success p{color:var(--text-light);font-size:15px;line-height:1.5;max-width:380px;margin:0 auto}
+  /* success modal popup */
+  .modal-backdrop{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .35s ease}
+  .modal-backdrop.show{display:flex;opacity:1}
+  .modal{background:linear-gradient(180deg,#141414 0%,#0e0608 100%);border:1px solid rgba(229,9,20,0.4);border-radius:14px;max-width:460px;width:100%;padding:48px 36px 36px;text-align:center;box-shadow:0 30px 80px rgba(229,9,20,0.25),0 60px 120px rgba(0,0,0,0.6);position:relative;transform:translateY(14px) scale(.96);transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+  .modal-backdrop.show .modal{transform:translateY(0) scale(1)}
+  .modal .heart-icon{width:72px;height:72px;margin:0 auto 22px;display:grid;place-items:center;border:1px solid rgba(229,9,20,0.4);border-radius:50%;color:var(--red);box-shadow:0 0 28px rgba(229,9,20,0.35);animation:pulse 2.2s ease-in-out infinite}
+  .modal h2{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:1px;line-height:1;margin-bottom:14px}
+  .modal h2 .accent{background:linear-gradient(135deg,#ff5f8f,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .modal p{color:var(--text-light);font-size:15px;line-height:1.55;margin:0 auto 22px;max-width:360px}
+  .modal .check-row{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:24px}
+  .modal .check-row svg{width:14px;height:14px;fill:var(--red)}
+  .modal .close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:transparent;color:#a3a3a3;cursor:pointer;display:grid;place-items:center;font-size:18px;line-height:1;transition:color .2s,border-color .2s}
+  .modal .close:hover{color:#fff;border-color:rgba(255,255,255,.35)}
 
   @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 28px rgba(229,9,20,0.35)}50%{transform:scale(1.06);box-shadow:0 0 40px rgba(229,9,20,0.55)}}
   @keyframes rise{to{opacity:1;transform:translateY(0)}}
@@ -81,7 +88,17 @@
   /* ===== L intro overlay ===== */
   #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
   #lf-intro.hide{opacity:0;pointer-events:none}
-  #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;animation:lf-zoom-in 3.5s 0.5s ease-in forwards;background-size:4000px;background-position:-1950px 0}
+  #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;background-size:4000px;background-position:-1950px 0;animation:lf-zoom-in 3.5s 0.5s ease-in forwards;animation-play-state:paused}
+  #lf-intro.playing netflixintro{animation-play-state:running}
+  #lf-intro.playing netflixintro [class*=helper-] .effect-brush{animation-play-state:running !important}
+  #lf-intro netflixintro [class*=helper-] .effect-brush{animation-play-state:paused}
+  #lf-intro netflixintro[letter=L] .helper-1{animation-play-state:paused}
+  #lf-intro.playing netflixintro[letter=L] .helper-1{animation-play-state:running}
+  #lf-intro-enter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(ellipse at center,rgba(229,9,20,0.18),transparent 60%),#000;cursor:pointer;z-index:10;transition:opacity .4s ease}
+  #lf-intro-enter.hide{opacity:0;pointer-events:none}
+  #lf-intro-enter .heart-pulse{width:64px;height:64px;border:1px solid rgba(229,9,20,.45);border-radius:50%;display:grid;place-items:center;color:#e50914;box-shadow:0 0 28px rgba(229,9,20,.35);animation:pulse 2s ease-in-out infinite}
+  #lf-intro-enter .label{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:#fff;text-transform:uppercase}
+  #lf-intro-enter .sub{font:500 11px/1 'Inter',sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a3a3a3}
   #lf-intro netflixintro::before{content:"";position:absolute;display:block;background:#000;width:150%;height:30%;left:-25%;bottom:-27%;border-radius:50%;z-index:5;transform-origin:left center;background-size:4000px;background-position:-1950px 0}
   #lf-intro netflixintro[letter=L]{transform-origin:30% center}
   #lf-intro netflixintro[letter=L] .helper-1{width:19.5%;height:100%;background:rgba(228,9,19,.5);left:22%;top:0;transform:rotate(180deg);animation:lf-fade-box 2s .6s forwards}
@@ -133,6 +150,13 @@
 </head>
 <body>
   <div id="lf-intro" aria-hidden="true">
+    <div id="lf-intro-enter" role="button" tabindex="0" aria-label="Tap to enter Loveflix">
+      <div class="heart-pulse" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+      </div>
+      <div class="label">Tap to enter</div>
+      <div class="sub">♥ sound on</div>
+    </div>
     <netflixintro letter="L">
       <div class="helper-1">
         <div class="effect-brush">
@@ -146,7 +170,7 @@
       </div>
     </netflixintro>
     <button id="lf-intro-skip" type="button" aria-label="Skip intro">Skip</button>
-    <audio id="lf-intro-audio" src="/assets/audio/loveflix-intro.mp3" preload="auto"></audio>
+    <audio id="lf-intro-audio" src="/LOVEFLIXAUDIO.mp3" preload="auto"></audio>
   </div>
 
   <div class="bg" aria-hidden="true"></div>
@@ -164,7 +188,7 @@
         <h1 class="title">Your private cinema,<br><span class="accent">built for two.</span></h1>
         <p class="tagline">Upload your videos, photos, voice notes — every moment that mattered. Loveflix turns them into a private streaming site that looks like the real thing.</p>
 
-        <form id="waitlist-form" novalidate>
+        <form id="waitlist-form" novalidate action="javascript:void(0);" onsubmit="return false;">
           <div class="field"><input id="name" name="name" type="text" autocomplete="name" placeholder="Full name" required></div>
           <div class="field"><input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required></div>
           <div class="field"><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required></div>
@@ -174,27 +198,34 @@
         </form>
       </div>
 
-      <div class="success" id="success" aria-live="polite">
-        <div class="heart-icon" aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
-        </div>
-        <h2>You're on the list.</h2>
-        <p>We'll be in touch the moment Loveflix opens its doors. Get ready to make her cry — in a good way.</p>
-      </div>
     </div>
 
     <div class="legal">© 2026 LoveFlix · loveflix.us</div>
   </main>
 
+  <div class="modal-backdrop" id="success-modal" role="dialog" aria-modal="true" aria-labelledby="success-title" aria-hidden="true">
+    <div class="modal">
+      <button type="button" class="close" id="success-close" aria-label="Close">×</button>
+      <div class="heart-icon" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+      </div>
+      <div class="check-row"><svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> You're on the list</div>
+      <h2 id="success-title">Welcome to <span class="accent">Loveflix.</span></h2>
+      <p>We've saved your spot. You'll get an email the moment we go live — be ready to make her cry, in a good way.</p>
+      <button type="button" class="btn btn-primary btn-lg" id="success-ok" style="min-width:180px">Got it</button>
+    </div>
+  </div>
+
 <script>
-  // L intro overlay: play audio, fade out and remove after animation
+  // L intro overlay: tap-to-enter (so audio is guaranteed to play under autoplay rules)
   (function(){
     var overlay = document.getElementById('lf-intro');
-    var audio = document.getElementById('lf-intro-audio');
-    var skip = document.getElementById('lf-intro-skip');
+    var enter   = document.getElementById('lf-intro-enter');
+    var audio   = document.getElementById('lf-intro-audio');
+    var skip    = document.getElementById('lf-intro-skip');
     if (!overlay) return;
 
-    var done = false;
+    var started = false, done = false;
     function dismiss() {
       if (done) return;
       done = true;
@@ -202,31 +233,47 @@
       try { audio && audio.pause(); } catch(e){}
       setTimeout(function(){ overlay && overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 700);
     }
-
-    if (audio) {
-      audio.volume = 1;
-      var p = audio.play();
-      if (p && p.catch) p.catch(function(){ /* autoplay blocked — animation still plays */ });
+    function start() {
+      if (started) return;
+      started = true;
+      enter && enter.classList.add('hide');
+      overlay.classList.add('playing');
+      if (audio) {
+        audio.volume = 1;
+        var p = audio.play();
+        if (p && p.catch) p.catch(function(){});
+      }
+      setTimeout(dismiss, 4200);
     }
 
-    setTimeout(dismiss, 4200);
+    // Try autoplay first; if it works, start immediately. Otherwise wait for tap.
+    if (audio) {
+      var t = audio.play();
+      if (t && t.then) {
+        t.then(function(){ start(); }).catch(function(){ /* needs user gesture */ });
+      }
+    }
+
+    enter && enter.addEventListener('click', start);
+    enter && enter.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } });
     skip && skip.addEventListener('click', dismiss);
   })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+(function(){
   // ===== CONFIG: fill these in =====
   const SUPABASE_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_oLseysACN0GgA3v5wGrJdg_y3ZGH0gZ';
   // =================================
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+  // Attach the submit guard IMMEDIATELY so the form can never do a default GET reload,
+  // even if the Supabase CDN fails to load or its init throws.
   const form = document.getElementById('waitlist-form');
-  const formBlock = document.getElementById('form-block');
   const btn = document.getElementById('submit-btn');
   const errorEl = document.getElementById('error');
-  const successEl = document.getElementById('success');
+  const modalEl = document.getElementById('success-modal');
+  const modalClose = document.getElementById('success-close');
+  const modalOk = document.getElementById('success-ok');
 
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRe = /^[+\d][\d\s().-]{6,}$/;
@@ -234,7 +281,6 @@
   function setInvalid(id, bad) {
     document.getElementById(id).parentElement.classList.toggle('invalid', bad);
   }
-
   function validate(data) {
     setInvalid('name', false); setInvalid('email', false); setInvalid('phone', false);
     if (!data.name || data.name.trim().length < 2) { setInvalid('name', true); return 'Please enter your full name.'; }
@@ -242,34 +288,72 @@
     if (!phoneRe.test(data.phone)) { setInvalid('phone', true); return 'Please enter a valid phone number.'; }
     return null;
   }
+  function showModal() {
+    modalEl.classList.add('show');
+    modalEl.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function hideModal() {
+    modalEl.classList.remove('show');
+    modalEl.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  modalClose && modalClose.addEventListener('click', hideModal);
+  modalOk && modalOk.addEventListener('click', hideModal);
+  modalEl && modalEl.addEventListener('click', (e) => { if (e.target === modalEl) hideModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+
+  let _client = null;
+  function getClient() {
+    if (_client) return _client;
+    if (!window.supabase || !window.supabase.createClient) return null;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || /^YOUR_/.test(SUPABASE_URL) || /^YOUR_/.test(SUPABASE_ANON_KEY)) return null;
+    try { _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { _client = null; }
+    return _client;
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     errorEl.textContent = '';
+
     const data = {
       name: document.getElementById('name').value.trim(),
       email: document.getElementById('email').value.trim().toLowerCase(),
       phone: document.getElementById('phone').value.trim(),
     };
     const err = validate(data);
-    if (err) { errorEl.textContent = err; return; }
+    if (err) { errorEl.textContent = err; return false; }
 
     btn.disabled = true;
     const original = btn.textContent;
     btn.textContent = 'Joining…';
 
+    const client = getClient();
+    if (!client) {
+      errorEl.textContent = "Couldn't reach the server. Check your connection and try again.";
+      btn.disabled = false; btn.textContent = original;
+      return false;
+    }
+
     try {
-      const { error } = await supabase.from('waitlist').insert([data]);
+      const { error } = await client.from('waitlist').insert([data]);
       if (error) throw error;
-      formBlock.style.display = 'none';
-      successEl.classList.add('show');
+      form.reset();
+      showModal();
     } catch (ex) {
       const msg = (ex && ex.message) ? ex.message : 'Something went wrong. Please try again.';
       errorEl.textContent = /duplicate|unique/i.test(msg) ? "You're already on the list." : msg;
+    } finally {
       btn.disabled = false;
       btn.textContent = original;
     }
+    return false;
   });
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 
   // particles
   (function particles() {
