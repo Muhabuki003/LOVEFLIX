@@ -121,7 +121,7 @@
     <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
     <a href="/settings/billing" class="side-link"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Billing</a>
     <button class="side-link" onclick="LoveFlix.signOut()" style="color:#fca5a5;background:none;border:none;width:100%;text-align:left;cursor:pointer"><svg viewBox="0 0 24 24" style="fill:currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Sign Out</button>
-    <div class="side-foot"><div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin · <span id="sideUrl">loveflix.so</span></div></div></div>
+    <div class="side-foot"><div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin · <span id="sideUrl">loveflix.us</span></div></div></div>
   </aside>
 
   <main>
@@ -144,7 +144,7 @@
           <div class="field">
             <label>Your custom URL</label>
             <div style="display:flex;align-items:stretch;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;overflow:hidden">
-              <span style="padding:11px 14px;background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:14px;font-family:monospace;border-right:1px solid var(--border)">loveflix.so/</span>
+              <span style="padding:11px 14px;background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:14px;font-family:monospace;border-right:1px solid var(--border)">loveflix.us/</span>
               <input id="urlSlug" type="text" style="border:none;background:none;flex:1;padding:11px 14px;color:#fff;font:inherit;font-size:14px;outline:none" placeholder="yourname-and-love">
             </div>
           </div>
@@ -305,7 +305,7 @@
     // Sidebar
     applySidebarAvatar((name2[0] || '?').toUpperCase(), adminPhoto);
     document.getElementById('sideAdminName').textContent = name2;
-    document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
+    document.getElementById('sideUrl').textContent = 'loveflix.us/' + slug;
 
     // Preview
     previewName1.textContent = name1;
@@ -355,12 +355,12 @@
     if (n1 && n2) {
       const slug = slugify(n2) + '-and-' + slugify(n1);
       document.getElementById('urlSlug').value = slug;
-      document.getElementById('sideUrl').textContent = 'loveflix.so/' + slug;
+      document.getElementById('sideUrl').textContent = 'loveflix.us/' + slug;
     }
   }
 
   document.getElementById('urlSlug').addEventListener('input', e => {
-    document.getElementById('sideUrl').textContent = 'loveflix.so/' + (e.target.value || 'yourname');
+    document.getElementById('sideUrl').textContent = 'loveflix.us/' + (e.target.value || 'yourname');
   });
 
   document.getElementById('name2').addEventListener('input', e => {

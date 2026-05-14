@@ -163,7 +163,7 @@
       <div class="av" id="sideAvatar">Y</div>
       <div>
         <div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div>
-        <div>Admin · <span id="sideUrl">loveflix.so</span></div>
+        <div>Admin · <span id="sideUrl">loveflix.us</span></div>
       </div>
     </div>
   </aside>
@@ -212,6 +212,18 @@
         <div class="num" id="statDays">—</div>
         <div class="delta">▲ +1 every day</div>
       </div>
+    </div>
+
+    <!-- storage usage -->
+    <div class="stat" style="margin-bottom:30px;padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px">
+        <span style="letter-spacing:2px;text-transform:uppercase;font-size:11px">Storage Used</span>
+        <span id="storageText">— / —</span>
+      </div>
+      <div style="height:4px;background:#2a2a2a;border-radius:2px">
+        <div id="storageFill" style="height:100%;background:#e50914;border-radius:2px;width:0%;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:11px;color:#555;margin-top:5px" id="storageTier"></div>
     </div>
 
     <!-- love note -->
@@ -286,7 +298,7 @@
     s = s || LoveFlix.getSettings();
     const name = s.adminName || 'You';
     const partner = s.partnerName || 'My Love';
-    const slug = s.urlSlug || 'loveflix.so';
+    const slug = s.urlSlug || 'loveflix.us';
     const avatar = document.getElementById('sideAvatar');
     avatar.textContent = (name[0] || '?').toUpperCase();
     if (s.adminPhoto) {
@@ -297,7 +309,7 @@
       avatar.style.color = '';
     }
     document.getElementById('sideAdminName').textContent = name;
-    document.getElementById('sideUrl').textContent = slug ? 'loveflix.so/' + slug : 'loveflix.so';
+    document.getElementById('sideUrl').textContent = slug ? 'loveflix.us/' + slug : 'loveflix.us';
     document.getElementById('welcomeSub').textContent = 'Welcome back, ' + name + '. Here\'s what\'s happening on your site.';
     // Activity rows render with the current names instead of static placeholders.
     document.querySelectorAll('#activityRows [data-name-role="partner"]').forEach(el => { el.textContent = partner; });
@@ -406,6 +418,25 @@
   }
 
   loadDashboard();
+
+  async function loadStorageUsage() {
+    const userId = LoveFlix.getUserId();
+    if (!userId) return;
+    try {
+      const data = await fetch(`/api/storage-usage?user_id=${userId}`).then(r => r.json());
+      if (data.error) return;
+      document.getElementById('storageText').textContent =
+        `${data.used_readable} / ${data.limit_readable}`;
+      document.getElementById('storageFill').style.width = data.percent_used + '%';
+      document.getElementById('storageTier').textContent =
+        `${data.tier.charAt(0).toUpperCase() + data.tier.slice(1)} plan · ${data.percent_used}% used`;
+      if (data.percent_used >= 90) {
+        document.getElementById('storageFill').style.background = '#f6121d';
+        document.getElementById('storageText').style.color = '#f6121d';
+      }
+    } catch (e) { console.warn('Storage usage fetch failed', e); }
+  }
+  loadStorageUsage();
 </script>
 </body>
 </html>
