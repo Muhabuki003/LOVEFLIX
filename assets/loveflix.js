@@ -128,7 +128,9 @@
         });
         clearPending();
       } catch (e) {
+        // Keep pending so the next page load / sign-in retries automatically.
         console.warn('settings sync push failed', e && e.message);
+        throw e;
       }
     })();
     try { await _pushInFlight; } finally { _pushInFlight = null; }
@@ -155,6 +157,18 @@
     }
   }
 
+  // Decide whether a settings object contains anything user-meaningful (i.e.
+  // anything beyond the bookkeeping timestamp). Pure-timestamp objects count
+  // as empty for sync-direction decisions.
+  function hasMeaningfulFields(obj) {
+    if (!obj || typeof obj !== 'object') return false;
+    for (const k of Object.keys(obj)) {
+      if (k === TS_FIELD) continue;
+      if (obj[k] !== '' && obj[k] != null) return true;
+    }
+    return false;
+  }
+
   async function pullSettings() {
     try {
       await flushPendingIfAny();
@@ -168,15 +182,19 @@
         : ((data && data.updated_at) || 0) * 1000;
 
       let next;
-      const serverEmpty = !serverSettings || Object.keys(serverSettings).length === 0;
-      if (serverEmpty) {
-        // Nothing on the server yet — keep local, push if we have anything
-        // worth syncing.
+      const serverHas = hasMeaningfulFields(serverSettings);
+      const localHas = hasMeaningfulFields(local);
+      if (!serverHas) {
+        // Nothing meaningful on the server yet — keep local, and if we're
+        // authenticated and have anything worth syncing, force-push it now
+        // (and KEEP the pending copy until the server confirms it landed, so
+        // future page loads retry on their own).
         next = local;
-        if (getToken() && Object.keys(local).length > 0) {
+        if (getToken() && localHas) {
+          writePending(stripLargeFields(local));
           flushPushSettings().catch(() => {});
         }
-      } else if (localTs && localTs > serverTs) {
+      } else if (localTs && localTs > serverTs && localHas) {
         // Local has unsaved/newer changes (e.g. user edited a name and we
         // got here before the debounced push fired). Keep local and push.
         next = local;
@@ -345,13 +363,25 @@
   }
 
   // Kick off a settings refresh on every page load. Pages that need to wait
-  // for it can `await LoveFlix.ensureSettingsReady()`.
+  // for it can `await LoveFlix.ensureSettingsReady()`. We only pull when
+  // authenticated; an anonymous pull would hit the public /api/settings
+  // endpoint with the default tenant and could race-resolve the ready
+  // promise with empty data, masking the real server response from the
+  // post-signin pull.
   if (typeof document !== 'undefined') {
-    const run = () => { pullSettings().catch(() => {}); };
+    const run = () => {
+      if (getToken()) {
+        pullSettings().catch(() => {});
+      } else {
+        // Resolve ready immediately with whatever's local so anonymous pages
+        // (login screen, landing) don't hang waiting on a pull we won't make.
+        resolveSettingsReady(getSettings());
+      }
+    };
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', run, { once: true });
     } else { run(); }
-    window.addEventListener('focus', () => pullSettings().catch(() => {}));
+    window.addEventListener('focus', () => { if (getToken()) pullSettings().catch(() => {}); });
     // Cross-tab updates: if another tab changes settings, mirror in this tab.
     window.addEventListener('storage', e => {
       if (e.key === SETTINGS_KEY) {
