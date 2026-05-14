@@ -86,10 +86,15 @@
   }
 
   /* ===== L intro overlay ===== */
-  #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
+  #lf-intro-gate{position:fixed;inset:0;z-index:9998;background:radial-gradient(ellipse at center,rgba(229,9,20,0.18),transparent 60%),#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:pointer;transition:opacity .4s ease}
+  #lf-intro-gate.hide{opacity:0;pointer-events:none}
+  #lf-intro-gate .heart-pulse{width:64px;height:64px;border:1px solid rgba(229,9,20,.45);border-radius:50%;display:grid;place-items:center;color:#e50914;box-shadow:0 0 28px rgba(229,9,20,.35);animation:pulse 2s ease-in-out infinite}
+  #lf-intro-gate .label{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:#fff;text-transform:uppercase}
+  #lf-intro-gate .sub{font:500 11px/1 'Inter',sans-serif;letter-spacing:3px;text-transform:uppercase;color:#a3a3a3}
+  #lf-intro{position:fixed;inset:0;z-index:9999;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden;transition:opacity .6s ease}
+  #lf-intro.show{display:flex}
   #lf-intro.hide{opacity:0;pointer-events:none}
   #lf-intro netflixintro{display:block;position:relative;width:300px;height:300px;overflow:hidden;background-size:4000px;background-position:-1950px 0;animation:lf-zoom-in 3.5s 0.5s ease-in forwards}
-  #lf-intro netflixintro [class*=helper-] .effect-brush{animation-play-state:running}
   #lf-intro netflixintro::before{content:"";position:absolute;display:block;background:#000;width:150%;height:30%;left:-25%;bottom:-27%;border-radius:50%;z-index:5;transform-origin:left center;background-size:4000px;background-position:-1950px 0}
   #lf-intro netflixintro[letter=L]{transform-origin:30% center}
   #lf-intro netflixintro[letter=L] .helper-1{width:19.5%;height:100%;background:rgba(228,9,19,.5);left:22%;top:0;transform:rotate(180deg);animation:lf-fade-box 2s .6s forwards}
@@ -140,6 +145,13 @@
 </style>
 </head>
 <body>
+  <div id="lf-intro-gate" role="button" tabindex="0" aria-label="Tap to enter Loveflix">
+    <div class="heart-pulse" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+    </div>
+    <div class="label">Tap to enter</div>
+    <div class="sub">♥ sound on</div>
+  </div>
   <div id="lf-intro" aria-hidden="true">
     <netflixintro letter="L">
       <div class="helper-1">
@@ -201,29 +213,45 @@
   </div>
 
 <script>
-  // L intro overlay: play audio + animation immediately, dismiss after 4.2s
+  // L intro: tap gate triggers audio + animation. Browsers block audio autoplay without a gesture.
   (function(){
+    var gate    = document.getElementById('lf-intro-gate');
     var overlay = document.getElementById('lf-intro');
     var audio   = document.getElementById('lf-intro-audio');
     var skip    = document.getElementById('lf-intro-skip');
-    if (!overlay) return;
+    if (!gate || !overlay) return;
 
-    var done = false;
+    var started = false, done = false;
+
     function dismiss() {
       if (done) return;
       done = true;
       overlay.classList.add('hide');
       try { audio && audio.pause(); } catch(e){}
-      setTimeout(function(){ overlay && overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 700);
+      setTimeout(function(){
+        overlay && overlay.parentNode && overlay.parentNode.removeChild(overlay);
+        gate && gate.parentNode && gate.parentNode.removeChild(gate);
+      }, 700);
     }
 
-    if (audio) {
-      audio.volume = 1;
-      var p = audio.play();
-      if (p && p.catch) p.catch(function(){});
+    function start() {
+      if (started) return;
+      started = true;
+      gate.classList.add('hide');
+      // display:none -> display:flex restarts CSS animations from t=0
+      overlay.classList.add('show');
+      if (audio) {
+        audio.volume = 1;
+        var p = audio.play();
+        if (p && p.catch) p.catch(function(){});
+      }
+      setTimeout(dismiss, 4200);
     }
 
-    setTimeout(dismiss, 4200);
+    gate.addEventListener('click', start);
+    gate.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); }
+    });
     skip && skip.addEventListener('click', dismiss);
   })();
 </script>
