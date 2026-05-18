@@ -24,6 +24,20 @@ R2_BUCKET_NAME = "loveflix-videos"
 R2_PUBLIC_URL = "https://pub-41c1138b6caa46559a3d65cc2f95e4fb.r2.dev"
 DEFAULT_TENANT_ID = "a9c77b1cff6d48f28930ed068bbba95e"
 
+# ---- Stripe (public keys — safe to commit) ----
+# Replace with your live publishable key after rotating:
+STRIPE_PUBLISHABLE_KEY = "pk_live_51TY6EgA20Y7L8XqMSawzuNPty7s4Ib3GdfBjITXt2HxMTiVqjx2o4BBbHZgQClDoXFAo2Ys0wbCeeNCPnBUw0yKl00CKdLpBip"
+
+# Paste the price IDs printed by `node stripe-setup.js` after running it:
+STRIPE_PRICE_CRUSH_MONTHLY = "price_1TY6rfA20Y7L8XqMohsuGEF7"
+STRIPE_PRICE_CRUSH_YEARLY  = "price_1TY6rfA20Y7L8XqMkvQtmukF"
+STRIPE_PRICE_SWEETHEART_MONTHLY = "price_1TY6rfA20Y7L8XqMZhPdtYDo"
+STRIPE_PRICE_SWEETHEART_YEARLY  = "price_1TY6rgA20Y7L8XqM2JvGksJB"
+STRIPE_PRICE_FOREVER_MONTHLY = "price_1TY6rgA20Y7L8XqMq4qFpwYl"
+STRIPE_PRICE_FOREVER_YEARLY  = "price_1TY6rhA20Y7L8XqMeJ8advP5"
+
 # Secrets (set via `wrangler pages secret put <NAME>`):
 #   R2_ACCESS_KEY_ID        — for presigned uploads (S3 API)
 #   R2_SECRET_ACCESS_KEY    — for presigned uploads (S3 API)
+#   STRIPE_SECRET_KEY       — your live Stripe secret key  ← required
+#   STRIPE_WEBHOOK_SECRET   — from Stripe dashboard > Webhooks (optional, recommended)

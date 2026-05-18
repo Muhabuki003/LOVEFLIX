@@ -67,7 +67,7 @@
     <p class="sub">Welcome to LoveFlix. Your <span id="planLabel">Sweetheart</span> plan is active and your private streaming service is ready to fill with memories.</p>
 
     <div class="status-row">
-      <div class="status"><span class="dot"></span>Payment received</div>
+      <div class="status"><span class="dot"></span>14-day trial active</div>
       <div class="status"><span class="dot"></span>Account provisioned</div>
       <div class="status"><span class="dot"></span>Site online</div>
     </div>
@@ -78,7 +78,7 @@
     </div>
 
     <div class="receipt">
-      Receipt: <strong id="receiptAmount">$12.00</strong> charged today · <strong id="receiptDate">today</strong><br>
+      Your card won't be charged until <strong id="trialEndDate">14 days from today</strong> — then <strong id="receiptAmount">$12.00</strong>/<span id="billingCycle">mo</span>.<br>
       Manage billing anytime in <a href="/settings/billing" style="color:var(--text-light);text-decoration:underline">Settings → Billing</a>.
     </div>
   </div>
@@ -86,31 +86,36 @@
 
 <script>
   const PLANS = { crush:'Crush', sweetheart:'Sweetheart', forever:'Forever' };
+  const AMOUNTS = {
+    crush:      { monthly: 600,  yearly: 4800  },
+    sweetheart: { monthly: 1200, yearly: 10800 },
+    forever:    { monthly: 2400, yearly: 21600 },
+  };
 
-  // Primary: read receipt details from URL params (set by checkout on redirect).
-  // Fallback: localStorage (same-device, non-private sessions).
-  // If neither is available, show a generic success page — do NOT redirect back
-  // to checkout, which would cause an infinite redirect loop in Safari private mode.
+  // Primary: read details from URL params (set by checkout on redirect).
+  // Fallback: localStorage for same-device non-private sessions.
   const params = new URLSearchParams(location.search);
-  let planId = params.get('plan') || null;
-  let amount = params.get('amount') ? parseInt(params.get('amount'), 10) : null;
-  let at = Date.now();
+  let planId  = params.get('plan') || null;
+  let billing = params.get('billing') || 'monthly';
 
   if (!planId) {
     try {
       const stored = JSON.parse(localStorage.getItem('loveflix.paymentComplete') || 'null');
-      if (stored) { planId = stored.plan; amount = stored.amount; at = stored.at || at; }
+      if (stored) { planId = stored.plan; billing = stored.billing || billing; }
     } catch (_) {}
   }
 
-  if (planId) {
-    document.getElementById('planLabel').textContent = PLANS[planId] || 'Sweetheart';
-  }
-  if (amount) {
-    document.getElementById('receiptAmount').textContent = '$' + (amount / 100).toFixed(2);
-    const d = new Date(at);
-    document.getElementById('receiptDate').textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  }
+  const safeId      = planId && PLANS[planId] ? planId : 'sweetheart';
+  const safeBilling = billing === 'yearly' ? 'yearly' : 'monthly';
+  const amount      = AMOUNTS[safeId][safeBilling];
+
+  document.getElementById('planLabel').textContent    = PLANS[safeId];
+  document.getElementById('receiptAmount').textContent = '$' + (amount / 100).toFixed(2);
+  document.getElementById('billingCycle').textContent  = safeBilling === 'yearly' ? 'yr' : 'mo';
+
+  const trialEnd = new Date();
+  trialEnd.setDate(trialEnd.getDate() + 14);
+  document.getElementById('trialEndDate').textContent = trialEnd.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 </script>
 </body>
 </html>
