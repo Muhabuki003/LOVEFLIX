@@ -78,7 +78,7 @@
     </div>
 
     <div class="receipt">
-      Receipt: <strong id="receiptAmount">$12.00</strong> charged today · <strong id="receiptDate">today</strong><br>
+      <strong id="receiptAmount">$12.00</strong> due after 14-day free trial · first charge on <strong id="receiptDate">—</strong><br>
       Manage billing anytime in <a href="/settings/billing" style="color:var(--text-light);text-decoration:underline">Settings → Billing</a>.
     </div>
   </div>
@@ -108,8 +108,9 @@
   }
   if (amount) {
     document.getElementById('receiptAmount').textContent = '$' + (amount / 100).toFixed(2);
-    const d = new Date(at);
-    document.getElementById('receiptDate').textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const chargeDate = new Date(at);
+    chargeDate.setDate(chargeDate.getDate() + 14);
+    document.getElementById('receiptDate').textContent = chargeDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 </script>
 </body>
