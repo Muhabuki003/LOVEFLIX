@@ -26,7 +26,7 @@ DEFAULT_TENANT_ID = "a9c77b1cff6d48f28930ed068bbba95e"
 
 # ---- Stripe (public keys — safe to commit) ----
 # Replace with your live publishable key after rotating:
-STRIPE_PUBLISHABLE_KEY = "pk_live_51TY6EgA20Y7L8XqMSawzuNPty7s4Ib3GdfBjITXt2HxMTiVqjx2o4BBbHZgQClDoXFAo2Ys0wbCeeNCPnBUw0yKl00CKdLpBip"
+STRIPE_PUBLISHABLE_KEY = "pk_live_51TY6EgA20Y7L8XqMtsRAdXT7cxSPIEvCZAFpFC4VmC5C4rBsxASOuDmuXmjgpSoBpQrJcwBRBk5GvEZ2axDboO8G003rSYi9a9"
 
 # Paste the price IDs printed by `node stripe-setup.js` after running it:
 STRIPE_PRICE_CRUSH_MONTHLY = "price_1TY6rfA20Y7L8XqMohsuGEF7"
