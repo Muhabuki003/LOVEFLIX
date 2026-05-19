@@ -31,8 +31,9 @@
 
   .field{margin-bottom:14px}
   .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
-  .field input, .stripe-shell{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:13px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s,box-shadow .15s}
+  .field input,.stripe-shell{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:13px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s,box-shadow .15s}
   .field input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+  .stripe-shell{cursor:text}
   .stripe-shell.focused{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
   .stripe-shell.invalid{border-color:#f87171}
 
@@ -58,13 +59,11 @@
   .plan-price{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:#fff;line-height:1}
   .plan-per{font-size:11px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
   .line{display:flex;justify-content:space-between;font-size:13px;color:var(--text-light);margin-bottom:10px}
+  .line.trial{color:#10b981;font-weight:600}
   .line.total{border-top:1px solid var(--border);padding-top:14px;margin-top:6px;font-size:14px;color:#fff;font-weight:600}
   .line.total .amt{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--red)}
   .change-link{font-size:12px;color:var(--text-dim);margin-top:14px;display:inline-block}
   .change-link:hover{color:#fff}
-
-  .test-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:5px 10px;border-radius:999px;margin-bottom:14px}
-  .test-badge .dot{width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px #fbbf24}
 
   @media (max-width:780px){
     nav{padding:14px 20px}
@@ -86,10 +85,9 @@
 
 <div class="wrap">
   <div>
-    <div class="test-badge"><span class="dot"></span>Test Mode</div>
     <div class="eyebrow">Final step</div>
     <h1>Confirm and pay.</h1>
-    <p class="sub">Your LoveFlix site goes live the moment payment clears.</p>
+    <p class="sub">Your card is saved now — nothing is charged until your 14-day trial ends.</p>
 
     <form id="payForm" novalidate>
       <div class="panel">
@@ -99,7 +97,7 @@
           <input type="text" id="cardName" name="cardName" autocomplete="cc-name" placeholder="Your full name" required>
         </div>
         <div class="field">
-          <label for="cardElement">Card number, expiry, CVC</label>
+          <label>Card number, expiry, CVC</label>
           <div id="cardElement" class="stripe-shell"></div>
         </div>
         <div id="payError" class="error" role="alert"></div>
@@ -113,11 +111,11 @@
         </div>
       </div>
 
-      <button type="submit" class="pay-btn" id="payBtn">
+      <button type="submit" class="pay-btn" id="payBtn" disabled>
         <span class="spinner" aria-hidden="true"></span>
-        <span class="pay-label">Pay <span id="payAmount">$12.00</span></span>
+        <span class="pay-label">Start free trial →</span>
       </button>
-      <p class="fineprint">By confirming, you agree to LoveFlix's Terms and authorize a recurring monthly charge until canceled.</p>
+      <p class="fineprint">No charge today. After 14 days you'll be billed <span id="fineAmount">$12.00</span>/<span id="fineCycle">mo</span> until you cancel.</p>
     </form>
   </div>
 
@@ -131,139 +129,186 @@
         </div>
         <div style="text-align:right">
           <div class="plan-price" id="planPrice">$12</div>
-          <div class="plan-per">per month</div>
+          <div class="plan-per" id="planPer">per month</div>
         </div>
       </div>
-      <div class="line"><span>Subtotal</span><span id="sumSubtotal">$12.00</span></div>
-      <div class="line"><span>Tax</span><span>$0.00</span></div>
-      <div class="line total"><span>Total due today</span><span class="amt" id="sumTotal">$12.00</span></div>
+      <div class="line trial"><span>14-day free trial</span><span>−<span id="trialAmt">$12.00</span></span></div>
+      <div class="line"><span>Due today</span><span>$0.00</span></div>
+      <div class="line total"><span>After trial</span><span class="amt" id="sumTotal">$12.00</span></div>
       <a href="pricing.html" class="change-link">← Change plan</a>
     </div>
   </aside>
 </div>
 
 <script>
-  // Plan catalog mirrors the backend. Source of truth for display.
   const PLANS = {
-    crush:      { name: 'Crush',      price: 600,  blurb: '25 videos · 1080p' },
-    sweetheart: { name: 'Sweetheart', price: 1200, blurb: 'Unlimited · 4K · custom URL' },
-    forever:    { name: 'Forever',    price: 2400, blurb: 'All features · concierge' },
+    crush:      { name: 'Crush',      monthly: 600,  yearly: 4800,  blurb: '25 videos · 1080p' },
+    sweetheart: { name: 'Sweetheart', monthly: 1200, yearly: 10800, blurb: 'Unlimited · 4K · custom URL' },
+    forever:    { name: 'Forever',    monthly: 2400, yearly: 21600, blurb: 'All features · concierge' },
   };
 
-  const params = new URLSearchParams(location.search);
-  const planId = (params.get('plan') || localStorage.getItem('loveflix.selectedPlan') || 'sweetheart').toLowerCase();
-  const plan = PLANS[planId] || PLANS.sweetheart;
-  localStorage.setItem('loveflix.selectedPlan', planId in PLANS ? planId : 'sweetheart');
+  const params  = new URLSearchParams(location.search);
+  const planId  = (params.get('plan')    || localStorage.getItem('loveflix.selectedPlan') || 'sweetheart').toLowerCase();
+  const billing = (params.get('billing') || localStorage.getItem('loveflix.billing')      || 'monthly').toLowerCase();
+  const safeId      = planId in PLANS ? planId : 'sweetheart';
+  const safeBilling = billing === 'yearly' ? 'yearly' : 'monthly';
+  const plan    = PLANS[safeId];
+  const amount  = safeBilling === 'yearly' ? plan.yearly : plan.monthly;
+  const fmt     = c => '$' + (c / 100).toFixed(2);
 
-  const fmt = (cents) => '$' + (cents / 100).toFixed(2);
-  document.getElementById('planName').textContent = plan.name;
+  localStorage.setItem('loveflix.selectedPlan', safeId);
+  localStorage.setItem('loveflix.billing', safeBilling);
+
+  document.getElementById('planName').textContent  = plan.name;
   document.getElementById('planBlurb').textContent = plan.blurb;
-  document.getElementById('planPrice').textContent = '$' + Math.round(plan.price / 100);
-  document.getElementById('sumSubtotal').textContent = fmt(plan.price);
-  document.getElementById('sumTotal').textContent = fmt(plan.price);
-  document.getElementById('payAmount').textContent = fmt(plan.price);
+  document.getElementById('planPrice').textContent = '$' + Math.round(amount / 100);
+  document.getElementById('planPer').textContent   = safeBilling === 'yearly' ? 'per year' : 'per month';
+  document.getElementById('trialAmt').textContent  = fmt(amount);
+  document.getElementById('sumTotal').textContent  = fmt(amount);
+  document.getElementById('fineAmount').textContent = fmt(amount);
+  document.getElementById('fineCycle').textContent  = safeBilling === 'yearly' ? 'yr' : 'mo';
 
-  let clientSecret = null;
+  // ---- State ----
   let stripe = null;
-  let card = null;
+  let card   = null;
+  let setupData = null; // { clientSecret, customerId, setupIntentId, planId, billing }
 
+  // ---- Bootstrap: load Stripe.js, create SetupIntent, mount card element ----
   async function bootstrap() {
-    // 1. Get a PaymentIntent client_secret from our backend.
-    try {
-      const res = await fetch('/api/create-payment-intent', {
+    // 1. Load Stripe.js and create Customer + SetupIntent in parallel.
+    const [, intentRes] = await Promise.all([
+      new Promise((resolve, reject) => {
+        if (window.Stripe) return resolve();
+        const s = document.createElement('script');
+        s.src = 'https://js.stripe.com/v3/';
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Stripe.js failed to load. Check your connection.'));
+        document.head.appendChild(s);
+      }),
+      fetch('/api/create-subscription-intent', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ plan: planId in PLANS ? planId : 'sweetheart' }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Unable to start checkout.');
-      clientSecret = data.clientSecret;
-    } catch (e) {
-      showError('Could not start checkout. Refresh and try again.');
+        body: JSON.stringify({ plan: safeId, billing: safeBilling }),
+      }),
+    ]);
+
+    const data = await intentRes.json();
+    if (!intentRes.ok) {
+      showError(data.error || 'Could not start checkout. Please refresh and try again.');
       return;
     }
 
-    // 2. Load Stripe.js and mount Elements.
-    let pk = window.LOVEFLIX_STRIPE_KEY || '';
-    if (!pk) {
-      try {
-        const cfg = await (await fetch('/api/stripe-config')).json();
-        pk = cfg.publishableKey || '';
-      } catch (_) {}
-    }
-    if (!pk) pk = 'pk_test_loveflix_placeholder';
-    try {
-      if (!window.Stripe) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'https://js.stripe.com/v3/';
-          s.onload = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-      }
-      stripe = window.Stripe(pk);
-      const elements = stripe.elements({
-        appearance: {
-          theme: 'night',
-          variables: {
-            colorPrimary: '#e50914',
-            colorBackground: '#1c1c1c',
-            colorText: '#ffffff',
-            colorDanger: '#f87171',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            fontSizeBase: '14px',
-            borderRadius: '6px',
-            spacingUnit: '4px',
-          },
+    // 2. The publishable key travels with the SetupIntent response — no separate fetch needed.
+    const pk = data.publishableKey;
+    if (!pk) { showError('Payment system not configured. Contact support.'); return; }
+
+    stripe = window.Stripe(pk);
+    setupData = data;
+
+    // 4. Mount Stripe Card Element
+    const elements = stripe.elements({
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#e50914',
+          colorBackground: '#1c1c1c',
+          colorText: '#ffffff',
+          colorDanger: '#f87171',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          fontSizeBase: '14px',
+          borderRadius: '6px',
         },
-      });
-      card = elements.create('card', {
-        hidePostalCode: true,
-        style: {
-          base: {
-            color: '#ffffff',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            fontSize: '14px',
-            fontSmoothing: 'antialiased',
-            '::placeholder': { color: '#6b6b6b' },
-            iconColor: '#cfcfcf',
-          },
-          invalid: { color: '#f87171', iconColor: '#f87171' },
+      },
+    });
+
+    card = elements.create('card', {
+      hidePostalCode: true,
+      style: {
+        base: {
+          color: '#ffffff',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          fontSize: '14px',
+          fontSmoothing: 'antialiased',
+          '::placeholder': { color: '#6b6b6b' },
+          iconColor: '#cfcfcf',
         },
-      });
-      card.mount('#cardElement');
-      const shell = document.getElementById('cardElement');
-      card.on('focus', () => shell.classList.add('focused'));
-      card.on('blur',  () => shell.classList.remove('focused'));
-      card.on('change', (e) => {
-        shell.classList.toggle('invalid', !!e.error);
-        if (e.error) showError(e.error.message);
-        else clearError();
-      });
-    } catch (e) {
-      // Stripe.js failed (offline / blocked). Fall back to a plain numeric stand-in so
-      // the test-mode flow remains usable.
-      mountFallbackCardInput();
-    }
+        invalid: { color: '#f87171', iconColor: '#f87171' },
+      },
+    });
+
+    const shell = document.getElementById('cardElement');
+    card.mount(shell);
+    card.on('focus',  () => shell.classList.add('focused'));
+    card.on('blur',   () => shell.classList.remove('focused'));
+    card.on('change', e => {
+      shell.classList.toggle('invalid', !!e.error);
+      if (e.error) showError(e.error.message); else clearError();
+    });
+
+    // Enable the button once Stripe Elements is ready
+    document.getElementById('payBtn').disabled = false;
   }
 
-  function mountFallbackCardInput() {
-    const shell = document.getElementById('cardElement');
-    shell.innerHTML = '';
-    shell.style.padding = '0';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.inputMode = 'numeric';
-    input.autocomplete = 'cc-number';
-    input.placeholder = '4242 4242 4242 4242';
-    input.style.cssText = 'width:100%;background:transparent;border:none;color:#fff;font:inherit;font-size:14px;padding:13px 14px;outline:none';
-    input.addEventListener('focus', () => shell.classList.add('focused'));
-    input.addEventListener('blur',  () => shell.classList.remove('focused'));
-    input.addEventListener('input', () => { input.value = input.value.replace(/[^\d ]/g, '').slice(0, 19); clearError(); });
-    shell.appendChild(input);
-    card = { _fallback: true, _input: input };
-  }
+  // ---- Form submit ----
+  document.getElementById('payForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    clearError();
+
+    const name  = document.getElementById('cardName').value.trim();
+    const email = document.getElementById('billingEmail').value.trim();
+    if (!name)  return showError('Enter the name on your card.');
+    if (!email || !/.+@.+\..+/.test(email)) return showError('Enter a valid billing email.');
+    if (!setupData) return showError('Payment form is still loading. Try again in a moment.');
+
+    setLoading(true);
+
+    // Step 1: Confirm the SetupIntent — saves the card with no charge.
+    const { error: setupError, setupIntent } = await stripe.confirmCardSetup(
+      setupData.clientSecret,
+      {
+        payment_method: {
+          card,
+          billing_details: { name, email },
+        },
+      }
+    );
+
+    if (setupError) {
+      showError(setupError.message);
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: Tell the server to create the subscription using the saved card.
+    let res, subData;
+    try {
+      res = await fetch('/api/activate-subscription', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          setupIntentId: setupData.setupIntentId,
+          customerId:    setupData.customerId,
+          planId:        safeId,
+          billing:       safeBilling,
+        }),
+      });
+      subData = await res.json();
+      if (!res.ok) throw new Error(subData.error || 'Could not activate subscription.');
+    } catch (err) {
+      showError(err.message);
+      setLoading(false);
+      return;
+    }
+
+    // Success — redirect to setup flow.
+    try {
+      localStorage.setItem('loveflix.paymentComplete', JSON.stringify({
+        plan: safeId, billing: safeBilling, amount, subscriptionId: subData.subscriptionId, at: Date.now(),
+      }));
+    } catch (_) {}
+
+    location.href = `/setup/complete?plan=${encodeURIComponent(safeId)}&billing=${safeBilling}`;
+  });
 
   function showError(msg) {
     const el = document.getElementById('payError');
@@ -275,41 +320,13 @@
     el.textContent = '';
     el.classList.remove('show');
   }
-
   function setLoading(on) {
     const btn = document.getElementById('payBtn');
     btn.disabled = on;
     btn.classList.toggle('loading', on);
   }
 
-  document.getElementById('payForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-
-    const name = document.getElementById('cardName').value.trim();
-    const email = document.getElementById('billingEmail').value.trim();
-    if (!name) return showError('Enter the name on your card.');
-    if (!email || !/.+@.+\..+/.test(email)) return showError('Enter a valid billing email.');
-    if (!card) return showError('Payment form is still loading. Try again in a moment.');
-
-    setLoading(true);
-
-    // TEST MODE: simulate a 1.5s processing delay, treat as success.
-    // In live mode this would call stripe.confirmCardPayment(clientSecret, {...}).
-    await new Promise(r => setTimeout(r, 1500));
-
-    try {
-      localStorage.setItem('loveflix.paymentComplete', JSON.stringify({
-        plan: planId in PLANS ? planId : 'sweetheart',
-        amount: plan.price,
-        at: Date.now(),
-      }));
-    } catch (_) {}
-
-    location.href = '/setup/complete?plan=' + encodeURIComponent(planId in PLANS ? planId : 'sweetheart') + '&amount=' + plan.price;
-  });
-
-  bootstrap();
+  bootstrap().catch(err => showError(err.message || 'Could not load payment form.'));
 </script>
 </body>
 </html>

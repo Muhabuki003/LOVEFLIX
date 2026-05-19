@@ -121,7 +121,7 @@
     <div class="plan-tagline">For new couples making their first scrapbook in binge form.</div>
     <div class="price-row"><span class="price">$<span data-monthly="6" data-yearly="4">6</span></span><span class="price-cents">.00</span></div>
     <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
-    <a href="/checkout?plan=crush" class="btn btn-ghost">Start free trial</a>
+    <a href="/checkout?plan=crush&billing=monthly" data-plan="crush" class="btn btn-ghost">Start free trial</a>
     <ul class="features-list">
       <li>Up to 25 videos</li>
       <li>1080p streaming</li>
@@ -137,7 +137,7 @@
     <div class="plan-tagline">For real couples with real history. The crowd-pleaser.</div>
     <div class="price-row"><span class="price">$<span data-monthly="12" data-yearly="9">12</span></span><span class="price-cents">.00</span></div>
     <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
-    <a href="/checkout?plan=sweetheart" class="btn btn-primary">Start free trial</a>
+    <a href="/checkout?plan=sweetheart&billing=monthly" data-plan="sweetheart" class="btn btn-primary">Start free trial</a>
     <ul class="features-list">
       <li>Unlimited videos</li>
       <li>4K HDR streaming</li>
@@ -152,7 +152,7 @@
     <div class="plan-tagline">For the long haul. Anniversaries, kids, the whole reel.</div>
     <div class="price-row"><span class="price">$<span data-monthly="24" data-yearly="18">24</span></span><span class="price-cents">.00</span></div>
     <div class="price-per"><span data-billed-monthly>billed monthly</span></div>
-    <a href="/checkout?plan=forever" class="btn btn-ghost">Start free trial</a>
+    <a href="/checkout?plan=forever&billing=monthly" data-plan="forever" class="btn btn-ghost">Start free trial</a>
     <ul class="features-list">
       <li>Unlimited everything</li>
       <li>4K HDR streaming</li>
@@ -202,20 +202,35 @@
 
 <script>
   // billing toggle
+  let currentBilling = 'monthly';
   const toggle = document.getElementById('toggle');
+
+  function updateCheckoutLinks() {
+    document.querySelectorAll('a[data-plan]').forEach(a => {
+      a.href = `/checkout?plan=${a.dataset.plan}&billing=${currentBilling}`;
+    });
+    // Also update the CTA button
+    const cta = document.querySelector('.cta a[href*="plan=sweetheart"]');
+    if (cta) cta.href = `/checkout?plan=sweetheart&billing=${currentBilling}`;
+  }
+
   toggle.addEventListener('click', e => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn) return;
     toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const bill = btn.dataset.bill;
+    currentBilling = btn.dataset.bill;
+    localStorage.setItem('loveflix.billing', currentBilling);
     document.querySelectorAll('[data-monthly]').forEach(span => {
-      span.textContent = bill === 'monthly' ? span.dataset.monthly : span.dataset.yearly;
+      span.textContent = currentBilling === 'monthly' ? span.dataset.monthly : span.dataset.yearly;
     });
     document.querySelectorAll('[data-billed-monthly]').forEach(el => {
-      el.textContent = bill === 'monthly' ? 'billed monthly' : 'billed yearly · save 25%';
+      el.textContent = currentBilling === 'monthly' ? 'billed monthly' : 'billed yearly · save 25%';
     });
+    updateCheckoutLinks();
   });
+
+  updateCheckoutLinks();
 
   // faq
   document.querySelectorAll('.faq-item').forEach(item => {

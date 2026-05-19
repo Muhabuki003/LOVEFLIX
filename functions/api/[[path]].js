@@ -16,8 +16,12 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/videos',
   'GET /api/settings',
   'POST /api/create-payment-intent',
+  'POST /api/create-checkout-session',
+  'POST /api/create-subscription-intent',
+  'POST /api/activate-subscription',
   'GET /api/billing/subscription',
   'GET /api/stripe-config',
+  'POST /api/stripe-webhook',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -89,10 +93,14 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
 
+    if (method === 'POST' && path === '/api/create-checkout-session') return createCheckoutSession(env, request, url);
+    if (method === 'POST' && path === '/api/create-subscription-intent') return createSubscriptionIntent(env, request);
+    if (method === 'POST' && path === '/api/activate-subscription') return activateSubscription(env, request);
     if (method === 'POST' && path === '/api/create-payment-intent') return createPaymentIntent(env, request);
-    if (method === 'GET'  && path === '/api/billing/subscription') return getMockSubscription();
+    if (method === 'POST' && path === '/api/stripe-webhook') return handleStripeWebhook(env, request);
+    if (method === 'GET'  && path === '/api/billing/subscription') return getBillingSubscription(env, request);
     if (method === 'GET'  && path === '/api/stripe-config') {
-      return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '', testMode: true });
+      return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '' });
     }
 
     return json({ error: 'not_found', path }, 404);
@@ -493,36 +501,285 @@ function bytesToHex(bytes) {
   return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ---------- Stripe (test mode stub) ----------
-// Returns a fake client_secret. Test mode only — wire to real Stripe in follow-up.
+// ---------- Stripe ----------
+
+function stripeRequest(secretKey, path, params) {
+  const isGet = !params;
+  return fetch(`https://api.stripe.com/v1${path}`, {
+    method: isGet ? 'GET' : 'POST',
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: isGet ? undefined : new URLSearchParams(params).toString(),
+  }).then(r => r.json());
+}
+
+// POST /api/create-checkout-session
+// Body: { plan: 'crush'|'sweetheart'|'forever', billing: 'monthly'|'yearly', email?: string }
+async function createCheckoutSession(env, request, url) {
+  const body = await request.json().catch(() => ({}));
+  const planId = (body.plan || 'sweetheart').toString().toLowerCase();
+  const billing = (body.billing || 'monthly').toString().toLowerCase();
+
+  const plan = LOVEFLIX_PLANS[planId];
+  if (!plan) return json({ error: 'invalid_plan' }, 400);
+  if (billing !== 'monthly' && billing !== 'yearly') return json({ error: 'invalid_billing' }, 400);
+
+  const secretKey = env.STRIPE_SECRET_KEY;
+  if (!secretKey) return json({ error: 'stripe_not_configured', hint: 'Run: wrangler pages secret put STRIPE_SECRET_KEY' }, 500);
+
+  const priceEnvKey = `STRIPE_PRICE_${planId.toUpperCase()}_${billing.toUpperCase()}`;
+  const priceId = env[priceEnvKey];
+  if (!priceId) return json({ error: 'price_not_configured', hint: `Set ${priceEnvKey} in wrangler.toml after running stripe-setup.js` }, 500);
+
+  const origin = url.origin;
+  const params = {
+    mode: 'subscription',
+    'line_items[0][price]': priceId,
+    'line_items[0][quantity]': '1',
+    success_url: `${origin}/setup/complete?session_id={CHECKOUT_SESSION_ID}&plan=${planId}&billing=${billing}`,
+    cancel_url: `${origin}/pricing.html`,
+    'subscription_data[trial_period_days]': '14',
+    'subscription_data[metadata][plan_id]': planId,
+    'subscription_data[metadata][billing]': billing,
+  };
+  if (body.email) params.customer_email = body.email.toString().slice(0, 320);
+
+  const session = await stripeRequest(secretKey, '/checkout/sessions', params);
+  if (session.error) return json({ error: session.error.message }, 500);
+
+  return json({ url: session.url, sessionId: session.id });
+}
+
+// POST /api/create-subscription-intent
+// Body: { plan, billing, email? }
+// Creates a Stripe Customer + SetupIntent so the frontend can collect and save card
+// details without charging. The card is charged after the 14-day trial via activateSubscription.
+async function createSubscriptionIntent(env, request) {
+  const body = await request.json().catch(() => ({}));
+  const planId  = (body.plan    || 'sweetheart').toString().toLowerCase();
+  const billing = (body.billing || 'monthly').toString().toLowerCase();
+  const email   = (body.email   || '').toString().slice(0, 320);
+
+  if (!LOVEFLIX_PLANS[planId]) return json({ error: 'invalid_plan' }, 400);
+  if (billing !== 'monthly' && billing !== 'yearly') return json({ error: 'invalid_billing' }, 400);
+
+  const secretKey = env.STRIPE_SECRET_KEY;
+  if (!secretKey) return json({ error: 'stripe_not_configured' }, 500);
+
+  // Create a Customer so we can attach the payment method and create a subscription.
+  const customerParams = { 'metadata[plan_id]': planId, 'metadata[billing]': billing };
+  if (email) customerParams.email = email;
+  const customer = await stripeRequest(secretKey, '/customers', customerParams);
+  if (customer.error) return json({ error: customer.error.message }, 500);
+
+  // SetupIntent: saves the card with no charge. usage=off_session so it can charge
+  // automatically after the trial ends.
+  const setup = await stripeRequest(secretKey, '/setup_intents', {
+    customer: customer.id,
+    usage: 'off_session',
+    'automatic_payment_methods[enabled]': 'true',
+    'metadata[plan_id]': planId,
+    'metadata[billing]': billing,
+  });
+  if (setup.error) return json({ error: setup.error.message }, 500);
+
+  return json({
+    clientSecret:    setup.client_secret,
+    customerId:      customer.id,
+    setupIntentId:   setup.id,
+    publishableKey:  env.STRIPE_PUBLISHABLE_KEY || '',
+    planId,
+    billing,
+  });
+}
+
+// POST /api/activate-subscription
+// Body: { setupIntentId, customerId, planId, billing }
+// Called after the frontend successfully confirms the SetupIntent.
+// Retrieves the saved payment method and creates the subscription with a trial.
+async function activateSubscription(env, request) {
+  const body = await request.json().catch(() => ({}));
+  const { setupIntentId, customerId, planId, billing } = body;
+
+  if (!setupIntentId || !customerId) return json({ error: 'missing_fields' }, 400);
+
+  const safeId      = LOVEFLIX_PLANS[planId] ? planId : 'sweetheart';
+  const safeBilling = billing === 'yearly' ? 'yearly' : 'monthly';
+
+  const secretKey = env.STRIPE_SECRET_KEY;
+  if (!secretKey) return json({ error: 'stripe_not_configured' }, 500);
+
+  const priceEnvKey = `STRIPE_PRICE_${safeId.toUpperCase()}_${safeBilling.toUpperCase()}`;
+  const priceId = env[priceEnvKey];
+  if (!priceId) return json({ error: 'price_not_configured', key: priceEnvKey }, 500);
+
+  // Fetch the SetupIntent to get the confirmed payment method.
+  const setup = await stripeRequest(secretKey, `/setup_intents/${setupIntentId}`);
+  if (setup.error) return json({ error: setup.error.message }, 500);
+  if (setup.status !== 'succeeded') return json({ error: 'setup_intent_not_succeeded', status: setup.status }, 400);
+
+  const paymentMethodId = setup.payment_method;
+
+  // Attach payment method as the customer's default for future charges.
+  await stripeRequest(secretKey, `/customers/${customerId}`, {
+    'invoice_settings[default_payment_method]': paymentMethodId,
+  });
+
+  // Create the subscription — trial starts now, card charged on day 15.
+  const sub = await stripeRequest(secretKey, '/subscriptions', {
+    customer: customerId,
+    'items[0][price]': priceId,
+    'trial_period_days': '14',
+    default_payment_method: paymentMethodId,
+    'metadata[plan_id]': safeId,
+    'metadata[billing]': safeBilling,
+  });
+  if (sub.error) return json({ error: sub.error.message }, 500);
+
+  // Persist to D1 if available.
+  if (env.DB) {
+    await env.DB.prepare(
+      `INSERT INTO subscriptions (customer_id, subscription_id, plan_id, billing, status, created_at)
+       VALUES (?, ?, ?, ?, 'trialing', strftime('%s','now'))
+       ON CONFLICT(customer_id) DO UPDATE SET
+         subscription_id = excluded.subscription_id,
+         plan_id = excluded.plan_id,
+         billing = excluded.billing,
+         status  = 'trialing'`
+    ).bind(customerId, sub.id, safeId, safeBilling).run().catch(() => null);
+  }
+
+  return json({ subscriptionId: sub.id, status: sub.status, trialEnd: sub.trial_end });
+}
+
+// POST /api/create-payment-intent — kept for backwards compatibility with checkout.html
 async function createPaymentIntent(env, request) {
   const body = await request.json().catch(() => ({}));
   const planId = (body.plan || '').toString().toLowerCase();
   const plan = LOVEFLIX_PLANS[planId];
   if (!plan) return json({ error: 'invalid_plan' }, 400);
 
-  const id = `pi_test_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-  const clientSecret = `${id}_secret_${Math.random().toString(36).slice(2, 16)}`;
+  const secretKey = env.STRIPE_SECRET_KEY;
+  if (!secretKey) return json({ error: 'stripe_not_configured' }, 500);
+
+  const pi = await stripeRequest(secretKey, '/payment_intents', {
+    amount: plan.price,
+    currency: 'usd',
+    'automatic_payment_methods[enabled]': 'true',
+    'metadata[plan_id]': planId,
+  });
+  if (pi.error) return json({ error: pi.error.message }, 500);
+
   return json({
-    clientSecret,
-    paymentIntentId: id,
+    clientSecret: pi.client_secret,
+    paymentIntentId: pi.id,
     amount: plan.price,
     currency: 'usd',
     plan: { id: planId, name: plan.name, display: plan.display },
-    testMode: true,
   });
 }
 
-function getMockSubscription() {
-  // Mock data — real Stripe wiring lands in follow-up.
-  const next = new Date();
-  next.setMonth(next.getMonth() + 1);
-  return json({
-    plan: { id: 'sweetheart', name: 'Sweetheart', price: 1200, display: '$12', cycle: 'monthly' },
-    status: 'active',
-    cancelAtPeriodEnd: false,
-    currentPeriodEnd: Math.floor(next.getTime() / 1000),
-    paymentMethod: { brand: 'visa', last4: '4242', expMonth: 12, expYear: 2029 },
-    testMode: true,
-  });
+// POST /api/stripe-webhook
+async function handleStripeWebhook(env, request) {
+  const secretKey = env.STRIPE_SECRET_KEY;
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
+  if (!secretKey) return json({ error: 'stripe_not_configured' }, 500);
+
+  const payload = await request.text();
+  const sig = request.headers.get('stripe-signature') || '';
+
+  // Verify webhook signature if secret is configured.
+  if (webhookSecret) {
+    const valid = await verifyStripeSignature(payload, sig, webhookSecret);
+    if (!valid) return json({ error: 'invalid_signature' }, 400);
+  }
+
+  let event;
+  try { event = JSON.parse(payload); } catch { return json({ error: 'invalid_json' }, 400); }
+
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      // Provision access: store subscription info in D1 if DB is available.
+      if (env.DB && session.customer && session.subscription) {
+        await env.DB.prepare(
+          `INSERT INTO subscriptions (customer_id, subscription_id, plan_id, billing, status, created_at)
+           VALUES (?, ?, ?, ?, 'active', strftime('%s','now'))
+           ON CONFLICT(customer_id) DO UPDATE SET
+             subscription_id = excluded.subscription_id,
+             plan_id = excluded.plan_id,
+             billing = excluded.billing,
+             status = 'active'`
+        ).bind(
+          session.customer,
+          session.subscription,
+          session.metadata?.plan_id || 'sweetheart',
+          session.metadata?.billing || 'monthly',
+        ).run().catch(() => null); // table may not exist yet — non-fatal
+      }
+      break;
+    }
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object;
+      if (env.DB && sub.customer) {
+        await env.DB.prepare(
+          `UPDATE subscriptions SET status = 'canceled' WHERE customer_id = ?`
+        ).bind(sub.customer).run().catch(() => null);
+      }
+      break;
+    }
+  }
+
+  return json({ received: true });
+}
+
+async function verifyStripeSignature(payload, sigHeader, secret) {
+  try {
+    const parts = Object.fromEntries(sigHeader.split(',').map(p => p.split('=')));
+    const timestamp = parts['t'];
+    const signature = parts['v1'];
+    if (!timestamp || !signature) return false;
+
+    const signedPayload = `${timestamp}.${payload}`;
+    const key = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
+    const computed = [...new Uint8Array(mac)].map(b => b.toString(16).padStart(2, '0')).join('');
+    return computed === signature;
+  } catch { return false; }
+}
+
+// GET /api/billing/subscription — returns active subscription for authenticated user
+async function getBillingSubscription(env, request) {
+  const secretKey = env.STRIPE_SECRET_KEY;
+  if (!secretKey) return json({ error: 'stripe_not_configured' }, 500);
+
+  // Try to look up from DB by user auth.
+  const user = await authenticate(request, env).catch(() => null);
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  if (env.DB) {
+    const row = await env.DB.prepare(
+      `SELECT subscription_id, plan_id, billing, status FROM subscriptions WHERE customer_id = ?`
+    ).bind(user.id).first().catch(() => null);
+
+    if (row && row.subscription_id) {
+      const sub = await stripeRequest(secretKey, `/subscriptions/${row.subscription_id}`);
+      if (!sub.error) {
+        const planInfo = LOVEFLIX_PLANS[row.plan_id] || LOVEFLIX_PLANS.sweetheart;
+        return json({
+          plan: { id: row.plan_id, name: planInfo.name, price: planInfo.price, display: planInfo.display, cycle: row.billing },
+          status: sub.status,
+          cancelAtPeriodEnd: sub.cancel_at_period_end,
+          currentPeriodEnd: sub.current_period_end,
+        });
+      }
+    }
+  }
+
+  return json({ status: 'none' });
 }
