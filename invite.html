@@ -214,6 +214,8 @@
 
   async function ensureCoupleId() {
     if (coupleId) return coupleId;
+    // Refresh the Supabase token if it has expired
+    await LoveFlix.ensureFreshToken();
     // Check couple_members for this user
     const res = await fetch(`${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`, { headers: sbHeaders() });
     if (res.ok) {
@@ -227,7 +229,10 @@
       headers: sbHeaders({ Prefer: 'return=representation' }),
       body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin' }),
     });
-    if (!ins.ok) throw new Error('Could not create couple record.');
+    if (!ins.ok) {
+      const errBody = await ins.json().catch(() => ({}));
+      throw new Error(errBody.message || errBody.hint || errBody.error_description || `Could not create couple record (${ins.status}).`);
+    }
     coupleId = newCoupleId;
     localStorage.setItem('loveflix_couple_id', coupleId);
     return coupleId;
@@ -329,6 +334,7 @@
     btn.disabled = true;
     btn.textContent = 'Generating…';
     try {
+      await LoveFlix.ensureFreshToken();
       await ensureCoupleId();
       const token = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
