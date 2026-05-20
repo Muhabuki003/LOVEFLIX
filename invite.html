@@ -335,7 +335,7 @@
       const res = await fetch(`${SB_URL}/rest/v1/couple_invites`, {
         method: 'POST',
         headers: sbHeaders({ Prefer: 'return=representation' }),
-        body: JSON.stringify({ couple_id: coupleId, token, expires_at: expiresAt, used: false }),
+        body: JSON.stringify({ couple_id: coupleId, token, expires_at: expiresAt, used: false, created_by: userId }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
