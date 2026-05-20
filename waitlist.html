@@ -87,9 +87,16 @@
     .nf-logo{font-size:32px}
     main{padding:20px 20px 80px}
   }
+  /* LoveConnect feature strip */
+  .feat-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;opacity:0;transform:translateY(8px);animation:rise 1s .65s cubic-bezier(.2,.7,.2,1) forwards}
+  .feat-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);font-size:12px;color:var(--text-light);font-weight:500;letter-spacing:.01em}
+  .feat-chip svg{width:12px;height:12px;fill:var(--text-dim);flex-shrink:0}
+  .feat-chip--rose{border-color:rgba(255,95,143,0.3);color:#ff8aa6}
+  .feat-chip--rose svg{fill:#ff5f8f}
+
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
-    .eyebrow,h1.title,p.tagline,form,.foot{opacity:1;transform:none}
+    .eyebrow,h1.title,p.tagline,.feat-strip,form,.foot{opacity:1;transform:none}
   }
 
   /* ===== L intro overlay ===== */
@@ -336,7 +343,22 @@
       <div id="form-block">
         <div class="eyebrow">♥ A streaming service of two</div>
         <h1 class="title">Your private cinema,<br><span class="accent">built for two.</span></h1>
-        <p class="tagline">Upload your videos, photos, voice notes — every moment that mattered. Loveflix turns them into a private streaming site that looks like the real thing.</p>
+        <p class="tagline">Upload your videos, photos, voice notes — every moment that mattered. LoveFlix turns them into a private streaming site, complete with LoveConnect: a live map that shows you're never truly apart.</p>
+
+        <div class="feat-strip" aria-hidden="true">
+          <span class="feat-chip">
+            <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+            Private streaming
+          </span>
+          <span class="feat-chip feat-chip--rose">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 12h20M12 2c-2.8 2.8-4.4 6.3-4.4 10s1.6 7.2 4.4 10M12 2c2.8 2.8 4.4 6.3 4.4 10S14.8 19.2 12 22" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            LoveConnect map
+          </span>
+          <span class="feat-chip">
+            <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            One-tap video calls
+          </span>
+        </div>
 
         <div class="counter-pill" id="waitlist-counter" aria-live="polite">
           <span class="counter-dot" aria-hidden="true"></span>
@@ -366,7 +388,7 @@
       </div>
       <div class="check-row"><svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> You're on the list</div>
       <h2 id="success-title">Welcome to <span class="accent">Loveflix.</span></h2>
-      <p>We've saved your spot. You'll get an email the moment we go live — be ready to make her cry, in a good way.</p>
+      <p>We've saved your spot. You'll be first to access private streaming, the LoveConnect live map, encrypted video calls, and everything else we're building — be ready to make her cry, in a good way.</p>
       <button type="button" class="btn btn-primary btn-lg" id="success-ok" style="min-width:180px">Got it</button>
     </div>
   </div>
