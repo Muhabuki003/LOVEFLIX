@@ -30,6 +30,7 @@
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
     try { localStorage.removeItem('loveflix_couple_id'); } catch (_) {}
+    try { localStorage.removeItem('loveflix_creator_id'); } catch (_) {}
   }
 
   // Silently refresh the access token using the stored refresh token.
@@ -352,6 +353,10 @@
     const headers = Object.assign({}, opts.headers || {});
     const token = getToken();
     if (token) headers['authorization'] = `Bearer ${token}`;
+    // Forward the couple creator's id so the worker resolves the right tenant
+    // when the logged-in user is the partner rather than the admin/creator.
+    const creatorId = getCreatorId();
+    if (creatorId) headers['x-tenant-id'] = creatorId;
     if (opts.body && !(opts.body instanceof FormData) && !headers['content-type']) {
       headers['content-type'] = 'application/json';
     }
@@ -448,6 +453,11 @@
     catch { return null; }
   }
 
+  function getCreatorId() {
+    try { return localStorage.getItem('loveflix_creator_id') || null; }
+    catch { return null; }
+  }
+
   // After sign-in, look up the couple row for this user and cache its id +
   // billing-owner flag. Best-effort: failures are silent (the worker also
   // derives couple_id from the user on the server side).
@@ -457,7 +467,7 @@
     if (!userId || !token) return;
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id,is_billing_owner&limit=1`,
+        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id,is_billing_owner,role&limit=1`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -468,9 +478,27 @@
       if (!res.ok) return;
       const rows = await res.json();
       const row = rows && rows[0];
-      if (row && row.couple_id) localStorage.setItem('loveflix_couple_id', row.couple_id);
-      if (row && typeof row.is_billing_owner === 'boolean') {
+      if (!row) return;
+      if (row.couple_id) localStorage.setItem('loveflix_couple_id', row.couple_id);
+      if (typeof row.is_billing_owner === 'boolean') {
         localStorage.setItem('loveflix_is_billing_owner', row.is_billing_owner ? '1' : '0');
+      }
+      // Cache the creator's (admin's) user_id so every API call targets the
+      // shared couple tenant regardless of which partner is signed in.
+      if (row.role === 'admin') {
+        localStorage.setItem('loveflix_creator_id', userId);
+      } else if (row.couple_id) {
+        try {
+          const r2 = await fetch(
+            `${SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${row.couple_id}&role=eq.admin&select=user_id&limit=1`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } }
+          );
+          if (r2.ok) {
+            const admins = await r2.json();
+            const admin = admins && admins[0];
+            if (admin && admin.user_id) localStorage.setItem('loveflix_creator_id', admin.user_id);
+          }
+        } catch (_) {}
       }
     } catch (_) {}
   }
@@ -543,6 +571,7 @@
     ensureFreshToken,
     getUserId,
     getCoupleId,
+    getCreatorId,
     cacheCoupleId,
     getUserRole,
     isBillingOwnerCached,
