@@ -248,10 +248,12 @@
 
 <script src="assets/loveflix.js"></script>
 <script>
-  // If already signed in, skip the login screen.
+  // If already signed in, skip the login screen. Anyone who's part of a
+  // couple (admin or partner) goes to the profile selector; brand-new users
+  // with no couple_members row yet go through onboarding.
   if (LoveFlix.getToken()) {
     LoveFlix.getUserRole().then(role => {
-      location.replace(role === 'partner' ? 'whos_watching.html' : 'intro.html');
+      location.replace(role ? 'whos_watching.html' : 'intro.html');
     });
   }
 
@@ -287,7 +289,7 @@
       await LoveFlix.signIn(email, pw);
       showErr('💕 Welcome back. Loading your memories...', 'ok');
       const role = await LoveFlix.getUserRole();
-      setTimeout(() => location.replace(role === 'partner' ? 'whos_watching.html' : 'intro.html'), 600);
+      setTimeout(() => location.replace(role ? 'whos_watching.html' : 'intro.html'), 600);
     } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Sign In';

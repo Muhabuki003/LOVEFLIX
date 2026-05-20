@@ -448,16 +448,16 @@
     catch { return null; }
   }
 
-  // After sign-in, look up the couple row for this user and cache its id so
-  // uploads can attach to the correct couple. Best-effort: failures are silent
-  // (the worker also derives couple_id from the user on the server side).
+  // After sign-in, look up the couple row for this user and cache its id +
+  // billing-owner flag. Best-effort: failures are silent (the worker also
+  // derives couple_id from the user on the server side).
   async function cacheCoupleId() {
     const userId = getUserId();
     const token = getToken();
     if (!userId || !token) return;
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`,
+        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id,is_billing_owner&limit=1`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -467,9 +467,52 @@
       );
       if (!res.ok) return;
       const rows = await res.json();
-      const id = rows && rows[0] && rows[0].couple_id;
-      if (id) localStorage.setItem('loveflix_couple_id', id);
+      const row = rows && rows[0];
+      if (row && row.couple_id) localStorage.setItem('loveflix_couple_id', row.couple_id);
+      if (row && typeof row.is_billing_owner === 'boolean') {
+        localStorage.setItem('loveflix_is_billing_owner', row.is_billing_owner ? '1' : '0');
+      }
     } catch (_) {}
+  }
+
+  function isBillingOwnerCached() {
+    return localStorage.getItem('loveflix_is_billing_owner') === '1';
+  }
+
+  // Authoritative check — pings Supabase and refreshes the cache. Use this on
+  // billing pages before enabling any subscription-mutating UI.
+  async function fetchIsBillingOwner() {
+    const userId = getUserId();
+    const token = getToken();
+    if (!userId || !token) return false;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=is_billing_owner&limit=1`,
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) return isBillingOwnerCached();
+      const rows = await res.json();
+      const flag = !!(rows && rows[0] && rows[0].is_billing_owner);
+      localStorage.setItem('loveflix_is_billing_owner', flag ? '1' : '0');
+      return flag;
+    } catch { return isBillingOwnerCached(); }
+  }
+
+  // Fetch both members of the current user's couple. Returns
+  // [{ user_id, display_name, role, is_billing_owner }, ...] (1 or 2 rows).
+  async function fetchCoupleMembers() {
+    const token = getToken();
+    const coupleId = getCoupleId();
+    if (!token || !coupleId) return [];
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&select=user_id,display_name,role,is_billing_owner`,
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) return [];
+      const rows = await res.json();
+      return Array.isArray(rows) ? rows : [];
+    } catch { return []; }
   }
 
   async function getUserRole() {
@@ -502,6 +545,9 @@
     getCoupleId,
     cacheCoupleId,
     getUserRole,
+    isBillingOwnerCached,
+    fetchIsBillingOwner,
+    fetchCoupleMembers,
     getUser,
     setSession,
     clearSession,
