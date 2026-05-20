@@ -6,6 +6,7 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
 
   const TOKEN_KEY = 'loveflix_token';
+  const REFRESH_KEY = 'loveflix_refresh_token';
   const USER_KEY = 'loveflix_user';
   const SETTINGS_KEY = 'loveflix_settings';
   // Mirror of settings written while unauthenticated (e.g. signup before email
@@ -19,14 +20,52 @@
   function getToken() {
     return localStorage.getItem(TOKEN_KEY) || '';
   }
-  function setSession({ access_token, user }) {
+  function setSession({ access_token, refresh_token, user }) {
     if (access_token) localStorage.setItem(TOKEN_KEY, access_token);
+    if (refresh_token) localStorage.setItem(REFRESH_KEY, refresh_token);
     if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
   function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
     try { localStorage.removeItem('loveflix_couple_id'); } catch (_) {}
+  }
+
+  // Silently refresh the access token using the stored refresh token.
+  // Returns true on success, false if there's nothing to refresh with.
+  async function refreshSession() {
+    const rt = localStorage.getItem(REFRESH_KEY);
+    if (!rt) return false;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', apikey: SUPABASE_ANON_KEY },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      if (!res.ok) { clearSession(); return false; }
+      const data = await res.json();
+      setSession(data);
+      return true;
+    } catch { return false; }
+  }
+
+  // Returns true if the stored access token is still valid (not expired).
+  function isTokenFresh() {
+    const token = getToken();
+    if (!token) return false;
+    try {
+      const { exp } = JSON.parse(atob(token.split('.')[1]));
+      // Treat as expired 60s early to avoid races
+      return exp * 1000 > Date.now() + 60000;
+    } catch { return false; }
+  }
+
+  // Ensures a fresh access token is in localStorage; refreshes if needed.
+  // Call before any authenticated Supabase REST request.
+  async function ensureFreshToken() {
+    if (isTokenFresh()) return;
+    await refreshSession();
   }
   function getUser() {
     try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); }
@@ -457,6 +496,8 @@
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
     getToken,
+    refreshSession,
+    ensureFreshToken,
     getUserId,
     getCoupleId,
     cacheCoupleId,
