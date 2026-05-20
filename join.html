@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Join Your Partner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',system-ui,sans-serif;background:#000;color:#fff;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  .bg-collage{position:fixed;inset:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:3px;opacity:.28;filter:blur(2px);z-index:0;transform:scale(1.05);pointer-events:none}
+  .bg-tile{position:relative;overflow:hidden}.bg-tile::after{content:'';position:absolute;inset:0;background:var(--c);opacity:.6}
+  .t1{--c:linear-gradient(135deg,#ff5f8f,#5a0a23)}.t2{--c:linear-gradient(135deg,#1a1a4e,#0d0d2b)}.t3{--c:linear-gradient(135deg,#2d1b0e,#5c3317)}.t4{--c:linear-gradient(135deg,#0e1a2d,#112240)}.t5{--c:linear-gradient(135deg,#1a0a0a,#3d1515)}.t6{--c:linear-gradient(135deg,#0d1b0d,#1a3a1a)}.t7{--c:linear-gradient(135deg,#2b0d2b,#4a1a4a)}.t8{--c:linear-gradient(135deg,#1a1000,#3d2d00)}.t9{--c:linear-gradient(135deg,#0a0a1a,#1a1a3d)}.t10{--c:linear-gradient(135deg,#1a0505,#3d0f0f)}.t11{--c:linear-gradient(135deg,#05100a,#0f2d1a)}.t12{--c:linear-gradient(135deg,#15051a,#2b0a3d)}.t13{--c:linear-gradient(135deg,#ff5f8f,#5a0a23)}.t14{--c:linear-gradient(135deg,#0d0d3d,#1a1a5c)}.t15{--c:linear-gradient(135deg,#1a0a00,#3d2000)}
+  .bg-overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.45) 0%,rgba(0,0,0,.88) 100%);z-index:1;pointer-events:none}
+
+  nav{position:fixed;top:0;left:0;right:0;padding:24px 48px;z-index:10;display:flex;align-items:center}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:38px;color:#e50914;letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:24px;vertical-align:middle;margin:0 2px;transform:translateY(-2px);display:inline-block}
+
+  .page{position:relative;z-index:5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 24px 60px}
+
+  .card{background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:52px 60px 44px;width:100%;max-width:460px;backdrop-filter:blur(6px);animation:fadeUp .45s ease forwards}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+  /* state panels */
+  .state{display:none}.state.active{display:block}
+
+  /* error state */
+  .err-icon{width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(248,113,113,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#f87171}
+  .err-icon svg{width:32px;height:32px;fill:currentColor}
+  .err-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;text-align:center;margin-bottom:10px}
+  .err-sub{font-size:14px;color:#a3a3a3;text-align:center;line-height:1.5}
+
+  /* signup form */
+  .eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#ff5f8f;font-weight:700;margin-bottom:14px}
+  .invite-from{font-size:14px;color:#cfcfcf;margin-bottom:28px;line-height:1.5}
+  .invite-from strong{color:#fff}
+  h1{font-size:28px;font-weight:700;margin-bottom:24px;letter-spacing:-.3px}
+
+  .form-group{position:relative;margin-bottom:14px}
+  .form-group input{width:100%;height:54px;background:#222;border:1px solid #333;border-radius:4px;padding:20px 16px 6px;font-size:15px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s,background .15s;caret-color:#fff}
+  .form-group input:focus{background:#2a2a2a;border-color:#666}
+  .form-group label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;color:#6b6b6b;pointer-events:none;transition:top .15s ease,transform .15s ease,font-size .15s ease;transform-origin:left top}
+  .form-group input:focus+label,.form-group input:not(:placeholder-shown)+label{top:8px;transform:translateY(0) scale(.74);color:#8c8c8c}
+  .form-group input::placeholder{color:transparent}
+
+  .btn-join{width:100%;height:50px;background:#e50914;color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-top:6px;transition:background .15s,transform .1s}
+  .btn-join:hover{background:#f40612}.btn-join:active{transform:scale(.99)}
+  .btn-join.loading{background:#b0070f;cursor:not-allowed;position:relative;overflow:hidden}
+  .btn-join.loading::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:shimmer 1s infinite}
+  @keyframes shimmer{to{left:100%}}
+
+  .error-msg{background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:14px;display:none;line-height:1.4}
+  .error-msg.show{display:block}
+
+  .terms-note{font-size:11px;color:#555;margin-top:14px;line-height:1.5;text-align:center}
+
+  /* success state */
+  .suc-ring{width:100px;height:100px;border-radius:50%;border:1.5px solid rgba(255,95,143,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;position:relative}
+  .suc-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(255,95,143,.2);animation:ringPulse 1.8s ease-in-out infinite}
+  .suc-check{width:46px;height:46px}
+  .suc-check path{stroke:#ff5f8f;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:drawCheck .5s .2s ease forwards}
+  @keyframes ringPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.15);opacity:0}}
+  @keyframes drawCheck{to{stroke-dashoffset:0}}
+  .suc-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff5f8f;font-weight:600;text-align:center;margin-bottom:10px}
+  .suc-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:2px;text-align:center;line-height:1;margin-bottom:14px}
+  .suc-sub{font-size:14px;color:#cfcfcf;text-align:center;line-height:1.55;margin-bottom:28px}
+  .btn-enter{display:block;width:100%;height:50px;background:#e50914;color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;text-align:center;line-height:50px;transition:background .15s}
+  .btn-enter:hover{background:#f40612}
+</style>
+</head>
+<body>
+
+<div class="bg-collage" aria-hidden="true">
+  <div class="bg-tile t1"></div><div class="bg-tile t2"></div><div class="bg-tile t3"></div><div class="bg-tile t4"></div><div class="bg-tile t5"></div>
+  <div class="bg-tile t6"></div><div class="bg-tile t7"></div><div class="bg-tile t8"></div><div class="bg-tile t9"></div><div class="bg-tile t10"></div>
+  <div class="bg-tile t11"></div><div class="bg-tile t12"></div><div class="bg-tile t13"></div><div class="bg-tile t14"></div><div class="bg-tile t15"></div>
+</div>
+<div class="bg-overlay"></div>
+
+<nav>
+  <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
+</nav>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Loading skeleton -->
+    <div class="state active" id="stateLoading">
+      <div style="text-align:center;color:#555;font-size:13px;padding:40px 0">Checking your invite…</div>
+    </div>
+
+    <!-- Error state -->
+    <div class="state" id="stateError">
+      <div class="err-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+      <div class="err-title" id="errTitle">Link Not Valid</div>
+      <div class="err-sub" id="errSub">This invite link has expired or already been used. Contact your partner to get a new one.</div>
+    </div>
+
+    <!-- Signup form -->
+    <div class="state" id="stateSignup">
+      <div class="eyebrow">You're invited ♥</div>
+      <p class="invite-from" id="inviteFrom">Your partner has created a private streaming site for you.</p>
+      <h1>Create your account</h1>
+      <div class="error-msg" id="errMsg"></div>
+      <div class="form-group">
+        <input type="text" id="nameInput" placeholder=" " autocomplete="name">
+        <label for="nameInput">Your display name</label>
+      </div>
+      <div class="form-group">
+        <input type="email" id="emailInput" placeholder=" " autocomplete="email">
+        <label for="emailInput">Email address</label>
+      </div>
+      <div class="form-group">
+        <input type="password" id="pwInput" placeholder=" " autocomplete="new-password">
+        <label for="pwInput">Create a password</label>
+      </div>
+      <button class="btn-join" id="joinBtn" type="button">Join LoveFlix →</button>
+      <p class="terms-note">By joining you agree to our <a href="#" style="color:#777">Terms</a> and <a href="#" style="color:#777">Privacy Policy</a>.</p>
+    </div>
+
+    <!-- Success state -->
+    <div class="state" id="stateSuccess">
+      <div class="suc-ring">
+        <svg class="suc-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
+      </div>
+      <div class="suc-eyebrow">You're in</div>
+      <h2 class="suc-title">Welcome to<br>LoveFlix.</h2>
+      <p class="suc-sub">Your account is ready. You and your partner are now connected on the map.</p>
+      <a class="btn-enter" href="whos_watching.html">Enter LoveFlix →</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(async function() {
+  const SB_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
+
+  function sbHeaders(extra) {
+    return Object.assign({ apikey: SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+  }
+
+  function show(id) {
+    ['stateLoading','stateError','stateSignup','stateSuccess'].forEach(s => {
+      document.getElementById(s).classList.toggle('active', s === id);
+    });
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('errMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  const token = new URLSearchParams(location.search).get('token');
+  if (!token) {
+    document.getElementById('errTitle').textContent = 'No Invite Found';
+    document.getElementById('errSub').textContent = 'This link is missing an invite token. Ask your partner to resend the invite.';
+    show('stateError');
+    return;
+  }
+
+  // Validate the token
+  let invite = null;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/couple_invites?token=eq.${token}&used=eq.false&select=*&limit=1`,
+      { headers: sbHeaders() }
+    );
+    if (!res.ok) throw new Error('Network error');
+    const rows = await res.json();
+    if (!rows || !rows[0]) {
+      document.getElementById('errSub').textContent = 'This invite link has already been used or doesn\'t exist. Ask your partner to generate a new one.';
+      show('stateError');
+      return;
+    }
+    invite = rows[0];
+    if (new Date(invite.expires_at) < new Date()) {
+      document.getElementById('errTitle').textContent = 'Invite Expired';
+      document.getElementById('errSub').textContent = 'This invite link expired. Ask your partner to generate a fresh one — it only takes a second.';
+      show('stateError');
+      return;
+    }
+  } catch (e) {
+    document.getElementById('errSub').textContent = 'Could not reach the server. Check your connection and try again.';
+    show('stateError');
+    return;
+  }
+
+  show('stateSignup');
+
+  document.getElementById('joinBtn').addEventListener('click', async () => {
+    const name  = document.getElementById('nameInput').value.trim();
+    const email = document.getElementById('emailInput').value.trim().toLowerCase();
+    const pw    = document.getElementById('pwInput').value;
+    const btn   = document.getElementById('joinBtn');
+
+    document.getElementById('errMsg').classList.remove('show');
+
+    if (!name) { showErr('Please enter a display name.'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
+    if (!pw || pw.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+
+    btn.classList.add('loading');
+    btn.textContent = 'Creating account…';
+
+    try {
+      // 1. Sign up with Supabase Auth
+      const signUpRes = await fetch(`${SB_URL}/auth/v1/signup`, {
+        method: 'POST',
+        headers: sbHeaders(),
+        body: JSON.stringify({ email, password: pw }),
+      });
+      const signUpData = await signUpRes.json();
+      if (!signUpRes.ok) throw new Error(signUpData.error_description || signUpData.msg || 'Sign-up failed');
+      if (!signUpData.access_token) throw new Error('Account created — check your email to confirm before signing in.');
+
+      const accessToken = signUpData.access_token;
+      const newUserId = signUpData.user && signUpData.user.id;
+
+      const authHeaders = sbHeaders({ Authorization: `Bearer ${accessToken}` });
+
+      // 2. Insert couple_members row
+      await fetch(`${SB_URL}/rest/v1/couple_members`, {
+        method: 'POST',
+        headers: Object.assign({}, authHeaders, { Prefer: 'return=minimal' }),
+        body: JSON.stringify({
+          couple_id: invite.couple_id,
+          user_id: newUserId,
+          role: 'partner',
+          display_name: name,
+        }),
+      });
+
+      // 3. Mark invite used
+      await fetch(`${SB_URL}/rest/v1/couple_invites?token=eq.${token}`, {
+        method: 'PATCH',
+        headers: Object.assign({}, authHeaders, { Prefer: 'return=minimal' }),
+        body: JSON.stringify({ used: true, accepted_by: newUserId }),
+      });
+
+      // 4. Store session + unlock gate so subsequent pages pass
+      try {
+        localStorage.setItem('loveflix_token', accessToken);
+        if (signUpData.user) localStorage.setItem('loveflix_user', JSON.stringify(signUpData.user));
+        localStorage.setItem('loveflix_couple_id', invite.couple_id);
+        localStorage.setItem('loveflix_access', '1');
+        localStorage.setItem('lf_access', '1');
+      } catch (_) {}
+
+      show('stateSuccess');
+
+    } catch (e) {
+      btn.classList.remove('loading');
+      btn.textContent = 'Join LoveFlix →';
+      const msg = (e.message || '').toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('confirm')) {
+        show('stateSuccess');
+      } else if (msg.includes('already registered') || msg.includes('duplicate')) {
+        showErr('That email already has an account. Try signing in instead.');
+      } else {
+        showErr(e.message || 'Something went wrong. Try again.');
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

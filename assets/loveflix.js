@@ -418,7 +418,7 @@
     if (!userId || !token) return;
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/couples?or=(user1_id.eq.${userId},user2_id.eq.${userId})&select=id`,
+        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -428,9 +428,29 @@
       );
       if (!res.ok) return;
       const rows = await res.json();
-      const id = rows && rows[0] && rows[0].id;
+      const id = rows && rows[0] && rows[0].couple_id;
       if (id) localStorage.setItem('loveflix_couple_id', id);
     } catch (_) {}
+  }
+
+  async function getUserRole() {
+    const userId = getUserId();
+    const token = getToken();
+    if (!userId || !token) return null;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=role&limit=1`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return (rows && rows[0] && rows[0].role) || null;
+    } catch { return null; }
   }
 
   global.LoveFlix = {
@@ -440,6 +460,7 @@
     getUserId,
     getCoupleId,
     cacheCoupleId,
+    getUserRole,
     getUser,
     setSession,
     clearSession,

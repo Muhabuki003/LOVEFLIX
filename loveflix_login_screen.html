@@ -249,7 +249,11 @@
 <script src="assets/loveflix.js"></script>
 <script>
   // If already signed in, skip the login screen.
-  if (LoveFlix.getToken()) location.replace('intro.html');
+  if (LoveFlix.getToken()) {
+    LoveFlix.getUserRole().then(role => {
+      location.replace(role === 'partner' ? 'whos_watching.html' : 'intro.html');
+    });
+  }
 
   function togglePw() {
     const input = document.getElementById('pwInput');
@@ -282,7 +286,8 @@
     try {
       await LoveFlix.signIn(email, pw);
       showErr('💕 Welcome back. Loading your memories...', 'ok');
-      setTimeout(() => location.replace('intro.html'), 600);
+      const role = await LoveFlix.getUserRole();
+      setTimeout(() => location.replace(role === 'partner' ? 'whos_watching.html' : 'intro.html'), 600);
     } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Sign In';
