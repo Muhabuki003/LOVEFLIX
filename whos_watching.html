@@ -652,12 +652,16 @@
 (function() {
   'use strict';
 
-  // Names live in settings (synced from the server). We paint optimistically
-  // from local cache, then re-paint once the server pull resolves so a fresh
-  // session on a new device shows the right names — without the user having
-  // to bounce through settings every time.
+  if (!LoveFlix.requireAuth()) return;
+
+  // Both partners now have full admin access. The profile picker shows two
+  // tiles built from couple_members: your own tile (clickable → admin
+  // dashboard) and your partner's tile (read-only display).
   let partnerName = '';
   let adminName = '';
+  let myUserId = LoveFlix.getUserId();
+  let meIsHis = true; // whether the current user occupies the "his" (blue) tile
+  let partnerTileEl = null; // the tile that represents the partner (not me)
 
   function applyNames(settings) {
     partnerName = settings.partnerName || 'My Love';
@@ -678,7 +682,7 @@
     hisInit.textContent = (adminName[0] || '?').toUpperCase();
     hisNameEl.textContent = adminName;
     hisProfile.dataset.name = adminName;
-    hisProfile.setAttribute('aria-label', 'Select profile ' + adminName + ' (locked)');
+    hisProfile.setAttribute('aria-label', 'Select profile ' + adminName);
 
     const herAv = document.querySelector('#herProfile .avatar');
     if (herAv) {
@@ -700,10 +704,51 @@
         hisInit.style.color = '';
       }
     }
+  }
 
-    document.getElementById('pinSub').textContent =
-      'A 4-digit PIN is required to access ' + adminName + "'s profile.";
-    document.getElementById('successTitle').textContent = 'Welcome back, ' + adminName;
+  // Decide which tile represents the current user based on couple_members.
+  // role='admin' → "his" (blue) tile; role='partner' → "her" (rose) tile.
+  // The other tile gets the view-only treatment.
+  async function resolveIdentity() {
+    const members = await LoveFlix.fetchCoupleMembers();
+    if (!members.length) return;
+
+    const me = members.find(m => m.user_id === myUserId);
+    if (!me) return;
+    meIsHis = me.role !== 'partner';
+
+    const hisTile = document.getElementById('hisProfile');
+    const herTile = document.getElementById('herProfile');
+    partnerTileEl = meIsHis ? herTile : hisTile;
+    const myTile = meIsHis ? hisTile : herTile;
+
+    // Strip the legacy lock chrome from the "his" tile — both partners are
+    // now equal admins, so neither tile is PIN-gated.
+    const lockOverlay = hisTile.querySelector('.lock-overlay');
+    if (lockOverlay) lockOverlay.remove();
+    const lockRow = hisTile.querySelector('.profile-lock-row');
+    if (lockRow) {
+      const nameSpan = lockRow.querySelector('.profile-name');
+      if (nameSpan) lockRow.parentNode.insertBefore(nameSpan, lockRow);
+      lockRow.remove();
+    }
+
+    // Mark "me" and "partner" so the click handler and styling know which is
+    // which. Partner tile becomes read-only (no admin access).
+    myTile.dataset.me = '1';
+    partnerTileEl.dataset.me = '0';
+    partnerTileEl.setAttribute('aria-label',
+      'Partner profile (view only) — ' + (partnerTileEl.dataset.name || ''));
+
+    // Replace the manage-pencil on the partner tile with a "view only" eye
+    // badge so it visually reads as non-interactive.
+    const pencil = partnerTileEl.querySelector('.manage-pencil');
+    if (pencil) {
+      pencil.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>';
+      pencil.style.opacity = '0.85';
+      pencil.style.transform = 'scale(1)';
+      pencil.title = "Your partner's profile";
+    }
   }
 
   // Optimistic paint from cache, then authoritative paint once synced.
@@ -711,126 +756,39 @@
   LoveFlix.ensureSettingsReady().then(applyNames).catch(() => {});
   window.addEventListener('loveflix:settings-changed', () => applyNames(LoveFlix.getSettings()));
 
-  function currentPin() {
-    return (LoveFlix.getSettings().adminPasscode) || '1234';
-  }
-  const overlay = document.getElementById('pinOverlay');
-  const pad = document.getElementById('pinPad');
-  const dotsEl = document.getElementById('pinDots');
-  const dots = [...dotsEl.querySelectorAll('.pin-dot')];
-  const errorEl = document.getElementById('pinError');
-  const cancelBtn = document.getElementById('pinCancel');
-  const successOverlay = document.getElementById('successOverlay');
   const selectorPage = document.getElementById('selectorPage');
 
-  let entry = '';
-  let locked = false;
+  // Resolve which tile is "you" then wire up clicks. While the fetch is in
+  // flight, clicks are buffered as no-ops to avoid the wrong destination.
+  let identityReady = false;
+  resolveIdentity().catch(() => {}).finally(() => { identityReady = true; });
 
-  function renderDots() {
-    dots.forEach((d, i) => d.classList.toggle('filled', i < entry.length));
-  }
-  function clearError() {
-    dotsEl.classList.remove('error');
-    errorEl.classList.remove('show');
-  }
-  function reset() {
-    entry = '';
-    renderDots();
-    clearError();
-  }
-  function openPin() {
-    reset();
-    overlay.classList.add('active');
+  function showPartnerToast(name) {
+    const el = document.createElement('div');
+    el.textContent = "That's " + (name || 'your partner') + "'s profile";
+    el.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);' +
+      'background:rgba(20,20,20,0.92);color:#fff;padding:10px 18px;border-radius:8px;' +
+      'border:1px solid rgba(255,255,255,0.12);font-size:13px;z-index:200;' +
+      'box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;transition:opacity .2s';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
     setTimeout(() => {
-      const first = pad.querySelector('.pin-key:not(.ghost)');
-      if (first) first.focus();
-    }, 200);
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 250);
+    }, 1800);
   }
-  function closePin() {
-    overlay.classList.remove('active');
-    reset();
-  }
-
-  function press(key) {
-    if (locked) return;
-    clearError();
-    if (key === 'back') {
-      entry = entry.slice(0, -1);
-      renderDots();
-      return;
-    }
-    if (entry.length >= 4) return;
-    entry += key;
-    renderDots();
-    if (entry.length === 4) check();
-  }
-
-  function check() {
-    locked = true;
-    if (entry === currentPin()) {
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        successOverlay.classList.add('active');
-        locked = false;
-      }, 250);
-    } else {
-      dotsEl.classList.add('error', 'shake');
-      errorEl.classList.add('show');
-      setTimeout(() => {
-        dotsEl.classList.remove('shake');
-        entry = '';
-        renderDots();
-        locked = false;
-      }, 600);
-    }
-  }
-
-  pad.addEventListener('click', e => {
-    const btn = e.target.closest('.pin-key');
-    if (!btn || btn.classList.contains('ghost')) return;
-    press(btn.dataset.key);
-  });
-
-  document.addEventListener('keydown', e => {
-    if (!overlay.classList.contains('active')) return;
-    if (e.key >= '0' && e.key <= '9') { press(e.key); e.preventDefault(); }
-    else if (e.key === 'Backspace') { press('back'); e.preventDefault(); }
-    else if (e.key === 'Escape') closePin();
-  });
-
-  cancelBtn.addEventListener('click', closePin);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closePin(); });
 
   document.querySelectorAll('.profile').forEach(p => {
     p.addEventListener('click', () => {
-      const which = p.dataset.profile;
-      if (which === 'his') {
-        openPin();
-      } else {
-        try {
-          sessionStorage.setItem('loveflix_profile', partnerName);
-          sessionStorage.setItem('loveflix_is_admin', '0');
-        } catch (_) {}
+      if (!identityReady) return;
+      if (p.dataset.me === '1') {
         selectorPage.classList.add('fade-out');
-        setTimeout(() => { window.location.href = 'home.html'; }, 500);
+        try { sessionStorage.setItem('loveflix_admin_authed', '1'); } catch (_) {}
+        setTimeout(() => { window.location.href = 'admin.html'; }, 350);
+      } else {
+        showPartnerToast(p.dataset.name);
       }
     });
-  });
-
-  document.getElementById('goAdmin').addEventListener('click', () => {
-    try {
-      sessionStorage.setItem('loveflix_profile', adminName);
-      sessionStorage.setItem('loveflix_is_admin', '1');
-      sessionStorage.setItem('loveflix_admin_authed', '1');
-    } catch (_) {}
-    window.location.href = 'admin.html';
-  });
-  document.getElementById('goHome').addEventListener('click', () => {
-    try {
-      sessionStorage.setItem('loveflix_profile', adminName);
-      sessionStorage.setItem('loveflix_is_admin', '1');
-    } catch (_) {}
-    window.location.href = 'home.html';
   });
 
   document.querySelector('.manage-btn').addEventListener('click', () => {

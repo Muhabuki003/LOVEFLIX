@@ -251,7 +251,7 @@
     const ins = await fetch(`${SB_URL}/rest/v1/couple_members`, {
       method: 'POST',
       headers: sbHeaders({ Prefer: 'return=representation' }),
-      body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin' }),
+      body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin', is_billing_owner: true }),
     });
     if (!ins.ok) {
       const errBody = await ins.json().catch(() => ({}));
