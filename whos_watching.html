@@ -86,6 +86,13 @@
     display: inline-block;
     transform: translateY(-2px);
   }
+  .signout-btn {
+    font-size: 14px; color: var(--text-dim); font-weight: 500;
+    background: transparent; border: none; cursor: pointer;
+    font-family: inherit; transition: color 0.18s ease;
+    letter-spacing: 0.5px;
+  }
+  .signout-btn:hover { color: #fff; }
 
   /* ---------- main selector layout ---------- */
   .selector-page {
@@ -93,13 +100,13 @@
     min-height: 100vh;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 60px;
-    padding: 120px 24px 60px;
+    gap: 56px;
+    padding: 120px 24px 80px;
     animation: fadeIn 0.6s ease both;
   }
 
   .selector-title {
-    font-size: clamp(40px, 4.8vw, 64px);
+    font-size: clamp(36px, 4.8vw, 64px);
     font-weight: 300;
     letter-spacing: -0.5px;
     color: #e5e5e5;
@@ -107,35 +114,36 @@
     line-height: 1.1;
   }
 
-  .profiles-row {
+  /* ---------- three-column layout ---------- */
+  .selector-layout {
     display: flex;
-    gap: 36px;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
+    gap: 64px;
   }
 
-  .profile {
-    display: flex; flex-direction: column; align-items: center;
+  /* ---------- decorative couple avatars (non-interactive) ---------- */
+  .couple-avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 14px;
-    cursor: pointer;
-    background: none; border: none;
-    color: inherit; font: inherit;
-    padding: 0;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.55;
   }
 
   .avatar {
-    position: relative;
-    width: 160px; height: 160px;
+    width: 130px; height: 130px;
     border-radius: 8px;
     overflow: hidden;
-    border: 2px solid transparent;
-    transition: border-color 0.18s ease, transform 0.18s ease;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 76px;
+    font-size: 62px;
     letter-spacing: 1px;
     color: rgba(255,255,255,0.92);
     text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+    position: relative;
   }
 
   .avatar.rose {
@@ -149,293 +157,84 @@
       linear-gradient(135deg, #3a7bff 0%, #1d4ed8 55%, #1e3a8a 100%);
   }
 
-  /* heart for her avatar */
   .avatar .heart-mark {
     position: absolute;
-    right: 16px; bottom: 14px;
-    width: 22px; height: 22px;
-    opacity: 0.85;
+    right: 12px; bottom: 10px;
+    width: 18px; height: 18px;
+    opacity: 0.8;
   }
-  /* lock for buki */
-  .avatar .lock-overlay {
-    position: absolute;
-    inset: auto 0 0 auto;
-    margin: 0 10px 10px 0;
-    width: 26px; height: 26px;
-    background: rgba(0,0,0,0.55);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .avatar .lock-overlay svg { width: 14px; height: 14px; fill: #fff; }
-
-  /* manage pencil — top right of avatar, on hover */
-  .manage-pencil {
-    position: absolute;
-    top: 8px; right: 8px;
-    width: 30px; height: 30px;
-    background: rgba(0,0,0,0.7);
-    border: 1px solid rgba(255,255,255,0.85);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transform: scale(0.85);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-    pointer-events: none;
-  }
-  .manage-pencil svg { width: 14px; height: 14px; fill: #fff; }
 
   .profile-name {
-    font-size: 16px;
+    font-size: 14px;
     color: var(--text-dim);
     font-weight: 500;
     letter-spacing: 0.2px;
-    transition: color 0.18s ease;
-  }
-  .profile-lock-row {
-    display: flex; align-items: center; gap: 6px;
-  }
-  .profile-lock-row svg { width: 11px; height: 11px; fill: var(--text-dim); transition: fill 0.18s ease; opacity: 0.85; }
-
-  /* hover */
-  .profile:hover .avatar { border-color: #fff; transform: translateY(-2px); }
-  .profile:hover .profile-name { color: #fff; }
-  .profile:hover .profile-lock-row svg { fill: #fff; }
-  .profile:hover .manage-pencil { opacity: 1; transform: scale(1); }
-  .profile:focus-visible { outline: none; }
-  .profile:focus-visible .avatar { border-color: #fff; }
-  .profile:focus-visible .profile-name { color: #fff; }
-
-  /* manage profiles button */
-  .manage-btn {
-    margin-top: 16px;
-    background: transparent;
-    border: 1px solid var(--text-dim);
-    color: var(--text-dim);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    padding: 11px 26px;
-    cursor: pointer;
-    transition: color 0.18s ease, border-color 0.18s ease;
-  }
-  .manage-btn:hover { color: #fff; border-color: #fff; }
-  .signout-btn {
-    font-size: 14px; color: var(--text-dim); font-weight: 500;
-    background: transparent; border: none; cursor: pointer;
-    font-family: inherit; transition: color 0.18s ease;
-    letter-spacing: 0.5px;
-  }
-  .signout-btn:hover { color: #fff; }
-
-  /* ---------- PIN overlay ---------- */
-  .pin-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.86);
-    z-index: 100;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .pin-overlay.active { opacity: 1; pointer-events: auto; }
-
-  .pin-card {
-    width: 100%; max-width: 520px;
     text-align: center;
-    transform: translateY(8px);
-    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
-  }
-  .pin-overlay.active .pin-card { transform: translateY(0); }
-
-  .pin-eyebrow {
-    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
-    color: var(--text-dim); margin-bottom: 16px;
-  }
-  .pin-title {
-    font-size: clamp(28px, 3vw, 40px);
-    font-weight: 400;
-    color: #fff;
-    margin-bottom: 10px;
-    letter-spacing: -0.3px;
-  }
-  .pin-sub {
-    font-size: 15px;
-    color: var(--text-light);
-    margin-bottom: 36px;
   }
 
-  .pin-dots {
-    display: flex; justify-content: center; gap: 14px;
-    margin-bottom: 28px;
-  }
-  .pin-dot {
-    width: 56px; height: 64px;
-    border-bottom: 2px solid #4a4a4a;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px;
-    font-weight: 500;
-    color: #fff;
-    transition: border-color 0.18s ease, color 0.18s ease;
-  }
-  .pin-dot.filled { border-bottom-color: #fff; }
-  .pin-dot.filled::after {
-    content: '';
-    width: 14px; height: 14px;
-    background: #fff;
-    border-radius: 50%;
-  }
-  .pin-dot.filled { color: transparent; }
-
-  .pin-dots.error .pin-dot { border-bottom-color: var(--red); }
-  .pin-dots.error .pin-dot.filled::after { background: var(--red); }
-  .pin-dots.shake { animation: shake 0.45s cubic-bezier(.36,.07,.19,.97); }
-
-  .pin-error {
-    height: 18px;
-    font-size: 13px;
-    color: var(--red);
-    margin-bottom: 16px;
-    opacity: 0;
-    transition: opacity 0.18s ease;
-  }
-  .pin-error.show { opacity: 1; }
-
-  /* numpad */
-  .pin-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 72px);
-    gap: 14px;
-    justify-content: center;
-    margin-bottom: 24px;
-  }
-  .pin-key {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #fff;
-    font-family: inherit;
-    font-size: 24px;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background 0.15s ease, transform 0.08s ease, border-color 0.15s ease;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .pin-key:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
-  .pin-key:active { transform: scale(0.94); }
-  .pin-key.ghost { background: transparent; border-color: transparent; cursor: default; }
-  .pin-key.ghost:hover { background: transparent; }
-  .pin-key.action { font-size: 18px; color: var(--text-light); }
-
-  .pin-cancel {
-    background: transparent; border: none;
-    color: var(--text-dim);
-    font: inherit; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer;
-    padding: 8px 12px;
-  }
-  .pin-cancel:hover { color: #fff; }
-
-  /* ---------- success state ---------- */
-  .success-overlay {
-    position: fixed; inset: 0;
-    background: #000;
-    z-index: 200;
-    display: flex; align-items: center; justify-content: center;
+  /* ---------- center navigation ---------- */
+  .nav-center {
+    display: flex;
     flex-direction: column;
-    gap: 24px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.4s ease;
+    align-items: center;
+    gap: 14px;
   }
-  .success-overlay.active { opacity: 1; pointer-events: auto; }
 
-  .success-ring {
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    border: 2px solid var(--red);
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-    animation: ringPop 0.6s cubic-bezier(.2,.8,.2,1) both;
-  }
-  .success-ring::before {
-    content: '';
-    position: absolute; inset: -8px;
-    border-radius: 50%;
-    border: 1px solid rgba(229,9,20,0.35);
-    animation: ringPulse 1.6s ease-in-out infinite;
-  }
-  .success-check {
-    width: 56px; height: 56px;
-  }
-  .success-check path {
-    stroke: #fff; stroke-width: 3;
-    fill: none;
-    stroke-linecap: round; stroke-linejoin: round;
-    stroke-dasharray: 60; stroke-dashoffset: 60;
-    animation: drawCheck 0.5s 0.25s ease forwards;
-  }
-  .success-eyebrow {
-    font-size: 11px; letter-spacing: 6px; text-transform: uppercase;
-    color: var(--red); font-weight: 600;
-  }
-  .success-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(48px, 6vw, 84px);
-    letter-spacing: 4px;
-    color: #fff;
-    line-height: 1;
-  }
-  .success-sub {
-    font-size: 15px; color: var(--text-light);
-    max-width: 420px; text-align: center;
-    line-height: 1.5;
-  }
-  .success-actions {
-    display: flex; gap: 12px; margin-top: 8px;
-  }
-  .success-btn {
-    background: var(--red); color: #fff; border: none;
-    font: inherit; font-size: 14px; font-weight: 600;
-    letter-spacing: 1px;
-    padding: 12px 28px; border-radius: 4px;
+  .watch-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 210px;
+    padding: 15px 32px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background 0.18s ease;
+    transition: background 0.18s ease, transform 0.1s ease, border-color 0.18s ease, color 0.18s ease;
+    border: 2px solid transparent;
   }
-  .success-btn:hover { background: #f6121d; }
-  .success-btn.ghost { background: transparent; border: 1px solid #444; color: #b3b3b3; }
-  .success-btn.ghost:hover { border-color: #fff; color: #fff; }
+  .watch-btn:active { transform: scale(0.97); }
 
-  /* enter-selected animation when "her" profile is clicked */
-  .selector-page.fade-out { animation: fadeOut 0.5s ease forwards; }
+  .home-btn {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
+  .home-btn:hover { background: #f6121d; border-color: #f6121d; }
+
+  .admin-btn {
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    border-color: rgba(255,255,255,0.22);
+  }
+  .admin-btn:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
+
+  /* ---------- animations ---------- */
+  .selector-page.fade-out { animation: fadeOut 0.4s ease forwards; }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeOut { to { opacity: 0; transform: scale(1.04); } }
-  @keyframes shake {
-    10%, 90% { transform: translateX(-2px); }
-    20%, 80% { transform: translateX(4px); }
-    30%, 50%, 70% { transform: translateX(-8px); }
-    40%, 60% { transform: translateX(8px); }
-  }
-  @keyframes ringPop {
-    0% { transform: scale(0.6); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes ringPulse {
-    0%, 100% { transform: scale(1); opacity: 0.6; }
-    50% { transform: scale(1.15); opacity: 0; }
-  }
-  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+  @keyframes fadeOut { to { opacity: 0; transform: scale(1.03); } }
 
-  @media (max-width: 560px) {
+  /* ---------- responsive ---------- */
+  @media (max-width: 640px) {
     nav { padding: 18px 24px; }
     .nf-logo { font-size: 30px; }
-    .avatar { width: 130px; height: 130px; font-size: 60px; }
-    .selector-page { gap: 40px; }
-    .pin-pad { grid-template-columns: repeat(3, 64px); gap: 10px; }
-    .pin-key { width: 64px; height: 64px; font-size: 22px; }
-    .pin-dot { width: 44px; height: 56px; }
+    .selector-layout {
+      flex-direction: column;
+      gap: 36px;
+    }
+    /* Side avatars sit in a row above the buttons on small screens */
+    .deco-profiles {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+    }
+    .avatar { width: 90px; height: 90px; font-size: 42px; }
+    .watch-btn { width: 190px; }
   }
 
   /* ---------- LoveConnect entry button ---------- */
@@ -544,46 +343,41 @@
   <main class="selector-page" id="selectorPage">
     <h1 class="selector-title">Who's watching?</h1>
 
-    <div class="profiles-row">
-      <!-- Profile 1: Partner — viewer -->
-      <button class="profile" id="herProfile" data-profile="her" data-name="My Love" aria-label="Select profile My Love">
+    <!-- Desktop: [Her] [Buttons] [His] in a row.
+         Mobile: deco-profiles row on top, buttons below. -->
+    <div class="selector-layout" id="selectorLayout">
+
+      <!-- Decorative left profile (partner / rose) -->
+      <div class="couple-avatar" id="herAvatarWrap" aria-hidden="true">
         <div class="avatar rose">
           <span class="avatar-initial" id="herInitial">M</span>
-          <svg class="heart-mark" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="heart-mark" viewBox="0 0 24 24">
             <path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z" fill="rgba(255,255,255,0.9)"/>
           </svg>
-          <div class="manage-pencil" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          </div>
         </div>
         <span class="profile-name" id="herName">My Love</span>
-      </button>
+      </div>
 
-      <!-- Profile 2: Admin — locked -->
-      <button class="profile" id="hisProfile" data-profile="his" data-name="You" aria-label="Select profile (locked)">
+      <!-- Center navigation — the real controls -->
+      <div class="nav-center">
+        <a href="home.html" class="watch-btn home-btn">Home</a>
+        <a href="admin.html" class="watch-btn admin-btn" id="adminBtn">Admin</a>
+      </div>
+
+      <!-- Decorative right profile (admin / blue) -->
+      <div class="couple-avatar" id="hisAvatarWrap" aria-hidden="true">
         <div class="avatar blue">
           <span class="avatar-initial" id="hisInitial">Y</span>
-          <div class="lock-overlay" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm9 14H6V10h12v10zm-6-3a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
-            </div>
-          <div class="manage-pencil" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          </div>
         </div>
-        <div class="profile-lock-row">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9V6z"/></svg>
-          <span class="profile-name" id="hisName">You</span>
-        </div>
-      </button>
-    </div>
+        <span class="profile-name" id="hisName">You</span>
+      </div>
 
-    <button class="manage-btn" type="button">Manage Profiles</button>
+    </div>
   </main>
 
   <!-- LoveConnect entry -->
   <a href="loveconnect.html" class="loveconnect-btn" aria-label="Open LoveConnect">
     <span class="lc-icon">
-      <!-- heart-with-globe icon -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 21C12 21 3.5 15.5 3.5 9.5a4.5 4.5 0 0 1 8.5-2.1A4.5 4.5 0 0 1 20.5 9.5C20.5 15.5 12 21 12 21z"/>
         <circle cx="19" cy="5" r="3.5" style="fill:#0a0a0a;stroke:#ff5f8f;stroke-width:1.4"/>
@@ -598,55 +392,6 @@
     </span>
   </a>
 
-  <!-- PIN OVERLAY -->
-  <div class="pin-overlay" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
-    <div class="pin-card">
-      <div class="pin-eyebrow">Profile Lock</div>
-      <h2 class="pin-title" id="pinTitle">Enter your PIN</h2>
-      <p class="pin-sub" id="pinSub">A 4-digit PIN is required to access your profile.</p>
-
-      <div class="pin-dots" id="pinDots">
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-      </div>
-
-      <div class="pin-error" id="pinError">Whoops, wrong PIN. Try again.</div>
-
-      <div class="pin-pad" id="pinPad">
-        <button class="pin-key" data-key="1">1</button>
-        <button class="pin-key" data-key="2">2</button>
-        <button class="pin-key" data-key="3">3</button>
-        <button class="pin-key" data-key="4">4</button>
-        <button class="pin-key" data-key="5">5</button>
-        <button class="pin-key" data-key="6">6</button>
-        <button class="pin-key" data-key="7">7</button>
-        <button class="pin-key" data-key="8">8</button>
-        <button class="pin-key" data-key="9">9</button>
-        <button class="pin-key ghost" tabindex="-1" aria-hidden="true"></button>
-        <button class="pin-key" data-key="0">0</button>
-        <button class="pin-key action" data-key="back" aria-label="Delete">⌫</button>
-      </div>
-
-      <button class="pin-cancel" id="pinCancel">Cancel</button>
-    </div>
-  </div>
-
-  <!-- SUCCESS OVERLAY (Buki / admin) -->
-  <div class="success-overlay" id="successOverlay" role="dialog" aria-modal="true">
-    <div class="success-eyebrow">Admin Access Granted</div>
-    <div class="success-ring">
-      <svg class="success-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
-    </div>
-    <h2 class="success-title" id="successTitle">Welcome back</h2>
-    <p class="success-sub">You're signed in as the creator. Continue to the admin dashboard or browse as a viewer.</p>
-    <div class="success-actions">
-      <button class="success-btn" id="goAdmin">Go to Dashboard</button>
-      <button class="success-btn ghost" id="goHome">Browse as viewer</button>
-    </div>
-  </div>
-
 <script src="assets/loveflix.js"></script>
 <script>
 (function() {
@@ -654,149 +399,80 @@
 
   if (!LoveFlix.requireAuth()) return;
 
-  // Both partners now have full admin access. The profile picker shows two
-  // tiles built from couple_members: your own tile (clickable → admin
-  // dashboard) and your partner's tile (read-only display).
-  let partnerName = '';
-  let adminName = '';
-  let myUserId = LoveFlix.getUserId();
-  let meIsHis = true; // whether the current user occupies the "his" (blue) tile
-  let partnerTileEl = null; // the tile that represents the partner (not me)
-
   function applyNames(settings) {
-    partnerName = settings.partnerName || 'My Love';
-    adminName = settings.adminName || 'You';
+    const partnerName = settings.partnerName || 'My Love';
+    const adminName   = settings.adminName   || 'You';
 
+    document.getElementById('herInitial').textContent = (partnerName[0] || '?').toUpperCase();
+    document.getElementById('herName').textContent    = partnerName;
+
+    document.getElementById('hisInitial').textContent = (adminName[0] || '?').toUpperCase();
+    document.getElementById('hisName').textContent    = adminName;
+
+    const herAv   = document.querySelector('#herAvatarWrap .avatar');
     const herInit = document.getElementById('herInitial');
-    const herNameEl = document.getElementById('herName');
+    if (herAv && settings.partnerPhoto) {
+      herAv.style.background = 'url(' + JSON.stringify(settings.partnerPhoto) + ') center/cover no-repeat';
+      herInit.style.color = 'transparent';
+    } else if (herAv) {
+      herAv.style.background = '';
+      herInit.style.color = '';
+    }
+
+    const hisAv   = document.querySelector('#hisAvatarWrap .avatar');
     const hisInit = document.getElementById('hisInitial');
-    const hisNameEl = document.getElementById('hisName');
-    const herProfile = document.getElementById('herProfile');
-    const hisProfile = document.getElementById('hisProfile');
-
-    herInit.textContent = (partnerName[0] || '?').toUpperCase();
-    herNameEl.textContent = partnerName;
-    herProfile.dataset.name = partnerName;
-    herProfile.setAttribute('aria-label', 'Select profile ' + partnerName);
-
-    hisInit.textContent = (adminName[0] || '?').toUpperCase();
-    hisNameEl.textContent = adminName;
-    hisProfile.dataset.name = adminName;
-    hisProfile.setAttribute('aria-label', 'Select profile ' + adminName);
-
-    const herAv = document.querySelector('#herProfile .avatar');
-    if (herAv) {
-      if (settings.partnerPhoto) {
-        herAv.style.background = `url(${JSON.stringify(settings.partnerPhoto)}) center/cover no-repeat`;
-        herInit.style.color = 'transparent';
-      } else {
-        herAv.style.background = '';
-        herInit.style.color = '';
-      }
-    }
-    const hisAv = document.querySelector('#hisProfile .avatar');
-    if (hisAv) {
-      if (settings.adminPhoto) {
-        hisAv.style.background = `url(${JSON.stringify(settings.adminPhoto)}) center/cover no-repeat`;
-        hisInit.style.color = 'transparent';
-      } else {
-        hisAv.style.background = '';
-        hisInit.style.color = '';
-      }
+    if (hisAv && settings.adminPhoto) {
+      hisAv.style.background = 'url(' + JSON.stringify(settings.adminPhoto) + ') center/cover no-repeat';
+      hisInit.style.color = 'transparent';
+    } else if (hisAv) {
+      hisAv.style.background = '';
+      hisInit.style.color = '';
     }
   }
 
-  // Decide which tile represents the current user based on couple_members.
-  // role='admin' → "his" (blue) tile; role='partner' → "her" (rose) tile.
-  // The other tile gets the view-only treatment.
-  async function resolveIdentity() {
-    const members = await LoveFlix.fetchCoupleMembers();
-    if (!members.length) return;
+  // Grant admin session flag so admin.html recognises the navigation intent.
+  document.getElementById('adminBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('selectorPage').classList.add('fade-out');
+    try { sessionStorage.setItem('loveflix_admin_authed', '1'); } catch (_) {}
+    setTimeout(function() { window.location.href = 'admin.html'; }, 280);
+  });
 
-    const me = members.find(m => m.user_id === myUserId);
-    if (!me) return;
-    meIsHis = me.role !== 'partner';
-
-    const hisTile = document.getElementById('hisProfile');
-    const herTile = document.getElementById('herProfile');
-    partnerTileEl = meIsHis ? herTile : hisTile;
-    const myTile = meIsHis ? hisTile : herTile;
-
-    // Strip the legacy lock chrome from the "his" tile — both partners are
-    // now equal admins, so neither tile is PIN-gated.
-    const lockOverlay = hisTile.querySelector('.lock-overlay');
-    if (lockOverlay) lockOverlay.remove();
-    const lockRow = hisTile.querySelector('.profile-lock-row');
-    if (lockRow) {
-      const nameSpan = lockRow.querySelector('.profile-name');
-      if (nameSpan) lockRow.parentNode.insertBefore(nameSpan, lockRow);
-      lockRow.remove();
-    }
-
-    // Mark "me" and "partner" so the click handler and styling know which is
-    // which. Partner tile becomes read-only (no admin access).
-    myTile.dataset.me = '1';
-    partnerTileEl.dataset.me = '0';
-    partnerTileEl.setAttribute('aria-label',
-      'Partner profile (view only) — ' + (partnerTileEl.dataset.name || ''));
-
-    // Replace the manage-pencil on the partner tile with a "view only" eye
-    // badge so it visually reads as non-interactive.
-    const pencil = partnerTileEl.querySelector('.manage-pencil');
-    if (pencil) {
-      pencil.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>';
-      pencil.style.opacity = '0.85';
-      pencil.style.transform = 'scale(1)';
-      pencil.title = "Your partner's profile";
-    }
-  }
-
-  // Optimistic paint from cache, then authoritative paint once synced.
   applyNames(LoveFlix.getSettings());
-  LoveFlix.ensureSettingsReady().then(applyNames).catch(() => {});
-  window.addEventListener('loveflix:settings-changed', () => applyNames(LoveFlix.getSettings()));
+  LoveFlix.ensureSettingsReady().then(applyNames).catch(function() {});
+  window.addEventListener('loveflix:settings-changed', function() { applyNames(LoveFlix.getSettings()); });
 
-  const selectorPage = document.getElementById('selectorPage');
+  // Reflow on mobile: wrap the two deco avatars into a shared row so they
+  // sit side-by-side above the buttons when the layout stacks vertically.
+  function reflow() {
+    const layout = document.getElementById('selectorLayout');
+    const her    = document.getElementById('herAvatarWrap');
+    const his    = document.getElementById('hisAvatarWrap');
+    const nav    = layout.querySelector('.nav-center');
+    const isMobile = window.innerWidth <= 640;
+    let row = document.getElementById('decoProfilesRow');
 
-  // Resolve which tile is "you" then wire up clicks. While the fetch is in
-  // flight, clicks are buffered as no-ops to avoid the wrong destination.
-  let identityReady = false;
-  resolveIdentity().catch(() => {}).finally(() => { identityReady = true; });
-
-  function showPartnerToast(name) {
-    const el = document.createElement('div');
-    el.textContent = "That's " + (name || 'your partner') + "'s profile";
-    el.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);' +
-      'background:rgba(20,20,20,0.92);color:#fff;padding:10px 18px;border-radius:8px;' +
-      'border:1px solid rgba(255,255,255,0.12);font-size:13px;z-index:200;' +
-      'box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;transition:opacity .2s';
-    document.body.appendChild(el);
-    requestAnimationFrame(() => { el.style.opacity = '1'; });
-    setTimeout(() => {
-      el.style.opacity = '0';
-      setTimeout(() => el.remove(), 250);
-    }, 1800);
+    if (isMobile) {
+      if (!row) {
+        row = document.createElement('div');
+        row.id = 'decoProfilesRow';
+        row.className = 'deco-profiles';
+        layout.insertBefore(row, nav);
+      }
+      if (!row.contains(her)) row.appendChild(her);
+      if (!row.contains(his)) row.appendChild(his);
+    } else {
+      if (row) {
+        // Restore desktop order: Her | Buttons | His
+        layout.insertBefore(her, nav);
+        layout.appendChild(his);
+        row.remove();
+      }
+    }
   }
 
-  document.querySelectorAll('.profile').forEach(p => {
-    p.addEventListener('click', () => {
-      if (!identityReady) return;
-      if (p.dataset.me === '1') {
-        selectorPage.classList.add('fade-out');
-        try { sessionStorage.setItem('loveflix_admin_authed', '1'); } catch (_) {}
-        setTimeout(() => { window.location.href = 'admin.html'; }, 350);
-      } else {
-        showPartnerToast(p.dataset.name);
-      }
-    });
-  });
-
-  document.querySelector('.manage-btn').addEventListener('click', () => {
-    document.querySelectorAll('.manage-pencil').forEach(p => {
-      p.style.opacity = p.style.opacity === '1' ? '' : '1';
-      p.style.transform = p.style.opacity === '1' ? 'scale(1)' : '';
-    });
-  });
+  reflow();
+  window.addEventListener('resize', reflow);
 })();
 </script>
 </body>
