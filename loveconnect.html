@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — LoveConnect</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0a;
+    --panel:rgba(20,20,20,0.78);
+    --panel-solid:#141414;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --red:#e50914;
+    --red-soft:rgba(229,9,20,0.18);
+    --rose:#ff5f8f;
+    --blue:#3a7bff;
+    --text-dim:#8a8a8a;
+    --text-light:#cfcfcf;
+    --green:#10b981;
+  }
+  html,body{height:100%}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:#000;color:#fff;-webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  /* MAP CANVAS */
+  #map{position:fixed;inset:0;background:#0a0a0a}
+  /* hide default maplibre attribution / controls — we'll style our own */
+  .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left{opacity:.35;filter:invert(1) grayscale(1)}
+  .maplibregl-ctrl-attrib{background:rgba(0,0,0,0.5) !important;color:#999 !important}
+  .maplibregl-ctrl-attrib a{color:#aaa !important}
+
+  /* vignette overlay so chrome reads on top */
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:
+      radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%),
+      linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 18%, transparent 80%, rgba(0,0,0,0.55) 100%)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    padding:18px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+  }
+  .top-left{display:flex;align-items:center;gap:22px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:20px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim)}
+  .crumbs a{color:var(--text-dim);transition:color .15s}
+  .crumbs a:hover{color:#fff}
+  .crumbs .sep{opacity:.4}
+  .crumbs .here{color:#fff;font-weight:500}
+
+  .top-right{display:flex;align-items:center;gap:10px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);
+    border-radius:999px;padding:7px 14px;font-size:12px;color:var(--text-light);
+    font-variant-numeric:tabular-nums;
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulseDot 2s ease-in-out infinite}
+  @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.45}}
+  .icon-btn{
+    width:34px;height:34px;border-radius:8px;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    transition:background .15s,border-color .15s,transform .1s
+  }
+  .icon-btn:hover{background:rgba(40,40,40,0.85);border-color:var(--border-strong)}
+  .icon-btn:active{transform:scale(.95)}
+  .icon-btn svg{width:16px;height:16px;fill:#fff}
+  .icon-btn.close:hover{background:var(--red);border-color:var(--red)}
+
+  /* ---------- couple card (top-left under nav) ---------- */
+  .couple-card{
+    position:fixed; top:78px; left:28px; z-index:10;
+    background:var(--panel);backdrop-filter:blur(20px);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 20px;
+    width:300px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  }
+  .couple-eyebrow{
+    font-size:10px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--red);font-weight:700;margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .couple-eyebrow .live{
+    background:var(--red);color:#fff;padding:3px 7px;border-radius:3px;font-size:9px;letter-spacing:1.5px;font-weight:800;
+  }
+  .couple-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1.5px;line-height:1;margin-bottom:14px}
+  .couple-row{display:flex;align-items:center;gap:14px;font-size:13px}
+  .couple-row + .couple-row{margin-top:10px}
+  .av{
+    width:36px;height:36px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;
+    color:rgba(255,255,255,0.95);text-shadow:0 1px 4px rgba(0,0,0,0.4);
+    position:relative;flex-shrink:0;
+  }
+  .av.rose{background:radial-gradient(circle at 30% 25%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,#ff5f8f 0%,#d6336c 55%,#8f1d4a 100%)}
+  .av.blue{background:radial-gradient(circle at 30% 25%,#9fc7ff 0%,transparent 55%),linear-gradient(135deg,#3a7bff 0%,#1d4ed8 55%,#1e3a8a 100%)}
+  .av .status{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--panel-solid)}
+  .av .status.idle{background:#f59e0b}
+  .name-block{flex:1;min-width:0}
+  .name-block .n{font-weight:600;color:#fff}
+  .name-block .meta{font-size:11px;color:var(--text-dim);margin-top:2px}
+
+  /* ---------- distance hero (bottom-center) ---------- */
+  .distance-hero{
+    position:fixed; left:50%; bottom:30px; transform:translateX(-50%);
+    z-index:10;
+    background:var(--panel);backdrop-filter:blur(22px);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:18px 22px;
+    display:flex;align-items:center;gap:0;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+    min-width:560px;
+  }
+  .stat-cell{padding:0 22px;text-align:left;border-right:1px solid var(--border)}
+  .stat-cell:last-child{border-right:none}
+  .stat-cell.primary{padding-left:0}
+  .stat-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin-bottom:6px}
+  .stat-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;line-height:1;color:#fff}
+  .stat-value .unit{font-family:'Inter',sans-serif;font-size:13px;color:var(--text-dim);font-weight:500;letter-spacing:1px;margin-left:4px}
+  .stat-sub{font-size:11px;color:var(--text-light);margin-top:5px}
+  .stat-cell.primary .stat-value{font-size:44px;background:linear-gradient(135deg,#ff8aa6 0%,#e50914 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* call button — protrudes from distance hero */
+  .call-btn{
+    margin-left:18px;
+    background:var(--red);color:#fff;border:none;
+    padding:14px 22px;border-radius:12px;
+    font-size:14px;font-weight:700;letter-spacing:.5px;
+    display:flex;align-items:center;gap:10px;
+    box-shadow:0 0 0 0 rgba(229,9,20,0.6),0 8px 24px rgba(229,9,20,0.45);
+    animation:callPulse 2.4s ease-in-out infinite;
+    transition:transform .12s ease,background .15s ease;
+  }
+  .call-btn:hover{background:#f6121d}
+  .call-btn:active{transform:scale(.97)}
+  .call-btn svg{width:18px;height:18px;fill:#fff}
+  @keyframes callPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(229,9,20,0.55),0 8px 24px rgba(229,9,20,0.45)}
+    50%{box-shadow:0 0 0 14px rgba(229,9,20,0),0 8px 24px rgba(229,9,20,0.45)}
+  }
+
+  /* ---------- right drawer ---------- */
+  .drawer{
+    position:fixed; top:78px; right:28px; bottom:120px; z-index:10;
+    width:340px;
+    background:var(--panel);backdrop-filter:blur(22px);
+    border:1px solid var(--border);
+    border-radius:14px;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  }
+  .drawer-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 4px}
+  .drawer-tab{
+    flex:1;background:none;border:none;color:var(--text-dim);
+    padding:14px 8px;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+    position:relative;transition:color .15s
+  }
+  .drawer-tab.active{color:#fff}
+  .drawer-tab.active::after{
+    content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--red);border-radius:2px;
+  }
+  .drawer-tab:hover{color:#fff}
+  .drawer-body{flex:1;overflow-y:auto;padding:6px 0}
+  .drawer-body::-webkit-scrollbar{width:6px}
+  .drawer-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}
+
+  .tab-pane{display:none;padding:6px 18px 18px}
+  .tab-pane.active{display:block}
+
+  .section-h{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin:14px 0 10px}
+
+  .call-row{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 0;border-bottom:1px dashed var(--border)
+  }
+  .call-row:last-child{border-bottom:none}
+  .call-icon{
+    width:32px;height:32px;border-radius:50%;
+    background:rgba(229,9,20,0.12);color:var(--red);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .call-icon svg{width:14px;height:14px;fill:currentColor}
+  .call-icon.miss{background:rgba(248,113,113,0.12);color:#fca5a5}
+  .call-info{flex:1;min-width:0}
+  .call-info .who{font-size:13px;font-weight:500;color:#fff}
+  .call-info .when{font-size:11px;color:var(--text-dim);margin-top:2px}
+  .call-len{font-size:12px;color:var(--text-light);font-variant-numeric:tabular-nums}
+
+  .journey-row{
+    display:flex;align-items:center;gap:12px;padding:10px 0;
+    border-bottom:1px dashed var(--border);cursor:pointer;
+    transition:background .15s;border-radius:6px;margin:0 -8px;padding:10px 8px
+  }
+  .journey-row:hover{background:rgba(255,255,255,0.03)}
+  .journey-row:last-child{border-bottom:none}
+  .journey-pin{
+    width:32px;height:32px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    background:var(--c,linear-gradient(135deg,#ff7aa2,#5a0a23));
+    color:rgba(255,255,255,0.92);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:.5px
+  }
+  .journey-info{flex:1;min-width:0}
+  .journey-info .place{font-size:13px;font-weight:500;color:#fff}
+  .journey-info .when{font-size:11px;color:var(--text-dim);margin-top:2px}
+  .journey-coords{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);text-align:right;line-height:1.4}
+
+  .schedule-cta{
+    background:rgba(255,255,255,0.04);border:1px dashed var(--border-strong);border-radius:10px;
+    padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;
+    transition:background .15s,border-color .15s
+  }
+  .schedule-cta:hover{background:rgba(255,255,255,0.07);border-color:#fff}
+  .schedule-cta svg{width:20px;height:20px;fill:var(--text-light)}
+  .schedule-cta .t{font-size:13px;font-weight:600;color:#fff}
+  .schedule-cta .s{font-size:11px;color:var(--text-dim);margin-top:2px}
+
+  /* ---------- map controls (custom) ---------- */
+  .map-controls{position:fixed;right:28px;top:78px;display:none}
+  /* we use right drawer there instead; controls go below */
+  .controls-stack{position:fixed;left:28px;bottom:120px;z-index:9;display:flex;flex-direction:column;gap:8px}
+  .ctrl-grp{
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:10px;overflow:hidden;
+    display:flex;flex-direction:column
+  }
+  .ctrl-grp button{
+    width:36px;height:36px;background:none;border:none;color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .12s
+  }
+  .ctrl-grp button:hover{background:rgba(255,255,255,0.07)}
+  .ctrl-grp button + button{border-top:1px solid var(--border)}
+  .ctrl-grp button svg{width:16px;height:16px;fill:#fff}
+
+  /* ---------- custom map markers ---------- */
+  .lc-marker{
+    position:relative;width:54px;height:54px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transform:translateY(-4px);
+  }
+  .lc-marker .ring{
+    position:absolute;inset:-8px;border-radius:50%;
+    border:2px solid var(--ring,rgba(255,95,143,0.55));
+    animation:ringPulse 2.4s ease-out infinite;
+    pointer-events:none;
+  }
+  .lc-marker .ring.r2{animation-delay:.8s}
+  .lc-marker .ring.r3{animation-delay:1.6s}
+  @keyframes ringPulse{
+    0%{transform:scale(0.65);opacity:.8}
+    100%{transform:scale(1.7);opacity:0}
+  }
+  .lc-marker .avatar{
+    width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;
+    color:#fff;text-shadow:0 2px 6px rgba(0,0,0,0.5);
+    border:2.5px solid #fff;
+    box-shadow:0 6px 14px rgba(0,0,0,0.5),0 0 0 4px rgba(0,0,0,0.3);
+    position:relative;z-index:2;
+  }
+  .lc-marker.her .avatar{background:radial-gradient(circle at 30% 25%,#ffb3c7,transparent 55%),linear-gradient(135deg,#ff5f8f,#8f1d4a)}
+  .lc-marker.him .avatar{background:radial-gradient(circle at 30% 25%,#9fc7ff,transparent 55%),linear-gradient(135deg,#3a7bff,#1e3a8a)}
+  .lc-marker.her{--ring:rgba(255,95,143,0.55)}
+  .lc-marker.him{--ring:rgba(58,123,255,0.55)}
+  .lc-marker .label{
+    position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    background:var(--panel);backdrop-filter:blur(12px);
+    border:1px solid var(--border);
+    border-radius:6px;padding:5px 10px;
+    font-size:11px;font-weight:600;color:#fff;
+    white-space:nowrap;letter-spacing:.3px;z-index:3;
+  }
+  .lc-marker .label .sub{display:block;font-weight:400;color:var(--text-dim);font-size:10px;margin-top:1px}
+
+  /* memory pins (smaller) */
+  .lc-memory{
+    width:30px;height:30px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .lc-memory::after{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    background:var(--c,linear-gradient(135deg,#ff7aa2,#5a0a23));
+    border:2px solid rgba(255,255,255,0.8);
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+  }
+  .lc-memory .dot{
+    position:relative;z-index:1;width:6px;height:6px;border-radius:50%;
+    background:#fff;
+  }
+  .lc-memory:hover{transform:scale(1.15)}
+
+  /* maplibre popup override */
+  .maplibregl-popup-content{
+    background:var(--panel) !important;backdrop-filter:blur(20px);
+    border:1px solid var(--border) !important;
+    border-radius:10px !important;
+    padding:14px 16px !important;
+    color:#fff !important;
+    box-shadow:0 20px 50px rgba(0,0,0,0.5) !important;
+  }
+  .maplibregl-popup-tip{border-top-color:rgba(20,20,20,0.78) !important;border-bottom-color:rgba(20,20,20,0.78) !important}
+  .popup-eyebrow{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:4px}
+  .popup-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;line-height:1;margin-bottom:4px}
+  .popup-meta{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
+
+  /* ---------- call modal ---------- */
+  .call-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+    opacity:0;pointer-events:none;transition:opacity .25s
+  }
+  .call-overlay.active{opacity:1;pointer-events:auto}
+  .call-card{
+    width:100%;max-width:420px;
+    background:var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius:18px;padding:36px 28px 28px;
+    text-align:center;
+    transform:translateY(8px);transition:transform .35s cubic-bezier(.2,.8,.2,1)
+  }
+  .call-overlay.active .call-card{transform:translateY(0)}
+  .call-card .calling-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:18px}
+  .call-card .calling-av{
+    width:140px;height:140px;border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,#ffb3c7,transparent 55%),linear-gradient(135deg,#ff5f8f,#8f1d4a);
+    margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:64px;color:#fff;
+    box-shadow:0 0 0 0 rgba(229,9,20,0.5);
+    animation:callingPulse 1.6s ease-out infinite;
+  }
+  @keyframes callingPulse{
+    0%{box-shadow:0 0 0 0 rgba(229,9,20,0.45)}
+    100%{box-shadow:0 0 0 30px rgba(229,9,20,0)}
+  }
+  .calling-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1.5px;line-height:1;margin-bottom:6px}
+  .calling-status{font-size:13px;color:var(--text-dim);margin-bottom:30px}
+  .calling-status .dots::after{content:'';animation:dots 1.4s steps(4,end) infinite;display:inline-block;width:1ch;text-align:left;color:var(--red)}
+  @keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
+  .call-actions{display:flex;gap:18px;justify-content:center}
+  .call-action{
+    width:60px;height:60px;border-radius:50%;border:none;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    transition:transform .12s,background .15s
+  }
+  .call-action:active{transform:scale(.92)}
+  .call-action svg{width:24px;height:24px;fill:#fff}
+  .call-action.decline{background:#dc2626}.call-action.decline:hover{background:#ef4444}
+  .call-action.mute{background:rgba(255,255,255,0.08);border:1px solid var(--border)}.call-action.mute:hover{background:rgba(255,255,255,0.14)}
+  .call-action.video{background:rgba(255,255,255,0.08);border:1px solid var(--border)}.call-action.video:hover{background:rgba(255,255,255,0.14)}
+
+  @media (max-width: 900px){
+    .couple-card{width:auto;right:28px}
+    .drawer{display:none}
+    .distance-hero{min-width:0;flex-wrap:wrap;left:14px;right:14px;bottom:14px;transform:none}
+    .stat-cell{padding:0 14px}
+    .call-btn{margin:14px 0 0 0;width:100%;justify-content:center}
+    .controls-stack{bottom:280px}
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="vignette"></div>
+
+<!-- TOP NAV -->
+<header class="topbar">
+  <div class="top-left">
+    <a href="admin.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+    <div class="crumbs">
+      <a href="admin.html">Creator Studio</a>
+      <span class="sep">›</span>
+      <span class="here">LoveConnect</span>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="pill"><span class="dot"></span> Both online</div>
+    <div class="pill" id="syncPill" title="Realtime sync">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#10b981"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3" stroke="#10b981" stroke-width="1.5"/></svg>
+      <span id="syncedAgo">Synced 2s ago</span>
+    </div>
+    <button class="icon-btn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7 7 0 00-1.69-.98l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+    </button>
+    <button class="icon-btn close" title="Close" aria-label="Close" onclick="location.href='admin.html'">
+      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- COUPLE CARD -->
+<aside class="couple-card">
+  <div class="couple-eyebrow"><span class="live">LIVE</span> Where in the world</div>
+  <div class="couple-title">You &amp; My Love</div>
+  <div class="couple-row">
+    <div class="av rose">M<span class="status"></span></div>
+    <div class="name-block">
+      <div class="n">My Love</div>
+      <div class="meta">London, UK · 16:42 GMT</div>
+    </div>
+  </div>
+  <div class="couple-row">
+    <div class="av blue">B<span class="status"></span></div>
+    <div class="name-block">
+      <div class="n">Buki <span style="color:var(--text-dim);font-weight:400">(you)</span></div>
+      <div class="meta">Brooklyn, NY · 11:42 EST</div>
+    </div>
+  </div>
+</aside>
+
+<!-- RIGHT DRAWER -->
+<aside class="drawer">
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-tab="calls">Calls</button>
+    <button class="drawer-tab" data-tab="journeys">Journeys</button>
+    <button class="drawer-tab" data-tab="stats">Stats</button>
+  </div>
+  <div class="drawer-body">
+
+    <div class="tab-pane active" data-pane="calls">
+      <div class="section-h">Up next</div>
+      <div class="schedule-cta">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
+        <div>
+          <div class="t">Tonight, 22:30 GMT</div>
+          <div class="s">Goodnight call · auto-reminder set</div>
+        </div>
+      </div>
+
+      <div class="section-h">Recent calls</div>
+      <div class="call-row">
+        <div class="call-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+        </div>
+        <div class="call-info"><div class="who">Morning coffee call</div><div class="when">Today, 08:14 · 24 min</div></div>
+        <div class="call-len">24:08</div>
+      </div>
+      <div class="call-row">
+        <div class="call-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+        </div>
+        <div class="call-info"><div class="who">Late night ramble</div><div class="when">Yesterday, 23:48 · 1h 14m</div></div>
+        <div class="call-len">1:14:22</div>
+      </div>
+      <div class="call-row">
+        <div class="call-icon miss">
+          <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>
+        </div>
+        <div class="call-info"><div class="who">Missed — at the gym</div><div class="when">Yesterday, 18:02</div></div>
+        <div class="call-len">—</div>
+      </div>
+      <div class="call-row">
+        <div class="call-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+        </div>
+        <div class="call-info"><div class="who">Walking home together</div><div class="when">Mon, 19:22 · 42 min</div></div>
+        <div class="call-len">42:11</div>
+      </div>
+      <div class="call-row">
+        <div class="call-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+        </div>
+        <div class="call-info"><div class="who">Sunday breakfast</div><div class="when">Sun, 10:30 · 1h 02m</div></div>
+        <div class="call-len">1:02:48</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-pane="journeys">
+      <div class="section-h">Places you've been together</div>
+      <div class="journey-row" data-fly="-9.13,38.71,10">
+        <div class="journey-pin" style="--c:linear-gradient(135deg,#fbbf24,#7c2d12)">LI</div>
+        <div class="journey-info"><div class="place">Lisbon, Portugal</div><div class="when">May 2025 · 4 days</div></div>
+        <div class="journey-coords">38.71°N<br>9.13°W</div>
+      </div>
+      <div class="journey-row" data-fly="-21.94,64.13,8">
+        <div class="journey-pin" style="--c:linear-gradient(135deg,#22d3ee,#0c4a6e)">IC</div>
+        <div class="journey-info"><div class="place">Reykjavík, Iceland</div><div class="when">Feb 2025 · 6 days</div></div>
+        <div class="journey-coords">64.13°N<br>21.94°W</div>
+      </div>
+      <div class="journey-row" data-fly="-116.07,33.87,10">
+        <div class="journey-pin" style="--c:linear-gradient(135deg,#a855f7,#1e1b4b)">JT</div>
+        <div class="journey-info"><div class="place">Joshua Tree, CA</div><div class="when">Oct 2024 · 3 days</div></div>
+        <div class="journey-coords">33.87°N<br>116.07°W</div>
+      </div>
+      <div class="journey-row" data-fly="2.35,48.86,11">
+        <div class="journey-pin" style="--c:linear-gradient(135deg,#fb7185,#7f1d1d)">PA</div>
+        <div class="journey-info"><div class="place">Paris, France</div><div class="when">Apr 2024 · 5 days</div></div>
+        <div class="journey-coords">48.86°N<br>2.35°E</div>
+      </div>
+      <div class="journey-row" data-fly="139.65,35.68,10">
+        <div class="journey-pin" style="--c:linear-gradient(135deg,#f472b6,#831843)">TK</div>
+        <div class="journey-info"><div class="place">Tokyo, Japan</div><div class="when">Nov 2023 · 8 days</div></div>
+        <div class="journey-coords">35.68°N<br>139.65°E</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-pane="stats">
+      <div class="section-h">Since you met</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Days together</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">1,094</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Calls</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">2,847</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Hours talked</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">1,612</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Trips</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">12</div>
+        </div>
+      </div>
+
+      <div class="section-h" style="margin-top:20px">Daily pattern</div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">Calls by hour (last 30 days)</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:60px" id="histogram"></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:6px;font-family:'JetBrains Mono',monospace">
+          <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span>
+        </div>
+      </div>
+
+      <div class="section-h" style="margin-top:20px">Total distance traveled to see each other</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;line-height:1;background:linear-gradient(135deg,#ff8aa6,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent">28,940 mi</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Once around the world. And then some.</div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- CONTROLS -->
+<div class="controls-stack">
+  <div class="ctrl-grp">
+    <button id="zoomIn" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+    <button id="zoomOut" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>
+  </div>
+  <div class="ctrl-grp">
+    <button id="fitBoth" title="Frame both of us" aria-label="Frame both">
+      <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    </button>
+    <button id="globeBtn" title="Spin to globe view" aria-label="Globe">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26zm.81 2h2.93a14.5 14.5 0 001.16 3.85A8 8 0 015.07 16zm2.93-8H5.07a8 8 0 014.02-3.85A14.5 14.5 0 008 8zm4 11.96A12.5 12.5 0 0110.08 15h3.84A12.5 12.5 0 0112 19.96zM14.34 14H9.66a14.4 14.4 0 010-4h4.68a14.4 14.4 0 010 4zm.5 5.85A14.5 14.5 0 0016 16h2.93a8 8 0 01-4.09 3.85zM16.36 14a17.2 17.2 0 000-4h3.38a8 8 0 010 4h-3.38z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- DISTANCE HERO + CALL CTA -->
+<div class="distance-hero">
+  <div class="stat-cell primary">
+    <div class="stat-label">Distance apart</div>
+    <div class="stat-value" id="distVal">3,461<span class="unit">mi</span></div>
+    <div class="stat-sub">5,571 km · across the Atlantic</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Time gap</div>
+    <div class="stat-value">5<span class="unit">hrs</span></div>
+    <div class="stat-sub">She's 5h ahead</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">Last seen</div>
+    <div class="stat-value">12<span class="unit">sec</span></div>
+    <div class="stat-sub" id="lastSeen">ago · just now</div>
+  </div>
+  <button class="call-btn" id="callBtn">
+    <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+    Call My Love
+  </button>
+</div>
+
+<!-- CALL MODAL -->
+<div class="call-overlay" id="callOverlay">
+  <div class="call-card">
+    <div class="calling-eyebrow">LoveConnect · Encrypted</div>
+    <div class="calling-av">M</div>
+    <div class="calling-name">Calling My Love</div>
+    <div class="calling-status">Connecting<span class="dots"></span></div>
+    <div class="call-actions">
+      <button class="call-action mute" title="Mute">
+        <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>
+      </button>
+      <button class="call-action decline" id="declineBtn" title="End call">
+        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>
+      </button>
+      <button class="call-action video" title="Video">
+        <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- COUPLE COORDINATES ----------
+  const HER = { name:'My Love', initial:'M', lng:-0.1276, lat:51.5074, kind:'her' };  // London
+  const HIM = { name:'Buki',    initial:'B', lng:-74.006, lat:40.7128, kind:'him' };  // NYC
+
+  const MEMORIES = [
+    { id:'lisbon',  lng:-9.13,    lat:38.71,  label:'Lisbon', sub:'May 2025', color:'linear-gradient(135deg,#fbbf24,#7c2d12)' },
+    { id:'iceland', lng:-21.94,   lat:64.13,  label:'Reykjavík', sub:'Feb 2025', color:'linear-gradient(135deg,#22d3ee,#0c4a6e)' },
+    { id:'joshua',  lng:-116.07,  lat:33.87,  label:'Joshua Tree', sub:'Oct 2024', color:'linear-gradient(135deg,#a855f7,#1e1b4b)' },
+    { id:'paris',   lng:2.35,     lat:48.86,  label:'Paris', sub:'Apr 2024', color:'linear-gradient(135deg,#fb7185,#7f1d1d)' },
+    { id:'tokyo',   lng:139.65,   lat:35.68,  label:'Tokyo', sub:'Nov 2023', color:'linear-gradient(135deg,#f472b6,#831843)' }
+  ];
+
+  // ---------- MAP INIT ----------
+  const map = new maplibregl.Map({
+    container:'map',
+    style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+    center:[ (HER.lng+HIM.lng)/2, (HER.lat+HIM.lat)/2 ],
+    zoom:2.6,
+    bearing:0,
+    pitch:0,
+    attributionControl:{ compact:true },
+    renderWorldCopies:false
+  });
+
+  // try globe projection (maplibre >= 4.6)
+  map.on('style.load', () => {
+    try { map.setProjection({ type:'globe' }); } catch(e){}
+  });
+
+  // ---------- BUILD CUSTOM MARKERS ----------
+  function makePartnerMarker(p, withLabelMeta){
+    const el = document.createElement('div');
+    el.className = `lc-marker ${p.kind}`;
+    el.innerHTML = `
+      <span class="ring"></span>
+      <span class="ring r2"></span>
+      <span class="ring r3"></span>
+      <div class="avatar">${p.initial}</div>
+      <div class="label">${p.name}<span class="sub">${withLabelMeta}</span></div>
+    `;
+    return el;
+  }
+
+  const herMarker = new maplibregl.Marker({ element: makePartnerMarker(HER, 'London · 16:42') })
+    .setLngLat([HER.lng, HER.lat])
+    .addTo(map);
+  const himMarker = new maplibregl.Marker({ element: makePartnerMarker(HIM, 'Brooklyn · 11:42') })
+    .setLngLat([HIM.lng, HIM.lat])
+    .addTo(map);
+
+  // memory pins
+  MEMORIES.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'lc-memory';
+    el.style.setProperty('--c', m.color);
+    el.innerHTML = '<span class="dot"></span>';
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([m.lng, m.lat])
+      .setPopup(new maplibregl.Popup({ offset: 18, closeButton:false }).setHTML(`
+        <div class="popup-eyebrow">LoveFlix Memory</div>
+        <div class="popup-title">${m.label}</div>
+        <div class="popup-meta">${m.sub} · ${m.lat.toFixed(2)}°, ${m.lng.toFixed(2)}°</div>
+      `))
+      .addTo(map);
+  });
+
+  // ---------- ARC BETWEEN PARTNERS ----------
+  // quadratic bezier curve in lng/lat (same approach as the React MapArc helper)
+  function buildArcCoords(from, to, curvature, samples){
+    const [x0,y0] = from, [x2,y2] = to;
+    const dx = x2 - x0, dy = y2 - y0;
+    const distance = Math.hypot(dx, dy);
+    if (distance === 0) return [from, to];
+    const mx = (x0+x2)/2, my=(y0+y2)/2;
+    const nx = -dy / distance, ny = dx / distance;
+    const offset = distance * curvature;
+    const cx = mx + nx * offset, cy = my + ny * offset;
+    const pts = [];
+    const segs = Math.max(2, samples|0);
+    for (let i=0; i<=segs; i++){
+      const t = i / segs, inv = 1 - t;
+      const x = inv*inv*x0 + 2*inv*t*cx + t*t*x2;
+      const y = inv*inv*y0 + 2*inv*t*cy + t*t*y2;
+      pts.push([x, y]);
+    }
+    return pts;
+  }
+
+  function buildArcFeature(){
+    const coords = buildArcCoords([HIM.lng, HIM.lat], [HER.lng, HER.lat], 0.28, 96);
+    return { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: coords } };
+  }
+
+  map.on('load', () => {
+    // arc data
+    map.addSource('love-arc', { type:'geojson', data: buildArcFeature() });
+
+    // glow underlayer
+    map.addLayer({
+      id:'love-arc-glow',
+      type:'line',
+      source:'love-arc',
+      layout:{ 'line-join':'round', 'line-cap':'round' },
+      paint:{
+        'line-color':'#e50914',
+        'line-width':10,
+        'line-opacity':0.18,
+        'line-blur':4
+      }
+    });
+    // main line
+    map.addLayer({
+      id:'love-arc-main',
+      type:'line',
+      source:'love-arc',
+      layout:{ 'line-join':'round', 'line-cap':'round' },
+      paint:{
+        'line-color':'#ff5f8f',
+        'line-width':2,
+        'line-opacity':0.95
+      }
+    });
+    // flowing dash overlay
+    map.addLayer({
+      id:'love-arc-dash',
+      type:'line',
+      source:'love-arc',
+      layout:{ 'line-join':'round', 'line-cap':'round' },
+      paint:{
+        'line-color':'#ffffff',
+        'line-width':2,
+        'line-opacity':0.7,
+        'line-dasharray':[0, 4, 3]
+      }
+    });
+
+    // animate dash
+    const dashSteps = [
+      [0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5], [2, 4, 1],
+      [2.5, 4, 0.5], [3, 4, 0], [3, 0.5, 3.5], [3, 1, 3], [3, 1.5, 2.5],
+      [3, 2, 2], [3, 2.5, 1.5], [3, 3, 1], [3, 3.5, 0.5]
+    ];
+    let step = 0;
+    setInterval(() => {
+      step = (step + 1) % dashSteps.length;
+      if (map.getLayer('love-arc-dash')) {
+        map.setPaintProperty('love-arc-dash', 'line-dasharray', dashSteps[step]);
+      }
+    }, 100);
+
+    // fit both partners with padding
+    setTimeout(fitBoth, 400);
+  });
+
+  // ---------- CONTROLS ----------
+  document.getElementById('zoomIn').onclick = () => map.zoomTo(map.getZoom()+1,{duration:300});
+  document.getElementById('zoomOut').onclick = () => map.zoomTo(map.getZoom()-1,{duration:300});
+  document.getElementById('fitBoth').onclick = fitBoth;
+  document.getElementById('globeBtn').onclick = () => {
+    map.flyTo({ center:[(HER.lng+HIM.lng)/2,(HER.lat+HIM.lat)/2], zoom:1.6, duration:1500 });
+  };
+
+  function fitBoth(){
+    const bounds = new maplibregl.LngLatBounds([HIM.lng,HIM.lat],[HIM.lng,HIM.lat]);
+    bounds.extend([HER.lng,HER.lat]);
+    map.fitBounds(bounds, { padding:{ top:140, bottom:200, left:360, right:380 }, duration:1500, maxZoom:5 });
+  }
+
+  // ---------- DRAWER TABS ----------
+  document.querySelectorAll('.drawer-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.drawer-tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelector(`[data-pane="${t.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  // ---------- JOURNEY ROW CLICKS ----------
+  document.querySelectorAll('.journey-row').forEach(r => {
+    r.addEventListener('click', () => {
+      const [lng, lat, z] = r.dataset.fly.split(',').map(Number);
+      map.flyTo({ center:[lng, lat], zoom: z, duration: 1800 });
+    });
+  });
+
+  // ---------- CALL MODAL ----------
+  const overlay = document.getElementById('callOverlay');
+  document.getElementById('callBtn').addEventListener('click', () => {
+    overlay.classList.add('active');
+  });
+  document.getElementById('declineBtn').addEventListener('click', () => {
+    overlay.classList.remove('active');
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+  // ---------- LIVE "LAST SEEN" + SYNC TICKER ----------
+  let sec = 12;
+  const lastSeenEl = document.getElementById('lastSeen');
+  const syncedAgoEl = document.getElementById('syncedAgo');
+  setInterval(() => {
+    sec++;
+    if (sec >= 60) sec = 1;
+    syncedAgoEl.textContent = `Synced ${sec}s ago`;
+  }, 1000);
+
+  // ---------- HISTOGRAM (calls by hour) ----------
+  const hist = document.getElementById('histogram');
+  const buckets = [2,1,0,0,0,1,2,4,5,3,2,2,3,2,2,3,4,5,7,9,11,10,7,4];
+  const max = Math.max(...buckets);
+  hist.innerHTML = buckets.map((v,i) => {
+    const h = (v/max)*100;
+    const peak = i >= 18 && i <= 22;
+    return `<div style="flex:1;height:${h}%;background:${peak?'var(--red)':'rgba(255,255,255,0.18)'};border-radius:2px;min-height:2px"></div>`;
+  }).join('');
+
+})();
+</script>
+</body>
+</html>
