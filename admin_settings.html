@@ -105,6 +105,8 @@
     .danger .btn{width:100%;justify-content:center}
     .avatar-pic{width:100px;height:100px;font-size:48px}
   }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .partner-joined{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:6px;padding:14px 16px}
 </style>
 </head>
 <body>
@@ -192,6 +194,24 @@
           <p class="desc">Shown on the home page hero. Make it good.</p>
           <div class="field"><label>Love Note</label><textarea id="loveNote">Every day with you is a new episode.</textarea></div>
           <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" placeholder="— Your Name, Day 1"></div>
+        </div>
+
+        <div class="panel" id="partnerPanel">
+          <h2>Partner Access</h2>
+          <p class="desc">Give your partner their own login — they'll land on the Watch screen, not the admin dashboard.</p>
+          <div id="partnerStatusRow" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div id="partnerSpinner" style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.12);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div>
+            <span id="partnerStatusText" style="font-size:13px;color:var(--text-dim)">Checking partner status…</span>
+          </div>
+          <a href="invite.html" class="btn btn-ghost" id="inviteLink" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            Invite Partner
+          </a>
+          <div id="partnerJoined" class="partner-joined" style="display:none">
+            <div style="font-size:11px;color:#10b981;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Partner joined</div>
+            <div style="font-size:14px;color:#fff">Your partner has an active account.</div>
+            <a href="invite.html" style="display:inline-block;margin-top:10px;font-size:12px;color:var(--text-dim)">Manage invite →</a>
+          </div>
         </div>
 
         <div class="panel danger">
@@ -325,6 +345,54 @@
   loadSettings(LoveFlix.getSettings());
   LoveFlix.ensureSettingsReady().then(loadSettings).catch(() => {});
   window.addEventListener('loveflix:settings-changed', () => loadSettings(LoveFlix.getSettings()));
+
+  // --- Partner Access Panel ---
+  (async function() {
+    const userId = LoveFlix.getUserId && LoveFlix.getUserId();
+    const token  = LoveFlix.getToken  && LoveFlix.getToken();
+    const SB_URL = LoveFlix.SUPABASE_URL;
+    const SB_KEY = LoveFlix.SUPABASE_ANON_KEY;
+    const spinner    = document.getElementById('partnerSpinner');
+    const statusText = document.getElementById('partnerStatusText');
+    const statusRow  = document.getElementById('partnerStatusRow');
+    const inviteLink = document.getElementById('inviteLink');
+    const joinedEl   = document.getElementById('partnerJoined');
+
+    function showInvite() {
+      spinner.style.display = 'none';
+      statusText.style.display = 'none';
+      inviteLink.style.display = '';
+    }
+
+    if (!userId || !token || !SB_URL) { showInvite(); return; }
+
+    const hdrs = { apikey: SB_KEY, Authorization: `Bearer ${token}` };
+    try {
+      const r1 = await fetch(
+        `${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`,
+        { headers: hdrs }
+      );
+      const rows1 = await r1.json();
+      const myRow = rows1 && rows1[0];
+      if (!myRow || !myRow.couple_id) { showInvite(); return; }
+
+      const coupleId = myRow.couple_id;
+      const r2 = await fetch(
+        `${SB_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&user_id=neq.${userId}&select=user_id&limit=1`,
+        { headers: hdrs }
+      );
+      const rows2 = await r2.json();
+      spinner.style.display = 'none';
+      statusRow.style.display = 'none';
+      if (rows2 && rows2.length > 0) {
+        joinedEl.style.display = 'block';
+      } else {
+        inviteLink.style.display = '';
+      }
+    } catch (_) {
+      showInvite();
+    }
+  })();
 
   colors.addEventListener('click', e => {
     const sw = e.target.closest('.color-swatch');

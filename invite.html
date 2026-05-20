@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){if(k==='mukstudio2026'){try{localStorage.setItem('lf_access','1');}catch(e){}u.searchParams.delete('unlock');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);}else{location.replace('/waitlist.html');return;}}var ok=false;try{ok=localStorage.getItem('lf_access')==='1';}catch(e){}if(!ok){location.replace('/waitlist.html');}}catch(e){location.replace('/waitlist.html');}})();</script><!-- LF_GATE_END -->
+
+<meta charset="UTF-8">
+<title>LoveFlix — Invite Partner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--rose:#ff5f8f;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+  .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
+  .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;border-left:3px solid transparent;transition:background .15s,color .15s}
+  .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
+  .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff}
+
+  main{padding:32px 40px 60px;max-width:760px}
+  .crumbs{font-size:12px;color:var(--text-dim);margin-bottom:14px}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:8px}
+  .page-sub{font-size:14px;color:var(--text-dim);margin-bottom:32px}
+
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px}
+  .panel h2{font-size:14px;font-weight:600;margin-bottom:4px}
+  .panel .desc{font-size:12px;color:var(--text-dim);margin-bottom:20px}
+
+  /* partner joined state */
+  .joined-row{display:flex;align-items:center;gap:16px;padding:16px 20px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px}
+  .joined-av{width:44px;height:44px;border-radius:10px;background:radial-gradient(circle at 30% 25%,#ffb3c7,transparent 55%),linear-gradient(135deg,#ff5f8f,#8f1d4a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;flex-shrink:0}
+  .joined-info .name{font-size:15px;font-weight:600;color:#fff}
+  .joined-info .meta{font-size:12px;color:#4ade80;margin-top:2px}
+  .joined-badge{margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#4ade80;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+
+  /* invite link box */
+  .invite-box{background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-size:13px;color:var(--text-light);word-break:break-all;font-family:'JetBrains Mono',monospace,sans-serif;line-height:1.5;position:relative;margin-bottom:14px;min-height:46px}
+  .invite-box.empty{color:var(--text-dim);font-style:italic;font-family:'Inter',sans-serif}
+
+  .btn{padding:10px 20px;border-radius:4px;font-size:13px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn svg{width:15px;height:15px;fill:currentColor}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}.btn-ghost:hover{border-color:#fff;color:#fff}
+  .btn-rose{background:rgba(255,95,143,0.15);color:#ff8aa6;border:1px solid rgba(255,95,143,0.3)}.btn-rose:hover{background:rgba(255,95,143,0.25);border-color:#ff5f8f;color:#fff}
+
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+
+  /* expiry / status chip */
+  .meta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--text-dim);align-items:center}
+  .status-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+  .status-chip .dot{width:6px;height:6px;border-radius:50%;background:#f59e0b;animation:chipPulse 1.8s ease-in-out infinite}
+  .status-chip.accepted{background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:#4ade80}
+  .status-chip.accepted .dot{background:#4ade80;animation:none}
+  .status-chip.expired{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.3);color:#f87171}
+  .status-chip.expired .dot{background:#f87171;animation:none}
+  @keyframes chipPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .toast{position:fixed;bottom:28px;right:28px;background:#10b981;color:#000;padding:11px 18px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transform:translateY(12px);transition:all .28s;pointer-events:none;z-index:100}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{background:#e87c03;color:#fff}
+
+  .skeleton{background:linear-gradient(90deg,var(--panel-2) 25%,rgba(255,255,255,0.04) 50%,var(--panel-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:18px;margin-bottom:8px}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  @media (max-width:720px){
+    .layout{grid-template-columns:1fr}
+    aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}
+    .side-logo,.side-foot,.side-eyebrow{display:none}
+    .side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
+    .side-link.active{border-left:none;border-bottom-color:var(--red)}
+    main{padding:20px 16px 40px}
+    .page-title{font-size:32px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="side-logo">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
+    </div>
+    <div class="side-eyebrow">Manage</div>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <div class="side-eyebrow" style="margin-top:18px">Live Site</div>
+    <a href="home.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>View Home</a>
+    <a href="loveconnect.html" class="side-link" style="color:#ff8aa6">
+      <svg viewBox="0 0 24 24" style="fill:#ff5f8f"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+      LoveConnect
+    </a>
+    <div class="side-foot">
+      <div class="av" id="sideAvatar">Y</div>
+      <div>
+        <div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div>
+        <div>Admin · <span id="sideUrl">loveflix.us</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="crumbs"><a href="admin.html">Dashboard</a> › <a href="admin_settings.html">Settings</a> › Invite Partner</div>
+    <h1 class="page-title">Invite Your Partner</h1>
+    <p class="page-sub">Send your partner a unique link. They'll create their own account, and LoveConnect will know who's who.</p>
+
+    <!-- Partner joined state -->
+    <div id="partnerJoinedPanel" class="panel" style="display:none">
+      <h2>Partner Access</h2>
+      <p class="desc">Your partner has joined LoveFlix.</p>
+      <div class="joined-row">
+        <div class="joined-av" id="partnerInitialEl">?</div>
+        <div class="joined-info">
+          <div class="name" id="partnerNameEl">—</div>
+          <div class="meta" id="partnerMetaEl">Joined recently</div>
+        </div>
+        <div class="joined-badge">Active</div>
+      </div>
+    </div>
+
+    <!-- Invite generator -->
+    <div id="invitePanel" class="panel">
+      <h2>Partner Invite Link</h2>
+      <p class="desc">Generate a one-time link. It expires in 7 days. Your partner uses it to create their account — no tech skills needed.</p>
+
+      <div class="invite-box empty" id="inviteBox">Generate an invite to see the link.</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="generateBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 5v3m0 8v3m-7-7H2m20 0h-3M5.64 5.64l2.12 2.12m8.49 8.49l2.12 2.12M5.64 18.36l2.12-2.12m8.49-8.49l2.12-2.12"/></svg>
+          Generate Invite
+        </button>
+        <button class="btn btn-ghost" id="copyBtn" disabled>
+          <svg viewBox="0 0 24 24"><path d="M16 1H4a2 2 0 00-2 2v14h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z"/></svg>
+          Copy Link
+        </button>
+        <a class="btn btn-rose" id="emailBtn" href="#" style="display:none">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Email Invite
+        </a>
+      </div>
+
+      <div class="meta-row" id="metaRow" style="display:none">
+        <span class="status-chip" id="statusChip">
+          <span class="dot"></span>
+          <span id="statusText">Pending</span>
+        </span>
+        <span id="expiryText" style="color:var(--text-dim)"></span>
+      </div>
+    </div>
+
+    <div class="panel" style="background:rgba(255,95,143,0.04);border-color:rgba(255,95,143,0.18)">
+      <h2 style="color:#ff8aa6">How it works</h2>
+      <p class="desc" style="color:var(--text-light);margin-bottom:0">
+        1. Click <strong>Generate Invite</strong> — a unique 7-day link is created.<br>
+        2. Copy and share it with your partner (WhatsApp, iMessage, email).<br>
+        3. They open the link, pick a display name, create a password.<br>
+        4. LoveConnect immediately knows both your locations.
+      </p>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/loveflix.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  const SB_URL  = LoveFlix.SUPABASE_URL;
+  const SB_KEY  = LoveFlix.SUPABASE_ANON_KEY;
+
+  function sbHeaders(extra) {
+    return Object.assign({
+      apikey: SB_KEY,
+      Authorization: `Bearer ${LoveFlix.getToken()}`,
+      'Content-Type': 'application/json',
+    }, extra || {});
+  }
+
+  function showToast(msg, err) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (err ? ' err' : '');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Paint sidebar names
+  (function() {
+    const s = LoveFlix.getSettings();
+    const n = s.adminName || 'You';
+    const av = document.getElementById('sideAvatar');
+    av.textContent = (n[0] || 'Y').toUpperCase();
+    if (s.adminPhoto) { av.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover`; av.style.color = 'transparent'; }
+    document.getElementById('sideAdminName').textContent = n;
+    const slug = s.urlSlug || 'loveflix.us';
+    document.getElementById('sideUrl').textContent = slug ? 'loveflix.us/' + slug : 'loveflix.us';
+  })();
+
+  let coupleId = LoveFlix.getCoupleId();
+  let currentInvite = null;
+  const userId = LoveFlix.getUserId();
+
+  async function ensureCoupleId() {
+    if (coupleId) return coupleId;
+    // Check couple_members for this user
+    const res = await fetch(`${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`, { headers: sbHeaders() });
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows && rows[0]) { coupleId = rows[0].couple_id; localStorage.setItem('loveflix_couple_id', coupleId); return coupleId; }
+    }
+    // No row yet — create one with a fresh couple_id
+    const newCoupleId = crypto.randomUUID();
+    const ins = await fetch(`${SB_URL}/rest/v1/couple_members`, {
+      method: 'POST',
+      headers: sbHeaders({ Prefer: 'return=representation' }),
+      body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin' }),
+    });
+    if (!ins.ok) throw new Error('Could not create couple record.');
+    coupleId = newCoupleId;
+    localStorage.setItem('loveflix_couple_id', coupleId);
+    return coupleId;
+  }
+
+  function fmtExpiry(expiresAt) {
+    const ms = new Date(expiresAt) - Date.now();
+    if (ms <= 0) return 'Expired';
+    const h = Math.floor(ms / 3600000);
+    if (h < 24) return `Expires in ${h}h`;
+    return `Expires in ${Math.floor(h / 24)}d`;
+  }
+
+  function renderInvite(invite) {
+    currentInvite = invite;
+    const url = `${location.origin}/join.html?token=${invite.token}`;
+    const box = document.getElementById('inviteBox');
+    box.textContent = url;
+    box.classList.remove('empty');
+
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.disabled = false;
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(url).then(() => showToast('Copied!')).catch(() => {});
+    };
+
+    const emailBtn = document.getElementById('emailBtn');
+    const s = LoveFlix.getSettings();
+    const partnerName = s.partnerName || 'my love';
+    const adminName = s.adminName || 'me';
+    emailBtn.style.display = '';
+    emailBtn.href = `mailto:?subject=${encodeURIComponent('Your LoveFlix invite')}&body=${encodeURIComponent(`Hey ${partnerName},\n\nI set up something special for us — click this link to join:\n${url}\n\nSee you on the map 💕\n${adminName}`)}`;
+
+    const metaRow = document.getElementById('metaRow');
+    const chip = document.getElementById('statusChip');
+    const statusText = document.getElementById('statusText');
+    const expiryText = document.getElementById('expiryText');
+    metaRow.style.display = '';
+
+    const isExpired = new Date(invite.expires_at) < new Date();
+    if (invite.used) {
+      chip.className = 'status-chip accepted';
+      statusText.textContent = 'Accepted';
+      expiryText.textContent = '';
+    } else if (isExpired) {
+      chip.className = 'status-chip expired';
+      statusText.textContent = 'Expired';
+      expiryText.textContent = 'Generate a new one';
+    } else {
+      chip.className = 'status-chip';
+      statusText.textContent = 'Pending';
+      expiryText.textContent = fmtExpiry(invite.expires_at);
+    }
+  }
+
+  async function load() {
+    document.getElementById('generateBtn').textContent = 'Loading…';
+    document.getElementById('generateBtn').disabled = true;
+    try {
+      await ensureCoupleId();
+
+      // Check if partner already joined
+      const pmRes = await fetch(
+        `${SB_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&role=eq.partner&select=display_name,created_at&limit=1`,
+        { headers: sbHeaders() }
+      );
+      if (pmRes.ok) {
+        const partners = await pmRes.json();
+        if (partners && partners[0]) {
+          const p = partners[0];
+          const el = document.getElementById('partnerJoinedPanel');
+          el.style.display = '';
+          const n = p.display_name || LoveFlix.getSettings().partnerName || 'Partner';
+          document.getElementById('partnerInitialEl').textContent = n[0].toUpperCase();
+          document.getElementById('partnerNameEl').textContent = n;
+          document.getElementById('partnerMetaEl').textContent = 'Joined ' + new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+      }
+
+      // Fetch latest invite
+      const invRes = await fetch(
+        `${SB_URL}/rest/v1/couple_invites?couple_id=eq.${coupleId}&order=created_at.desc&limit=1`,
+        { headers: sbHeaders() }
+      );
+      if (invRes.ok) {
+        const invites = await invRes.json();
+        if (invites && invites[0]) renderInvite(invites[0]);
+      }
+    } catch (e) {
+      showToast(e.message || 'Error loading invite', true);
+    } finally {
+      document.getElementById('generateBtn').textContent = 'Generate Invite';
+      document.getElementById('generateBtn').disabled = false;
+    }
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      await ensureCoupleId();
+      const token = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
+      const res = await fetch(`${SB_URL}/rest/v1/couple_invites`, {
+        method: 'POST',
+        headers: sbHeaders({ Prefer: 'return=representation' }),
+        body: JSON.stringify({ couple_id: coupleId, token, expires_at: expiresAt, used: false }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to create invite');
+      }
+      const rows = await res.json();
+      renderInvite(rows[0]);
+      showToast('Invite link ready!');
+
+      // Try to also fire the Worker email endpoint (best-effort)
+      const s = LoveFlix.getSettings();
+      fetch('/api/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LoveFlix.getToken()}` },
+        body: JSON.stringify({
+          invite_url: `${location.origin}/join.html?token=${token}`,
+          from_name: s.adminName || 'Your Partner',
+          to_name: s.partnerName || 'You',
+        }),
+      }).catch(() => {});
+    } catch (e) {
+      showToast(e.message || 'Error generating invite', true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Regenerate';
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>

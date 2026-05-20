@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){if(k==='mukstudio2026'){try{localStorage.setItem('lf_access','1');}catch(e){}u.searchParams.delete('unlock');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);}else{location.replace('/waitlist.html');return;}}var ok=false;try{ok=localStorage.getItem('lf_access')==='1';}catch(e){}if(!ok){location.replace('/waitlist.html');}}catch(e){location.replace('/waitlist.html');}})();</script><!-- LF_GATE_END -->
+
 <meta charset="UTF-8">
 <title>LoveFlix — LoveConnect</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -616,11 +618,50 @@
   </div>
 </div>
 
+<script src="assets/loveflix.js"></script>
 <script>
 (function(){
-  // ---------- COUPLE COORDINATES ----------
-  const HER = { name:'My Love', initial:'M', lng:-0.1276, lat:51.5074, kind:'her' };  // London
-  const HIM = { name:'Buki',    initial:'B', lng:-74.006, lat:40.7128, kind:'him' };  // NYC
+  // ---------- AUTH + SUPABASE SETUP ----------
+  const SB_URL    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_URL     : '';
+  const SB_KEY    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_ANON_KEY : '';
+  const MY_USER   = typeof LoveFlix !== 'undefined' ? LoveFlix.getUserId()       : null;
+  const TOKEN     = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken()        : null;
+  const COUPLE_ID = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId()     : null;
+
+  if (!TOKEN) { location.replace('loveflix_login_screen.html'); return; }
+
+  const _s = typeof LoveFlix !== 'undefined' ? (LoveFlix.getSettings() || {}) : {};
+
+  // ---------- COUPLE DATA (mutable — populated from Supabase) ----------
+  let HER = {
+    name:    _s.partnerName || 'My Love',
+    initial: ((_s.partnerName || 'M')[0] || 'M').toUpperCase(),
+    lng: -0.1276, lat: 51.5074, kind: 'her'
+  };
+  let HIM = {
+    name:    _s.adminName || 'You',
+    initial: ((_s.adminName || 'Y')[0] || 'Y').toUpperCase(),
+    lng: -74.006, lat: 40.7128, kind: 'him'
+  };
+
+  // ---------- WKB PARSER (PostGIS geography(POINT) hex → [lng, lat]) ----------
+  function parseWKB(hex) {
+    if (!hex || hex.length < 42) return null;
+    try {
+      const buf  = new Uint8Array(hex.match(/../g).map(b => parseInt(b, 16)));
+      const view = new DataView(buf.buffer);
+      const le   = buf[0] === 1;
+      const type = view.getUint32(1, le);
+      const off  = (type & 0x20000000) ? 9 : 5;
+      const lng  = view.getFloat64(off,     le);
+      const lat  = view.getFloat64(off + 8, le);
+      return (isFinite(lng) && isFinite(lat)) ? [lng, lat] : null;
+    } catch (_) { return null; }
+  }
+
+  function sbHeaders() {
+    return { apikey: SB_KEY, Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
+  }
 
   const MEMORIES = [
     { id:'lisbon',  lng:-9.13,    lat:38.71,  label:'Lisbon', sub:'May 2025', color:'linear-gradient(135deg,#fbbf24,#7c2d12)' },
@@ -661,12 +702,21 @@
     return el;
   }
 
-  const herMarker = new maplibregl.Marker({ element: makePartnerMarker(HER, 'London · 16:42') })
+  const herMarker = new maplibregl.Marker({ element: makePartnerMarker(HER, 'Loading…') })
     .setLngLat([HER.lng, HER.lat])
     .addTo(map);
-  const himMarker = new maplibregl.Marker({ element: makePartnerMarker(HIM, 'Brooklyn · 11:42') })
+  const himMarker = new maplibregl.Marker({ element: makePartnerMarker(HIM, 'Loading…') })
     .setLngLat([HIM.lng, HIM.lat])
     .addTo(map);
+
+  function updateMarkerUI(mkr, p, labelMeta) {
+    mkr.setLngLat([p.lng, p.lat]);
+    const el  = mkr.getElement();
+    const av  = el.querySelector('.avatar');
+    const lbl = el.querySelector('.label');
+    if (av)  av.textContent  = p.initial;
+    if (lbl) lbl.innerHTML   = p.name + `<span class="sub">${labelMeta}</span>`;
+  }
 
   // memory pins
   MEMORIES.forEach(m => {
@@ -770,6 +820,9 @@
 
     // fit both partners with padding
     setTimeout(fitBoth, 400);
+
+    // wire real Supabase data after map is ready
+    initLiveData();
   });
 
   // ---------- CONTROLS ----------
@@ -784,6 +837,131 @@
     const bounds = new maplibregl.LngLatBounds([HIM.lng,HIM.lat],[HIM.lng,HIM.lat]);
     bounds.extend([HER.lng,HER.lat]);
     map.fitBounds(bounds, { padding:{ top:140, bottom:200, left:360, right:380 }, duration:1500, maxZoom:5 });
+  }
+
+  // ---------- LIVE DATA (Supabase) ----------
+  function formatLocalTime(lng) {
+    const offsetHours = Math.round(lng / 15);
+    const utcMs = Date.now() + new Date().getTimezoneOffset() * 60000;
+    return new Date(utcMs + offsetHours * 3600000)
+      .toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+
+  async function fetchAndUpdateLocations() {
+    if (!SB_URL || !TOKEN || !COUPLE_ID) return;
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/couple_locations?couple_id=eq.${COUPLE_ID}&select=user_id,location,updated_at`,
+        { headers: sbHeaders() }
+      );
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!Array.isArray(rows)) return;
+
+      for (const row of rows) {
+        const coords = parseWKB(row.location);
+        if (!coords) continue;
+        const [lng, lat] = coords;
+        const localTime  = formatLocalTime(lng);
+        const isMe = row.user_id === MY_USER;
+        if (isMe) {
+          HIM.lng = lng; HIM.lat = lat;
+          updateMarkerUI(himMarker, HIM, `${localTime} local`);
+        } else {
+          HER.lng = lng; HER.lat = lat;
+          updateMarkerUI(herMarker, HER, `${localTime} local`);
+          if (row.updated_at) {
+            const secAgo = Math.round((Date.now() - new Date(row.updated_at).getTime()) / 1000);
+            const lastSeenEl = document.getElementById('lastSeen');
+            if (lastSeenEl) {
+              const label = secAgo < 60 ? `${secAgo}s` : `${Math.round(secAgo/60)}m`;
+              lastSeenEl.textContent = `${label} ago · ${secAgo < 30 ? 'just now' : 'recently'}`;
+            }
+          }
+        }
+      }
+
+      if (map.getSource('love-arc')) {
+        map.getSource('love-arc').setData(buildArcFeature());
+      }
+      updateCoupleCard();
+    } catch (_) {}
+    syncSec = 0;
+  }
+
+  function pushMyLocation() {
+    if (!MY_USER || !COUPLE_ID || !TOKEN || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { longitude: lng, latitude: lat } = pos.coords;
+      fetch(`${SB_URL}/rest/v1/couple_locations`, {
+        method: 'POST',
+        headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({
+          user_id:    MY_USER,
+          couple_id:  COUPLE_ID,
+          location:   `SRID=4326;POINT(${lng} ${lat})`,
+          updated_at: new Date().toISOString()
+        })
+      }).catch(() => {});
+    }, () => {});
+  }
+
+  async function fetchDistance() {
+    if (!COUPLE_ID || !TOKEN) return;
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/rpc/get_couple_distance`, {
+        method: 'POST',
+        headers: sbHeaders(),
+        body: JSON.stringify({ couple_id_param: COUPLE_ID })
+      });
+      if (!res.ok) return;
+      const data   = await res.json();
+      const meters = typeof data === 'number' ? data : (data && (data.distance_m || data.meters));
+      if (!meters || !isFinite(meters)) return;
+      const miles = Math.round(meters / 1609.34).toLocaleString();
+      const km    = Math.round(meters / 1000).toLocaleString();
+      const distEl = document.getElementById('distVal');
+      if (distEl) distEl.innerHTML = `${miles}<span class="unit">mi</span>`;
+      const subEl = document.querySelector('.stat-cell.primary .stat-sub');
+      if (subEl)  subEl.textContent = `${km} km`;
+    } catch (_) {}
+  }
+
+  function updateCoupleCard() {
+    const title = document.querySelector('.couple-title');
+    if (title) title.innerHTML = `You &amp; ${HER.name}`;
+    const rows = document.querySelectorAll('.couple-row');
+    if (rows[0]) {
+      const av = rows[0].querySelector('.av');
+      if (av) av.innerHTML = HER.initial + '<span class="status"></span>';
+      const n = rows[0].querySelector('.n');
+      if (n) n.textContent = HER.name;
+    }
+    if (rows[1]) {
+      const av = rows[1].querySelector('.av');
+      if (av) av.innerHTML = HIM.initial + '<span class="status"></span>';
+      const n = rows[1].querySelector('.n');
+      if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+    }
+    const callBtn = document.getElementById('callBtn');
+    if (callBtn) {
+      const txt = [...callBtn.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+      if (txt) txt.textContent = ` Call ${HER.name}`;
+    }
+    const callingName = document.querySelector('.calling-name');
+    if (callingName) callingName.textContent = `Calling ${HER.name}`;
+    const callingAv = document.querySelector('.calling-av');
+    if (callingAv) callingAv.textContent = HER.initial;
+  }
+
+  async function initLiveData() {
+    if (!SB_URL || !TOKEN || !COUPLE_ID) return;
+    pushMyLocation();
+    await fetchAndUpdateLocations();
+    fetchDistance();
+    setInterval(fetchAndUpdateLocations, 10000);
+    setInterval(pushMyLocation,          10000);
+    setInterval(fetchDistance,           30000);
   }
 
   // ---------- DRAWER TABS ----------
@@ -814,14 +992,14 @@
   });
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
 
-  // ---------- LIVE "LAST SEEN" + SYNC TICKER ----------
-  let sec = 12;
-  const lastSeenEl = document.getElementById('lastSeen');
+  // ---------- SYNC TICKER ----------
+  let syncSec = 0;
   const syncedAgoEl = document.getElementById('syncedAgo');
   setInterval(() => {
-    sec++;
-    if (sec >= 60) sec = 1;
-    syncedAgoEl.textContent = `Synced ${sec}s ago`;
+    syncSec++;
+    syncedAgoEl.textContent = syncSec < 60
+      ? `Synced ${syncSec}s ago`
+      : `Synced ${Math.round(syncSec / 60)}m ago`;
   }, 1000);
 
   // ---------- HISTOGRAM (calls by hour) ----------

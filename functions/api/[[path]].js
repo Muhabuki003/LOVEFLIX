@@ -90,6 +90,8 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/progress') return listProgress(env, user);
     if (method === 'POST' && path === '/api/progress') return saveProgress(env, request, user);
 
+    if (method === 'POST' && path === '/api/send-invite') return sendInvite(env, request, user);
+
     if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
 
@@ -751,6 +753,48 @@ async function verifyStripeSignature(payload, sigHeader, secret) {
     const computed = [...new Uint8Array(mac)].map(b => b.toString(16).padStart(2, '0')).join('');
     return computed === signature;
   } catch { return false; }
+}
+
+// POST /api/send-invite — send a partner invite email via Resend
+async function sendInvite(env, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const { to, inviteUrl } = body;
+  if (!to || !inviteUrl) return json({ error: 'to and inviteUrl required' }, 400);
+
+  const apiKey = env.RESEND_API_KEY;
+  if (!apiKey) return json({ error: 'RESEND_API_KEY not configured' }, 500);
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'LoveFlix <invite@loveflix.us>',
+      to: [to],
+      subject: "You've been invited to LoveFlix 💕",
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0e0e0e;color:#fff;padding:40px;border-radius:8px">
+          <div style="font-size:32px;font-weight:700;letter-spacing:2px;color:#e50914;margin-bottom:8px">LOVE♥FLIX</div>
+          <h2 style="font-size:22px;margin-bottom:12px;color:#fff">You're invited</h2>
+          <p style="color:#cfcfcf;margin-bottom:24px;line-height:1.6">
+            Your partner has invited you to join their private streaming service on LoveFlix —
+            a personal Netflix just for the two of you.
+          </p>
+          <a href="${inviteUrl}" style="display:inline-block;background:#e50914;color:#fff;padding:14px 28px;border-radius:4px;font-weight:600;text-decoration:none;font-size:15px">
+            Accept Invite &amp; Join
+          </a>
+          <p style="margin-top:24px;font-size:12px;color:#737373">
+            This link expires in 7 days. If you didn't expect this email, you can ignore it.
+          </p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    return json({ error: 'resend_error', detail: err }, 500);
+  }
+  return json({ ok: true });
 }
 
 // GET /api/billing/subscription — returns active subscription for authenticated user
