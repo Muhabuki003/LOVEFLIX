@@ -181,6 +181,30 @@
   const SB_URL  = LoveFlix.SUPABASE_URL;
   const SB_KEY  = LoveFlix.SUPABASE_ANON_KEY;
 
+  async function ensureFreshToken() {
+    if (LoveFlix.ensureFreshToken) return LoveFlix.ensureFreshToken();
+    // Fallback: inline token refresh for older cached loveflix.js
+    const token = LoveFlix.getToken();
+    if (!token) return;
+    try {
+      const { exp } = JSON.parse(atob(token.split('.')[1]));
+      if (exp * 1000 > Date.now() + 60000) return; // still fresh
+    } catch { return; }
+    const rt = localStorage.getItem('loveflix_refresh_token');
+    if (!rt) return;
+    try {
+      const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', apikey: SB_KEY },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.access_token) localStorage.setItem('loveflix_token', data.access_token);
+      if (data.refresh_token) localStorage.setItem('loveflix_refresh_token', data.refresh_token);
+    } catch { /* best-effort */ }
+  }
+
   function sbHeaders(extra) {
     return Object.assign({
       apikey: SB_KEY,
@@ -215,7 +239,7 @@
   async function ensureCoupleId() {
     if (coupleId) return coupleId;
     // Refresh the Supabase token if it has expired
-    await LoveFlix.ensureFreshToken();
+    await ensureFreshToken();
     // Check couple_members for this user
     const res = await fetch(`${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`, { headers: sbHeaders() });
     if (res.ok) {
@@ -334,7 +358,7 @@
     btn.disabled = true;
     btn.textContent = 'Generating…';
     try {
-      await LoveFlix.ensureFreshToken();
+      await ensureFreshToken();
       await ensureCoupleId();
       const token = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
