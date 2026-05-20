@@ -46,7 +46,7 @@ function corsHeaders() {
   return {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'access-control-allow-headers': 'authorization,content-type',
+    'access-control-allow-headers': 'authorization,content-type,x-tenant-id',
     'access-control-max-age': '86400',
   };
 }
@@ -73,7 +73,7 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/health') return json({ ok: true });
 
-    if (method === 'GET' && path === '/api/videos') return listVideos(env, url, user);
+    if (method === 'GET' && path === '/api/videos') return listVideos(env, url, user, request);
     if (method === 'POST' && path === '/api/videos') return createVideo(env, request, user);
 
     const videoIdMatch = path.match(/^\/api\/videos\/([^/]+)$/);
@@ -92,7 +92,7 @@ export async function onRequest(context) {
 
     if (method === 'POST' && path === '/api/send-invite') return sendInvite(env, request, user);
 
-    if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user);
+    if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user, request);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
 
     if (method === 'POST' && path === '/api/create-checkout-session') return createCheckoutSession(env, request, url);
@@ -135,8 +135,8 @@ async function authenticate(request, env) {
 }
 
 // ---------- Videos ----------
-async function listVideos(env, url, user) {
-  const tenantId = (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+async function listVideos(env, url, user, request) {
+  const tenantId = (request && request.headers.get('x-tenant-id')) || (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
   const stmt = env.DB.prepare(
     `SELECT id, tenant_id, title, description, date, category,
             thumbnail_url, video_url, duration_seconds, is_published,
@@ -319,8 +319,8 @@ async function saveProgress(env, request, user) {
 }
 
 // ---------- Tenant Settings ----------
-async function getSettings(env, url, user) {
-  const tenantId = (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+async function getSettings(env, url, user, request) {
+  const tenantId = (request && request.headers.get('x-tenant-id')) || (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
   const row = await env.DB.prepare(
     `SELECT data, updated_at FROM tenant_settings WHERE tenant_id = ?`
   ).bind(tenantId).first();
@@ -333,7 +333,7 @@ async function getSettings(env, url, user) {
 async function putSettings(env, request, user) {
   const body = await request.json().catch(() => ({}));
   const settings = (body && typeof body.settings === 'object' && body.settings) || {};
-  const tenantId = user.id;
+  const tenantId = request.headers.get('x-tenant-id') || user.id;
   const data = JSON.stringify(settings);
   if (data.length > 900_000) {
     return json({ error: 'settings_too_large', message: 'Settings payload exceeds 900KB. Trim photos or other large fields.' }, 413);

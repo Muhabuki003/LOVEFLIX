@@ -632,15 +632,22 @@
 
   const _s = typeof LoveFlix !== 'undefined' ? (LoveFlix.getSettings() || {}) : {};
 
+  // Determine role from the cached creator_id (set at login by cacheCoupleId).
+  // HIM = the person on this device (always "you"), HER = the other person.
+  // When the admin is logged in: HIM = admin, HER = partner.
+  // When the partner is logged in: HIM = partner, HER = admin.
+  const _creatorId = typeof LoveFlix.getCreatorId === 'function' ? LoveFlix.getCreatorId() : null;
+  const _iAmAdmin  = !_creatorId || _creatorId === MY_USER;
+
   // ---------- COUPLE DATA (mutable — populated from Supabase) ----------
   let HER = {
-    name:    _s.partnerName || 'My Love',
-    initial: ((_s.partnerName || 'M')[0] || 'M').toUpperCase(),
+    name:    _iAmAdmin ? (_s.partnerName || 'My Love') : (_s.adminName || 'You'),
+    initial: (_iAmAdmin ? ((_s.partnerName || 'M')[0] || 'M') : ((_s.adminName || 'Y')[0] || 'Y')).toUpperCase(),
     lng: -0.1276, lat: 51.5074, kind: 'her'
   };
   let HIM = {
-    name:    _s.adminName || 'You',
-    initial: ((_s.adminName || 'Y')[0] || 'Y').toUpperCase(),
+    name:    _iAmAdmin ? (_s.adminName || 'You') : (_s.partnerName || 'My Love'),
+    initial: (_iAmAdmin ? ((_s.adminName || 'Y')[0] || 'Y') : ((_s.partnerName || 'M')[0] || 'M')).toUpperCase(),
     lng: -74.006, lat: 40.7128, kind: 'him'
   };
 
@@ -936,12 +943,16 @@
       if (av) av.innerHTML = HER.initial + '<span class="status"></span>';
       const n = rows[0].querySelector('.n');
       if (n) n.textContent = HER.name;
+      const meta = rows[0].querySelector('.meta');
+      if (meta) meta.textContent = formatLocalTime(HER.lng) + ' local';
     }
     if (rows[1]) {
       const av = rows[1].querySelector('.av');
       if (av) av.innerHTML = HIM.initial + '<span class="status"></span>';
       const n = rows[1].querySelector('.n');
       if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+      const meta = rows[1].querySelector('.meta');
+      if (meta) meta.textContent = formatLocalTime(HIM.lng) + ' local';
     }
     const callBtn = document.getElementById('callBtn');
     if (callBtn) {
