@@ -902,48 +902,57 @@
       const rows = await res.json();
       if (!Array.isArray(rows)) return;
 
+      // Collect confirmed fresh rows for each person before touching any marker.
+      // This means a missing or corrupted partner row during a sync window
+      // leaves HER at her last known position rather than jumping to a wrong spot.
+      let himRow = null, herRow = null;
       const seen = new Set();
       for (const row of rows) {
-        if (seen.has(row.user_id)) continue; // first row per user = most recent (ORDER BY desc)
+        if (seen.has(row.user_id)) continue; // first = most recent (ORDER BY desc)
         seen.add(row.user_id);
         const coords = parseWKB(row.location);
         if (!coords) continue;
-        const [lng, lat] = coords;
+        if (row.user_id === MY_USER) himRow = { coords, updated_at: row.updated_at };
+        else                         herRow = { coords, updated_at: row.updated_at };
+      }
+
+      // Only move a marker when we have confirmed data for that person.
+      if (himRow) {
+        const [lng, lat] = himRow.coords;
         const localTime  = formatLocalTime(lng);
-        const isMe = row.user_id === MY_USER;
-        if (isMe) {
-          HIM.lng = lng; HIM.lat = lat;
-          updateMarkerUI(himMarker, HIM, `${localTime} local`);
-          // Snapshot coords so the async callback can't read a later overwrite of HIM.
-          (function(snapLng, snapLat, snapTime) {
-            reverseGeocode(HIM).then(place => {
-              if (place) {
-                HIM.lng = snapLng; HIM.lat = snapLat;
-                updateMarkerUI(himMarker, HIM, `${place} · ${snapTime}`);
-                updateCoupleCard();
-              }
-            });
-          })(lng, lat, localTime);
-        } else {
-          HER.lng = lng; HER.lat = lat;
-          updateMarkerUI(herMarker, HER, `${localTime} local`);
-          // Snapshot coords so the async callback can't read a later overwrite of HER.
-          (function(snapLng, snapLat, snapTime) {
-            reverseGeocode(HER).then(place => {
-              if (place) {
-                HER.lng = snapLng; HER.lat = snapLat;
-                updateMarkerUI(herMarker, HER, `${place} · ${snapTime}`);
-                updateCoupleCard();
-              }
-            });
-          })(lng, lat, localTime);
-          if (row.updated_at) {
-            const secAgo = Math.round((Date.now() - new Date(row.updated_at).getTime()) / 1000);
-            const lastSeenEl = document.getElementById('lastSeen');
-            if (lastSeenEl) {
-              const label = secAgo < 60 ? `${secAgo}s` : `${Math.round(secAgo/60)}m`;
-              lastSeenEl.textContent = `${label} ago · ${secAgo < 30 ? 'just now' : 'recently'}`;
+        HIM.lng = lng; HIM.lat = lat;
+        updateMarkerUI(himMarker, HIM, `${localTime} local`);
+        (function(snapLng, snapLat, snapTime) {
+          reverseGeocode(HIM).then(place => {
+            if (place) {
+              HIM.lng = snapLng; HIM.lat = snapLat;
+              updateMarkerUI(himMarker, HIM, `${place} · ${snapTime}`);
+              updateCoupleCard();
             }
+          });
+        })(lng, lat, localTime);
+      }
+
+      if (herRow) {
+        const [lng, lat] = herRow.coords;
+        const localTime  = formatLocalTime(lng);
+        HER.lng = lng; HER.lat = lat;
+        updateMarkerUI(herMarker, HER, `${localTime} local`);
+        (function(snapLng, snapLat, snapTime) {
+          reverseGeocode(HER).then(place => {
+            if (place) {
+              HER.lng = snapLng; HER.lat = snapLat;
+              updateMarkerUI(herMarker, HER, `${place} · ${snapTime}`);
+              updateCoupleCard();
+            }
+          });
+        })(lng, lat, localTime);
+        if (herRow.updated_at) {
+          const secAgo = Math.round((Date.now() - new Date(herRow.updated_at).getTime()) / 1000);
+          const lastSeenEl = document.getElementById('lastSeen');
+          if (lastSeenEl) {
+            const label = secAgo < 60 ? `${secAgo}s` : `${Math.round(secAgo/60)}m`;
+            lastSeenEl.textContent = `${label} ago · ${secAgo < 30 ? 'just now' : 'recently'}`;
           }
         }
       }
@@ -960,7 +969,10 @@
     if (!MY_USER || !COUPLE_ID || !TOKEN || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(pos => {
       const { longitude: lng, latitude: lat } = pos.coords;
-      fetch(`${SB_URL}/rest/v1/couple_locations`, {
+      // on_conflict=user_id,couple_id ensures this upserts the user's OWN row
+      // and never overwrites the partner's row (which was the source of the
+      // 10-second alternating marker flip).
+      fetch(`${SB_URL}/rest/v1/couple_locations?on_conflict=user_id,couple_id`, {
         method: 'POST',
         headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify({
