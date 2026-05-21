@@ -32,6 +32,7 @@
     try { localStorage.removeItem('loveflix_couple_id'); } catch (_) {}
     try { localStorage.removeItem('loveflix_creator_id'); } catch (_) {}
     try { localStorage.removeItem('loveflix_role'); } catch (_) {}
+    try { localStorage.removeItem(SETTINGS_KEY); } catch (_) {}
   }
 
   // Silently refresh the access token using the stored refresh token.

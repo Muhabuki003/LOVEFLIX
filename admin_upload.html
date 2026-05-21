@@ -330,16 +330,11 @@
     status.textContent = 'Preparing upload…';
 
     try {
-      const presign = await fetch('/api/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: LoveFlix.getUserId(),
-          file_size: file.size,
-          filename: file.name,
-          type: file.type || 'video/mp4',
-        })
-      }).then(r => r.json());
+      const filename = encodeURIComponent(file.name);
+      const type     = encodeURIComponent(file.type || 'video/mp4');
+      const presign  = await LoveFlix.api(
+        `/api/upload-url?folder=videos&filename=${filename}&type=${type}`
+      );
 
       if (presign.error) {
         status.textContent = presign.error;
