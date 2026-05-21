@@ -632,12 +632,10 @@
 
   const _s = typeof LoveFlix !== 'undefined' ? (LoveFlix.getSettings() || {}) : {};
 
-  // Determine role from the cached creator_id (set at login by cacheCoupleId).
-  // HIM = the person on this device (always "you"), HER = the other person.
-  // When the admin is logged in: HIM = admin, HER = partner.
-  // When the partner is logged in: HIM = partner, HER = admin.
-  const _creatorId = typeof LoveFlix.getCreatorId === 'function' ? LoveFlix.getCreatorId() : null;
-  const _iAmAdmin  = !_creatorId || _creatorId === MY_USER;
+  // Determine role from the cached loveflix_role set by cacheCoupleId.
+  // HIM = the logged-in user, HER = the other person.
+  const _role     = (function(){ try { return localStorage.getItem('loveflix_role') || 'admin'; } catch(_){ return 'admin'; } })();
+  const _iAmAdmin = _role !== 'partner';
 
   // ---------- COUPLE DATA (mutable — populated from Supabase) ----------
   let HER = {
@@ -677,6 +675,9 @@
     { id:'paris',   lng:2.35,     lat:48.86,  label:'Paris', sub:'Apr 2024', color:'linear-gradient(135deg,#fb7185,#7f1d1d)' },
     { id:'tokyo',   lng:139.65,   lat:35.68,  label:'Tokyo', sub:'Nov 2023', color:'linear-gradient(135deg,#f472b6,#831843)' }
   ];
+
+  // Paint names + call button immediately from cached settings — before live data arrives.
+  updateCoupleCard();
 
   // ---------- MAP INIT ----------
   const map = new maplibregl.Map({
@@ -936,7 +937,7 @@
 
   function updateCoupleCard() {
     const title = document.querySelector('.couple-title');
-    if (title) title.innerHTML = `You &amp; ${HER.name}`;
+    if (title) title.innerHTML = `${HIM.name} &amp; ${HER.name}`;
     const rows = document.querySelectorAll('.couple-row');
     if (rows[0]) {
       const av = rows[0].querySelector('.av');
