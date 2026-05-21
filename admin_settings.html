@@ -446,14 +446,34 @@
         reject(new Error('Please choose an image file.'));
         return;
       }
-      if (file.size > 4 * 1024 * 1024) {
-        reject(new Error('Image is too large (max 4 MB).'));
+      if (file.size > 10 * 1024 * 1024) {
+        reject(new Error('Image is too large (max 10 MB).'));
         return;
       }
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result);
       reader.onerror = () => reject(new Error('Could not read the file.'));
       reader.readAsDataURL(file);
+    });
+  }
+
+  // Resize and re-encode to a small JPEG thumbnail so it fits in D1 and
+  // syncs across devices. Max 200px on longest side, JPEG quality 0.78.
+  function compressImage(dataUrl, maxDim, quality) {
+    return new Promise(function(resolve) {
+      const img = new Image();
+      img.onload = function() {
+        const scale = Math.min(1, (maxDim || 200) / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality != null ? quality : 0.78));
+      };
+      img.onerror = function() { resolve(dataUrl); };
+      img.src = dataUrl;
     });
   }
 
@@ -470,7 +490,8 @@
       const f = e.target.files && e.target.files[0];
       if (!f) return;
       try {
-        const dataUrl = await readImageFile(f);
+        const raw = await readImageFile(f);
+        const dataUrl = await compressImage(raw, 200, 0.78);
         if (which === 'partner') partnerPhoto = dataUrl;
         else adminPhoto = dataUrl;
         applyAvatarPhoto(pic, dataUrl);
