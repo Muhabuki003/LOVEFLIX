@@ -902,18 +902,19 @@
       const rows = await res.json();
       if (!Array.isArray(rows)) return;
 
-      // Collect confirmed fresh rows for each person before touching any marker.
-      // This means a missing or corrupted partner row during a sync window
-      // leaves HER at her last known position rather than jumping to a wrong spot.
+      // Walk rows newest-first. Stop as soon as we have one row per person.
+      // Using else-if(!herRow) means a ghost/stale third row can never
+      // overwrite the real partner row that was already found.
       let himRow = null, herRow = null;
       const seen = new Set();
       for (const row of rows) {
-        if (seen.has(row.user_id)) continue; // first = most recent (ORDER BY desc)
+        if (himRow && herRow) break;
+        if (seen.has(row.user_id)) continue;
         seen.add(row.user_id);
         const coords = parseWKB(row.location);
         if (!coords) continue;
-        if (row.user_id === MY_USER) himRow = { coords, updated_at: row.updated_at };
-        else                         herRow = { coords, updated_at: row.updated_at };
+        if (row.user_id === MY_USER)  himRow = { coords, updated_at: row.updated_at };
+        else if (!herRow)             herRow = { coords, updated_at: row.updated_at };
       }
 
       // Only move a marker when we have confirmed data for that person.
@@ -936,23 +937,34 @@
       if (herRow) {
         const [lng, lat] = herRow.coords;
         const localTime  = formatLocalTime(lng);
+        const secAgo = herRow.updated_at
+          ? Math.round((Date.now() - new Date(herRow.updated_at).getTime()) / 1000) : 9999;
+        // Online = pushed a location in the last 5 minutes.
+        HER.online  = secAgo < 300;
+        HER.secAgo  = secAgo;
         HER.lng = lng; HER.lat = lat;
-        updateMarkerUI(herMarker, HER, `${localTime} local`);
-        (function(snapLng, snapLat, snapTime) {
+        const markerMeta = HER.online ? `${localTime} local` : 'Last seen';
+        updateMarkerUI(herMarker, HER, markerMeta);
+        (function(snapLng, snapLat, snapTime, online) {
           reverseGeocode(HER).then(place => {
             if (place) {
               HER.lng = snapLng; HER.lat = snapLat;
-              updateMarkerUI(herMarker, HER, `${place} · ${snapTime}`);
+              const label = online ? `${place} · ${snapTime}` : `${place} · offline`;
+              updateMarkerUI(herMarker, HER, label);
               updateCoupleCard();
             }
           });
-        })(lng, lat, localTime);
-        if (herRow.updated_at) {
-          const secAgo = Math.round((Date.now() - new Date(herRow.updated_at).getTime()) / 1000);
-          const lastSeenEl = document.getElementById('lastSeen');
-          if (lastSeenEl) {
+        })(lng, lat, localTime, HER.online);
+        const lastSeenEl = document.getElementById('lastSeen');
+        if (lastSeenEl) {
+          if (HER.online) {
             const label = secAgo < 60 ? `${secAgo}s` : `${Math.round(secAgo/60)}m`;
             lastSeenEl.textContent = `${label} ago · ${secAgo < 30 ? 'just now' : 'recently'}`;
+          } else {
+            const minsAgo = Math.round(secAgo / 60);
+            lastSeenEl.textContent = minsAgo < 60
+              ? `${minsAgo}m ago · offline`
+              : `${Math.round(minsAgo/60)}h ago · offline`;
           }
         }
       }
@@ -965,24 +977,51 @@
     syncSec = 0;
   }
 
-  function pushMyLocation() {
-    if (!MY_USER || !COUPLE_ID || !TOKEN || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { longitude: lng, latitude: lat } = pos.coords;
-      // on_conflict=user_id,couple_id ensures this upserts the user's OWN row
-      // and never overwrites the partner's row (which was the source of the
-      // 10-second alternating marker flip).
-      fetch(`${SB_URL}/rest/v1/couple_locations?on_conflict=user_id,couple_id`, {
-        method: 'POST',
-        headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          user_id:    MY_USER,
-          couple_id:  COUPLE_ID,
-          location:   `SRID=4326;POINT(${lng} ${lat})`,
-          updated_at: new Date().toISOString()
-        })
-      }).catch(() => {});
-    }, () => {});
+  // Push a single coordinate fix to Supabase.
+  // on_conflict=couple_id,user_id matches the unique constraint
+  // couple_locations_user_couple_unique(couple_id, user_id) so this always
+  // upserts the current user's OWN row and never touches the partner's row.
+  function pushCoords(lng, lat) {
+    if (!MY_USER || !COUPLE_ID || !TOKEN) return;
+    fetch(`${SB_URL}/rest/v1/couple_locations?on_conflict=couple_id,user_id`, {
+      method: 'POST',
+      headers: { ...sbHeaders(), Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({
+        user_id:    MY_USER,
+        couple_id:  COUPLE_ID,
+        location:   `SRID=4326;POINT(${lng} ${lat})`,
+        updated_at: new Date().toISOString()
+      })
+    }).catch(() => {});
+  }
+
+  // Continuous watch — fires whenever the device moves, just like Life360.
+  // Falls back to a 30-second heartbeat so the row's updated_at stays fresh
+  // even when the device is stationary (lets the partner see "online").
+  let _watchId = null;
+  let _lastPushTime = 0;
+  const HEARTBEAT_MS = 30000;
+
+  function startLocationWatch() {
+    if (!navigator.geolocation) return;
+    _watchId = navigator.geolocation.watchPosition(
+      pos => {
+        pushCoords(pos.coords.longitude, pos.coords.latitude);
+        _lastPushTime = Date.now();
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+    );
+    // Heartbeat: if watchPosition hasn't fired in HEARTBEAT_MS, push again
+    // to keep updated_at fresh so the partner sees "online".
+    setInterval(() => {
+      if (Date.now() - _lastPushTime >= HEARTBEAT_MS) {
+        navigator.geolocation.getCurrentPosition(
+          pos => { pushCoords(pos.coords.longitude, pos.coords.latitude); _lastPushTime = Date.now(); },
+          () => {}
+        );
+      }
+    }, HEARTBEAT_MS);
   }
 
   async function fetchDistance() {
@@ -1012,11 +1051,17 @@
     const rows = document.querySelectorAll('.couple-row');
     if (rows[0]) {
       const av = rows[0].querySelector('.av');
-      if (av) av.innerHTML = HER.initial + '<span class="status"></span>';
+      // Green dot = online (location seen < 5 min ago), grey = offline/unknown.
+      const dot = HER.online === false
+        ? '<span class="status" style="background:#666"></span>'
+        : '<span class="status"></span>';
+      if (av) av.innerHTML = HER.initial + dot;
       const n = rows[0].querySelector('.n');
       if (n) n.textContent = HER.name;
       const meta = rows[0].querySelector('.meta');
-      if (meta) meta.textContent = (HER.place ? `${HER.place} · ` : '') + formatLocalTime(HER.lng);
+      const locationText = HER.place ? `${HER.place} · ` : '';
+      const statusText = HER.online === false ? 'offline' : formatLocalTime(HER.lng);
+      if (meta) meta.textContent = locationText + statusText;
     }
     if (rows[1]) {
       const av = rows[1].querySelector('.av');
@@ -1039,11 +1084,10 @@
 
   async function initLiveData() {
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
-    pushMyLocation();
+    startLocationWatch();          // continuous push whenever device moves
     await fetchAndUpdateLocations();
     fetchDistance();
-    setInterval(fetchAndUpdateLocations, 10000);
-    setInterval(pushMyLocation,          10000);
+    setInterval(fetchAndUpdateLocations, 10000); // pull partner's location every 10s
     setInterval(fetchDistance,           30000);
   }
 
