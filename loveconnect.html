@@ -900,7 +900,10 @@
       const rows = await res.json();
       if (!Array.isArray(rows)) return;
 
+      const seen = new Set();
       for (const row of rows) {
+        if (seen.has(row.user_id)) continue; // take only the first (most-recent) row per user
+        seen.add(row.user_id);
         const coords = parseWKB(row.location);
         if (!coords) continue;
         const [lng, lat] = coords;
