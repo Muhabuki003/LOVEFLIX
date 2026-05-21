@@ -165,7 +165,9 @@ async function getVideo(env, id) {
 async function createVideo(env, request, user) {
   const body = await request.json().catch(() => ({}));
   const id = body.id || `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const tenantId = user.id;
+  // Use x-tenant-id so partner-uploaded videos land in the shared couple tenant,
+  // matching what listVideos uses. Falls back to the uploader's own id.
+  const tenantId = request.headers.get('x-tenant-id') || user.id;
   const isPublished = body.is_published === false ? 0 : 1;
   const thumbnailUrl = body.thumbnail_url || '';
 

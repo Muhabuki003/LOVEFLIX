@@ -855,6 +855,40 @@
       .toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', hour12:false });
   }
 
+  // Reverse geocode via Nominatim. Returns "City, ST" (US) or "City, Country" (abroad).
+  // Results are cached on the person object so we only re-fetch when coords move >~1 km.
+  async function reverseGeocode(person) {
+    const { lat, lng } = person;
+    if (person._geoLat !== undefined &&
+        Math.abs(person._geoLat - lat) < 0.01 &&
+        Math.abs(person._geoLng - lng) < 0.01) {
+      return person.place || null;
+    }
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const a = data.address || {};
+      const city = a.city || a.town || a.village || a.county || '';
+      let region = '';
+      if (a.country_code === 'us') {
+        // abbreviate US state from ISO code e.g. "US-NY" → "NY"
+        const iso = a['ISO3166-2-lvl4'] || '';
+        region = iso.split('-')[1] || a.state || '';
+      } else {
+        region = a.country || '';
+      }
+      const place = city && region ? `${city}, ${region}` : (city || region || '');
+      person.place    = place;
+      person._geoLat  = lat;
+      person._geoLng  = lng;
+      return place;
+    } catch (_) { return null; }
+  }
+
   async function fetchAndUpdateLocations() {
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
     try {
@@ -875,9 +909,15 @@
         if (isMe) {
           HIM.lng = lng; HIM.lat = lat;
           updateMarkerUI(himMarker, HIM, `${localTime} local`);
+          reverseGeocode(HIM).then(place => {
+            if (place) { updateMarkerUI(himMarker, HIM, `${place} · ${localTime}`); updateCoupleCard(); }
+          });
         } else {
           HER.lng = lng; HER.lat = lat;
           updateMarkerUI(herMarker, HER, `${localTime} local`);
+          reverseGeocode(HER).then(place => {
+            if (place) { updateMarkerUI(herMarker, HER, `${place} · ${localTime}`); updateCoupleCard(); }
+          });
           if (row.updated_at) {
             const secAgo = Math.round((Date.now() - new Date(row.updated_at).getTime()) / 1000);
             const lastSeenEl = document.getElementById('lastSeen');
@@ -945,7 +985,7 @@
       const n = rows[0].querySelector('.n');
       if (n) n.textContent = HER.name;
       const meta = rows[0].querySelector('.meta');
-      if (meta) meta.textContent = formatLocalTime(HER.lng) + ' local';
+      if (meta) meta.textContent = (HER.place ? `${HER.place} · ` : '') + formatLocalTime(HER.lng);
     }
     if (rows[1]) {
       const av = rows[1].querySelector('.av');
@@ -953,7 +993,7 @@
       const n = rows[1].querySelector('.n');
       if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
       const meta = rows[1].querySelector('.meta');
-      if (meta) meta.textContent = formatLocalTime(HIM.lng) + ' local';
+      if (meta) meta.textContent = (HIM.place ? `${HIM.place} · ` : '') + formatLocalTime(HIM.lng);
     }
     const callBtn = document.getElementById('callBtn');
     if (callBtn) {
