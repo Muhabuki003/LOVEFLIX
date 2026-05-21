@@ -892,8 +892,10 @@
   async function fetchAndUpdateLocations() {
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
     try {
+      // Order by updated_at DESC so the seen-set always takes the latest row per user,
+      // even when merge-duplicates didn't fire and old rows accumulated.
       const res = await fetch(
-        `${SB_URL}/rest/v1/couple_locations?couple_id=eq.${COUPLE_ID}&select=user_id,location,updated_at`,
+        `${SB_URL}/rest/v1/couple_locations?couple_id=eq.${COUPLE_ID}&select=user_id,location,updated_at&order=updated_at.desc`,
         { headers: sbHeaders() }
       );
       if (!res.ok) return;
@@ -902,7 +904,7 @@
 
       const seen = new Set();
       for (const row of rows) {
-        if (seen.has(row.user_id)) continue; // take only the first (most-recent) row per user
+        if (seen.has(row.user_id)) continue; // first row per user = most recent (ORDER BY desc)
         seen.add(row.user_id);
         const coords = parseWKB(row.location);
         if (!coords) continue;
@@ -912,15 +914,29 @@
         if (isMe) {
           HIM.lng = lng; HIM.lat = lat;
           updateMarkerUI(himMarker, HIM, `${localTime} local`);
-          reverseGeocode(HIM).then(place => {
-            if (place) { updateMarkerUI(himMarker, HIM, `${place} · ${localTime}`); updateCoupleCard(); }
-          });
+          // Snapshot coords so the async callback can't read a later overwrite of HIM.
+          (function(snapLng, snapLat, snapTime) {
+            reverseGeocode(HIM).then(place => {
+              if (place) {
+                HIM.lng = snapLng; HIM.lat = snapLat;
+                updateMarkerUI(himMarker, HIM, `${place} · ${snapTime}`);
+                updateCoupleCard();
+              }
+            });
+          })(lng, lat, localTime);
         } else {
           HER.lng = lng; HER.lat = lat;
           updateMarkerUI(herMarker, HER, `${localTime} local`);
-          reverseGeocode(HER).then(place => {
-            if (place) { updateMarkerUI(herMarker, HER, `${place} · ${localTime}`); updateCoupleCard(); }
-          });
+          // Snapshot coords so the async callback can't read a later overwrite of HER.
+          (function(snapLng, snapLat, snapTime) {
+            reverseGeocode(HER).then(place => {
+              if (place) {
+                HER.lng = snapLng; HER.lat = snapLat;
+                updateMarkerUI(herMarker, HER, `${place} · ${snapTime}`);
+                updateCoupleCard();
+              }
+            });
+          })(lng, lat, localTime);
           if (row.updated_at) {
             const secAgo = Math.round((Date.now() - new Date(row.updated_at).getTime()) / 1000);
             const lastSeenEl = document.getElementById('lastSeen');
