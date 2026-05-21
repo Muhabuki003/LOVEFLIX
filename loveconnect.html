@@ -621,6 +621,7 @@
 </div>
 
 <script src="assets/loveflix.js"></script>
+<script src="assets/loveflix-call.js"></script>
 <script>
 (function(){
   // ---------- AUTH + SUPABASE SETUP ----------
@@ -1141,15 +1142,12 @@
     });
   });
 
-  // ---------- CALL MODAL ----------
-  const overlay = document.getElementById('callOverlay');
+  // ---------- CALL BUTTON ----------
   document.getElementById('callBtn').addEventListener('click', () => {
-    overlay.classList.add('active');
+    if (typeof LoveFlix !== 'undefined' && LoveFlix.Call) {
+      LoveFlix.Call.start(HER.name, COUPLE_ID, MY_USER, HIM.name, HIM.initial, true);
+    }
   });
-  document.getElementById('declineBtn').addEventListener('click', () => {
-    overlay.classList.remove('active');
-  });
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
 
   // ---------- SYNC TICKER ----------
   let syncSec = 0;
