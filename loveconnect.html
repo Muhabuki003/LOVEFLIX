@@ -268,6 +268,8 @@
   }
   .lc-marker .ring.r2{animation-delay:.8s}
   .lc-marker .ring.r3{animation-delay:1.6s}
+  .lc-marker.offline .ring{animation:none;opacity:0}
+  .lc-marker.offline .avatar{opacity:0.45;filter:grayscale(0.7)}
   @keyframes ringPulse{
     0%{transform:scale(0.65);opacity:.8}
     100%{transform:scale(1.7);opacity:0}
@@ -400,7 +402,7 @@
     </div>
   </div>
   <div class="top-right">
-    <div class="pill"><span class="dot"></span> Both online</div>
+    <div class="pill" id="onlinePill"><span class="dot" id="onlineDot"></span> <span id="onlineText">Both online</span></div>
     <div class="pill" id="syncPill" title="Realtime sync">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#10b981"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3" stroke="#10b981" stroke-width="1.5"/></svg>
       <span id="syncedAgo">Synced 2s ago</span>
@@ -720,6 +722,7 @@
   function updateMarkerUI(mkr, p, labelMeta) {
     mkr.setLngLat([p.lng, p.lat]);
     const el  = mkr.getElement();
+    el.classList.toggle('offline', p.online === false);
     const av  = el.querySelector('.avatar');
     const lbl = el.querySelector('.label');
     if (av)  av.textContent  = p.initial;
@@ -921,6 +924,9 @@
       if (himRow) {
         const [lng, lat] = himRow.coords;
         const localTime  = formatLocalTime(lng);
+        const himSecAgo  = himRow.updated_at
+          ? Math.round((Date.now() - new Date(himRow.updated_at).getTime()) / 1000) : 9999;
+        HIM.online = himSecAgo < 300;
         HIM.lng = lng; HIM.lat = lat;
         updateMarkerUI(himMarker, HIM, `${localTime} local`);
         (function(snapLng, snapLat, snapTime) {
@@ -1048,14 +1054,35 @@
   function updateCoupleCard() {
     const title = document.querySelector('.couple-title');
     if (title) title.innerHTML = `${HIM.name} &amp; ${HER.name}`;
+
+    // Top-right status pill
+    const onlineText = document.getElementById('onlineText');
+    const onlineDot  = document.getElementById('onlineDot');
+    if (onlineText && onlineDot) {
+      const herOn = HER.online !== false;
+      const himOn = HIM.online !== false;
+      if (herOn && himOn) {
+        onlineText.textContent = 'Both online';
+        onlineDot.style.background = '';
+        onlineDot.style.animation  = '';
+      } else if (herOn || himOn) {
+        onlineText.textContent = herOn ? `${HER.name} online` : `${HIM.name} online`;
+        onlineDot.style.background = '#f59e0b';
+        onlineDot.style.animation  = 'none';
+      } else {
+        onlineText.textContent = 'Both offline';
+        onlineDot.style.background = '#666';
+        onlineDot.style.animation  = 'none';
+      }
+    }
+
     const rows = document.querySelectorAll('.couple-row');
     if (rows[0]) {
       const av = rows[0].querySelector('.av');
-      // Green dot = online (location seen < 5 min ago), grey = offline/unknown.
-      const dot = HER.online === false
+      const herDot = HER.online === false
         ? '<span class="status" style="background:#666"></span>'
         : '<span class="status"></span>';
-      if (av) av.innerHTML = HER.initial + dot;
+      if (av) av.innerHTML = HER.initial + herDot;
       const n = rows[0].querySelector('.n');
       if (n) n.textContent = HER.name;
       const meta = rows[0].querySelector('.meta');
@@ -1065,11 +1092,16 @@
     }
     if (rows[1]) {
       const av = rows[1].querySelector('.av');
-      if (av) av.innerHTML = HIM.initial + '<span class="status"></span>';
+      const himDot = HIM.online === false
+        ? '<span class="status" style="background:#666"></span>'
+        : '<span class="status"></span>';
+      if (av) av.innerHTML = HIM.initial + himDot;
       const n = rows[1].querySelector('.n');
       if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
       const meta = rows[1].querySelector('.meta');
-      if (meta) meta.textContent = (HIM.place ? `${HIM.place} · ` : '') + formatLocalTime(HIM.lng);
+      const himLocation = HIM.place ? `${HIM.place} · ` : '';
+      const himStatus = HIM.online === false ? 'offline' : formatLocalTime(HIM.lng);
+      if (meta) meta.textContent = himLocation + himStatus;
     }
     const callBtn = document.getElementById('callBtn');
     if (callBtn) {
