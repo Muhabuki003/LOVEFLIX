@@ -1,0 +1,28 @@
+{
+  "name": "loveflix",
+  "version": "1.0.0",
+  "description": "A private Netflix-style streaming service for two. Vanilla JS + HTML, deployed on Cloudflare Pages with D1 (database), R2 (video storage), Pages Functions (API), and Supabase (auth only).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Muhabuki003/LOVEFLIX.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Muhabuki003/LOVEFLIX/issues"
+  },
+  "homepage": "https://github.com/Muhabuki003/LOVEFLIX#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
+    "maplibre-gl": "^5.24.0",
+    "tailwind-merge": "^3.6.0"
+  }
+}

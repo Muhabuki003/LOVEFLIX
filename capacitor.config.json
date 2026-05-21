@@ -1,0 +1,9 @@
+{
+  "appId": "com.loveflix.app",
+  "appName": "Loveflix",
+  "webDir": "www",
+  "server": {
+    "url": "https://loveflix-test.pages.dev/home.html?unlock=mukstudio2026",
+    "cleartext": true
+  }
+}
