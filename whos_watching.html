@@ -131,6 +131,21 @@
     pointer-events: none;
     user-select: none;
     opacity: 0.55;
+    transition: opacity 0.35s ease;
+  }
+
+  /* Glowing state for the avatar that matches the logged-in user */
+  .couple-avatar.active {
+    opacity: 1;
+  }
+  .couple-avatar.active .avatar.rose {
+    box-shadow: 0 0 0 3px rgba(255, 95, 143, 0.55), 0 0 28px rgba(255, 95, 143, 0.4);
+  }
+  .couple-avatar.active .avatar.blue {
+    box-shadow: 0 0 0 3px rgba(58, 123, 255, 0.55), 0 0 28px rgba(58, 123, 255, 0.4);
+  }
+  .couple-avatar.active .profile-name {
+    color: #fff;
   }
 
   .avatar {
@@ -438,9 +453,23 @@
     setTimeout(function() { window.location.href = 'admin.html'; }, 280);
   });
 
+  // Apply the glow to whichever avatar belongs to the logged-in user,
+  // and hide the Admin button if the logged-in user is a partner.
+  function applyRoleUI() {
+    const profile = LoveFlix.getActiveProfile();
+    const isPartner = profile.dbRole === 'partner';
+    document.getElementById('herAvatarWrap').classList.toggle('active', isPartner);
+    document.getElementById('hisAvatarWrap').classList.toggle('active', !isPartner);
+    document.getElementById('adminBtn').style.display = isPartner ? 'none' : '';
+  }
+
   applyNames(LoveFlix.getSettings());
-  LoveFlix.ensureSettingsReady().then(applyNames).catch(function() {});
-  window.addEventListener('loveflix:settings-changed', function() { applyNames(LoveFlix.getSettings()); });
+  applyRoleUI();
+
+  // Re-apply after settings and couple cache have loaded.
+  LoveFlix.ensureSettingsReady().then(function(s) { applyNames(s); applyRoleUI(); }).catch(function() {});
+  LoveFlix.cacheCoupleId().then(applyRoleUI).catch(function() {});
+  window.addEventListener('loveflix:settings-changed', function() { applyNames(LoveFlix.getSettings()); applyRoleUI(); });
 
   // Reflow on mobile: wrap the two deco avatars into a shared row so they
   // sit side-by-side above the buttons when the layout stacks vertically.

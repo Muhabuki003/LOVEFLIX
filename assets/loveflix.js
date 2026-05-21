@@ -31,6 +31,7 @@
     localStorage.removeItem(USER_KEY);
     try { localStorage.removeItem('loveflix_couple_id'); } catch (_) {}
     try { localStorage.removeItem('loveflix_creator_id'); } catch (_) {}
+    try { localStorage.removeItem('loveflix_role'); } catch (_) {}
   }
 
   // Silently refresh the access token using the stored refresh token.
@@ -256,21 +257,18 @@
     return fallback;
   }
 
-  // Active profile: 'his' (admin) or 'her' (partner). Falls back to admin
-  // since the upload/admin pages assume the creator is signed in.
+  // Active profile derived from the logged-in user's couple_members role
+  // (cached by cacheCoupleId). Falls back to 'admin' so admin pages work
+  // correctly when the cache hasn't been populated yet.
   function getActiveProfile() {
     const settings = getSettings();
     const adminName = settings.adminName || 'You';
     const partnerName = settings.partnerName || 'My Love';
-    let profileName = '';
-    let isAdmin = '';
-    try {
-      profileName = sessionStorage.getItem('loveflix_profile') || '';
-      isAdmin = sessionStorage.getItem('loveflix_is_admin') || '';
-    } catch (_) {}
-    const isPartner = profileName && profileName === partnerName && isAdmin !== '1';
+    const role = (function() { try { return localStorage.getItem('loveflix_role') || 'admin'; } catch (_) { return 'admin'; } })();
+    const isPartner = role === 'partner';
     return {
       role: isPartner ? 'her' : 'his',
+      dbRole: role,
       name: isPartner ? partnerName : adminName,
       photo: isPartner ? (settings.partnerPhoto || '') : (settings.adminPhoto || ''),
       initial: ((isPartner ? partnerName : adminName)[0] || '?').toUpperCase(),
@@ -480,6 +478,7 @@
       const row = rows && rows[0];
       if (!row) return;
       if (row.couple_id) localStorage.setItem('loveflix_couple_id', row.couple_id);
+      if (row.role) localStorage.setItem('loveflix_role', row.role);
       if (typeof row.is_billing_owner === 'boolean') {
         localStorage.setItem('loveflix_is_billing_owner', row.is_billing_owner ? '1' : '0');
       }
