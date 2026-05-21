@@ -22,6 +22,7 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/billing/subscription',
   'GET /api/stripe-config',
   'POST /api/stripe-webhook',
+  'POST /api/join-partner',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -91,6 +92,7 @@ export async function onRequest(context) {
     if (method === 'POST' && path === '/api/progress') return saveProgress(env, request, user);
 
     if (method === 'POST' && path === '/api/send-invite') return sendInvite(env, request, user);
+    if (method === 'POST' && path === '/api/join-partner') return joinPartner(env, request);
 
     if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user, request);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
@@ -795,6 +797,121 @@ async function sendInvite(env, request, user) {
     return json({ error: 'resend_error', detail: err }, 500);
   }
   return json({ ok: true });
+}
+
+// POST /api/join-partner — server-side partner signup via invite token.
+// Public route. Bypasses Supabase's per-IP signup rate limit by originating the
+// auth.admin.createUser call from the Worker (Cloudflare IP) and skipping the
+// confirmation email entirely via email_confirm: true.
+async function joinPartner(env, request) {
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return json({ error: 'service_role_not_configured' }, 500);
+
+  const body = await request.json().catch(() => ({}));
+  const token = (body.token || '').trim();
+  const email = (body.email || '').trim().toLowerCase();
+  const password = body.password || '';
+  const displayName = (body.display_name || '').trim();
+
+  if (!token || !email || !password || !displayName) {
+    return json({ error: 'missing_fields' }, 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'invalid_email' }, 400);
+  if (password.length < 6) return json({ error: 'weak_password' }, 400);
+
+  const sbUrl = env.SUPABASE_URL;
+  const anonKey = env.SUPABASE_ANON_KEY;
+
+  // 1. Validate invite (must exist, unused, not expired).
+  const inviteRes = await fetch(
+    `${sbUrl}/rest/v1/couple_invites?token=eq.${encodeURIComponent(token)}&used=eq.false&select=*&limit=1`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!inviteRes.ok) return json({ error: 'invite_lookup_failed' }, 500);
+  const invites = await inviteRes.json();
+  const invite = invites && invites[0];
+  if (!invite) return json({ error: 'invalid_or_expired_invite' }, 400);
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    return json({ error: 'invalid_or_expired_invite' }, 400);
+  }
+
+  // 2. Create the user via admin API. email_confirm: true skips the
+  // confirmation email — the partner is verified by holding the invite token.
+  const createRes = await fetch(`${sbUrl}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password, email_confirm: true }),
+  });
+  const createData = await createRes.json().catch(() => ({}));
+  if (!createRes.ok) {
+    const msg = createData.msg || createData.error_description || createData.error || 'signup_failed';
+    return json({ error: msg }, createRes.status);
+  }
+  const newUser = createData.user || createData;
+  const newUserId = newUser && newUser.id;
+  if (!newUserId) return json({ error: 'signup_failed' }, 500);
+
+  // 3. Insert couple_members row (service role bypasses RLS).
+  const memberRes = await fetch(`${sbUrl}/rest/v1/couple_members`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      couple_id: invite.couple_id,
+      user_id: newUserId,
+      role: 'partner',
+      display_name: displayName,
+      is_billing_owner: false,
+    }),
+  });
+  if (!memberRes.ok) {
+    const err = await memberRes.text().catch(() => '');
+    return json({ error: 'couple_member_insert_failed', detail: err }, 500);
+  }
+
+  // 4. Mark invite used.
+  await fetch(`${sbUrl}/rest/v1/couple_invites?token=eq.${encodeURIComponent(token)}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ used: true, accepted_by: newUserId }),
+  });
+
+  // 5. Issue a session for the new user. /token?grant_type=password trades
+  // email+password for an access_token + refresh_token (anon key is fine here).
+  const sessionRes = await fetch(`${sbUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  const sessionData = await sessionRes.json().catch(() => ({}));
+  if (!sessionRes.ok || !sessionData.access_token) {
+    // User exists but session couldn't be issued — frontend can prompt to sign in.
+    return json({ ok: true, user: newUser, couple_id: invite.couple_id, session: null });
+  }
+
+  return json({
+    ok: true,
+    access_token: sessionData.access_token,
+    refresh_token: sessionData.refresh_token,
+    user: sessionData.user || newUser,
+    couple_id: invite.couple_id,
+  });
 }
 
 // GET /api/billing/subscription — returns active subscription for authenticated user

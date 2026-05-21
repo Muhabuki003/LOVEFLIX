@@ -37,7 +37,8 @@ STRIPE_PRICE_FOREVER_MONTHLY = "price_1TY6rgA20Y7L8XqMq4qFpwYl"
 STRIPE_PRICE_FOREVER_YEARLY  = "price_1TY6rhA20Y7L8XqMeJ8advP5"
 
 # Secrets (set via `wrangler pages secret put <NAME>`):
-#   R2_ACCESS_KEY_ID        — for presigned uploads (S3 API)
-#   R2_SECRET_ACCESS_KEY    — for presigned uploads (S3 API)
-#   STRIPE_SECRET_KEY       — your live Stripe secret key  ← required
-#   STRIPE_WEBHOOK_SECRET   — from Stripe dashboard > Webhooks (optional, recommended)
+#   R2_ACCESS_KEY_ID            — for presigned uploads (S3 API)
+#   R2_SECRET_ACCESS_KEY        — for presigned uploads (S3 API)
+#   STRIPE_SECRET_KEY           — your live Stripe secret key  ← required
+#   STRIPE_WEBHOOK_SECRET       — from Stripe dashboard > Webhooks (optional, recommended)
+#   SUPABASE_SERVICE_ROLE_KEY   — for /api/join-partner (Supabase Project Settings → API → service_role). Bypasses RLS; never expose client-side.
