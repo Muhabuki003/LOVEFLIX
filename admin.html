@@ -307,13 +307,14 @@
 
   function paintNames(s) {
     s = s || LoveFlix.getSettings();
-    const name = s.adminName || 'You';
+    const profile = LoveFlix.getActiveProfile();
+    const name = profile.name;
     const partner = s.partnerName || 'My Love';
     const slug = s.urlSlug || 'loveflix.us';
     const avatar = document.getElementById('sideAvatar');
-    avatar.textContent = (name[0] || '?').toUpperCase();
-    if (s.adminPhoto) {
-      avatar.style.background = `url(${JSON.stringify(s.adminPhoto)}) center/cover no-repeat`;
+    avatar.textContent = profile.initial;
+    if (profile.photo) {
+      avatar.style.background = `url(${JSON.stringify(profile.photo)}) center/cover no-repeat`;
       avatar.style.color = 'transparent';
     } else {
       avatar.style.background = '';
