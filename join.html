@@ -209,46 +209,32 @@
     btn.textContent = 'Creating account…';
 
     try {
-      // 1. Sign up with Supabase Auth
-      const signUpRes = await fetch(`${SB_URL}/auth/v1/signup`, {
+      // Single server-side call. The Worker creates the user with the service
+      // role key (Cloudflare IP, skips the per-IP signup rate limit), inserts
+      // couple_members, marks the invite used, and returns a session.
+      const res = await fetch('/api/join-partner', {
         method: 'POST',
-        headers: sbHeaders(),
-        body: JSON.stringify({ email, password: pw }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, email, password: pw, display_name: name }),
       });
-      const signUpData = await signUpRes.json();
-      if (!signUpRes.ok) throw new Error(signUpData.error_description || signUpData.msg || 'Sign-up failed');
-      if (!signUpData.access_token) throw new Error('Account created — check your email to confirm before signing in.');
+      const data = await res.json().catch(() => ({}));
 
-      const accessToken = signUpData.access_token;
-      const newUserId = signUpData.user && signUpData.user.id;
+      if (!res.ok) {
+        const err = (data.error || '').toLowerCase();
+        if (err === 'invalid_or_expired_invite') {
+          show('stateError');
+          return;
+        }
+        if (err.includes('already') || err.includes('registered') || err.includes('duplicate') || err.includes('exists')) {
+          throw new Error('That email already has an account. Try signing in instead.');
+        }
+        throw new Error(data.error || 'Sign-up failed');
+      }
 
-      const authHeaders = sbHeaders({ Authorization: `Bearer ${accessToken}` });
-
-      // 2. Insert couple_members row
-      await fetch(`${SB_URL}/rest/v1/couple_members`, {
-        method: 'POST',
-        headers: Object.assign({}, authHeaders, { Prefer: 'return=minimal' }),
-        body: JSON.stringify({
-          couple_id: invite.couple_id,
-          user_id: newUserId,
-          role: 'partner',
-          display_name: name,
-          is_billing_owner: false,
-        }),
-      });
-
-      // 3. Mark invite used
-      await fetch(`${SB_URL}/rest/v1/couple_invites?token=eq.${token}`, {
-        method: 'PATCH',
-        headers: Object.assign({}, authHeaders, { Prefer: 'return=minimal' }),
-        body: JSON.stringify({ used: true, accepted_by: newUserId }),
-      });
-
-      // 4. Store session + unlock gate so subsequent pages pass
       try {
-        localStorage.setItem('loveflix_token', accessToken);
-        if (signUpData.user) localStorage.setItem('loveflix_user', JSON.stringify(signUpData.user));
-        localStorage.setItem('loveflix_couple_id', invite.couple_id);
+        if (data.access_token) localStorage.setItem('loveflix_token', data.access_token);
+        if (data.user) localStorage.setItem('loveflix_user', JSON.stringify(data.user));
+        if (data.couple_id) localStorage.setItem('loveflix_couple_id', data.couple_id);
         localStorage.setItem('loveflix_access', '1');
         localStorage.setItem('lf_access', '1');
       } catch (_) {}
@@ -258,14 +244,7 @@
     } catch (e) {
       btn.classList.remove('loading');
       btn.textContent = 'Join LoveFlix →';
-      const msg = (e.message || '').toLowerCase();
-      if (msg.includes('email not confirmed') || msg.includes('confirm')) {
-        show('stateSuccess');
-      } else if (msg.includes('already registered') || msg.includes('duplicate')) {
-        showErr('That email already has an account. Try signing in instead.');
-      } else {
-        showErr(e.message || 'Something went wrong. Try again.');
-      }
+      showErr(e.message || 'Something went wrong. Try again.');
     }
   });
 })();
