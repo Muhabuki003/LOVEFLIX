@@ -113,9 +113,9 @@
   }
 
   // ----- Cross-device sync for LoveFlix.getSettings -----
-  // Photos are stored as data URLs and can be multi-MB. Strip them before
-  // pushing so we don't blow past D1 row limits; photos stay device-local.
-  const LARGE_FIELDS = ['partnerPhoto', 'adminPhoto'];
+  // Photos are compressed to thumbnails at upload time (max 200px, JPEG 0.75)
+  // so they are small enough to store in D1 and sync across all devices.
+  const LARGE_FIELDS = [];
   function stripLargeFields(settings) {
     const out = {};
     for (const k of Object.keys(settings || {})) {
@@ -157,6 +157,8 @@
   }
   async function pushSettings() {
     if (!getToken()) return; // pending mirror will flush on next sign-in
+    await ensureFreshToken();
+    if (!getToken()) return; // token invalid even after refresh
     if (_pushInFlight) {
       // Coalesce concurrent pushes; the in-flight one already reads the
       // latest local copy at send time.
