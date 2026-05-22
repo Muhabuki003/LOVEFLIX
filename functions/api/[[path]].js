@@ -109,6 +109,9 @@ export async function onRequest(context) {
 
     if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
 
+    if (method === 'POST' && path === '/api/call/signal') return callSignal(env, request, user);
+    if (method === 'GET'  && path === '/api/call/check')  return callCheck(env, request, user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -972,6 +975,75 @@ async function livekitToken(env, request, user) {
     console.error('[livekitToken] token generation failed', err);
     return json({ error: 'token_failed' }, 500);
   }
+}
+
+// ---------- Call Signaling (D1-backed polling fallback for Supabase Realtime) ----------
+async function _ensureSignalsTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS call_signals (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       couple_id TEXT NOT NULL,
+       signal_type TEXT NOT NULL,
+       from_user TEXT NOT NULL,
+       payload TEXT NOT NULL,
+       created_ms INTEGER NOT NULL,
+       expires_ms INTEGER NOT NULL
+     )`
+  ).run();
+}
+
+async function callSignal(env, request, user) {
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+
+  const { type, payload, coupleId } = body || {};
+  if (!type || !coupleId || payload === undefined) {
+    return json({ error: 'type, coupleId, payload required' }, 400);
+  }
+  if (!['ring', 'hangup', 'declined'].includes(type)) {
+    return json({ error: 'invalid_type' }, 400);
+  }
+
+  const now = Date.now();
+  const expires = now + 60000;
+
+  await _ensureSignalsTable(env);
+  await env.DB.prepare(`DELETE FROM call_signals WHERE expires_ms < ?`).bind(now).run();
+  await env.DB.prepare(
+    `INSERT INTO call_signals (couple_id, signal_type, from_user, payload, created_ms, expires_ms)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(coupleId, type, user.id, JSON.stringify(payload), now, expires).run();
+
+  return json({ ok: true });
+}
+
+async function callCheck(env, request, user) {
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  const url = new URL(request.url);
+  const coupleId = url.searchParams.get('coupleId');
+  const since = parseInt(url.searchParams.get('since') || '0', 10) || 0;
+  if (!coupleId) return json({ error: 'coupleId required' }, 400);
+
+  await _ensureSignalsTable(env);
+  const now = Date.now();
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, signal_type, from_user, payload, created_ms
+       FROM call_signals
+      WHERE couple_id = ? AND from_user != ? AND expires_ms > ? AND id > ?
+      ORDER BY id ASC LIMIT 20`
+  ).bind(coupleId, user.id, now, since).all();
+
+  const signals = (results || []).map(r => {
+    let p = {};
+    try { p = JSON.parse(r.payload); } catch (_) {}
+    return { id: r.id, type: r.signal_type, from: r.from_user, payload: p, ts: r.created_ms };
+  });
+
+  return json({ signals });
 }
 
 // GET /api/billing/subscription — returns active subscription for authenticated user

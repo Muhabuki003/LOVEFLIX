@@ -292,11 +292,13 @@
 
   // ─── INTERNAL STATE ───────────────────────────────────────────────────────────
   var _room      = null;   // LiveKit Room instance
-  var _sigCh     = null;   // Supabase Realtime — ring/notify only
+  var _sigCh     = null;   // Supabase Realtime — ring/notify (legacy fast path)
   var _vsyncCh   = null;
   var _timer     = null;
   var _ringTimer = null;   // interval that re-broadcasts ring until partner joins
   var _sigRetry  = null;   // timeout to retry opening signal channel
+  var _pollTimer = null;   // HTTP poll interval for incoming signals
+  var _lastSigId = 0;      // highest signal ID seen (server-side dedup cursor)
   var _sec       = 0;
   var _muted     = false;
   var _camOff    = false;
@@ -474,6 +476,53 @@
     return _room;
   }
 
+  // ─── HTTP SIGNALING (D1-backed, reliable) ────────────────────────────────────
+  // Supabase Realtime broadcast isn't enabled on this project, so signals go
+  // via /api/call/signal (write) and /api/call/check (poll every 2 s).
+  async function _postSignal(type, payload) {
+    var creds = _creds();
+    if (!creds || !creds.token || !creds.coupleId) return;
+    try {
+      await fetch('/api/call/signal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + creds.token },
+        body: JSON.stringify({ type: type, payload: payload, coupleId: creds.coupleId })
+      });
+    } catch (err) { console.error('[LoveCall] signal post failed', err); }
+    // Also try the legacy WebSocket path for instant delivery if it works
+    if (_sigCh) { try { _sigCh.broadcast(type, payload); } catch (_) {} }
+  }
+
+  async function _pollSignals() {
+    var creds = _creds();
+    if (!creds || !creds.token || !creds.coupleId) return;
+    try {
+      var res = await fetch(
+        '/api/call/check?coupleId=' + encodeURIComponent(creds.coupleId) + '&since=' + _lastSigId,
+        { headers: { 'Authorization': 'Bearer ' + creds.token } }
+      );
+      if (!res.ok) return;
+      var data = await res.json();
+      if (!data.signals || !data.signals.length) return;
+      for (var i = 0; i < data.signals.length; i++) {
+        var sig = data.signals[i];
+        if (sig.id > _lastSigId) _lastSigId = sig.id;
+        if (sig.type === 'ring')          _onRing(sig.payload);
+        else if (sig.type === 'hangup')   _onHangup(sig.payload);
+        else if (sig.type === 'declined') _onDeclined(sig.payload);
+      }
+    } catch (_) {}
+  }
+
+  function _startPolling() {
+    if (_pollTimer) return;
+    _pollSignals();
+    _pollTimer = setInterval(_pollSignals, 2000);
+  }
+  function _stopPolling() {
+    clearInterval(_pollTimer); _pollTimer = null;
+  }
+
   // ─── SIGNALING (ring notification via Supabase Realtime) ─────────────────────
   function _openSig(url, key, token, coupleId) {
     var need = 'realtime:call:' + coupleId;
@@ -502,18 +551,18 @@
     _openSig(creds.url, creds.key, creds.token, creds.coupleId);
   }
 
-  // Ring with retry every 3 s until partner joins (max ~45 s)
+  // Ring with retry every 3 s until partner joins (max ~45 s).
+  // Goes through HTTP signal endpoint + WebSocket broadcast for redundancy.
   function _startRinging(roomName) {
     _clearRingTimer();
     var payload = { from: _myId, to: null, roomName: roomName,
                     callerName: _myName, callerInitial: _myInitial };
-    function _doRing() { if (_sigCh) _sigCh.broadcast('ring', payload); }
-    _doRing();
+    _postSignal('ring', payload);
     var attempts = 0;
     _ringTimer = setInterval(function() {
       if (!_room) { _clearRingTimer(); return; }
       if (++attempts > 14) { _clearRingTimer(); return; } // ~45 s
-      _doRing();
+      _postSignal('ring', payload);
     }, 3000);
   }
 
@@ -647,7 +696,7 @@
 
   // ─── PUBLIC: END CALL ─────────────────────────────────────────────────────────
   function endCall() {
-    if (_sigCh) _sigCh.broadcast('hangup', { from: _myId });
+    _postSignal('hangup', { from: _myId });
     _cleanup(false);
   }
 
@@ -728,7 +777,7 @@
 
     var decBtn = _el('lf-inc-dec');
     if (decBtn) decBtn.addEventListener('click', function () {
-      if (_sigCh && _pendRing) _sigCh.broadcast('declined', { from: _myId, to: _pendRing.from });
+      if (_pendRing) _postSignal('declined', { from: _myId, to: _pendRing.from });
       _pendRing = null;
       var inc = _el('lf-inc-overlay'); if (inc) inc.classList.remove('lf-visible');
       _hideBar();
@@ -765,6 +814,14 @@
     // Always open signaling so we can receive incoming rings.
     // _tryOpenSig retries if couple_id isn't in localStorage yet.
     _tryOpenSig();
+
+    // HTTP polling — reliable signal delivery (2 s latency, works even when
+    // the Supabase Realtime channel isn't established).
+    _startPolling();
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) _stopPolling();
+      else _startPolling();
+    });
 
     // Reconnect if we were on a call when page navigated
     if (saved && saved.active && saved.roomName) {
