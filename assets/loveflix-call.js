@@ -378,8 +378,16 @@
       headers: headers,
       body:    JSON.stringify({ roomName: roomName, identity: identity })
     });
-    if (!res.ok) throw new Error('Token fetch failed: ' + res.status);
-    return res.json(); // { token, url }
+    if (!res.ok) {
+      var errBody = {};
+      try { errBody = await res.json(); } catch(_) {}
+      var reason = errBody.error || 'token_fetch_failed';
+      throw new Error(reason + ' (' + res.status + ')');
+    }
+    var data = await res.json();
+    if (!data.url) throw new Error('livekit_url_missing — set LIVEKIT_URL secret in Cloudflare Pages');
+    if (!data.token) throw new Error('livekit_token_missing — check LIVEKIT_API_KEY/SECRET in Cloudflare Pages');
+    return data;
   }
 
   // ─── LIVEKIT ROOM SETUP ───────────────────────────────────────────────────────
@@ -514,8 +522,8 @@
         await _joinRoom(p.roomName, _myId);
       } catch(err) {
         console.error('[LoveCall] join failed', err);
-        _setTitle('Call failed — check connection');
-        setTimeout(function(){ _cleanup(false); }, 3000);
+        _setTitle(err && err.message ? err.message : 'Call failed');
+        setTimeout(function(){ _cleanup(false); }, 5000);
       }
     });
   }
@@ -600,8 +608,8 @@
 
       } catch(err) {
         console.error('[LoveCall] startCall failed', err);
-        _setTitle('Call failed — check connection');
-        setTimeout(function(){ _cleanup(false); }, 3000);
+        _setTitle(err && err.message ? err.message : 'Call failed');
+        setTimeout(function(){ _cleanup(false); }, 5000);
       }
     });
   }
