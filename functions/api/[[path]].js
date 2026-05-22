@@ -107,6 +107,8 @@ export async function onRequest(context) {
       return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '' });
     }
 
+    if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -914,6 +916,62 @@ async function joinPartner(env, request) {
     user: sessionData.user || newUser,
     couple_id: invite.couple_id,
   });
+}
+
+// ---------- LiveKit Token ----------
+function _lkB64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function _lkJsonB64(obj) {
+  return _lkB64url(new TextEncoder().encode(JSON.stringify(obj)));
+}
+
+async function _makeLiveKitToken(apiKey, apiSecret, roomName, identity, ttl = 21600) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = {
+    iss: apiKey, sub: identity, iat: now, exp: now + ttl,
+    jti: `${identity}-${now}`,
+    video: { room: roomName, roomJoin: true, canPublish: true, canSubscribe: true, canPublishData: true },
+  };
+  const data = `${_lkJsonB64(header)}.${_lkJsonB64(payload)}`;
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(apiSecret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  return `${data}.${_lkB64url(sig)}`;
+}
+
+async function livekitToken(env, request, user) {
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+
+  const { roomName, identity } = body || {};
+  if (!roomName || !identity || typeof roomName !== 'string' || typeof identity !== 'string') {
+    return json({ error: 'roomName and identity required' }, 400);
+  }
+
+  const apiKey = env.LIVEKIT_API_KEY;
+  const apiSecret = env.LIVEKIT_API_SECRET;
+  const wsUrl = env.LIVEKIT_URL;
+
+  if (!apiKey || !apiSecret || !wsUrl) {
+    console.error('[livekitToken] Missing env vars: LIVEKIT_API_KEY / LIVEKIT_API_SECRET / LIVEKIT_URL');
+    return json({ error: 'livekit_not_configured' }, 503);
+  }
+
+  try {
+    const token = await _makeLiveKitToken(apiKey, apiSecret, roomName, identity);
+    return json({ token, url: wsUrl });
+  } catch (err) {
+    console.error('[livekitToken] token generation failed', err);
+    return json({ error: 'token_failed' }, 500);
+  }
 }
 
 // GET /api/billing/subscription — returns active subscription for authenticated user
