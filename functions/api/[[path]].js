@@ -32,33 +32,97 @@ const LOVEFLIX_PLANS = {
   forever:    { name: 'Forever',    price: 2400, display: '$24', blurb: 'All features · concierge' },
 };
 
+// json() picks up the per-request origin stored at the top of onRequest.
+let _reqOrigin = '';
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
-      ...corsHeaders(),
+      ...corsHeaders(_reqOrigin),
       ...extra,
     },
   });
 
-function corsHeaders() {
+// Only allow https URLs (or data-less http in dev) to prevent javascript:/data: injection
+function validateHttpsUrl(raw) {
+  if (!raw || typeof raw !== 'string') return false;
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' || u.protocol === 'http:';
+  } catch { return false; }
+}
+
+// Ensure an invite redirect URL belongs to our own domain
+function validateInviteUrl(raw, reqOrigin) {
+  if (!raw || typeof raw !== 'string') return false;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+    const allowed = new Set([...ALLOWED_ORIGINS, reqOrigin].filter(Boolean));
+    return allowed.has(u.origin) || u.hostname === 'localhost';
+  } catch { return false; }
+}
+
+const ALLOWED_ORIGINS = new Set([
+  'https://loveflix.so',
+  'https://www.loveflix.so',
+  'http://localhost:3000',
+  'http://localhost:8788',
+]);
+
+function corsHeaders(requestOrigin) {
+  const origin = ALLOWED_ORIGINS.has(requestOrigin) ? requestOrigin : [...ALLOWED_ORIGINS][0];
   return {
-    'access-control-allow-origin': '*',
+    'access-control-allow-origin': origin,
     'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
     'access-control-allow-headers': 'authorization,content-type,x-tenant-id',
     'access-control-max-age': '86400',
+    'vary': 'origin',
   };
+}
+
+// ── NeMo Guardrails: Input Rail — prompt-injection patterns ──────────────────
+// Blocks payloads that attempt to hijack any LLM that later reads this data.
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /system\s*:\s*you\s+are/i,
+  /\[(?:INST|SYS)\]|<\|im_(?:start|end)\|>/,
+  /\bJailbreak\b|\bDANmode\b/i,
+  /<!--[\s\S]*?-->/,                        // HTML comment injection
+  /\}\s*\{[^}]*"role"\s*:/,                // JSON role injection
+];
+
+function sanitizeUserText(text, maxLen = 500) {
+  if (!text || typeof text !== 'string') return '';
+  const trimmed = text.trim().slice(0, maxLen);
+  if (INJECTION_PATTERNS.some(p => p.test(trimmed))) return '';
+  return trimmed;
+}
+
+// ── Tenant ownership verification via Supabase couple_members (RLS-protected) ─
+async function verifyTenantAccess(env, user, requestedTenantId) {
+  if (!requestedTenantId || requestedTenantId === user.id) return requestedTenantId || user.id;
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${encodeURIComponent(requestedTenantId)}&user_id=eq.${encodeURIComponent(user.id)}&select=couple_id&limit=1`,
+      { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json().catch(() => []);
+    return (rows && rows.length > 0) ? requestedTenantId : null;
+  } catch { return null; }
 }
 
 export async function onRequest(context) {
   const { request, env } = context;
+  _reqOrigin = request.headers.get('origin') || '';
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
   const path = url.pathname.replace(/\/+$/, '') || url.pathname;
 
-  if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders() });
+  if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(_reqOrigin) });
 
   try {
     const routeKey = `${method} ${path}`;
@@ -113,7 +177,8 @@ export async function onRequest(context) {
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
     console.error('API route failed', { method, path, message, stack: err && err.stack });
-    return json({ error: 'server_error', message }, 500);
+    // Never expose internal error details to clients
+    return json({ error: 'server_error' }, 500);
   }
 }
 
@@ -140,7 +205,10 @@ async function authenticate(request, env) {
 
 // ---------- Videos ----------
 async function listVideos(env, url, user, request) {
-  const tenantId = (request && request.headers.get('x-tenant-id')) || (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+  const requested = (request && request.headers.get('x-tenant-id')) || url.searchParams.get('tenant') || (user && user.id) || env.DEFAULT_TENANT_ID || 'default';
+  const tenantId = user
+    ? (await verifyTenantAccess(env, user, requested) || (user && user.id))
+    : (env.DEFAULT_TENANT_ID || 'default');
   const stmt = env.DB.prepare(
     `SELECT id, tenant_id, title, description, date, category,
             thumbnail_url, video_url, duration_seconds, is_published,
@@ -167,9 +235,12 @@ async function getVideo(env, id) {
 async function createVideo(env, request, user) {
   const body = await request.json().catch(() => ({}));
   const id = body.id || `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  // Use x-tenant-id so partner-uploaded videos land in the shared couple tenant,
-  // matching what listVideos uses. Falls back to the uploader's own id.
-  const tenantId = request.headers.get('x-tenant-id') || user.id;
+
+  // Verify caller belongs to the requested tenant before writing to it
+  const requestedTenant = request.headers.get('x-tenant-id') || user.id;
+  const tenantId = await verifyTenantAccess(env, user, requestedTenant);
+  if (!tenantId) return json({ error: 'forbidden' }, 403);
+
   const isPublished = body.is_published === false ? 0 : 1;
   const thumbnailUrl = body.thumbnail_url || '';
 
@@ -180,6 +251,16 @@ async function createVideo(env, request, user) {
     }, 400);
   }
 
+  // Reject non-http(s) thumbnail URLs (blocks javascript:, data:, css-injection payloads)
+  if (thumbnailUrl && !validateHttpsUrl(thumbnailUrl)) {
+    return json({ error: 'invalid_thumbnail_url' }, 400);
+  }
+
+  // NeMo input rail: sanitize free-text fields before persisting (blocks prompt injection)
+  const title = sanitizeUserText(body.title || 'Untitled', 200) || 'Untitled';
+  const description = sanitizeUserText(body.description || '', 2000);
+  const category = sanitizeUserText(body.category || 'Moments', 100) || 'Moments';
+
   await env.DB.prepare(
     `INSERT INTO videos
        (id, tenant_id, title, description, date, category,
@@ -188,10 +269,10 @@ async function createVideo(env, request, user) {
   ).bind(
     id,
     tenantId,
-    (body.title || 'Untitled').slice(0, 200),
-    body.description || '',
+    title,
+    description,
     body.date || '',
-    body.category || 'Moments',
+    category,
     thumbnailUrl,
     body.video_url || '',
     parseInt(body.duration_seconds || 0, 10) || 0,
@@ -203,8 +284,12 @@ async function createVideo(env, request, user) {
 }
 
 async function deleteVideo(env, id, user) {
-  const row = await env.DB.prepare(`SELECT video_url FROM videos WHERE id = ?`).bind(id).first();
+  const row = await env.DB.prepare(`SELECT video_url, tenant_id FROM videos WHERE id = ?`).bind(id).first();
   if (!row) return json({ error: 'not_found' }, 404);
+
+  // Verify the caller owns (or belongs to) this video's tenant before deleting
+  const allowed = await verifyTenantAccess(env, user, row.tenant_id);
+  if (!allowed) return json({ error: 'forbidden' }, 403);
 
   // Best-effort R2 delete if the URL is in our bucket.
   if (row.video_url) {
@@ -326,7 +411,10 @@ async function saveProgress(env, request, user) {
 
 // ---------- Tenant Settings ----------
 async function getSettings(env, url, user, request) {
-  const tenantId = (request && request.headers.get('x-tenant-id')) || (user && user.id) || url.searchParams.get('tenant') || env.DEFAULT_TENANT_ID || 'default';
+  const requested = (request && request.headers.get('x-tenant-id')) || url.searchParams.get('tenant') || (user && user.id) || env.DEFAULT_TENANT_ID || 'default';
+  const tenantId = user
+    ? (await verifyTenantAccess(env, user, requested) || (user && user.id))
+    : (env.DEFAULT_TENANT_ID || 'default');
   const row = await env.DB.prepare(
     `SELECT data, updated_at FROM tenant_settings WHERE tenant_id = ?`
   ).bind(tenantId).first();
@@ -339,7 +427,9 @@ async function getSettings(env, url, user, request) {
 async function putSettings(env, request, user) {
   const body = await request.json().catch(() => ({}));
   const settings = (body && typeof body.settings === 'object' && body.settings) || {};
-  const tenantId = request.headers.get('x-tenant-id') || user.id;
+  const requestedTenant = request.headers.get('x-tenant-id') || user.id;
+  const tenantId = await verifyTenantAccess(env, user, requestedTenant);
+  if (!tenantId) return json({ error: 'forbidden' }, 403);
   const data = JSON.stringify(settings);
   if (data.length > 900_000) {
     return json({ error: 'settings_too_large', message: 'Settings payload exceeds 900KB. Trim photos or other large fields.' }, 413);
@@ -764,11 +854,25 @@ async function verifyStripeSignature(payload, sigHeader, secret) {
 // POST /api/send-invite — send a partner invite email via Resend
 async function sendInvite(env, request, user) {
   const body = await request.json().catch(() => ({}));
-  const { to, inviteUrl } = body;
+  const to = (body.to || '').toString().trim().slice(0, 320);
+  const inviteUrl = (body.inviteUrl || '').toString().trim();
+
   if (!to || !inviteUrl) return json({ error: 'to and inviteUrl required' }, 400);
 
+  // Validate email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ error: 'invalid_email' }, 400);
+
+  // NeMo output rail: only allow invite links that point back to our own domain
+  // Prevents phishing emails sent from our Resend identity to arbitrary URLs
+  if (!validateInviteUrl(inviteUrl, _reqOrigin)) {
+    return json({ error: 'invalid_invite_url', detail: 'inviteUrl must point to a LoveFlix domain' }, 400);
+  }
+
+  // Encode the URL for safe use in an HTML href attribute
+  const safeUrl = inviteUrl.replace(/"/g, '%22').replace(/'/g, '%27');
+
   const apiKey = env.RESEND_API_KEY;
-  if (!apiKey) return json({ error: 'RESEND_API_KEY not configured' }, 500);
+  if (!apiKey) return json({ error: 'email_not_configured' }, 500);
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -776,16 +880,16 @@ async function sendInvite(env, request, user) {
     body: JSON.stringify({
       from: 'LoveFlix <invite@loveflix.us>',
       to: [to],
-      subject: "You've been invited to LoveFlix 💕",
+      subject: "You've been invited to LoveFlix",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0e0e0e;color:#fff;padding:40px;border-radius:8px">
-          <div style="font-size:32px;font-weight:700;letter-spacing:2px;color:#e50914;margin-bottom:8px">LOVE♥FLIX</div>
+          <div style="font-size:32px;font-weight:700;letter-spacing:2px;color:#e50914;margin-bottom:8px">LOVE&#9829;FLIX</div>
           <h2 style="font-size:22px;margin-bottom:12px;color:#fff">You're invited</h2>
           <p style="color:#cfcfcf;margin-bottom:24px;line-height:1.6">
             Your partner has invited you to join their private streaming service on LoveFlix —
             a personal Netflix just for the two of you.
           </p>
-          <a href="${inviteUrl}" style="display:inline-block;background:#e50914;color:#fff;padding:14px 28px;border-radius:4px;font-weight:600;text-decoration:none;font-size:15px">
+          <a href="${safeUrl}" style="display:inline-block;background:#e50914;color:#fff;padding:14px 28px;border-radius:4px;font-weight:600;text-decoration:none;font-size:15px">
             Accept Invite &amp; Join
           </a>
           <p style="margin-top:24px;font-size:12px;color:#737373">

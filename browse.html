@@ -182,6 +182,11 @@
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  function safeCssUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    if (!/^https?:\/\//i.test(url)) return null;
+    return url.replace(/'/g, '%27').replace(/\)/g, '%29').replace(/\\/g, '%5C');
+  }
   function fmtDur(sec) {
     if (!sec) return '—';
     const m = Math.floor(sec / 60), s = sec % 60;
@@ -224,8 +229,9 @@
       const date = v.date || '';
       const dur = fmtDur(v.duration_seconds);
       const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
-      const thumbStyle = v.thumbnail_url
-        ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+      const safeThumb = safeCssUrl(v.thumbnail_url);
+      const thumbStyle = safeThumb
+        ? `style="background:url('${safeThumb}') center/cover no-repeat"`
         : '';
       const titleHtml = escapeHtml(v.title || 'Untitled').replace(/ · /, '<br>');
       return `

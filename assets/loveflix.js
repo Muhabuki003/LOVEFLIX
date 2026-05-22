@@ -284,11 +284,16 @@
     const apply = () => {
       const p = getActiveProfile();
       el.textContent = p.initial;
-      if (p.photo) {
-        el.style.background = `url(${JSON.stringify(p.photo)}) center/cover no-repeat`;
+      if (p.photo && /^https?:\/\//i.test(p.photo)) {
+        // Use the DOM style API directly so the browser never interprets the URL
+        // as CSS syntax — no CSS injection possible through this path.
+        el.style.backgroundImage = `url(${JSON.stringify(p.photo)})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
         el.style.color = 'transparent';
       } else {
         el.style.background = '';
+        el.style.backgroundImage = '';
         el.style.color = '';
       }
     };
