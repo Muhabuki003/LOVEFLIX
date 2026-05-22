@@ -1143,11 +1143,26 @@
   });
 
   // ---------- CALL BUTTON ----------
-  document.getElementById('callBtn').addEventListener('click', () => {
-    if (typeof LoveFlix !== 'undefined' && LoveFlix.Call) {
+  // Defer until DOMContentLoaded to ensure loveflix-call.js has loaded and initialized
+  function initCallButton() {
+    const callBtn = document.getElementById('callBtn');
+    if (!callBtn) return;
+    callBtn.addEventListener('click', () => {
+      if (typeof LoveFlix === 'undefined' || !LoveFlix.Call) {
+        console.error('[LoveConnect] LoveFlix.Call module not loaded');
+        alert('Call service is loading. Please try again.');
+        return;
+      }
       LoveFlix.Call.start(HER.name, COUPLE_ID, MY_USER, HIM.name, HIM.initial, true);
-    }
-  });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCallButton);
+  } else {
+    // Already loaded (e.g., via history navigation)
+    setTimeout(initCallButton, 0);
+  }
 
   // ---------- SYNC TICKER ----------
   let syncSec = 0;
