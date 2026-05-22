@@ -626,7 +626,7 @@
 (function(){
   // ---------- AUTH + SUPABASE SETUP ----------
   const SB_URL    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_URL     : '';
-  const SB_KEY    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_ANON_KEY : '';
+  const SB_KEY    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_ANON_KEY : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
   const MY_USER   = typeof LoveFlix !== 'undefined' ? LoveFlix.getUserId()       : null;
   const TOKEN     = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken()        : null;
   const COUPLE_ID = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId()     : null;
