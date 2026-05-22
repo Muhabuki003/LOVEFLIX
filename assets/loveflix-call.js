@@ -9,7 +9,7 @@
   // Token endpoint — your Cloudflare Worker URL.
   // In production set this to: https://loveflix.so/api/livekit-token
   // or your workers.dev subdomain during testing.
-  var TOKEN_ENDPOINT = 'https://loveflix-livekit-token.adrienmuhabukibusiness.workers.dev';
+  var TOKEN_ENDPOINT = '/api/livekit-token';
 
   // LiveKit JS SDK loaded from CDN (injected once)
   var LK_SDK_URL = 'https://cdn.jsdelivr.net/npm/livekit-client@2.19.0/dist/livekit-client.umd.min.js';
@@ -514,7 +514,8 @@
         await _joinRoom(p.roomName, _myId);
       } catch(err) {
         console.error('[LoveCall] join failed', err);
-        _cleanup(false);
+        _setTitle('Call failed — check connection');
+        setTimeout(function(){ _cleanup(false); }, 3000);
       }
     });
   }
@@ -599,7 +600,8 @@
 
       } catch(err) {
         console.error('[LoveCall] startCall failed', err);
-        _cleanup(false);
+        _setTitle('Call failed — check connection');
+        setTimeout(function(){ _cleanup(false); }, 3000);
       }
     });
   }
