@@ -295,6 +295,8 @@
   var _sigCh     = null;   // Supabase Realtime — ring/notify only
   var _vsyncCh   = null;
   var _timer     = null;
+  var _ringTimer = null;   // interval that re-broadcasts ring until partner joins
+  var _sigRetry  = null;   // timeout to retry opening signal channel
   var _sec       = 0;
   var _muted     = false;
   var _camOff    = false;
@@ -436,6 +438,7 @@
     });
 
     _room.on(LK.RoomEvent.ParticipantConnected, function() {
+      _clearRingTimer();
       _barMode('');
       _setTitle('On call with ' + _pName);
       _startTimer();
@@ -473,6 +476,9 @@
 
   // ─── SIGNALING (ring notification via Supabase Realtime) ─────────────────────
   function _openSig(url, key, token, coupleId) {
+    var need = 'realtime:call:' + coupleId;
+    // Reuse live channel for the same couple — don't tear down mid-ring
+    if (_sigCh && !_sigCh._closed && _sigCh._channel === need) return;
     if (_sigCh) { _sigCh.close(); _sigCh = null; }
     _sigCh = new RealtimeChannel(url, key, token, 'call:' + coupleId);
     _sigCh
@@ -480,6 +486,39 @@
       .on('hangup',   _onHangup)
       .on('declined', _onDeclined);
     _sigCh.connect();
+  }
+
+  // Open signal channel with retry until couple_id is available in localStorage
+  function _tryOpenSig() {
+    clearTimeout(_sigRetry); _sigRetry = null;
+    var creds = _creds();
+    if (!creds || !creds.token) return;
+    if (!creds.coupleId) {
+      _sigRetry = setTimeout(_tryOpenSig, 2000);
+      return;
+    }
+    if (!_myId)     _myId     = creds.userId;
+    if (!_coupleId) _coupleId = creds.coupleId;
+    _openSig(creds.url, creds.key, creds.token, creds.coupleId);
+  }
+
+  // Ring with retry every 3 s until partner joins (max ~45 s)
+  function _startRinging(roomName) {
+    _clearRingTimer();
+    var payload = { from: _myId, to: null, roomName: roomName,
+                    callerName: _myName, callerInitial: _myInitial };
+    function _doRing() { if (_sigCh) _sigCh.broadcast('ring', payload); }
+    _doRing();
+    var attempts = 0;
+    _ringTimer = setInterval(function() {
+      if (!_room) { _clearRingTimer(); return; }
+      if (++attempts > 14) { _clearRingTimer(); return; } // ~45 s
+      _doRing();
+    }, 3000);
+  }
+
+  function _clearRingTimer() {
+    clearInterval(_ringTimer); _ringTimer = null;
   }
 
   // Callee receives a ring notification with the room name to join
@@ -542,6 +581,7 @@
   // ─── CLEANUP ──────────────────────────────────────────────────────────────────
   function _cleanup(notify) {
     _stopTimer();
+    _clearRingTimer();
     if (_room) {
       try { _room.disconnect(); } catch(_){}
       _room = null;
@@ -583,24 +623,15 @@
       try {
         await _joinRoom(roomName, _myId);
 
-        // Notify partner to pick up (ring signal)
-        await new Promise(function(r){ setTimeout(r, 600); });
-        _sigCh.broadcast('ring', {
-          from:          _myId,
-          to:            null,
-          roomName:      roomName,
-          callerName:    _myName,
-          callerInitial: _myInitial
-        });
+        // Ring partner — retries every 3 s automatically
+        _startRinging(roomName);
 
-        // No-answer timeout: 45s
+        // No-answer timeout: 45 s
         setTimeout(function(){
-          if (_room && _room.state === 'connected') {
-            // Partner is connected — all good
-            return;
-          }
-          // Still no one joined
-          if (_room && _room.numParticipants < 2) {
+          if (!_room) return;
+          var hasPartner = _room.remoteParticipants && _room.remoteParticipants.size > 0;
+          if (!hasPartner) {
+            _clearRingTimer();
             _setTitle('No answer');
             setTimeout(function(){ _cleanup(false); }, 2000);
           }
@@ -731,8 +762,9 @@
     if (saved && saved.pName)  { _pName = saved.pName;  _pInitial = saved.pInitial  || _pName[0].toUpperCase(); }
     if (saved && saved.myName) { _myName = saved.myName; _myInitial = saved.myInitial || _myName[0].toUpperCase(); }
 
-    // Always open signaling so we can receive incoming rings
-    if (_coupleId) _openSig(creds.url, creds.key, creds.token, _coupleId);
+    // Always open signaling so we can receive incoming rings.
+    // _tryOpenSig retries if couple_id isn't in localStorage yet.
+    _tryOpenSig();
 
     // Reconnect if we were on a call when page navigated
     if (saved && saved.active && saved.roomName) {
