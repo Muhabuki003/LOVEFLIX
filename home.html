@@ -586,6 +586,13 @@
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  // NeMo input rail: only allow https/http image URLs in CSS url() context.
+  // escapeHtml() alone is insufficient because HTML entities are decoded before CSS parsing.
+  function safeCssUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    if (!/^https?:\/\//i.test(url)) return null;
+    return url.replace(/'/g, '%27').replace(/\)/g, '%29').replace(/\\/g, '%5C');
+  }
   function fmtMin(sec) {
     if (!sec) return '';
     const m = Math.round(sec / 60);
@@ -599,8 +606,9 @@
     const titleParts = (v.title || 'Untitled').split(' · ');
     const headline = escapeHtml(titleParts[0] || 'Untitled');
     const sub = escapeHtml(titleParts[1] || v.category || '');
-    const thumbStyle = v.thumbnail_url
-      ? `style="background:url('${escapeHtml(v.thumbnail_url)}') center/cover no-repeat"`
+    const safeThumb = safeCssUrl(v.thumbnail_url);
+    const thumbStyle = safeThumb
+      ? `style="background:url('${safeThumb}') center/cover no-repeat"`
       : '';
     const total = v.duration_seconds || 0;
     let progressBar = '';
