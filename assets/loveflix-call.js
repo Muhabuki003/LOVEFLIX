@@ -291,12 +291,14 @@
   }
 
   // ─── INTERNAL STATE ───────────────────────────────────────────────────────────
-  var _room      = null;   // LiveKit Room instance
-  var _sigCh     = null;   // Supabase Realtime — ring/notify only
-  var _vsyncCh   = null;
-  var _timer     = null;
-  var _ringTimer = null;   // interval that re-broadcasts ring until partner joins
-  var _sigRetry  = null;   // timeout to retry opening signal channel
+  var _room           = null;   // LiveKit Room instance
+  var _sigCh          = null;   // Supabase Realtime — ring/notify only
+  var _vsyncCh        = null;
+  var _timer          = null;
+  var _ringTimer      = null;   // interval that re-broadcasts ring until partner joins
+  var _sigRetry       = null;   // timeout to retry opening signal channel
+  var _reconnectTimer = null;   // grace period before giving up on a navigating partner
+  var _pageUnloading  = false;  // set on pagehide so Disconnected doesn't wipe sessionStorage
   var _sec       = 0;
   var _muted     = false;
   var _camOff    = false;
@@ -425,8 +427,12 @@
           _updateVideoPlaceholder();
           _showVideo();
         }
+      } else if (track.kind === LK.Track.Kind.Audio) {
+        var audioEl = track.attach();
+        if (audioEl && !audioEl.parentNode) document.body.appendChild(audioEl);
+        // Resume audio context if browser blocked autoplay
+        if (_room) try { _room.startAudio(); } catch(_) {}
       }
-      // Audio auto-attaches via LiveKit
     });
 
     _room.on(LK.RoomEvent.TrackUnsubscribed, function(track) {
@@ -434,10 +440,14 @@
         track.detach();
         _hasRemoteVideo = false;
         _updateVideoPlaceholder();
+      } else if (track.kind === LK.Track.Kind.Audio) {
+        track.detach();
       }
     });
 
     _room.on(LK.RoomEvent.ParticipantConnected, function() {
+      // Cancel reconnection grace period if partner came back after navigating
+      if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
       _clearRingTimer();
       _barMode('');
       _setTitle('On call with ' + _pName);
@@ -450,18 +460,31 @@
     });
 
     _room.on(LK.RoomEvent.ParticipantDisconnected, function() {
-      // Partner left
-      _cleanup(true);
+      // Partner may be navigating to another page — give them 15 s to reconnect
+      _stopTimer();
+      _setTitle(_pName + ' reconnecting...');
+      if (_reconnectTimer) clearTimeout(_reconnectTimer);
+      _reconnectTimer = setTimeout(function() {
+        _reconnectTimer = null;
+        _cleanup(true, false);
+      }, 15000);
     });
 
     _room.on(LK.RoomEvent.Disconnected, function() {
-      _cleanup(true);
+      // If we're navigating, preserve sessionStorage so the new page can rejoin
+      if (_pageUnloading) return;
+      // If _room is already null, _cleanup() was the caller — avoid re-entry
+      if (!_room) return;
+      _cleanup(true, false);
     });
 
     // ── Connect + publish local tracks ──────────────────────────────────────
     await _room.connect(data.url, data.token);
 
-    // Publish camera + mic with VP9 for FaceTime-level quality
+    // Unblock audio playback (browser autoplay policy requires a user-gesture ancestor)
+    try { await _room.startAudio(); } catch(_) {}
+
+    // Publish camera + mic
     await _room.localParticipant.enableCameraAndMicrophone();
 
     // Attach local video to PIP
@@ -579,16 +602,18 @@
   }
 
   // ─── CLEANUP ──────────────────────────────────────────────────────────────────
-  function _cleanup(notify) {
+  function _cleanup(notify, keepState) {
     _stopTimer();
     _clearRingTimer();
-    if (_room) {
-      try { _room.disconnect(); } catch(_){}
-      _room = null;
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
+    var room = _room;
+    _room = null;          // null first so Disconnected handler doesn't re-enter
+    if (room) {
+      try { room.disconnect(); } catch(_){}
     }
     _hasRemoteVideo = false;
     _hideVideo();
-    setCallState(null);
+    if (!keepState) setCallState(null);
     if (notify) {
       _setTitle('Call ended');
       setTimeout(function(){ _hideBar(); _minimized = false; }, 2000);
@@ -648,7 +673,7 @@
   // ─── PUBLIC: END CALL ─────────────────────────────────────────────────────────
   function endCall() {
     if (_sigCh) _sigCh.broadcast('hangup', { from: _myId });
-    _cleanup(false);
+    _cleanup(false, false);
   }
 
   // ─── MUTE / CAMERA ───────────────────────────────────────────────────────────
@@ -721,6 +746,15 @@
   // ─── PAGE INIT ────────────────────────────────────────────────────────────────
   function init() {
     injectUI();
+
+    // Preserve sessionStorage across same-tab navigation so the new page can rejoin
+    window.addEventListener('pagehide', function() { _pageUnloading = true; });
+
+    // Re-enable audio if browser blocked autoplay on the reconnected page
+    var bar = document.getElementById('lf-call-bar');
+    if (bar) bar.addEventListener('click', function() {
+      if (_room) try { _room.startAudio(); } catch(_) {}
+    }, { once: false });
 
     // Incoming overlay buttons
     var accBtn = _el('lf-inc-acc');
