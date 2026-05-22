@@ -1,12 +1,13 @@
 // loveflix-call.js — Persistent WebRTC video/audio calling for LOVEFLIX
-// Injects a floating call bar that follows across all pages via sessionStorage reconnect.
+// Floating FaceTime-style card that follows across all pages via sessionStorage.
 (function (global) {
   'use strict';
 
   var STUN = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' }
   ];
 
   // ─── SUPABASE REALTIME MINI-CLIENT ───────────────────────────────────────────
@@ -97,18 +98,19 @@
   function getCallState()  { try { return JSON.parse(sessionStorage.getItem(SS_KEY)||'null'); } catch(_){ return null; } }
   function setCallState(s) { if(s) sessionStorage.setItem(SS_KEY,JSON.stringify(s)); else sessionStorage.removeItem(SS_KEY); }
 
-  // ─── INJECTED HTML ────────────────────────────────────────────────────────────
-  var BAR_ID = 'lf-call-bar';
-
-  var BAR_CSS = '<style id="lf-call-css">'
-    + '#lf-call-bar{position:fixed;bottom:0;left:0;right:0;z-index:9999;'
-    + 'background:linear-gradient(135deg,#120606 0%,#1e0a0a 100%);'
-    + 'border-top:1px solid rgba(220,38,38,.35);'
-    + 'display:none;align-items:center;gap:12px;padding:10px 18px;'
-    + 'box-shadow:0 -4px 30px rgba(0,0,0,.7);font-family:Inter,sans-serif;}'
+  // ─── CSS ──────────────────────────────────────────────────────────────────────
+  var CALL_CSS = '<style id="lf-call-css">'
+    /* ── Call status bar ── */
+    + '#lf-call-bar{'
+    +   'position:fixed;bottom:0;left:0;right:0;z-index:9999;'
+    +   'background:linear-gradient(135deg,#120606 0%,#1e0a0a 100%);'
+    +   'border-top:1px solid rgba(220,38,38,.35);'
+    +   'display:none;align-items:center;gap:12px;padding:10px 18px;'
+    +   'box-shadow:0 -4px 30px rgba(0,0,0,.7);font-family:Inter,sans-serif;}'
     + '#lf-call-bar.lf-active{display:flex;}'
-    + '.lf-cb-pulse{width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;'
-    + 'box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:lf-ring 1.6s ease-out infinite;}'
+    + '.lf-cb-pulse{'
+    +   'width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0;'
+    +   'box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:lf-ring 1.6s ease-out infinite;}'
     + '#lf-call-bar.lf-calling .lf-cb-pulse{background:#eab308;animation:lf-ring-y 1.6s ease-out infinite;}'
     + '#lf-call-bar.lf-incoming .lf-cb-pulse{background:#3b82f6;animation:lf-ring-b 1.6s ease-out infinite;}'
     + '@keyframes lf-ring  {0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}'
@@ -118,90 +120,180 @@
     + '.lf-cb-title{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.lf-cb-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}'
     + '.lf-cb-actions{display:flex;gap:8px;flex-shrink:0;}'
-    + '.lf-cb-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;'
-    + 'display:flex;align-items:center;justify-content:center;'
-    + 'background:rgba(255,255,255,.1);color:#fff;transition:background .2s;}'
+    + '.lf-cb-btn{'
+    +   'width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;'
+    +   'display:flex;align-items:center;justify-content:center;'
+    +   'background:rgba(255,255,255,.1);color:#fff;transition:background .2s;}'
     + '.lf-cb-btn:hover{background:rgba(255,255,255,.2);}'
     + '.lf-cb-btn.lf-danger{background:#dc2626;}'
     + '.lf-cb-btn.lf-danger:hover{background:#b91c1c;}'
     + '.lf-cb-btn.lf-accept{background:#16a34a;}'
     + '.lf-cb-btn.lf-accept:hover{background:#15803d;}'
     + '.lf-cb-btn.lf-muted{background:rgba(220,38,38,.45);}'
-    + '#lf-video-wrap{position:fixed;bottom:58px;right:16px;z-index:9998;'
-    + 'width:220px;height:165px;border-radius:12px;overflow:hidden;'
-    + 'box-shadow:0 4px 28px rgba(0,0,0,.85);background:#000;display:none;'
-    + 'border:2px solid rgba(220,38,38,.4);cursor:move;}'
+    /* ── Floating FaceTime video card ── */
+    + '#lf-video-wrap{'
+    +   'position:fixed;bottom:66px;right:16px;z-index:9998;'
+    +   'width:290px;height:390px;border-radius:20px;overflow:hidden;'
+    +   'box-shadow:0 12px 48px rgba(0,0,0,.92);background:#0d0505;'
+    +   'display:none;border:2px solid rgba(220,38,38,.45);'
+    +   'touch-action:none;user-select:none;}'
     + '#lf-video-wrap.lf-visible{display:block;}'
-    + '#lf-video-wrap video{width:100%;height:100%;object-fit:cover;}'
-    + '#lf-my-video{position:absolute;bottom:8px;right:8px;'
-    + 'width:64px;height:48px;border-radius:7px;overflow:hidden;'
-    + 'border:1.5px solid rgba(255,255,255,.3);background:#111;}'
+    /* Remote video fills the card */
+    + '#lf-remote-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}'
+    /* No-video placeholder (shown while connecting or camera off) */
+    + '#lf-no-vid{'
+    +   'position:absolute;inset:0;display:flex;flex-direction:column;'
+    +   'align-items:center;justify-content:center;gap:14px;background:#0d0505;}'
+    + '#lf-no-vid-av{'
+    +   'width:88px;height:88px;border-radius:50%;'
+    +   'background:linear-gradient(135deg,#dc2626,#7f1d1d);'
+    +   'display:flex;align-items:center;justify-content:center;'
+    +   'font-size:36px;font-weight:700;color:#fff;font-family:"Bebas Neue",sans-serif;'
+    +   'animation:lf-av-pulse 2s ease-in-out infinite;}'
+    + '@keyframes lf-av-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 18px rgba(220,38,38,0)}}'
+    + '#lf-no-vid-name{font-size:13px;color:rgba(255,255,255,.5);font-family:Inter,sans-serif;}'
+    /* Drag handle – top strip, cursor:move */
+    + '#lf-vid-drag{'
+    +   'position:absolute;top:0;left:0;right:0;height:48px;cursor:move;z-index:3;'
+    +   'background:linear-gradient(180deg,rgba(0,0,0,.65) 0%,transparent 100%);'
+    +   'display:flex;align-items:center;padding:0 10px;gap:8px;}'
+    + '#lf-vid-drag-dots{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;}'
+    + '.lf-drag-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.35);}'
+    + '#lf-vid-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.85);font-family:Inter,sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.8);}'
+    + '#lf-vid-min{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);'
+    +   'border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}'
+    + '#lf-vid-min:hover{background:rgba(255,255,255,.3);}'
+    /* Local PIP – small self-view */
+    + '#lf-my-video{'
+    +   'position:absolute;bottom:60px;left:10px;z-index:2;'
+    +   'width:84px;height:64px;border-radius:11px;overflow:hidden;'
+    +   'border:2px solid rgba(255,255,255,.45);background:#111;cursor:pointer;}'
     + '#lf-my-video video{width:100%;height:100%;object-fit:cover;}'
-    + '#lf-inc-overlay{position:fixed;top:0;left:0;right:0;bottom:0;'
-    + 'background:rgba(0,0,0,.88);z-index:10000;display:none;'
-    + 'align-items:center;justify-content:center;flex-direction:column;gap:16px;}'
+    /* In-video control strip at bottom */
+    + '#lf-vid-controls{'
+    +   'position:absolute;bottom:0;left:0;right:0;height:56px;z-index:2;'
+    +   'background:linear-gradient(0deg,rgba(0,0,0,.8) 0%,transparent 100%);'
+    +   'display:flex;align-items:center;justify-content:center;gap:14px;padding-bottom:6px;}'
+    + '.lf-vbtn{'
+    +   'width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;'
+    +   'display:flex;align-items:center;justify-content:center;'
+    +   'background:rgba(255,255,255,.18);color:#fff;transition:background .18s,transform .15s;}'
+    + '.lf-vbtn:hover{background:rgba(255,255,255,.3);transform:scale(1.07);}'
+    + '.lf-vbtn.lf-muted{background:rgba(220,38,38,.5);}'
+    + '.lf-vbtn.lf-danger{background:#dc2626;}'
+    + '.lf-vbtn.lf-danger:hover{background:#b91c1c;}'
+    /* ── Incoming call full-screen overlay ── */
+    + '#lf-inc-overlay{'
+    +   'position:fixed;top:0;left:0;right:0;bottom:0;'
+    +   'background:rgba(0,0,0,.9);z-index:10000;'
+    +   'display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}'
     + '#lf-inc-overlay.lf-visible{display:flex;}'
-    + '#lf-inc-av{width:84px;height:84px;border-radius:50%;'
-    + 'background:linear-gradient(135deg,#dc2626,#7f1d1d);'
-    + 'display:flex;align-items:center;justify-content:center;'
-    + 'font-size:34px;font-weight:700;color:#fff;font-family:"Bebas Neue",sans-serif;'
-    + 'animation:lf-inc-ring 1.4s ease-out infinite;}'
-    + '@keyframes lf-inc-ring{0%{box-shadow:0 0 0 0 rgba(220,38,38,.7)}70%{box-shadow:0 0 0 22px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}'
-    + '#lf-inc-name{font-size:30px;font-weight:700;color:#fff;font-family:"Bebas Neue",sans-serif;letter-spacing:1.5px;}'
+    + '#lf-inc-av{'
+    +   'width:88px;height:88px;border-radius:50%;'
+    +   'background:linear-gradient(135deg,#dc2626,#7f1d1d);'
+    +   'display:flex;align-items:center;justify-content:center;'
+    +   'font-size:36px;font-weight:700;color:#fff;font-family:"Bebas Neue",sans-serif;'
+    +   'animation:lf-inc-ring 1.4s ease-out infinite;}'
+    + '@keyframes lf-inc-ring{0%{box-shadow:0 0 0 0 rgba(220,38,38,.7)}70%{box-shadow:0 0 0 24px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}'
+    + '#lf-inc-name{font-size:32px;font-weight:700;color:#fff;font-family:"Bebas Neue",sans-serif;letter-spacing:1.5px;text-align:center;}'
     + '#lf-inc-sub{font-size:13px;color:rgba(255,255,255,.45);}'
-    + '.lf-inc-actions{display:flex;gap:36px;margin-top:12px;}'
-    + '.lf-inc-btn{width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;'
-    + 'display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .15s;}'
-    + '.lf-inc-btn:hover{transform:scale(1.08);}'
-    + '.lf-inc-accept{background:#16a34a;}'
+    + '.lf-inc-actions{display:flex;gap:36px;margin-top:14px;}'
+    + '.lf-inc-btn{'
+    +   'width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;'
+    +   'display:flex;align-items:center;justify-content:center;color:#fff;'
+    +   'transition:transform .15s,box-shadow .15s;}'
+    + '.lf-inc-btn:hover{transform:scale(1.1);}'
+    + '.lf-inc-accept{background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.6);animation:lf-acc-ring 1.6s ease-out infinite;}'
+    + '@keyframes lf-acc-ring{0%{box-shadow:0 0 0 0 rgba(22,163,74,.6)}70%{box-shadow:0 0 0 14px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}'
     + '.lf-inc-decline{background:#dc2626;}'
     + '</style>';
 
-  var BAR_HTML = '<div id="lf-inc-overlay">'
+  // ─── INCOMING OVERLAY HTML ────────────────────────────────────────────────────
+  var INC_HTML = '<div id="lf-inc-overlay">'
     + '<div id="lf-inc-av">M</div>'
     + '<div id="lf-inc-name">Incoming Call</div>'
     + '<div id="lf-inc-sub">LoveConnect · Encrypted</div>'
     + '<div class="lf-inc-actions">'
     + '<button class="lf-inc-btn lf-inc-decline" id="lf-inc-dec" title="Decline">'
-    + '<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
     + '</button>'
     + '<button class="lf-inc-btn lf-inc-accept" id="lf-inc-acc" title="Accept">'
-    + '<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
+    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
     + '</button>'
-    + '</div></div>'
-    + '<div id="lf-video-wrap">'
-    + '<video id="lf-remote-vid" autoplay playsinline></video>'
-    + '<div id="lf-my-video"><video id="lf-local-vid" autoplay playsinline muted></video></div>'
     + '</div>'
-    + '<div class="lf-cb-pulse"></div>'
-    + '<div class="lf-cb-info"><div class="lf-cb-title" id="lf-cb-title">On call</div>'
-    + '<div class="lf-cb-sub" id="lf-cb-sub">00:00</div></div>'
-    + '<div class="lf-cb-actions">'
-    + '<button class="lf-cb-btn" id="lf-cb-mute" title="Mute">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
-    + '</button>'
-    + '<button class="lf-cb-btn" id="lf-cb-cam" title="Toggle camera">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
-    + '</button>'
-    + '<button class="lf-cb-btn lf-danger" id="lf-cb-hang" title="End call">'
-    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
-    + '</button>'
     + '</div>';
 
-  function injectBar() {
-    if (document.getElementById(BAR_ID)) return;
-    var wrap = document.createElement('div');
-    wrap.id = BAR_ID;
-    document.head.insertAdjacentHTML('beforeend', BAR_CSS);
-    wrap.innerHTML = BAR_HTML;
-    document.body.appendChild(wrap);
+  // ─── FLOATING VIDEO CARD HTML ─────────────────────────────────────────────────
+  var VID_HTML = '<div id="lf-video-wrap">'
+    /* Remote full-face video */
+    + '<video id="lf-remote-vid" autoplay playsinline></video>'
+    /* Connecting / camera-off placeholder */
+    + '<div id="lf-no-vid">'
+    +   '<div id="lf-no-vid-av">M</div>'
+    +   '<div id="lf-no-vid-name">Connecting...</div>'
+    + '</div>'
+    /* Drag handle */
+    + '<div id="lf-vid-drag">'
+    +   '<span id="lf-vid-label">On call</span>'
+    +   '<div id="lf-vid-drag-dots"><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span></div>'
+    +   '<button id="lf-vid-min" title="Minimize">&#8722;</button>'
+    + '</div>'
+    /* Local self-view PIP */
+    + '<div id="lf-my-video"><video id="lf-local-vid" autoplay playsinline muted></video></div>'
+    /* In-video controls */
+    + '<div id="lf-vid-controls">'
+    +   '<button class="lf-vbtn" id="lf-vid-mute" title="Mute">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
+    +   '</button>'
+    +   '<button class="lf-vbtn lf-danger" id="lf-vid-hang" title="End call">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    +   '</button>'
+    +   '<button class="lf-vbtn" id="lf-vid-cam" title="Toggle camera">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
+    +   '</button>'
+    + '</div>'
+    + '</div>';
+
+  // ─── CALL STATUS BAR HTML ─────────────────────────────────────────────────────
+  var BAR_HTML = '<div id="lf-call-bar">'
+    + '<div class="lf-cb-pulse"></div>'
+    + '<div class="lf-cb-info">'
+    +   '<div class="lf-cb-title" id="lf-cb-title">On call</div>'
+    +   '<div class="lf-cb-sub" id="lf-cb-sub">00:00</div>'
+    + '</div>'
+    + '<div class="lf-cb-actions">'
+    /* Restore video button (shown when minimized) */
+    +   '<button class="lf-cb-btn" id="lf-cb-restore" title="Show video" style="display:none">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
+    +   '</button>'
+    /* Mute quick-access */
+    +   '<button class="lf-cb-btn" id="lf-cb-mute" title="Mute">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
+    +   '</button>'
+    /* Hang up from bar */
+    +   '<button class="lf-cb-btn lf-danger" id="lf-cb-hang" title="End call">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    +   '</button>'
+    /* Incoming-call bar accept/decline */
+    +   '<button class="lf-cb-btn lf-accept" id="lf-cb-acc" style="display:none" title="Accept">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
+    +   '</button>'
+    + '</div>'
+    + '</div>';
+
+  // ─── INJECT ALL UI ────────────────────────────────────────────────────────────
+  function injectUI() {
+    if (document.getElementById('lf-call-bar')) return;
+    document.head.insertAdjacentHTML('beforeend', CALL_CSS);
+    // Inject as siblings directly on body — fully independent fixed elements
+    document.body.insertAdjacentHTML('beforeend', INC_HTML + VID_HTML + BAR_HTML);
   }
 
   // ─── INTERNAL STATE ───────────────────────────────────────────────────────────
   var _pc        = null;
-  var _local     = null;   // MediaStream
-  var _sigCh     = null;   // signaling RealtimeChannel
-  var _vsyncCh   = null;   // video-sync RealtimeChannel
+  var _local     = null;
+  var _sigCh     = null;
+  var _vsyncCh   = null;
   var _timer     = null;
   var _sec       = 0;
   var _muted     = false;
@@ -212,7 +304,9 @@
   var _pInitial  = 'M';
   var _myName    = 'Me';
   var _myInitial = 'M';
-  var _pendOffer = null;   // stored incoming offer before accept
+  var _pendOffer = null;
+  var _minimized = false;
+  var _hasRemoteStream = false;
 
   function _lf() { return typeof LoveFlix !== 'undefined' ? LoveFlix : null; }
 
@@ -226,35 +320,74 @@
   function _el(id) { return document.getElementById(id); }
 
   function _barMode(mode) {
-    var b = _el(BAR_ID);
+    var b = _el('lf-call-bar');
     if (!b) return;
     b.className = 'lf-active' + (mode ? ' lf-' + mode : '');
+    // Show accept button only when incoming
+    var acc = _el('lf-cb-acc');
+    if (acc) acc.style.display = mode === 'incoming' ? '' : 'none';
   }
 
-  function _hideBar() { var b = _el(BAR_ID); if (b) b.className = ''; }
+  function _hideBar() {
+    var b = _el('lf-call-bar'); if (b) b.className = '';
+  }
 
-  function _setTitle(t) { var el = _el('lf-cb-title'); if (el) el.textContent = t; }
+  function _setTitle(t, sub) {
+    var el = _el('lf-cb-title'); if (el) el.textContent = t;
+    var vl = _el('lf-vid-label'); if (vl) vl.textContent = t;
+    if (sub !== undefined) { var s = _el('lf-cb-sub'); if (s) s.textContent = sub; }
+  }
+
+  function _showVideo() {
+    var w = _el('lf-video-wrap'); if (w) w.classList.add('lf-visible');
+    var r = _el('lf-cb-restore'); if (r) r.style.display = 'none';
+    _minimized = false;
+  }
+
+  function _hideVideo() {
+    var w = _el('lf-video-wrap'); if (w) w.classList.remove('lf-visible');
+    var r = _el('lf-cb-restore'); if (r) r.style.display = '';
+    _minimized = true;
+  }
+
+  // Show placeholder vs actual remote video
+  function _updateVideoPlaceholder() {
+    var rv  = _el('lf-remote-vid');
+    var nv  = _el('lf-no-vid');
+    var nav = _el('lf-no-vid-av');
+    var nan = _el('lf-no-vid-name');
+    if (_hasRemoteStream) {
+      if (rv)  rv.style.display  = 'block';
+      if (nv)  nv.style.display  = 'none';
+    } else {
+      if (rv)  rv.style.display  = 'none';
+      if (nv)  nv.style.display  = 'flex';
+      if (nav) nav.textContent   = _pInitial;
+      if (nan) nan.textContent   = 'Connecting...';
+    }
+  }
 
   function _startTimer() {
     _sec = 0;
     clearInterval(_timer);
     _timer = setInterval(function () {
       _sec++;
-      var el = _el('lf-cb-sub');
-      if (el) el.textContent = pad(_sec);
+      var el = _el('lf-cb-sub'); if (el) el.textContent = _pad(_sec);
     }, 1000);
   }
 
-  function pad(s) {
+  function _pad(s) {
     var m = Math.floor(s/60), sec = s%60;
     return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
   }
 
   function _stopTimer() { clearInterval(_timer); _timer = null; }
 
-  // ─── WebRTC ────────────────────────────────────────────────────────────────────
+  // ─── WebRTC ───────────────────────────────────────────────────────────────────
   function _makePC() {
+    if (_pc) { try { _pc.close(); } catch(_){} }
     _pc = new RTCPeerConnection({ iceServers: STUN });
+    _hasRemoteStream = false;
 
     _pc.onicecandidate = function (e) {
       if (e.candidate && _sigCh)
@@ -265,8 +398,9 @@
       var vid = _el('lf-remote-vid');
       if (vid && e.streams[0]) {
         vid.srcObject = e.streams[0];
-        var wrap = _el('lf-video-wrap');
-        if (wrap) wrap.classList.add('lf-visible');
+        _hasRemoteStream = true;
+        _updateVideoPlaceholder();
+        _showVideo();
       }
     };
 
@@ -276,10 +410,22 @@
         _barMode('');
         _setTitle('On call with ' + _pName);
         _startTimer();
-        setCallState({ active:true, coupleId:_coupleId, myId:_myId,
-                       pName:_pName, pInitial:_pInitial, myName:_myName, myInitial:_myInitial });
+        setCallState({
+          active: true, coupleId: _coupleId, myId: _myId,
+          pName: _pName, pInitial: _pInitial, myName: _myName, myInitial: _myInitial
+        });
       } else if (st === 'failed' || st === 'closed') {
         _cleanup(true);
+      }
+    };
+
+    _pc.oniceconnectionstatechange = function () {
+      var st = _pc && _pc.iceConnectionState;
+      if (st === 'disconnected') {
+        // Try ICE restart rather than full teardown
+        if (_pc && _pc.connectionState !== 'closed') {
+          _pc.restartIce && _pc.restartIce();
+        }
       }
     };
   }
@@ -290,17 +436,17 @@
   }
 
   async function _getMedia(wantVideo) {
-    var constraints = wantVideo ? { audio:true, video:true } : { audio:true, video:false };
+    var constraints = wantVideo ? { audio: true, video: { facingMode: 'user' } } : { audio: true, video: false };
     try { _local = await navigator.mediaDevices.getUserMedia(constraints); }
     catch(_) {
-      try { _local = await navigator.mediaDevices.getUserMedia({ audio:true, video:false }); }
+      try { _local = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); }
       catch(__) { _local = null; }
     }
     var lv = _el('lf-local-vid');
     if (lv && _local) lv.srcObject = _local;
   }
 
-  // ─── SIGNALING HANDLERS ───────────────────────────────────────────────────────
+  // ─── SIGNALING ────────────────────────────────────────────────────────────────
   function _openSig(url, key, token, coupleId) {
     if (_sigCh) { _sigCh.close(); _sigCh = null; }
     _sigCh = new RealtimeChannel(url, key, token, 'call:' + coupleId);
@@ -315,8 +461,12 @@
   }
 
   function _onOffer(p) {
+    // CRITICAL: ignore our own broadcast echo
+    if (p.from === _myId) return;
     if (p.to && p.to !== _myId) return;
-    // Store offer and show incoming UI
+    // If we're already in a connected call, auto-answer reoffers silently
+    if (_pc && (_pc.connectionState === 'connected' || _pc.connectionState === 'connecting')) return;
+
     _pendOffer = p;
     var inc = _el('lf-inc-overlay');
     if (inc) {
@@ -326,25 +476,35 @@
     }
     _barMode('incoming');
     _setTitle((p.callerName || 'Someone') + ' is calling...');
+    _updateVideoPlaceholder();
   }
 
   async function _acceptIncoming() {
     if (!_pendOffer) return;
     var p = _pendOffer; _pendOffer = null;
-    _el('lf-inc-overlay').classList.remove('lf-visible');
+    var inc = _el('lf-inc-overlay'); if (inc) inc.classList.remove('lf-visible');
+
     var creds = _creds();
     if (!creds) return;
     _myId     = creds.userId;
     _coupleId = creds.coupleId;
+
+    // Store caller info
+    _pName    = p.callerName    || 'My Love';
+    _pInitial = p.callerInitial || (_pName[0] || 'M').toUpperCase();
+
+    _updateVideoPlaceholder();
+    _showVideo();
+    _barMode('');
+    _setTitle('Connecting...');
+
     await _getMedia(true);
     _makePC();
     _addTracks();
     await _pc.setRemoteDescription(new RTCSessionDescription(p.offer));
     var ans = await _pc.createAnswer();
     await _pc.setLocalDescription(ans);
-    _sigCh.broadcast('answer', { answer:ans, from:_myId, to:p.from });
-    _barMode('');
-    _setTitle('Connecting...');
+    _sigCh.broadcast('answer', { answer: ans, from: _myId, to: p.from });
   }
 
   function _onAnswer(p) {
@@ -357,24 +517,25 @@
     _pc.addIceCandidate(new RTCIceCandidate(p.c)).catch(function(){});
   }
 
-  function _onHangup() { _cleanup(true); }
+  function _onHangup(p) {
+    if (p && p.from === _myId) return;
+    _cleanup(true);
+  }
 
-  function _onDeclined() {
+  function _onDeclined(p) {
+    if (p && p.from === _myId) return;
     _setTitle(_pName + ' declined');
     setTimeout(function(){ _cleanup(false); }, 2000);
   }
 
-  // Re-offer is sent when partner navigates to a new page and needs to reconnect
   async function _onReOffer(p) {
     if (!_pc || p.from === _myId) return;
-    // Partner has re-joined; restart our connection too
-    _pc.close();
     _makePC();
     _addTracks();
     await _pc.setRemoteDescription(new RTCSessionDescription(p.offer));
     var ans = await _pc.createAnswer();
     await _pc.setLocalDescription(ans);
-    _sigCh.broadcast('answer', { answer:ans, from:_myId, to:p.from });
+    _sigCh.broadcast('answer', { answer: ans, from: _myId, to: p.from });
   }
 
   // ─── CLEANUP ──────────────────────────────────────────────────────────────────
@@ -382,28 +543,34 @@
     _stopTimer();
     if (_pc) { try { _pc.close(); } catch(_){} _pc = null; }
     if (_local) { _local.getTracks().forEach(function(t){ t.stop(); }); _local = null; }
-    var wrap = _el('lf-video-wrap');
-    if (wrap) wrap.classList.remove('lf-visible');
+    _hasRemoteStream = false;
+    _hideVideo();
     setCallState(null);
     if (notify) {
-      _setTitle('Call ended'); setTimeout(function(){ _hideBar(); }, 2000);
-    } else { _hideBar(); }
+      _setTitle('Call ended');
+      setTimeout(function(){ _hideBar(); _minimized = false; }, 2000);
+    } else {
+      _hideBar();
+      _minimized = false;
+    }
   }
 
   // ─── PUBLIC: START CALL ───────────────────────────────────────────────────────
   async function startCall(partnerName, coupleId, myUserId, myName, myInitial, wantVideo) {
     var creds = _creds();
     if (!creds || !creds.token) return;
-    _myId      = myUserId  || creds.userId;
-    _coupleId  = coupleId  || creds.coupleId;
+
+    _myId      = myUserId   || creds.userId;
+    _coupleId  = coupleId   || creds.coupleId;
     _pName     = partnerName || 'My Love';
     _pInitial  = (_pName[0] || 'M').toUpperCase();
-    _myName    = myName    || 'Me';
+    _myName    = myName     || 'Me';
     _myInitial = (myInitial || _myName[0] || 'M').toUpperCase();
 
-    injectBar();
     _barMode('calling');
-    _setTitle('Calling ' + _pName + '...');
+    _setTitle('Calling ' + _pName + '...', '');
+    _updateVideoPlaceholder();
+    _showVideo();
 
     _openSig(creds.url, creds.key, creds.token, _coupleId);
 
@@ -414,14 +581,14 @@
     var offer = await _pc.createOffer();
     await _pc.setLocalDescription(offer);
 
-    // Short wait for WS join ack
+    // Wait for WebSocket join ack (queued if not ready yet)
     await new Promise(function(r){ setTimeout(r, 700); });
     _sigCh.broadcast('offer', {
       offer: offer, from: _myId, to: null,
       callerName: _myName, callerInitial: _myInitial
     });
 
-    // No-answer timeout
+    // No-answer timeout: 45 s
     setTimeout(function(){
       if (_pc && _pc.connectionState !== 'connected') {
         _setTitle('No answer');
@@ -440,15 +607,57 @@
     if (!_local) return;
     _muted = !_muted;
     _local.getAudioTracks().forEach(function(t){ t.enabled = !_muted; });
-    var btn = _el('lf-cb-mute'); if (btn) btn.classList.toggle('lf-muted', _muted);
+    var bm = _el('lf-cb-mute');   if (bm) bm.classList.toggle('lf-muted', _muted);
+    var vm = _el('lf-vid-mute'); if (vm) vm.classList.toggle('lf-muted', _muted);
   }
 
   function toggleCamera() {
     if (!_local) return;
     _camOff = !_camOff;
     _local.getVideoTracks().forEach(function(t){ t.enabled = !_camOff; });
-    var btn = _el('lf-cb-cam'); if (btn) btn.classList.toggle('lf-muted', _camOff);
-    var wrap = _el('lf-video-wrap'); if (wrap) wrap.classList.toggle('lf-visible', !_camOff);
+    var vc  = _el('lf-vid-cam'); if (vc) vc.classList.toggle('lf-muted', _camOff);
+    // Show/hide the local PIP — remote video stays visible
+    var my = _el('lf-my-video'); if (my) my.style.opacity = _camOff ? '0' : '1';
+  }
+
+  // ─── DRAGGABLE VIDEO CARD ─────────────────────────────────────────────────────
+  function _makeDraggable(wrap, handle) {
+    var startX, startY, origLeft, origTop;
+
+    function onMove(cx, cy) {
+      wrap.style.left   = (origLeft + cx - startX) + 'px';
+      wrap.style.top    = (origTop  + cy - startY) + 'px';
+      wrap.style.right  = 'auto';
+      wrap.style.bottom = 'auto';
+    }
+
+    // Mouse
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      var rect  = wrap.getBoundingClientRect();
+      startX    = e.clientX;
+      startY    = e.clientY;
+      origLeft  = rect.left;
+      origTop   = rect.top;
+      function mm(e) { onMove(e.clientX, e.clientY); }
+      function mu()  { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); }
+      document.addEventListener('mousemove', mm);
+      document.addEventListener('mouseup', mu);
+    });
+
+    // Touch
+    handle.addEventListener('touchstart', function(e) {
+      var t     = e.touches[0];
+      var rect  = wrap.getBoundingClientRect();
+      startX    = t.clientX;
+      startY    = t.clientY;
+      origLeft  = rect.left;
+      origTop   = rect.top;
+      function tm(e) { e.preventDefault(); var t = e.touches[0]; onMove(t.clientX, t.clientY); }
+      function tu()  { document.removeEventListener('touchmove', tm); document.removeEventListener('touchend', tu); }
+      document.addEventListener('touchmove', tm, { passive: false });
+      document.addEventListener('touchend', tu);
+    }, { passive: true });
   }
 
   // ─── VIDEO SYNC ───────────────────────────────────────────────────────────────
@@ -471,61 +680,60 @@
   function vsyncPause(t) { if (_vsyncCh) _vsyncCh.broadcast('pause', { from:_myId, t:t }); }
   function vsyncSeek(t)  { if (_vsyncCh) _vsyncCh.broadcast('seek',  { from:_myId, t:t }); }
 
-  // ─── DRAGGABLE VIDEO PANEL ────────────────────────────────────────────────────
-  function _makeDraggable(el) {
-    var dx=0, dy=0, sx=0, sy=0;
-    el.onmousedown = function(e) {
-      e.preventDefault();
-      sx=e.clientX; sy=e.clientY;
-      document.onmouseup   = function(){ document.onmouseup=null; document.onmousemove=null; };
-      document.onmousemove = function(e){
-        dx=sx-e.clientX; dy=sy-e.clientY; sx=e.clientX; sy=e.clientY;
-        el.style.top  = (el.offsetTop -dy)+'px';
-        el.style.left = (el.offsetLeft-dx)+'px';
-        el.style.right='auto'; el.style.bottom='auto';
-      };
-    };
-  }
-
   // ─── PAGE INIT ────────────────────────────────────────────────────────────────
   function init() {
-    injectBar();
+    injectUI();
 
-    // Button wiring
-    var hangBtn = _el('lf-cb-hang');   if (hangBtn) hangBtn.addEventListener('click', endCall);
-    var muteBtn = _el('lf-cb-mute');   if (muteBtn) muteBtn.addEventListener('click', toggleMute);
-    var camBtn  = _el('lf-cb-cam');    if (camBtn)  camBtn.addEventListener('click', toggleCamera);
-    var accBtn  = _el('lf-inc-acc');   if (accBtn)  accBtn.addEventListener('click', _acceptIncoming);
-    var decBtn  = _el('lf-inc-dec');
+    // Wire buttons — incoming overlay
+    var accBtn = _el('lf-inc-acc');
+    if (accBtn) accBtn.addEventListener('click', _acceptIncoming);
+
+    var decBtn = _el('lf-inc-dec');
     if (decBtn) decBtn.addEventListener('click', function () {
-      if (_sigCh && _pendOffer) _sigCh.broadcast('declined', { from:_myId, to:_pendOffer.from });
+      if (_sigCh && _pendOffer) _sigCh.broadcast('declined', { from: _myId, to: _pendOffer.from });
       _pendOffer = null;
       var inc = _el('lf-inc-overlay'); if (inc) inc.classList.remove('lf-visible');
       _hideBar();
     });
 
-    var vw = _el('lf-video-wrap'); if (vw) _makeDraggable(vw);
+    // Wire bar buttons
+    var hangBtn    = _el('lf-cb-hang');    if (hangBtn)    hangBtn.addEventListener('click',    endCall);
+    var muteBtn    = _el('lf-cb-mute');    if (muteBtn)    muteBtn.addEventListener('click',    toggleMute);
+    var barAccBtn  = _el('lf-cb-acc');     if (barAccBtn)  barAccBtn.addEventListener('click',  _acceptIncoming);
+    var restoreBtn = _el('lf-cb-restore'); if (restoreBtn) restoreBtn.addEventListener('click', _showVideo);
+
+    // Wire in-video control buttons
+    var vHang = _el('lf-vid-hang'); if (vHang) vHang.addEventListener('click', endCall);
+    var vMute = _el('lf-vid-mute'); if (vMute) vMute.addEventListener('click', toggleMute);
+    var vCam  = _el('lf-vid-cam');  if (vCam)  vCam.addEventListener('click',  toggleCamera);
+    var vMin  = _el('lf-vid-min');  if (vMin)  vMin.addEventListener('click',  _hideVideo);
+
+    // Draggable via the handle strip at top of video card
+    var vWrap   = _el('lf-video-wrap');
+    var vHandle = _el('lf-vid-drag');
+    if (vWrap && vHandle) _makeDraggable(vWrap, vHandle);
 
     // Restore or listen for incoming calls
-    var saved = getCallState();
-    var creds = _creds();
+    var saved  = getCallState();
+    var creds  = _creds();
     if (!creds || !creds.token) return;
 
     _myId     = saved ? (saved.myId     || creds.userId)   : creds.userId;
     _coupleId = saved ? (saved.coupleId || creds.coupleId) : creds.coupleId;
 
-    if (saved && saved.pName)     { _pName = saved.pName; _pInitial = saved.pInitial || _pName[0].toUpperCase(); }
-    if (saved && saved.myName)    { _myName = saved.myName; _myInitial = saved.myInitial || _myName[0].toUpperCase(); }
+    if (saved && saved.pName)  { _pName = saved.pName;  _pInitial = saved.pInitial  || _pName[0].toUpperCase(); }
+    if (saved && saved.myName) { _myName = saved.myName; _myInitial = saved.myInitial || _myName[0].toUpperCase(); }
 
-    // Always open signaling to receive incoming calls
+    // Always open signaling so we receive incoming calls
     if (_coupleId) _openSig(creds.url, creds.key, creds.token, _coupleId);
 
-    // Reconnect if we were in a call before navigating
+    // Reconnect if we were on a call when we navigated to this page
     if (saved && saved.active) {
       _barMode('');
       _setTitle('On call with ' + _pName);
-      // Re-establish WebRTC by sending a new offer (partner will re-answer)
-      (async function(){
+      _updateVideoPlaceholder();
+      _showVideo();
+      (async function () {
         await _getMedia(true);
         _makePC();
         _addTracks();
@@ -548,16 +756,16 @@
   }
 
   // ─── EXPORTS ──────────────────────────────────────────────────────────────────
-  global.LoveFlix        = global.LoveFlix || {};
-  global.LoveFlix.Call   = {
-    start:          startCall,
-    end:            endCall,
-    toggleMute:     toggleMute,
-    toggleCamera:   toggleCamera,
-    initVideoSync:  initVideoSync,
-    vsyncPlay:      vsyncPlay,
-    vsyncPause:     vsyncPause,
-    vsyncSeek:      vsyncSeek
+  global.LoveFlix       = global.LoveFlix || {};
+  global.LoveFlix.Call  = {
+    start:         startCall,
+    end:           endCall,
+    toggleMute:    toggleMute,
+    toggleCamera:  toggleCamera,
+    initVideoSync: initVideoSync,
+    vsyncPlay:     vsyncPlay,
+    vsyncPause:    vsyncPause,
+    vsyncSeek:     vsyncSeek
   };
 
 })(window);
