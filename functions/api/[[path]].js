@@ -958,7 +958,7 @@ async function livekitToken(env, request, user) {
 
   const apiKey = env.LIVEKIT_API_KEY;
   const apiSecret = env.LIVEKIT_API_SECRET;
-  const wsUrl = env.LIVEKIT_URL;
+  const wsUrl = env.LIVEKIT_WS_URL;
 
   if (!apiKey || !apiSecret || !wsUrl) {
     console.error('[livekitToken] Missing env vars: LIVEKIT_API_KEY / LIVEKIT_API_SECRET / LIVEKIT_URL');
