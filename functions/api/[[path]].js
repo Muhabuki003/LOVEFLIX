@@ -1185,6 +1185,20 @@ function decodePolyline(str) {
   return coords;
 }
 
+// Strip HTML tags + decode the few entities Google embeds in turn instructions.
+function stripHtml(s) {
+  return String(s || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function getDirections(env, url, user) {
   const origin = parseLatLng(url.searchParams.get('origin'));
   const dest = parseLatLng(url.searchParams.get('dest'));
@@ -1210,9 +1224,17 @@ async function getDirections(env, url, user) {
     const route = data.routes[0];
     const leg = route.legs && route.legs[0];
     const coords = route.overview_polyline ? decodePolyline(route.overview_polyline.points) : [];
+    const steps = (leg && Array.isArray(leg.steps) ? leg.steps : []).map(s => ({
+      instruction: stripHtml(s.html_instructions || ''),
+      distance_m: s.distance ? s.distance.value : 0,
+      distance_text: s.distance ? s.distance.text : '',
+      maneuver: s.maneuver || '',
+      end: s.end_location ? { lat: s.end_location.lat, lng: s.end_location.lng } : null,
+    }));
     return json({
       ok: true,
       coords,
+      steps,
       distance_m: leg && leg.distance ? leg.distance.value : 0,
       duration_s: leg && leg.duration ? leg.duration.value : 0,
       summary: route.summary || '',
