@@ -171,7 +171,7 @@
       <div class="field"><label>Their name (the surprise-ee)</label><input type="text" id="theirName" placeholder="My Love" value="My Love"></div>
       <div class="field"><label>Your name (you again)</label><input type="text" id="adminName2" placeholder="Your name"></div>
     </div>
-    <div class="field"><label>Anniversary date</label><input type="date" value="2023-05-14"></div>
+    <div class="field"><label>Anniversary date</label><input type="date" id="anniversaryDate"></div>
     <p class="step-sub" style="margin-top:34px;margin-bottom:20px">Add profile photos (optional — you can skip and use the gradient avatars).</p>
     <div class="uploads">
       <div class="upload-tile"><div class="av-pic her" id="herInitial">M</div><div class="av-name">Their Photo</div><div class="av-cta">+ Upload</div></div>
@@ -288,14 +288,17 @@
     const accentEl = document.querySelector('#colors .color.selected');
     const savedPasscode = document.getElementById('adminPasscode').value.trim();
     const selectedPlan = (document.querySelector('#planCards .plan-card.selected') || {}).dataset?.plan || 'sweetheart';
+    const anniversaryDate = (document.getElementById('anniversaryDate') || {}).value || '';
     try {
-      await LoveFlix.saveSettings({
+      const onboardingSettings = {
         adminName: adminName || 'You',
         partnerName: partnerName,
         urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
         adminPasscode: savedPasscode || '1234',
-      }, { flush: !!LoveFlix.getToken() });
+      };
+      if (anniversaryDate) onboardingSettings.anniversaryDate = anniversaryDate;
+      await LoveFlix.saveSettings(onboardingSettings, { flush: !!LoveFlix.getToken() });
     } catch (_) {}
     try { localStorage.setItem('loveflix.selectedPlan', selectedPlan); } catch (_) {}
     location.href = '/checkout?plan=' + encodeURIComponent(selectedPlan);
@@ -327,13 +330,16 @@
       const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
       const accentEl = document.querySelector('#colors .color.selected');
       const savedPasscode = document.getElementById('adminPasscode').value.trim();
-      const saving = LoveFlix.saveSettings({
+      const anniversaryDate = (document.getElementById('anniversaryDate') || {}).value || '';
+      const step5Settings = {
         adminName: adminName || 'You',
         partnerName: partnerName,
         urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
         adminPasscode: savedPasscode || '1234',
-      }, { flush: !!LoveFlix.getToken() });
+      };
+      if (anniversaryDate) step5Settings.anniversaryDate = anniversaryDate;
+      const saving = LoveFlix.saveSettings(step5Settings, { flush: !!LoveFlix.getToken() });
       try { await saving; } catch (_) {}
       document.getElementById('successUrl').textContent = 'loveflix.us/' + slug;
       const notice = document.getElementById('confirmEmailNotice');

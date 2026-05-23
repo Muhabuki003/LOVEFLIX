@@ -295,6 +295,23 @@
     const play = e.target.closest('[data-play]');
     if (play) { location.href = `player.html?id=${encodeURIComponent(play.dataset.play)}`; return; }
 
+    const toggle = e.target.closest('.toggle');
+    if (toggle) {
+      const id = toggle.dataset.id;
+      const video = VIDEOS.find(v => v.id === id);
+      if (!video) return;
+      const newPublished = !video.is_published;
+      try {
+        await LoveFlix.api(`/api/videos/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ is_published: newPublished })
+        });
+        video.is_published = newPublished;
+        render();
+      } catch (err) { alert('Toggle failed: ' + err.message); }
+      return;
+    }
+
     const del = e.target.closest('[data-del]');
     if (del) {
       const id = del.dataset.del;

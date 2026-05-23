@@ -191,6 +191,8 @@
 
   .section-h{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin:14px 0 10px}
 
+  .lc-empty{font-size:12.5px;color:var(--text-dim);padding:14px;text-align:center;line-height:1.5;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:10px}
+
   .call-row{
     display:flex;align-items:center;gap:12px;
     padding:10px 0;border-bottom:1px dashed var(--border)
@@ -590,14 +592,14 @@
     <div class="av rose">M<span class="status"></span></div>
     <div class="name-block">
       <div class="n">My Love</div>
-      <div class="meta">London, UK · 16:42 GMT</div>
+      <div class="meta">Locating…</div>
     </div>
   </div>
   <div class="couple-row">
     <div class="av blue">B<span class="status"></span></div>
     <div class="name-block">
       <div class="n">Buki <span style="color:var(--text-dim);font-weight:400">(you)</span></div>
-      <div class="meta">Brooklyn, NY · 11:42 EST</div>
+      <div class="meta">Locating…</div>
     </div>
   </div>
 </aside>
@@ -616,75 +618,21 @@
       <div class="schedule-cta">
         <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
         <div>
-          <div class="t">Tonight, 22:30 GMT</div>
-          <div class="s">Goodnight call · auto-reminder set</div>
+          <div class="t">No calls scheduled</div>
+          <div class="s">Call scheduling is coming soon</div>
         </div>
       </div>
 
       <div class="section-h">Recent calls</div>
-      <div class="call-row">
-        <div class="call-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
-        </div>
-        <div class="call-info"><div class="who">Morning coffee call</div><div class="when">Today, 08:14 · 24 min</div></div>
-        <div class="call-len">24:08</div>
-      </div>
-      <div class="call-row">
-        <div class="call-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
-        </div>
-        <div class="call-info"><div class="who">Late night ramble</div><div class="when">Yesterday, 23:48 · 1h 14m</div></div>
-        <div class="call-len">1:14:22</div>
-      </div>
-      <div class="call-row">
-        <div class="call-icon miss">
-          <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>
-        </div>
-        <div class="call-info"><div class="who">Missed — at the gym</div><div class="when">Yesterday, 18:02</div></div>
-        <div class="call-len">—</div>
-      </div>
-      <div class="call-row">
-        <div class="call-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
-        </div>
-        <div class="call-info"><div class="who">Walking home together</div><div class="when">Mon, 19:22 · 42 min</div></div>
-        <div class="call-len">42:11</div>
-      </div>
-      <div class="call-row">
-        <div class="call-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
-        </div>
-        <div class="call-info"><div class="who">Sunday breakfast</div><div class="when">Sun, 10:30 · 1h 02m</div></div>
-        <div class="call-len">1:02:48</div>
+      <div id="callList">
+        <div class="lc-empty">Loading…</div>
       </div>
     </div>
 
     <div class="tab-pane" data-pane="journeys">
       <div class="section-h">Places you've been together</div>
-      <div class="journey-row" data-fly="-9.13,38.71,10">
-        <div class="journey-pin" style="--c:linear-gradient(135deg,#fbbf24,#7c2d12)">LI</div>
-        <div class="journey-info"><div class="place">Lisbon, Portugal</div><div class="when">May 2025 · 4 days</div></div>
-        <div class="journey-coords">38.71°N<br>9.13°W</div>
-      </div>
-      <div class="journey-row" data-fly="-21.94,64.13,8">
-        <div class="journey-pin" style="--c:linear-gradient(135deg,#22d3ee,#0c4a6e)">IC</div>
-        <div class="journey-info"><div class="place">Reykjavík, Iceland</div><div class="when">Feb 2025 · 6 days</div></div>
-        <div class="journey-coords">64.13°N<br>21.94°W</div>
-      </div>
-      <div class="journey-row" data-fly="-116.07,33.87,10">
-        <div class="journey-pin" style="--c:linear-gradient(135deg,#a855f7,#1e1b4b)">JT</div>
-        <div class="journey-info"><div class="place">Joshua Tree, CA</div><div class="when">Oct 2024 · 3 days</div></div>
-        <div class="journey-coords">33.87°N<br>116.07°W</div>
-      </div>
-      <div class="journey-row" data-fly="2.35,48.86,11">
-        <div class="journey-pin" style="--c:linear-gradient(135deg,#fb7185,#7f1d1d)">PA</div>
-        <div class="journey-info"><div class="place">Paris, France</div><div class="when">Apr 2024 · 5 days</div></div>
-        <div class="journey-coords">48.86°N<br>2.35°E</div>
-      </div>
-      <div class="journey-row" data-fly="139.65,35.68,10">
-        <div class="journey-pin" style="--c:linear-gradient(135deg,#f472b6,#831843)">TK</div>
-        <div class="journey-info"><div class="place">Tokyo, Japan</div><div class="when">Nov 2023 · 8 days</div></div>
-        <div class="journey-coords">35.68°N<br>139.65°E</div>
+      <div id="journeyList">
+        <div class="lc-empty">Loading…</div>
       </div>
     </div>
 
@@ -693,19 +641,19 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
           <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Days together</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">1,094</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px" id="statDaysTogether">—</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
           <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Calls</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">2,847</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px" id="statCalls">—</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
           <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Hours talked</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">1,612</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px" id="statHours">—</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
           <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600">Trips</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px">12</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-top:6px" id="statTrips">—</div>
         </div>
       </div>
 
@@ -719,8 +667,8 @@
       </div>
 
       <div class="section-h" style="margin-top:20px">Total distance traveled to see each other</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;line-height:1;background:linear-gradient(135deg,#ff8aa6,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent">28,940 mi</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Once around the world. And then some.</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:1px;line-height:1;background:linear-gradient(135deg,#ff8aa6,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent" id="statTotalDist">—</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px" id="statTotalDistSub">Trip distance tracking is coming soon</div>
     </div>
 
   </div>
@@ -746,18 +694,18 @@
 <div class="distance-hero">
   <div class="stat-cell primary">
     <div class="stat-label">Distance apart</div>
-    <div class="stat-value" id="distVal">3,461<span class="unit">mi</span></div>
-    <div class="stat-sub">5,571 km · across the Atlantic</div>
+    <div class="stat-value" id="distVal">—</div>
+    <div class="stat-sub" id="distSub">Locating…</div>
   </div>
   <div class="stat-cell">
     <div class="stat-label">Time gap</div>
-    <div class="stat-value">5<span class="unit">hrs</span></div>
-    <div class="stat-sub">She's 5h ahead</div>
+    <div class="stat-value" id="timeGapVal">—</div>
+    <div class="stat-sub" id="timeGapSub">Locating…</div>
   </div>
   <div class="stat-cell">
     <div class="stat-label">Last seen</div>
-    <div class="stat-value">12<span class="unit">sec</span></div>
-    <div class="stat-sub" id="lastSeen">ago · just now</div>
+    <div class="stat-value" id="lastSeenVal">—</div>
+    <div class="stat-sub" id="lastSeen">—</div>
   </div>
   <button class="call-btn" id="callBtn">
     <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
@@ -808,7 +756,7 @@
       <div class="m-couple-rows">
         <div class="m-couple-card">
           <div class="av rose">M<span class="status"></span></div>
-          <div class="name-block"><div class="n">My Love</div><div class="meta">London · —</div></div>
+          <div class="name-block"><div class="n">My Love</div><div class="meta">Locating…</div></div>
         </div>
         <div class="m-couple-card">
           <div class="av blue">B<span class="status"></span></div>
@@ -947,16 +895,16 @@
     return { apikey: SB_KEY, Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
   }
 
-  const MEMORIES = [
-    { id:'lisbon',  lng:-9.13,    lat:38.71,  label:'Lisbon', sub:'May 2025', color:'linear-gradient(135deg,#fbbf24,#7c2d12)' },
-    { id:'iceland', lng:-21.94,   lat:64.13,  label:'Reykjavík', sub:'Feb 2025', color:'linear-gradient(135deg,#22d3ee,#0c4a6e)' },
-    { id:'joshua',  lng:-116.07,  lat:33.87,  label:'Joshua Tree', sub:'Oct 2024', color:'linear-gradient(135deg,#a855f7,#1e1b4b)' },
-    { id:'paris',   lng:2.35,     lat:48.86,  label:'Paris', sub:'Apr 2024', color:'linear-gradient(135deg,#fb7185,#7f1d1d)' },
-    { id:'tokyo',   lng:139.65,   lat:35.68,  label:'Tokyo', sub:'Nov 2023', color:'linear-gradient(135deg,#f472b6,#831843)' }
-  ];
+  // Map memory pins render from real couple data only — none yet.
+  const MEMORIES = [];
 
   // Paint names + call button immediately from cached settings — before live data arrives.
   updateCoupleCard();
+
+  // Refresh anniversary-derived stats once settings finish syncing from the server.
+  if (typeof LoveFlix !== 'undefined' && LoveFlix.ensureSettingsReady) {
+    LoveFlix.ensureSettingsReady().then(renderDaysTogether).catch(() => {});
+  }
 
   // ---------- MAP INIT ----------
   const map = new maplibregl.Map({
@@ -1111,6 +1059,9 @@
 
     // wire real Supabase data after map is ready
     initLiveData();
+    loadCallHistory();
+    loadTrips();
+    setInterval(loadCallHistory, 30000);
   });
 
   // ---------- CONTROLS ----------
@@ -1209,6 +1160,7 @@
           ? Math.round((Date.now() - new Date(himRow.updated_at).getTime()) / 1000) : 9999;
         HIM.online = himSecAgo < 300;
         HIM.lng = lng; HIM.lat = lat;
+        HIM._real = true;
         updateMarkerUI(himMarker, HIM, `${localTime} local`);
         (function(snapLng, snapLat, snapTime) {
           reverseGeocode(HIM).then(place => {
@@ -1230,6 +1182,7 @@
         HER.online  = secAgo < 300;
         HER.secAgo  = secAgo;
         HER.lng = lng; HER.lat = lat;
+        HER._real = true;
         const markerMeta = HER.online ? `${localTime} local` : 'Last seen';
         updateMarkerUI(herMarker, HER, markerMeta);
         (function(snapLng, snapLat, snapTime, online) {
@@ -1242,21 +1195,24 @@
             }
           });
         })(lng, lat, localTime, HER.online);
-        const lastSeenEl   = document.getElementById('lastSeen');
-        const mLastSeenVal = document.getElementById('mLastSeenVal');
-        const mNowbarSub   = document.querySelector('.m-nowbar-sub');
+        const lastSeenEl    = document.getElementById('lastSeen');
+        const lastSeenValEl = document.getElementById('lastSeenVal');
+        const mLastSeenVal  = document.getElementById('mLastSeenVal');
+        const mNowbarSub    = document.querySelector('.m-nowbar-sub');
         if (HER.online) {
           const label    = secAgo < 60 ? `${secAgo}s` : `${Math.round(secAgo/60)}m`;
           const subLabel = secAgo < 30 ? 'just now' : 'recently';
-          if (lastSeenEl)   lastSeenEl.textContent = `${label} ago · ${subLabel}`;
-          if (mLastSeenVal) mLastSeenVal.innerHTML = `${secAgo < 60 ? secAgo : Math.round(secAgo/60)}<span class="unit">${secAgo < 60 ? 's' : 'm'}</span>`;
-          if (mNowbarSub)   mNowbarSub.textContent = `last seen ${label} ago`;
+          if (lastSeenEl)    lastSeenEl.textContent = `${label} ago · ${subLabel}`;
+          if (lastSeenValEl) lastSeenValEl.innerHTML = `${secAgo < 60 ? secAgo : Math.round(secAgo/60)}<span class="unit">${secAgo < 60 ? 'sec' : 'min'}</span>`;
+          if (mLastSeenVal)  mLastSeenVal.innerHTML = `${secAgo < 60 ? secAgo : Math.round(secAgo/60)}<span class="unit">${secAgo < 60 ? 's' : 'm'}</span>`;
+          if (mNowbarSub)    mNowbarSub.textContent = `last seen ${label} ago`;
         } else {
           const minsAgo      = Math.round(secAgo / 60);
           const offlineLabel = minsAgo < 60 ? `${minsAgo}m ago · offline` : `${Math.round(minsAgo/60)}h ago · offline`;
-          if (lastSeenEl)   lastSeenEl.textContent = offlineLabel;
-          if (mLastSeenVal) mLastSeenVal.innerHTML = `${minsAgo < 60 ? minsAgo : Math.round(minsAgo/60)}<span class="unit">${minsAgo < 60 ? 'm' : 'h'}</span>`;
-          if (mNowbarSub)   mNowbarSub.textContent = offlineLabel;
+          if (lastSeenEl)    lastSeenEl.textContent = offlineLabel;
+          if (lastSeenValEl) lastSeenValEl.innerHTML = `${minsAgo < 60 ? minsAgo : Math.round(minsAgo/60)}<span class="unit">${minsAgo < 60 ? 'min' : 'hr'}</span>`;
+          if (mLastSeenVal)  mLastSeenVal.innerHTML = `${minsAgo < 60 ? minsAgo : Math.round(minsAgo/60)}<span class="unit">${minsAgo < 60 ? 'm' : 'h'}</span>`;
+          if (mNowbarSub)    mNowbarSub.textContent = offlineLabel;
         }
       }
 
@@ -1264,6 +1220,7 @@
         map.getSource('love-arc').setData(buildArcFeature());
       }
       updateCoupleCard();
+      updateDistanceAndGap();
     } catch (_) {}
     syncSec = 0;
   }
@@ -1315,31 +1272,213 @@
     }, HEARTBEAT_MS);
   }
 
-  async function fetchDistance() {
-    if (!COUPLE_ID || !TOKEN) return;
+  // ---------- DISTANCE + TIME GAP (computed live from both coordinates) ----------
+  function _haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371, rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function updateDistanceAndGap() {
+    if (!HER._real || !HIM._real) return; // wait until both real positions are known
+
+    // Distance — haversine between the two live fixes.
+    const km    = _haversineKm(HER.lat, HER.lng, HIM.lat, HIM.lng);
+    const kmR   = Math.round(km);
+    const miles = Math.round(km / 1.60934);
+    const milesStr = miles.toLocaleString(), kmStr = kmR.toLocaleString();
+    const distEl  = document.getElementById('distVal');
+    if (distEl)  distEl.innerHTML = `${milesStr}<span class="unit">mi</span>`;
+    const distSub = document.getElementById('distSub');
+    if (distSub) distSub.textContent = kmR > 1 ? `${kmStr} km apart` : 'Together right now';
+    const mNowbarDist = document.querySelector('.m-nowbar-dist');
+    if (mNowbarDist) mNowbarDist.innerHTML = `${milesStr}<span class="unit">mi</span>`;
+    const mSheetDistV = document.querySelector('.m-sheet-hero .cell.primary .v');
+    if (mSheetDistV) mSheetDistV.innerHTML = `${milesStr}<span class="unit">mi</span>`;
+    const mSheetDistS = document.querySelector('.m-sheet-hero .cell.primary .s');
+    if (mSheetDistS) mSheetDistS.textContent = `${kmStr} km`;
+
+    // Time gap — longitude-derived offset, consistent with formatLocalTime().
+    const gap    = Math.round(HER.lng / 15) - Math.round(HIM.lng / 15);
+    const absGap = Math.abs(gap);
+    const dir    = gap > 0 ? 'ahead' : 'behind';
+    const gapVal = document.getElementById('timeGapVal');
+    if (gapVal) gapVal.innerHTML = `${absGap}<span class="unit">hrs</span>`;
+    const gapSub = document.getElementById('timeGapSub');
+    if (gapSub) gapSub.textContent = absGap === 0 ? 'Same timezone' : `${HER.name} is ${absGap}h ${dir}`;
+    const mGapV = document.querySelector('.m-sheet-hero .cell:nth-child(2) .v');
+    if (mGapV) mGapV.innerHTML = `${absGap}<span class="unit">hrs</span>`;
+    const mGapS = document.querySelector('.m-sheet-hero .cell:nth-child(2) .s');
+    if (mGapS) mGapS.textContent = absGap === 0 ? 'Same timezone' : `${HER.name} ${absGap}h ${dir}`;
+  }
+
+  // ---------- DAYS TOGETHER (from the couple's saved anniversary date) ----------
+  function _daysSince(dateStr) {
+    if (!dateStr) return 0;
+    const t = Date.parse(dateStr);
+    if (isNaN(t)) return 0;
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  }
+  function renderDaysTogether() {
+    const el = document.getElementById('statDaysTogether');
+    if (!el) return;
+    const s = (typeof LoveFlix !== 'undefined' ? LoveFlix.getSettings() : {}) || {};
+    const d = _daysSince(s.anniversaryDate);
+    el.textContent = d ? d.toLocaleString() : '—';
+  }
+
+  // ---------- HTML escaping for injected user data ----------
+  function _escapeHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ---------- CALL HISTORY (Supabase call_logs) ----------
+  const _PHONE_SVG = '<svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>';
+  const _MISS_SVG  = '<svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>';
+
+  function _fmtCallLen(sec) {
+    sec = parseInt(sec, 10) || 0;
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  function _fmtMinLabel(sec) {
+    const m = Math.round((parseInt(sec, 10) || 0) / 60);
+    if (m >= 60) { const h = Math.floor(m / 60), r = m % 60; return r ? `${h}h ${r}m` : `${h}h`; }
+    return `${m} min`;
+  }
+  function _fmtCallWhen(iso) {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const time = d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (d.toDateString() === now.toDateString()) return `Today, ${time}`;
+    const yest = new Date(now); yest.setDate(now.getDate() - 1);
+    if (d.toDateString() === yest.toDateString()) return `Yesterday, ${time}`;
+    const diffDays = Math.floor((now - d) / 86400000);
+    if (diffDays < 7) return `${d.toLocaleDateString('en', { weekday: 'short' })}, ${time}`;
+    return `${d.toLocaleDateString('en', { month: 'short', day: 'numeric' })}, ${time}`;
+  }
+
+  function renderRecentCalls(rows) {
+    const list = document.getElementById('callList');
+    if (!list) return;
+    if (!rows.length) {
+      list.innerHTML = `<div class="lc-empty">No calls yet — tap “Call ${_escapeHtml(HER.name)}” to start your first LoveConnect call.</div>`;
+      return;
+    }
+    list.innerHTML = rows.slice(0, 15).map(r => {
+      const answered = r.status === 'answered';
+      const outgoing = r.caller_id === MY_USER;
+      let who;
+      if (!answered) who = r.status === 'declined' ? 'Declined' : 'Missed call';
+      else who = outgoing ? `Called ${_escapeHtml(HER.name)}` : `${_escapeHtml(HER.name)} called`;
+      const when = _fmtCallWhen(r.started_at) + (answered ? ` · ${_fmtMinLabel(r.duration_seconds)}` : '');
+      const len  = answered ? _fmtCallLen(r.duration_seconds) : '—';
+      const icon = answered ? _PHONE_SVG : _MISS_SVG;
+      const cls  = answered ? 'call-icon' : 'call-icon miss';
+      return `<div class="call-row"><div class="${cls}">${icon}</div>`
+           + `<div class="call-info"><div class="who">${who}</div><div class="when">${when}</div></div>`
+           + `<div class="call-len">${len}</div></div>`;
+    }).join('');
+  }
+
+  function renderCallStats(rows) {
+    const callsEl = document.getElementById('statCalls');
+    if (callsEl) callsEl.textContent = rows.length.toLocaleString();
+    const totalSec = rows.reduce((sum, r) =>
+      sum + (r.status === 'answered' ? (parseInt(r.duration_seconds, 10) || 0) : 0), 0);
+    const hoursEl = document.getElementById('statHours');
+    if (hoursEl) hoursEl.textContent = Math.round(totalSec / 3600).toLocaleString();
+  }
+
+  function renderHistogram(rows) {
+    const hist = document.getElementById('histogram');
+    if (!hist) return;
+    const buckets = new Array(24).fill(0);
+    (rows || []).forEach(r => {
+      if (r.status !== 'answered' || !r.started_at) return;
+      const h = new Date(r.started_at).getHours();
+      if (h >= 0 && h < 24) buckets[h]++;
+    });
+    const max = Math.max(1, ...buckets);
+    hist.innerHTML = buckets.map(v => {
+      const h = (v / max) * 100;
+      const peak = v === max && v > 0;
+      return `<div style="flex:1;height:${h}%;background:${peak ? 'var(--red)' : 'rgba(255,255,255,0.18)'};border-radius:2px;min-height:2px"></div>`;
+    }).join('');
+  }
+
+  async function loadCallHistory() {
+    renderDaysTogether();
+    if (!SB_URL || !TOKEN || !COUPLE_ID) {
+      renderRecentCalls([]); renderCallStats([]); renderHistogram([]);
+      return;
+    }
+    let rows = [];
     try {
-      const res = await fetch(`${SB_URL}/rest/v1/rpc/get_couple_distance`, {
-        method: 'POST',
-        headers: sbHeaders(),
-        body: JSON.stringify({ couple_id_param: COUPLE_ID })
-      });
-      if (!res.ok) return;
-      const data   = await res.json();
-      const meters = typeof data === 'number' ? data : (data && (data.distance_m || data.meters));
-      if (!meters || !isFinite(meters)) return;
-      const miles = Math.round(meters / 1609.34).toLocaleString();
-      const km    = Math.round(meters / 1000).toLocaleString();
-      const distEl = document.getElementById('distVal');
-      if (distEl) distEl.innerHTML = `${miles}<span class="unit">mi</span>`;
-      const subEl = document.querySelector('.stat-cell.primary .stat-sub');
-      if (subEl)  subEl.textContent = `${km} km`;
-      const mNowbarDist = document.querySelector('.m-nowbar-dist');
-      if (mNowbarDist) mNowbarDist.innerHTML = `${miles}<span class="unit">mi</span>`;
-      const mSheetDistV = document.querySelector('.m-sheet-hero .cell.primary .v');
-      if (mSheetDistV) mSheetDistV.innerHTML = `${miles}<span class="unit">mi</span>`;
-      const mSheetDistS = document.querySelector('.m-sheet-hero .cell.primary .s');
-      if (mSheetDistS) mSheetDistS.textContent = `${km} km`;
+      const res = await fetch(
+        `${SB_URL}/rest/v1/call_logs?couple_id=eq.${COUPLE_ID}&order=started_at.desc&limit=300`,
+        { headers: sbHeaders() }
+      );
+      if (res.ok) rows = await res.json();
     } catch (_) {}
+    if (!Array.isArray(rows)) rows = [];
+    renderRecentCalls(rows);
+    renderCallStats(rows);
+    renderHistogram(rows);
+  }
+
+  // ---------- TRIPS / JOURNEYS (from videos in the "Trips" category) ----------
+  function _tripInitials(title) {
+    const words = String(title || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return 'TR';
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  function _fmtTripDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en', { month: 'short', year: 'numeric' });
+  }
+  const _TRIP_TINTS = [
+    'linear-gradient(135deg,#fbbf24,#7c2d12)', 'linear-gradient(135deg,#22d3ee,#0c4a6e)',
+    'linear-gradient(135deg,#a855f7,#1e1b4b)', 'linear-gradient(135deg,#fb7185,#7f1d1d)',
+    'linear-gradient(135deg,#f472b6,#831843)'
+  ];
+
+  function renderJourneys(trips) {
+    const list = document.getElementById('journeyList');
+    if (list) {
+      if (!trips.length) {
+        list.innerHTML = '<div class="lc-empty">No trips yet — upload a video in the <strong>Trips</strong> category and it shows up here.</div>';
+      } else {
+        list.innerHTML = trips.map((v, i) => {
+          const tint = _TRIP_TINTS[i % _TRIP_TINTS.length];
+          return `<div class="journey-row">`
+               + `<div class="journey-pin" style="--c:${tint}">${_escapeHtml(_tripInitials(v.title))}</div>`
+               + `<div class="journey-info"><div class="place">${_escapeHtml(v.title || 'Untitled trip')}</div>`
+               + `<div class="when">${_escapeHtml(_fmtTripDate(v.date))}</div></div></div>`;
+        }).join('');
+      }
+    }
+    const statTrips = document.getElementById('statTrips');
+    if (statTrips) statTrips.textContent = trips.length.toLocaleString();
+  }
+
+  async function loadTrips() {
+    let videos = [];
+    try {
+      const r = await LoveFlix.api('/api/videos');
+      videos = (r && r.videos) || [];
+    } catch (_) {}
+    const trips = videos.filter(v => String(v.category || '').toLowerCase() === 'trips');
+    renderJourneys(trips);
   }
 
   function updateCoupleCard() {
@@ -1440,9 +1579,7 @@
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
     startLocationWatch();          // continuous push whenever device moves
     await fetchAndUpdateLocations();
-    fetchDistance();
-    setInterval(fetchAndUpdateLocations, 10000); // pull partner's location every 10s
-    setInterval(fetchDistance,           30000);
+    setInterval(fetchAndUpdateLocations, 10000); // pull partner's location + recompute distance/gap every 10s
   }
 
   // ---------- DRAWER TABS ----------
@@ -1499,14 +1636,8 @@
   }, 1000);
 
   // ---------- HISTOGRAM (calls by hour) ----------
-  const hist = document.getElementById('histogram');
-  const buckets = [2,1,0,0,0,1,2,4,5,3,2,2,3,2,2,3,4,5,7,9,11,10,7,4];
-  const max = Math.max(...buckets);
-  hist.innerHTML = buckets.map((v,i) => {
-    const h = (v/max)*100;
-    const peak = i >= 18 && i <= 22;
-    return `<div style="flex:1;height:${h}%;background:${peak?'var(--red)':'rgba(255,255,255,0.18)'};border-radius:2px;min-height:2px"></div>`;
-  }).join('');
+  // Painted empty up front; loadCallHistory() fills it from real call_logs.
+  renderHistogram([]);
 
   // ---------- MOBILE WIRING ----------
   (function(){

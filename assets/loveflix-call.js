@@ -311,6 +311,9 @@
   var _pendRing  = null;   // pending incoming ring payload
   var _minimized = false;
   var _hasRemoteVideo = false;
+  var _isCaller      = false; // true when this side initiated the call (the only side that writes call history)
+  var _callLogId     = null;  // id of the inserted 'answered' row, set on connect
+  var _outcomeLogged = false; // guards against double-logging a missed/declined outcome
 
   function _lf() { return typeof LoveFlix !== 'undefined' ? LoveFlix : null; }
   function _creds() {
@@ -452,6 +455,10 @@
       _barMode('');
       _setTitle('On call with ' + _pName);
       _startTimer();
+      // Record the connected call once, from the caller's side only.
+      if (_isCaller && !_callLogId) {
+        _insertCallLog('answered', 0).then(function (id) { _callLogId = id; });
+      }
       setCallState({
         active: true, coupleId: _coupleId, myId: _myId,
         pName: _pName, pInitial: _pInitial, myName: _myName, myInitial: _myInitial,
@@ -566,6 +573,8 @@
   async function _acceptIncoming() {
     if (!_pendRing) return;
     var p = _pendRing; _pendRing = null;
+    // We're answering, not initiating — the caller owns the history row.
+    _isCaller = false; _callLogId = null; _outcomeLogged = false;
     var inc = _el('lf-inc-overlay'); if (inc) inc.classList.remove('lf-visible');
 
     var creds = _creds(); if (!creds) return;
@@ -597,12 +606,71 @@
 
   function _onDeclined(p) {
     if (p && p.from === _myId) return;
+    if (_isCaller && !_outcomeLogged) { _outcomeLogged = true; _insertCallLog('declined', 0); }
     _setTitle(_pName + ' declined');
     setTimeout(function(){ _cleanup(false); }, 2000);
   }
 
+  // ─── CALL HISTORY LOGGING (Supabase call_logs) ───────────────────────────────
+  // Only the caller writes a row, so every call produces exactly one history
+  // entry that both partners can read (RLS scopes rows to the couple).
+  function _insertCallLog(status, durationSec) {
+    var creds = _creds();
+    if (!creds || !creds.token || !_coupleId || !_myId) return Promise.resolve(null);
+    var nowIso = new Date().toISOString();
+    return fetch(creds.url + '/rest/v1/call_logs', {
+      method: 'POST',
+      headers: {
+        apikey: creds.key,
+        Authorization: 'Bearer ' + creds.token,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({
+        couple_id:        _coupleId,
+        caller_id:        _myId,
+        status:           status,
+        duration_seconds: durationSec || 0,
+        started_at:       nowIso,
+        ended_at:         status === 'answered' ? null : nowIso
+      })
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rows) { return (rows && rows[0] && rows[0].id) || null; })
+      .catch(function () { return null; });
+  }
+
+  function _updateCallLog(id, durationSec) {
+    var creds = _creds();
+    if (!creds || !creds.token || !id) return;
+    fetch(creds.url + '/rest/v1/call_logs?id=eq.' + encodeURIComponent(id), {
+      method: 'PATCH',
+      headers: {
+        apikey: creds.key,
+        Authorization: 'Bearer ' + creds.token,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ ended_at: new Date().toISOString(), duration_seconds: durationSec || 0 })
+    }).catch(function () {});
+  }
+
+  // Records the final outcome of a call. Called from _cleanup; no-ops on the
+  // callee side and after the outcome has already been written.
+  function _logCallEnd() {
+    if (!_isCaller) return;
+    if (_callLogId) {
+      _updateCallLog(_callLogId, _sec);
+    } else if (!_outcomeLogged) {
+      // Caller ended before the partner ever connected → unanswered.
+      _outcomeLogged = true;
+      _insertCallLog('missed', 0);
+    }
+  }
+
   // ─── CLEANUP ──────────────────────────────────────────────────────────────────
   function _cleanup(notify, keepState) {
+    _logCallEnd();
     _stopTimer();
     _clearRingTimer();
     if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
@@ -613,6 +681,7 @@
     }
     _hasRemoteVideo = false;
     _hideVideo();
+    _isCaller = false; _callLogId = null; _outcomeLogged = false;
     if (!keepState) setCallState(null);
     if (notify) {
       _setTitle('Call ended');
@@ -626,6 +695,9 @@
   // ─── PUBLIC: START CALL ───────────────────────────────────────────────────────
   async function startCall(partnerName, coupleId, myUserId, myName, myInitial, wantVideo) {
     var creds = _creds(); if (!creds || !creds.token) return;
+
+    // This side initiated → it owns the call-history row for this call.
+    _isCaller = true; _callLogId = null; _outcomeLogged = false;
 
     _myId      = myUserId   || creds.userId;
     _coupleId  = coupleId   || creds.coupleId;
@@ -657,6 +729,10 @@
           var hasPartner = _room.remoteParticipants && _room.remoteParticipants.size > 0;
           if (!hasPartner) {
             _clearRingTimer();
+            if (_isCaller && !_callLogId && !_outcomeLogged) {
+              _outcomeLogged = true;
+              _insertCallLog('missed', 0);
+            }
             _setTitle('No answer');
             setTimeout(function(){ _cleanup(false); }, 2000);
           }
