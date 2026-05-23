@@ -179,6 +179,8 @@ export async function onRequest(context) {
 
     if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
 
+    if (method === 'GET' && path === '/api/directions') return getDirections(env, url, user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -1151,4 +1153,71 @@ async function getBillingSubscription(env, request) {
   }
 
   return json({ status: 'none' });
+}
+
+// ---------- Directions (Google Directions API proxy) ----------
+// Keeps GOOGLE_MAPS_API_KEY server-side. Returns a decoded route the client can
+// draw directly. Always responds 200 with { ok } so the client can fall back to
+// a straight-line estimate without treating it as a hard error.
+function parseLatLng(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const m = raw.split(',');
+  if (m.length !== 2) return null;
+  const lat = parseFloat(m[0]), lng = parseFloat(m[1]);
+  if (!isFinite(lat) || !isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return { lat, lng };
+}
+
+// Decode a Google encoded polyline into [[lng, lat], ...].
+function decodePolyline(str) {
+  const coords = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < str.length) {
+    let b, shift = 0, result = 0;
+    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    shift = 0; result = 0;
+    do { b = str.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lng / 1e5, lat / 1e5]);
+  }
+  return coords;
+}
+
+async function getDirections(env, url, user) {
+  const origin = parseLatLng(url.searchParams.get('origin'));
+  const dest = parseLatLng(url.searchParams.get('dest'));
+  if (!origin || !dest) return json({ ok: false, error: 'invalid_coords' });
+
+  const key = env.GOOGLE_MAPS_API_KEY;
+  if (!key) return json({ ok: false, error: 'directions_not_configured' });
+
+  const mode = (url.searchParams.get('mode') || 'driving').toLowerCase();
+  const safeMode = ['driving', 'walking', 'bicycling', 'transit'].includes(mode) ? mode : 'driving';
+
+  const api = `https://maps.googleapis.com/maps/api/directions/json`
+    + `?origin=${origin.lat},${origin.lng}`
+    + `&destination=${dest.lat},${dest.lng}`
+    + `&mode=${safeMode}&key=${encodeURIComponent(key)}`;
+
+  try {
+    const res = await fetch(api);
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.routes || !data.routes[0]) {
+      return json({ ok: false, error: data.status || 'no_route' });
+    }
+    const route = data.routes[0];
+    const leg = route.legs && route.legs[0];
+    const coords = route.overview_polyline ? decodePolyline(route.overview_polyline.points) : [];
+    return json({
+      ok: true,
+      coords,
+      distance_m: leg && leg.distance ? leg.distance.value : 0,
+      duration_s: leg && leg.duration ? leg.duration.value : 0,
+      summary: route.summary || '',
+    });
+  } catch (_) {
+    return json({ ok: false, error: 'directions_fetch_failed' });
+  }
 }
