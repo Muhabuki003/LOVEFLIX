@@ -570,8 +570,8 @@
 
   .dir-panel{
     position:fixed; left:0; right:0; bottom:0; z-index:14;
-    min-height:220px; background:#141414;
-    border-radius:16px 16px 0 0; border-top:2px solid #c9a96e;
+    min-height:280px; background:#141414;
+    border-radius:20px 20px 0 0; border-top:2px solid #e50914;
     box-shadow:0 -14px 50px rgba(0,0,0,0.65);
     padding:10px 20px 24px; color:#fff;
     transform:translateY(105%); transition:transform .35s cubic-bezier(.4,0,.2,1);
@@ -588,7 +588,8 @@
   .dir-content{transition:opacity .25s ease; opacity:1; padding-top:6px}
   .dir-content.fading{opacity:0}
   .dir-eyebrow{font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:#c9a96e; font-weight:700}
-  .dir-title{font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:1px; line-height:1.05; margin-top:4px}
+  .dir-title{font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; line-height:1.05; margin-top:2px; color:#e9c87a}
+  .dir-label{font-family:'DM Sans','Inter',sans-serif; font-size:12px; color:var(--text-dim); letter-spacing:.3px}
   .dir-sub{font-size:13px; color:var(--text-dim); margin-top:6px}
   .dir-metrics{display:flex; gap:24px; margin-top:14px}
   .dir-metric .l{font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); font-weight:600}
@@ -613,10 +614,66 @@
   .dir-flight-card .arrow{color:#e50914; font-size:20px; flex-shrink:0}
   .dir-arrived{display:flex; align-items:center; gap:14px; margin-top:6px}
   .dir-arrived .heart{font-size:40px; line-height:1; filter:drop-shadow(0 0 12px rgba(229,9,20,.6))}
+
+  /* ----- Apple-Maps style navigation panel ----- */
+  .dir-turn{display:flex; align-items:center; gap:14px; margin-top:14px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:12px 14px}
+  .dir-turn-icon{font-size:30px; line-height:1; color:#fff; width:34px; text-align:center; flex-shrink:0}
+  .dir-turn-body{flex:1; min-width:0}
+  .dir-turn-text{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.5px; color:#fff; line-height:1.1}
+  .dir-turn-dist{font-family:'DM Sans','Inter',sans-serif; font-size:16px; color:#e50914; margin-top:2px}
+  .dir-stat-row{display:flex; gap:24px; margin-top:14px}
+  .dir-stat-row .dir-metric{flex:1}
+  .dir-cancel-full{display:block; width:100%; margin-top:16px; padding:13px; border:none; border-radius:12px;
+    background:linear-gradient(135deg,#e50914,#b00610); color:#fff; font-weight:700; font-size:15px; cursor:pointer}
+  .dir-cancel-full:hover{filter:brightness(1.08)}
+  .dir-paused{display:inline-block; margin-top:8px; font-size:12px; color:#e8a23c; letter-spacing:.3px}
+
+  /* ----- toast ----- */
+  .dir-toast{
+    position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(10px); z-index:30;
+    background:rgba(20,20,20,0.95); border:1px solid var(--border); color:#fff;
+    font-size:13px; padding:9px 16px; border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; font-family:'Inter',sans-serif;
+  }
+  .dir-toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  /* ----- Flights (independent feature) ----- */
+  .flights-fab{
+    position:fixed; right:28px; bottom:28px; z-index:12;
+    padding:11px 16px; border:none; border-radius:30px; cursor:pointer;
+    background:linear-gradient(135deg,#e50914,#b00610);
+    color:#e9c87a; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    box-shadow:0 8px 24px rgba(229,9,20,0.45); transition:transform .12s, box-shadow .2s;
+  }
+  .flights-fab:hover{transform:translateY(-2px); box-shadow:0 12px 30px rgba(229,9,20,0.55)}
+  .flights-fab:active{transform:scale(.96)}
+  .flights-panel{
+    position:fixed; left:0; right:0; bottom:0; z-index:16;
+    min-height:240px; background:#141414;
+    border-radius:20px 20px 0 0; border-top:2px solid #c9a96e;
+    box-shadow:0 -14px 50px rgba(0,0,0,0.65); padding:10px 20px 26px; color:#fff;
+    transform:translateY(110%); transition:transform .35s cubic-bezier(.4,0,.2,1); font-family:'Inter',sans-serif;
+  }
+  .flights-panel.open{transform:translateY(0)}
+  .flights-handle{width:42px; height:5px; border-radius:3px; background:rgba(255,255,255,0.22); margin:0 auto 6px}
+  .flights-close{position:absolute; top:14px; right:16px; background:rgba(255,255,255,0.06); border:1px solid var(--border);
+    color:#bdbdbd; font-size:13px; padding:5px 10px; border-radius:8px; cursor:pointer}
+  .flights-close:hover{background:rgba(255,255,255,0.12); color:#fff}
+  .flights-actions{display:flex; flex-direction:column; gap:10px; margin-top:16px}
+  .flights-btn{display:block; text-align:center; text-decoration:none; padding:14px; border-radius:12px; font-weight:700; font-size:15px}
+  .flights-btn.primary{background:linear-gradient(135deg,#e50914,#b00610); color:#fff}
+  .flights-btn.primary:hover{filter:brightness(1.08)}
+  .flights-btn.outline{background:transparent; border:1.5px solid #c9a96e; color:#e9c87a}
+  .flights-btn.outline:hover{background:rgba(201,169,110,0.12)}
+
   @media (max-width:760px){
     .dir-fab{left:14px; bottom:110px; padding:9px 13px; font-size:14px}
     .dir-panel{padding:10px 16px 26px}
     .dir-title{font-size:26px}
+    .flights-fab{right:14px; bottom:165px; padding:9px 13px; font-size:14px}
+    .flights-panel{padding:10px 16px 26px}
+    .dir-toast{bottom:180px}
   }
 </style>
 </head>
@@ -918,9 +975,20 @@
 
 <div id="dir-panel" class="dir-panel" role="dialog" aria-label="Directions">
   <div class="dir-handle"></div>
-  <button id="dir-cancel" class="dir-cancel">✕ Cancel Journey</button>
+  <button id="dir-cancel" class="dir-cancel">✕</button>
   <div id="dir-content" class="dir-content"></div>
 </div>
+
+<!-- FLIGHTS — independent FAB + slide-up panel (no connection to directions) -->
+<button id="flights-fab" class="flights-fab" aria-label="Flights to partner">✈ Flights</button>
+<div id="flights-panel" class="flights-panel" role="dialog" aria-label="Flights">
+  <div class="flights-handle"></div>
+  <button class="flights-close" aria-label="Close">✕</button>
+  <div class="flights-body"></div>
+</div>
+
+<!-- shared non-blocking toast -->
+<div id="dir-toast" class="dir-toast" role="status" aria-live="polite"></div>
 
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
@@ -1807,96 +1875,83 @@
   })();
 
   // ==========================================================================
-  // DIRECTIONS TO PARTNER  (additive — hooks into existing `map`, HER, HIM,
-  // fitBoth, buildArcCoords. No new map instance, no new dependencies.)
+  // DIRECTIONS (Apple-Maps nav) + FLIGHTS  — additive, hooks into existing
+  // `map`, HER, HIM, fitBoth, fetchAndUpdateLocations. No new map instance, no
+  // new dependencies. Coordinate source of truth: couple_locations.location
+  // (latest fix = live when fresh, last-seen when stale); the user's own
+  // position prefers live GPS, then that same Supabase fallback.
   // ==========================================================================
-  (function initDirections(){
-    const FAB = document.getElementById('dir-fab');
-    const PANEL = document.getElementById('dir-panel');
+  (function initDirectionsAndFlights(){
+    const FAB     = document.getElementById('dir-fab');
+    const PANEL   = document.getElementById('dir-panel');
     const CONTENT = document.getElementById('dir-content');
-    const CANCEL = document.getElementById('dir-cancel');
+    const CANCEL  = document.getElementById('dir-cancel');
+    const FFAB    = document.getElementById('flights-fab');
+    const FPANEL  = document.getElementById('flights-panel');
     if (!FAB || !PANEL || !CONTENT) return;
 
-    const LOCAL_KM = 80;     // under this = local mode; over = long-distance journey
-    const FLIGHT_MS = 4200;  // plane animation duration
-    const DRIVE_KMH = 50;    // fallback ETA speed when Google Directions is unavailable
+    const NAV_ZOOM=16, NAV_PITCH=60;
+    const DRIVE_KMH=50;        // fallback ETA speed when Directions is unavailable
+    const REFETCH_M=75;        // re-fetch the route after the user moves this far
+    const TURN_ADVANCE_M=30;   // pop to the next turn within this distance of its maneuver
+    const STALE_MS=20000;      // no GPS for this long → "Location paused"
 
-    // ~20 major international airports — nearest-airport lookup via haversine.
-    const AIRPORTS = [
-      {iata:'JFK',city:'New York',lat:40.6413,lng:-73.7781},
-      {iata:'LAX',city:'Los Angeles',lat:33.9416,lng:-118.4085},
-      {iata:'ORD',city:'Chicago',lat:41.9742,lng:-87.9073},
-      {iata:'ATL',city:'Atlanta',lat:33.6407,lng:-84.4277},
-      {iata:'SFO',city:'San Francisco',lat:37.6213,lng:-122.3790},
-      {iata:'MIA',city:'Miami',lat:25.7959,lng:-80.2870},
-      {iata:'YYZ',city:'Toronto',lat:43.6777,lng:-79.6248},
-      {iata:'LHR',city:'London',lat:51.4700,lng:-0.4543},
-      {iata:'CDG',city:'Paris',lat:49.0097,lng:2.5479},
-      {iata:'AMS',city:'Amsterdam',lat:52.3105,lng:4.7683},
-      {iata:'FRA',city:'Frankfurt',lat:50.0379,lng:8.5622},
-      {iata:'MAD',city:'Madrid',lat:40.4839,lng:-3.5680},
-      {iata:'IST',city:'Istanbul',lat:41.2753,lng:28.7519},
-      {iata:'DXB',city:'Dubai',lat:25.2532,lng:55.3657},
-      {iata:'DEL',city:'Delhi',lat:28.5562,lng:77.1000},
-      {iata:'SIN',city:'Singapore',lat:1.3644,lng:103.9915},
-      {iata:'HKG',city:'Hong Kong',lat:22.3080,lng:113.9185},
-      {iata:'NRT',city:'Tokyo',lat:35.7720,lng:140.3929},
-      {iata:'SYD',city:'Sydney',lat:-33.9399,lng:151.1753},
-      {iata:'GRU',city:'Sao Paulo',lat:-23.4356,lng:-46.4731},
-      {iata:'JNB',city:'Johannesburg',lat:-26.1392,lng:28.2460},
-      {iata:'NBO',city:'Nairobi',lat:-1.3192,lng:36.9278},
-      {iata:'LOS',city:'Lagos',lat:6.5774,lng:3.3212}
-    ];
-
-    const LAYERS  = ['directions-drive-in','directions-plane','directions-plane-trail','directions-arc','directions-drive-out'];
-    const SOURCES = ['directions-drive-in-src','directions-plane-src','directions-plane-trail-src','directions-arc-src','directions-drive-out-src'];
-
-    let active=false, dashRaf=null, planeRaf=null, autoTimer=null;
-    let depAirport=null, arrAirport=null, arcCoords=null;
-
-    // ---- geo helpers ----
-    function hav(aLat,aLng,bLat,bLng){
-      const R=6371, rad=Math.PI/180, dLat=(bLat-aLat)*rad, dLng=(bLng-aLng)*rad;
+    // ---- geo + format helpers ----
+    function hav(aLat,aLng,bLat,bLng){ // metres
+      const R=6371000, rad=Math.PI/180, dLat=(bLat-aLat)*rad, dLng=(bLng-aLng)*rad;
       const a=Math.sin(dLat/2)**2+Math.cos(aLat*rad)*Math.cos(bLat*rad)*Math.sin(dLng/2)**2;
       return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
     }
-    function nearestAirport(lat,lng){
-      let best=null,bd=Infinity;
-      for(const a of AIRPORTS){ const d=hav(lat,lng,a.lat,a.lng); if(d<bd){bd=d;best=a;} }
-      return best;
-    }
-    function bearing(a,b){ // a,b = [lng,lat]
+    function bearing(a,b){ // {lat,lng}
       const rad=Math.PI/180;
-      const y=Math.sin((b[0]-a[0])*rad)*Math.cos(b[1]*rad);
-      const x=Math.cos(a[1]*rad)*Math.sin(b[1]*rad)-Math.sin(a[1]*rad)*Math.cos(b[1]*rad)*Math.cos((b[0]-a[0])*rad);
+      const y=Math.sin((b.lng-a.lng)*rad)*Math.cos(b.lat*rad);
+      const x=Math.cos(a.lat*rad)*Math.sin(b.lat*rad)-Math.sin(a.lat*rad)*Math.cos(b.lat*rad)*Math.cos((b.lng-a.lng)*rad);
       return (Math.atan2(y,x)*180/Math.PI+360)%360;
     }
-    function fmtKm(km){ return `${Math.round(km/1.60934).toLocaleString()} mi · ${Math.round(km).toLocaleString()} km`; }
-    function fmtDur(sec){ const m=Math.round(sec/60); if(m<60) return `${m} min`; const h=Math.floor(m/60),r=m%60; return r?`${h}h ${r}m`:`${h}h`; }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function fmtShort(m){ return m>=1000 ? `${(m/1609.34).toFixed(1)} mi` : `${Math.round(m*3.28084)} ft`; }
+    function fmtFull(m){ const km=m/1000; const d=km<16?1:0; return `${(km/1.60934).toFixed(d)} mi · ${km.toFixed(d)} km`; }
+    function fmtETA(sec){ const m=Math.round(sec/60); if(m<1) return '<1 min'; if(m<60) return `${m} min`; const h=Math.floor(m/60),r=m%60; return r?`${h}h ${r}m`:`${h}h`; }
+    function arrowFor(man){ man=(man||'').toLowerCase(); if(man.indexOf('left')>=0) return '←'; if(man.indexOf('right')>=0) return '→'; if(man.indexOf('uturn')>=0) return '⤺'; return '↑'; }
 
-    // ---- map layer helpers (always guard add/remove to avoid conflicts) ----
+    // ---- toast (non-blocking) ----
+    let toastTimer=null;
+    function toast(msg){
+      const t=document.getElementById('dir-toast'); if(!t) return;
+      t.textContent=msg; t.classList.add('show');
+      clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), 2600);
+    }
+
+    // ---- coordinate resolution: live → Supabase last-known ----
+    async function refreshSupabaseCoords(){ try{ await fetchAndUpdateLocations(); }catch(_){} }
+    async function resolvePartnerCoords(){
+      if (HER._real) return {lat:HER.lat,lng:HER.lng};
+      await refreshSupabaseCoords();
+      return HER._real ? {lat:HER.lat,lng:HER.lng} : null;
+    }
+    function gpsOnce(){
+      return new Promise(res=>{
+        if(!navigator.geolocation) return res(null);
+        navigator.geolocation.getCurrentPosition(
+          p=>res({lat:p.coords.latitude,lng:p.coords.longitude}),
+          ()=>res(null),
+          {enableHighAccuracy:true, timeout:8000, maximumAge:10000}
+        );
+      });
+    }
+    async function resolveUserCoords(){
+      const g=await gpsOnce(); if(g) return g;
+      if (HIM._real) return {lat:HIM.lat,lng:HIM.lng};
+      await refreshSupabaseCoords();
+      return HIM._real ? {lat:HIM.lat,lng:HIM.lng} : null;
+    }
+
+    // ---- map layer helpers (directions-* namespace, guarded) ----
     function delLayer(id){ if(map.getLayer(id)) map.removeLayer(id); }
     function delSource(id){ if(map.getSource(id)) map.removeSource(id); }
     function lineFeature(coords){ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}}; }
-    function planeFeature(pos,brg){ return {type:'Feature',properties:{bearing:brg},geometry:{type:'Point',coordinates:pos}}; }
-
-    function addAnimatedLine(id, coords, color){
-      const src=id+'-src';
-      delLayer(id); delSource(src);
-      map.addSource(src,{type:'geojson',data:lineFeature(coords)});
-      map.addLayer({id,type:'line',source:src,layout:{'line-join':'round','line-cap':'round'},
-        paint:{'line-color':color,'line-width':4,'line-opacity':0.95}});
-    }
-    function addArc(id, coords){
-      const src=id+'-src';
-      delLayer(id); delSource(src);
-      map.addSource(src,{type:'geojson',data:lineFeature(coords)});
-      map.addLayer({id,type:'line',source:src,layout:{'line-join':'round','line-cap':'round'},
-        paint:{'line-color':'#9aa0a6','line-width':2,'line-opacity':0.5,'line-dasharray':[2,3]}});
-    }
-
     const DASH=[[0,4,3],[0.5,4,2.5],[1,4,2],[1.5,4,1.5],[2,4,1],[2.5,4,0.5],[3,4,0],[3,0.5,3.5],[3,1,3],[3,1.5,2.5],[3,2,2],[3,2.5,1.5],[3,3,1],[3,3.5,0.5]];
+    let dashRaf=null;
     function startDash(id){
       stopDash(); let last=0, step=0;
       (function frame(ts){
@@ -1906,207 +1961,202 @@
       })(0);
     }
     function stopDash(){ if(dashRaf){ cancelAnimationFrame(dashRaf); dashRaf=null; } }
-
-    function frameCoords(coords){
-      const b=new maplibregl.LngLatBounds(coords[0],coords[0]);
-      coords.forEach(c=>b.extend(c));
-      const mobile=window.matchMedia('(max-width: 760px)').matches;
-      map.fitBounds(b,{padding: mobile?{top:70,bottom:250,left:30,right:30}:{top:120,bottom:280,left:380,right:400}, duration:1400, maxZoom:14});
+    function drawRoute(coords){
+      const id='directions-drive-out', src=id+'-src';
+      if(map.getSource(src)){ map.getSource(src).setData(lineFeature(coords)); }
+      else {
+        map.addSource(src,{type:'geojson',data:lineFeature(coords)});
+        map.addLayer({id,type:'line',source:src,layout:{'line-join':'round','line-cap':'round'},
+          paint:{'line-color':'#e50914','line-width':5,'line-opacity':0.95}});
+      }
+      startDash(id);
+    }
+    function clearMapLayers(){
+      stopDash();
+      delLayer('directions-drive-out'); delSource('directions-drive-out-src');
     }
 
-    // ---- plane icon (SVG → map image), resolves when registered ----
-    let planeIconPromise=null;
-    function ensurePlaneIcon(){
-      if(planeIconPromise) return planeIconPromise;
-      planeIconPromise=new Promise(resolve=>{
-        if(map.hasImage && map.hasImage('dir-plane')){ resolve(); return; }
-        const raw='<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24"><path fill="#ffffff" stroke="#e50914" stroke-width="0.5" d="M21 16v-2l-8-5V3.5C13 2.67 12.33 2 11.5 2S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
-        const img=new Image(34,34);
-        img.onload=()=>{ try{ if(map.hasImage && !map.hasImage('dir-plane')) map.addImage('dir-plane',img); }catch(_){} resolve(); };
-        img.onerror=()=>resolve();
-        img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(raw);
-      });
-      return planeIconPromise;
+    // ---- route fetch (Worker proxy → straight-line fallback) ----
+    function straightLine(from,to){
+      const N=24, pts=[];
+      for(let i=0;i<=N;i++){ const t=i/N; pts.push([from.lng+(to.lng-from.lng)*t, from.lat+(to.lat-from.lat)*t]); }
+      return pts;
     }
-
-    // ---- route fetch (Google via Worker proxy; straight-line fallback) ----
-    async function getRoute(from, to){ // from/to = {lat,lng}
+    async function getRoute(from,to){
       try{
         const r=await LoveFlix.api(`/api/directions?origin=${from.lat},${from.lng}&dest=${to.lat},${to.lng}&mode=driving`);
         if(r && r.ok && Array.isArray(r.coords) && r.coords.length>1){
-          return {coords:r.coords, distance_m:r.distance_m, duration_s:r.duration_s, real:true};
+          return {coords:r.coords, steps:Array.isArray(r.steps)?r.steps:[], distance_m:r.distance_m, duration_s:r.duration_s, real:true};
         }
       }catch(_){}
-      const coords=buildArcCoords([from.lng,from.lat],[to.lng,to.lat],0.04,48);
-      const km=hav(from.lat,from.lng,to.lat,to.lng);
-      return {coords, distance_m:km*1000, duration_s:(km/DRIVE_KMH)*3600, real:false};
+      const m=hav(from.lat,from.lng,to.lat,to.lng);
+      return {coords:straightLine(from,to), steps:[], distance_m:m, duration_s:(m/1000/DRIVE_KMH)*3600, real:false};
     }
 
-    // ---- panel ----
+    // ---- directions panel ----
     function openPanel(){ PANEL.classList.add('open'); }
-    function setContent(html){
-      CONTENT.classList.add('fading');
-      setTimeout(()=>{ CONTENT.innerHTML=html; CONTENT.classList.remove('fading'); wireContent(); }, 170);
-    }
-    const PHASE_FNS={}; // populated below
-    function wireContent(){
-      const el=CONTENT.querySelector('[data-next]');
-      if(el) el.addEventListener('click', ()=>{ const fn=el.getAttribute('data-next'); if(PHASE_FNS[fn]) PHASE_FNS[fn](); });
-    }
+    function closePanel(){ PANEL.classList.remove('open'); }
+    function setContent(html){ CONTENT.innerHTML=html; const c=CONTENT.querySelector('[data-cancel]'); if(c) c.addEventListener('click', cancelNav); }
 
-    // ---- LOCAL MODE ----
-    async function localMode(){
-      const route=await getRoute(HIM, HER);
-      if(!active) return;
-      addAnimatedLine('directions-drive-out', route.coords, '#e50914');
-      startDash('directions-drive-out');
-      frameCoords(route.coords);
-      const note = route.real ? '' : '<div class="dir-sub">Estimated · live routing unavailable</div>';
+    // ====================== FEATURE 1: APPLE-MAPS NAVIGATION ======================
+    const nav={active:false, watchId:null, steps:[], stepIdx:0, dest:null,
+               lastFetchOrigin:null, lastPos:null, real:true, speed:14,
+               remaining_m:0, eta_s:0, nextTurnDist:0, paused:false, fetching:false, staleTimer:null};
+
+    function navInstruction(){
+      const s=nav.steps[nav.stepIdx];
+      if(s) return {arrow:arrowFor(s.maneuver), text:s.instruction||'Continue', dist: nav.nextTurnDist? fmtShort(nav.nextTurnDist) : (s.distance_text||'')};
+      return {arrow:'↑', text:`Head toward ${HER.name}`, dist:''};
+    }
+    function renderNavPanel(){
+      const ins=navInstruction();
+      const paused = nav.paused ? '<div class="dir-paused">● Location paused</div>' : '';
       setContent(
-        `<div class="dir-eyebrow">Directions</div>
+        `<div class="dir-label">Directions to</div>
          <div class="dir-title">${esc(HER.name)}</div>
-         <div class="dir-metrics">
-           <div class="dir-metric"><div class="l">ETA</div><div class="v">${fmtDur(route.duration_s)}</div></div>
-           <div class="dir-metric"><div class="l">Distance</div><div class="v">${fmtKm(route.distance_m/1000)}</div></div>
-         </div>${note}`
-      );
-    }
-
-    // ---- LONG-DISTANCE MODE: 4 phases ----
-    async function phase1(){
-      depAirport=nearestAirport(HIM.lat,HIM.lng);
-      arrAirport=nearestAirport(HER.lat,HER.lng);
-      const route=await getRoute(HIM, {lat:depAirport.lat,lng:depAirport.lng});
-      if(!active) return;
-      addAnimatedLine('directions-drive-out', route.coords, '#e50914');
-      startDash('directions-drive-out');
-      frameCoords(route.coords);
-      setContent(
-        `<div class="dir-eyebrow">Phase 1 of 4 · Drive</div>
-         <div class="dir-title">Drive to ${esc(depAirport.city)} (${depAirport.iata})</div>
-         <div class="dir-metrics">
-           <div class="dir-metric"><div class="l">Drive time</div><div class="v">${fmtDur(route.duration_s)}</div></div>
-           <div class="dir-metric"><div class="l">Distance</div><div class="v">${fmtKm(route.distance_m/1000)}</div></div>
+         ${paused}
+         <div class="dir-turn">
+           <div class="dir-turn-icon">${ins.arrow}</div>
+           <div class="dir-turn-body">
+             <div class="dir-turn-text">${esc(ins.text)}</div>
+             ${ins.dist?`<div class="dir-turn-dist">${esc(ins.dist)}</div>`:''}
+           </div>
          </div>
-         <div class="dir-actions"><button class="dir-btn" data-next="phase2">Next → Find flights</button></div>`
-      );
-      clearTimeout(autoTimer); autoTimer=setTimeout(()=>{ if(active) phase2(); }, 3000); // auto-advance
-    }
-
-    function phase2(){
-      clearTimeout(autoTimer);
-      stopDash();
-      arcCoords=buildArcCoords([depAirport.lng,depAirport.lat],[arrAirport.lng,arrAirport.lat],0.3,128);
-      addArc('directions-arc', arcCoords);
-      frameCoords([[depAirport.lng,depAirport.lat],[arrAirport.lng,arrAirport.lat]]);
-      const gf=`https://www.google.com/travel/flights?q=${encodeURIComponent('Flights from '+depAirport.city+' to '+arrAirport.city)}`;
-      const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
-      const kayak=`https://www.kayak.com/flights/${depAirport.iata}-${arrAirport.iata}/${date}`;
-      setContent(
-        `<div class="dir-eyebrow">Phase 2 of 4 · Fly</div>
-         <div class="dir-flight-card">
-           <div class="leg"><div class="city">${esc(depAirport.city)}</div><div class="iata">${depAirport.iata}</div></div>
-           <div class="arrow">✈</div>
-           <div class="leg" style="text-align:right"><div class="city">${esc(arrAirport.city)}</div><div class="iata">${arrAirport.iata}</div></div>
+         <div class="dir-stat-row">
+           <div class="dir-metric"><div class="l">Distance left</div><div class="v">${fmtFull(nav.remaining_m)}</div></div>
+           <div class="dir-metric"><div class="l">ETA</div><div class="v">${fmtETA(nav.eta_s)}</div></div>
          </div>
-         <div class="dir-actions">
-           <a class="dir-btn" href="${gf}" target="_blank" rel="noopener" data-next="phase3">Search Flights →</a>
-           <a class="dir-btn ghost" href="${kayak}" target="_blank" rel="noopener">Open on Kayak</a>
-         </div>`
+         <button class="dir-cancel-full" data-cancel>Cancel Navigation</button>`
       );
     }
 
-    async function phase3(){
-      clearTimeout(autoTimer);
-      await ensurePlaneIcon();
-      if(!active || !arcCoords) return;
-      delLayer('directions-plane'); delSource('directions-plane-src');
-      delLayer('directions-plane-trail'); delSource('directions-plane-trail-src');
-      map.addSource('directions-plane-trail-src',{type:'geojson',data:lineFeature([arcCoords[0]])});
-      map.addLayer({id:'directions-plane-trail',type:'line',source:'directions-plane-trail-src',
-        layout:{'line-join':'round','line-cap':'round'},
-        paint:{'line-color':'#ff8aa6','line-width':2,'line-opacity':0.6,'line-dasharray':[1,2]}});
-      map.addSource('directions-plane-src',{type:'geojson',data:planeFeature(arcCoords[0],0)});
-      map.addLayer({id:'directions-plane',type:'symbol',source:'directions-plane-src',
-        layout:{'icon-image':'dir-plane','icon-size':0.9,'icon-rotate':['get','bearing'],
-                'icon-rotation-alignment':'map','icon-allow-overlap':true,'icon-ignore-placement':true}});
-
-      const N=arcCoords.length;
-      map.easeTo({center:[arrAirport.lng,arrAirport.lat], duration:FLIGHT_MS, essential:true});
-      const start=performance.now();
-      (function frame(ts){
-        if(!active || !map.getSource('directions-plane-src')){ planeRaf=null; return; }
-        const t=Math.min(1,(ts-start)/FLIGHT_MS);
-        const idx=Math.min(N-1, Math.floor(t*(N-1)));
-        const pos=arcCoords[idx], prev=arcCoords[Math.max(0,idx-1)];
-        map.getSource('directions-plane-src').setData(planeFeature(pos, bearing(prev,pos)));
-        map.getSource('directions-plane-trail-src').setData(lineFeature(arcCoords.slice(0,idx+1)));
-        if(t<1){ planeRaf=requestAnimationFrame(frame); } else { planeRaf=null; phase4(); }
-      })(start);
-
-      setContent(
-        `<div class="dir-eyebrow">Phase 3 of 4 · In flight</div>
-         <div class="dir-title">${esc(depAirport.city)} → ${esc(arrAirport.city)}</div>
-         <div class="dir-sub">Cruising toward ${esc(HER.name)}…</div>`
-      );
+    function recomputeProgress(userPos){
+      while(nav.stepIdx < nav.steps.length){
+        const s=nav.steps[nav.stepIdx];
+        if(s && s.end && hav(userPos.lat,userPos.lng,s.end.lat,s.end.lng) < TURN_ADVANCE_M){ nav.stepIdx++; }
+        else break;
+      }
+      if(nav.steps.length && nav.stepIdx < nav.steps.length){
+        const cur=nav.steps[nav.stepIdx];
+        nav.nextTurnDist = cur && cur.end ? hav(userPos.lat,userPos.lng,cur.end.lat,cur.end.lng) : 0;
+        let rem=nav.nextTurnDist;
+        for(let i=nav.stepIdx+1;i<nav.steps.length;i++) rem += nav.steps[i].distance_m||0;
+        nav.remaining_m=rem;
+      } else {
+        nav.nextTurnDist=0;
+        nav.remaining_m = nav.dest ? hav(userPos.lat,userPos.lng,nav.dest.lat,nav.dest.lng) : 0;
+      }
+      nav.eta_s = nav.remaining_m / Math.max(3, nav.speed); // metres ÷ (m/s)
     }
 
-    async function phase4(){
-      const route=await getRoute({lat:arrAirport.lat,lng:arrAirport.lng}, HER);
-      if(!active) return;
-      addAnimatedLine('directions-drive-in', route.coords, '#e50914');
-      startDash('directions-drive-in');
-      map.flyTo({center:[HER.lng,HER.lat], zoom:11, duration:1600});
-      setContent(
-        `<div class="dir-eyebrow">Phase 4 of 4 · Almost there</div>
-         <div class="dir-title">You're almost there</div>
-         <div class="dir-metrics">
-           <div class="dir-metric"><div class="l">From ${arrAirport.iata}</div><div class="v">${fmtKm(route.distance_m/1000)}</div></div>
-           <div class="dir-metric"><div class="l">ETA</div><div class="v">${fmtDur(route.duration_s)}</div></div>
-         </div>`
-      );
-      setTimeout(()=>{ if(!active) return;
-        setContent(
-          `<div class="dir-eyebrow">Arrived</div>
-           <div class="dir-arrived"><div class="heart">❤</div>
-             <div><div class="dir-title" style="margin:0">You've arrived</div>
-             <div class="dir-sub">Home is wherever ${esc(HER.name)} is.</div></div></div>`
-        );
-      }, 2600);
+    async function fetchAndRenderRoute(origin){
+      if(nav.fetching) return; nav.fetching=true;
+      const route=await getRoute(origin, nav.dest);
+      nav.fetching=false;
+      if(!nav.active) return;
+      drawRoute(route.coords);
+      nav.steps=route.steps; nav.stepIdx=0; nav.real=route.real;
+      nav.remaining_m=route.distance_m; nav.eta_s=route.duration_s; nav.nextTurnDist=0;
+      nav.speed = route.duration_s>0 ? (route.distance_m/route.duration_s) : 14;
+      nav.lastFetchOrigin=origin;
+      if(!route.real) toast('Using estimated route');
+      renderNavPanel();
     }
 
-    PHASE_FNS.phase2=phase2; PHASE_FNS.phase3=phase3; PHASE_FNS.phase4=phase4;
-
-    // ---- lifecycle ----
-    function clearMapLayers(){
-      stopDash();
-      if(planeRaf){ cancelAnimationFrame(planeRaf); planeRaf=null; }
-      LAYERS.forEach(delLayer); SOURCES.forEach(delSource);
+    function markFresh(){
+      nav.paused=false;
+      clearTimeout(nav.staleTimer);
+      nav.staleTimer=setTimeout(()=>{ if(nav.active){ nav.paused=true; renderNavPanel(); } }, STALE_MS);
     }
-    function cancelJourney(){
-      active=false;
-      clearTimeout(autoTimer);
+
+    function navUpdate(pos){
+      if(!nav.active) return;
+      const userPos={lat:pos.coords.latitude, lng:pos.coords.longitude};
+      markFresh();
+      let hdg = (pos.coords.heading!=null && isFinite(pos.coords.heading)) ? pos.coords.heading : null;
+      if(hdg==null && nav.lastPos && hav(nav.lastPos.lat,nav.lastPos.lng,userPos.lat,userPos.lng)>5) hdg=bearing(nav.lastPos,userPos);
+      if(hdg==null) hdg=bearing(userPos, nav.dest);
+      map.easeTo({center:[userPos.lng,userPos.lat], bearing:hdg, pitch:NAV_PITCH, zoom:NAV_ZOOM, duration:1000, essential:true});
+      // Track the partner if they move during navigation (HER stays fresh via the 10s poll).
+      if(HER._real && hav(nav.dest.lat,nav.dest.lng,HER.lat,HER.lng) > REFETCH_M){
+        nav.dest={lat:HER.lat,lng:HER.lng}; nav.lastFetchOrigin=null;
+      }
+      recomputeProgress(userPos);
+      renderNavPanel();
+      if(!nav.lastFetchOrigin || hav(userPos.lat,userPos.lng,nav.lastFetchOrigin.lat,nav.lastFetchOrigin.lng) > REFETCH_M){
+        fetchAndRenderRoute(userPos);
+      }
+      nav.lastPos=userPos;
+    }
+    function navError(){ if(nav.active){ nav.paused=true; renderNavPanel(); } }
+
+    async function startNav(){
+      clearMapLayers(); if(FPANEL) FPANEL.classList.remove('open');
+      openPanel();
+      setContent(`<div class="dir-label">Directions to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Locating…</div>`);
+      const dest=await resolvePartnerCoords();
+      if(!dest){ toast('Partner location unavailable'); closePanel(); return; }
+      const origin=await resolveUserCoords();
+      if(!origin){ toast('Your location unavailable'); closePanel(); return; }
+      nav.active=true; nav.dest=dest; nav.lastPos=origin; nav.stepIdx=0; nav.paused=false; nav.lastFetchOrigin=null;
+      try{ map.setProjection({type:'mercator'}); }catch(_){}
+      map.flyTo({center:[origin.lng,origin.lat], zoom:NAV_ZOOM, pitch:NAV_PITCH, bearing:bearing(origin,dest), duration:1500, essential:true});
+      await fetchAndRenderRoute(origin);
+      markFresh();
+      if(navigator.geolocation){
+        nav.watchId=navigator.geolocation.watchPosition(navUpdate, navError, {enableHighAccuracy:true, maximumAge:5000, timeout:15000});
+      }
+    }
+    function cancelNav(){
+      nav.active=false;
+      if(nav.watchId!=null && navigator.geolocation){ navigator.geolocation.clearWatch(nav.watchId); nav.watchId=null; }
+      clearTimeout(nav.staleTimer);
       clearMapLayers();
-      PANEL.classList.remove('open');
+      closePanel();
+      try{ map.setProjection({type:'globe'}); }catch(_){}
+      try{ map.setPitch(0); map.setBearing(0); }catch(_){}
       try{ fitBoth(); }catch(_){}
     }
-    async function startJourney(){
-      clearMapLayers();
-      openPanel();
-      if(!HER._real || !HIM._real){
-        active=false;
-        setContent(`<div class="dir-eyebrow">Directions</div><div class="dir-title">Waiting for locations…</div><div class="dir-sub">Both of you need to be sharing live location first.</div>`);
-        return;
-      }
-      active=true;
-      ensurePlaneIcon(); // preload so the plane is ready by phase 3
-      setContent(`<div class="dir-eyebrow">Directions</div><div class="dir-title">Plotting route to ${esc(HER.name)}…</div>`);
-      const km=hav(HIM.lat,HIM.lng,HER.lat,HER.lng);
-      if(km<LOCAL_KM) localMode(); else phase1();
+
+    // ====================== FEATURE 2: FLIGHTS (independent) ======================
+    async function geocodeCity(lat,lng){
+      try{
+        const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`, {headers:{'Accept-Language':'en'}});
+        if(!res.ok) return '';
+        const d=await res.json(); const a=d.address||{};
+        return a.city||a.town||a.village||a.state||a.county||a.country||'';
+      }catch(_){ return ''; }
+    }
+    function fBody(){ return FPANEL ? FPANEL.querySelector('.flights-body') : null; }
+    async function startFlights(){
+      if(!FPANEL) return;
+      FPANEL.classList.add('open');
+      const body=fBody(); if(!body) return;
+      body.innerHTML=`<div class="dir-label">Flights to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Finding your cities…</div>`;
+      const me=await resolveUserCoords();
+      const them=await resolvePartnerCoords();
+      if(!me || !them){ body.innerHTML=`<div class="dir-title">Location unavailable</div><div class="dir-sub">Can't detect both cities right now.</div>`; return; }
+      const [uCity,pCity]=await Promise.all([geocodeCity(me.lat,me.lng), geocodeCity(them.lat,them.lng)]);
+      const userCity=uCity||`${me.lat.toFixed(2)},${me.lng.toFixed(2)}`;
+      const partnerCity=pCity||`${them.lat.toFixed(2)},${them.lng.toFixed(2)}`;
+      const today=new Date().toISOString().slice(0,10);
+      const gf=`https://www.google.com/travel/flights?q=${encodeURIComponent('Flights from '+userCity+' to '+partnerCity)}`;
+      const kayak=`https://www.kayak.com/flights/${encodeURIComponent(userCity)}-${encodeURIComponent(partnerCity)}/${today}`;
+      body.innerHTML=
+        `<div class="dir-label">Flights to</div>
+         <div class="dir-title">${esc(HER.name)}</div>
+         <div class="flights-actions">
+           <a class="flights-btn primary" href="${gf}" target="_blank" rel="noopener">Search Google Flights →</a>
+           <a class="flights-btn outline" href="${kayak}" target="_blank" rel="noopener">Search Kayak →</a>
+         </div>
+         <div class="dir-sub" style="margin-top:12px">Based on ${esc(userCity)} → ${esc(partnerCity)}</div>`;
     }
 
-    FAB.addEventListener('click', startJourney);
-    CANCEL.addEventListener('click', cancelJourney);
+    // ---- wire up ----
+    FAB.addEventListener('click', startNav);
+    if(CANCEL) CANCEL.addEventListener('click', cancelNav);
+    if(FFAB) FFAB.addEventListener('click', startFlights);
+    if(FPANEL){ const fc=FPANEL.querySelector('.flights-close'); if(fc) fc.addEventListener('click', ()=>FPANEL.classList.remove('open')); }
   })();
 
 })();
