@@ -143,6 +143,7 @@ export async function onRequest(context) {
 
     const videoIdMatch = path.match(/^\/api\/videos\/([^/]+)$/);
     if (videoIdMatch && method === 'DELETE') return deleteVideo(env, videoIdMatch[1], user);
+    if (videoIdMatch && method === 'PATCH') return updateVideo(env, videoIdMatch[1], request, user);
     if (videoIdMatch && method === 'GET') return getVideo(env, videoIdMatch[1]);
 
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
@@ -299,6 +300,44 @@ async function deleteVideo(env, id, user) {
     }
   }
   await env.DB.prepare(`DELETE FROM videos WHERE id = ?`).bind(id).run();
+  return json({ ok: true });
+}
+
+async function updateVideo(env, id, request, user) {
+  const row = await env.DB.prepare(`SELECT tenant_id FROM videos WHERE id = ?`).bind(id).first();
+  if (!row) return json({ error: 'not_found' }, 404);
+
+  const allowed = await verifyTenantAccess(env, user, row.tenant_id);
+  if (!allowed) return json({ error: 'forbidden' }, 403);
+
+  const body = await request.json().catch(() => ({}));
+  const updates = {};
+  let hasUpdates = false;
+
+  if (typeof body.is_published === 'boolean' || typeof body.is_published === 'number') {
+    updates.is_published = body.is_published ? 1 : 0;
+    hasUpdates = true;
+  }
+  if (typeof body.title === 'string') {
+    updates.title = sanitizeUserText(body.title, 200) || 'Untitled';
+    hasUpdates = true;
+  }
+  if (typeof body.description === 'string') {
+    updates.description = sanitizeUserText(body.description, 2000);
+    hasUpdates = true;
+  }
+  if (typeof body.category === 'string') {
+    updates.category = sanitizeUserText(body.category, 100) || 'Moments';
+    hasUpdates = true;
+  }
+
+  if (!hasUpdates) return json({ error: 'no_updates' }, 400);
+
+  const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+  const values = Object.values(updates);
+  values.push(id);
+
+  await env.DB.prepare(`UPDATE videos SET ${setClauses} WHERE id = ?`).bind(...values).run();
   return json({ ok: true });
 }
 
