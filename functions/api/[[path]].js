@@ -102,11 +102,16 @@ function sanitizeUserText(text, maxLen = 500) {
 }
 
 // ── Tenant ownership verification via Supabase couple_members (RLS-protected) ─
+// The tenant key is the couple creator's (admin's) auth user_id. A caller may
+// access their own tenant, or the tenant of anyone they share a couple with.
 async function verifyTenantAccess(env, user, requestedTenantId) {
   if (!requestedTenantId || requestedTenantId === user.id) return requestedTenantId || user.id;
   try {
+    // couple_members SELECT RLS only returns rows in the caller's own couple
+    // (user_id = auth.uid() OR couple_id = get_my_couple_id()). So a hit when
+    // querying by the requested tenant's user_id proves they share a couple.
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${encodeURIComponent(requestedTenantId)}&user_id=eq.${encodeURIComponent(user.id)}&select=couple_id&limit=1`,
+      `${env.SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${encodeURIComponent(requestedTenantId)}&select=couple_id&limit=1`,
       { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` } }
     );
     if (!res.ok) return null;
