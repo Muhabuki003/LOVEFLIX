@@ -32,6 +32,8 @@ const PUBLIC_ROUTES = new Set([
   // SoundCloud proxy — search is public so the music page can search before
   // the auth token is fully checked. Stream uses a dynamic path matched below.
   'GET /api/soundcloud/search',
+  'GET /api/music/recent',
+  'GET /api/music/yt-match',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -206,6 +208,28 @@ export async function onRequest(context) {
     if (method === 'POST' && path === '/api/music/plays') return saveMusicPlay(env, request, user);
     const musicPlaysMatch = path.match(/^\/api\/music\/plays\/([^/]+)$/);
     if (musicPlaysMatch && method === 'GET') return getMusicPlays(env, musicPlaysMatch[1], user);
+
+    // Music playlist endpoints
+    if (method === 'GET'  && path === '/api/music/playlists') return listPlaylists(env, url, user);
+    if (method === 'POST' && path === '/api/music/playlists') return createPlaylist(env, request, user);
+    const plMatch  = path.match(/^\/api\/music\/playlists\/([^/]+)$/);
+    const plsMatch = path.match(/^\/api\/music\/playlists\/([^/]+)\/songs$/);
+    const plssMatch = path.match(/^\/api\/music\/playlists\/([^/]+)\/songs\/([^/]+)$/);
+    if (plMatch)  {
+      if (method === 'GET')    return getPlaylist(env, plMatch[1], user);
+      if (method === 'DELETE') return deletePlaylist(env, plMatch[1], user);
+    }
+    if (plsMatch) {
+      if (method === 'GET')  return listPlaylistSongs(env, plsMatch[1], user);
+      if (method === 'POST') return addToPlaylist(env, plsMatch[1], request, user);
+    }
+    if (plssMatch && method === 'DELETE') return removeFromPlaylist(env, plssMatch[1], plssMatch[2], user);
+
+    // Music recent plays (for home page widget)
+    if (method === 'GET' && path === '/api/music/recent') return getMusicRecent(env, url, user);
+
+    // YouTube track match — returns a YouTube videoId for full-song playback
+    if (method === 'GET' && path === '/api/music/yt-match') return ytMatch(env, url);
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
@@ -1279,7 +1303,7 @@ async function saveMusicPlay(env, request, user) {
     const body = await request.json();
     const { couple_id, soundcloud_track_id, title, artist } = body;
 
-    if (!couple_id || !soundcloud_track_id || !title) {
+    if (!couple_id || !title) {
       return json({ error: 'missing_fields' }, 400);
     }
 
@@ -1320,7 +1344,114 @@ async function getMusicPlays(env, coupleId, user) {
   }
 }
 
-// ── SoundCloud proxy ──────────────────────────────────────────────────────────
+// ── Music playlist CRUD ───────────────────────────────────────────────────────
+
+function genId() {
+  return [...crypto.getRandomValues(new Uint8Array(9))].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function listPlaylists(env, url, user) {
+  const coupleId = url.searchParams.get('couple_id') || user?.couple_id;
+  if (!coupleId) return json({ playlists: [] });
+  try {
+    const r = await env.DB.prepare(
+      'SELECT id, couple_id, name, created_at, updated_at FROM couple_playlists WHERE couple_id = ? ORDER BY updated_at DESC'
+    ).bind(coupleId).all();
+    // Attach song count
+    const playlists = await Promise.all((r.results || []).map(async pl => {
+      const cnt = await env.DB.prepare('SELECT COUNT(*) as c FROM couple_playlist_songs WHERE playlist_id = ?').bind(pl.id).first();
+      return { ...pl, song_count: cnt?.c || 0 };
+    }));
+    return json({ playlists });
+  } catch(e) { return json({ playlists: [], error: String(e) }); }
+}
+
+async function createPlaylist(env, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const coupleId = body.couple_id || user?.couple_id;
+  const name = (body.name || '').trim();
+  if (!name || !coupleId) return json({ error: 'name and couple_id required' }, 400);
+  const id = genId();
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.prepare(
+    'INSERT INTO couple_playlists (id, couple_id, name, created_at, updated_at) VALUES (?,?,?,?,?)'
+  ).bind(id, coupleId, name, now, now).run();
+  return json({ id, couple_id: coupleId, name, song_count: 0 });
+}
+
+async function getPlaylist(env, id, user) {
+  const pl = await env.DB.prepare('SELECT * FROM couple_playlists WHERE id = ?').bind(id).first();
+  if (!pl) return json({ error: 'not_found' }, 404);
+  const songs = await env.DB.prepare('SELECT * FROM couple_playlist_songs WHERE playlist_id = ? ORDER BY added_at ASC').bind(id).all();
+  return json({ playlist: pl, songs: songs.results || [] });
+}
+
+async function deletePlaylist(env, id, user) {
+  await env.DB.prepare('DELETE FROM couple_playlists WHERE id = ?').bind(id).run();
+  return json({ ok: true });
+}
+
+async function listPlaylistSongs(env, playlistId, user) {
+  const rows = await env.DB.prepare(
+    'SELECT * FROM couple_playlist_songs WHERE playlist_id = ? ORDER BY added_at ASC'
+  ).bind(playlistId).all();
+  return json({ songs: rows.results || [] });
+}
+
+async function addToPlaylist(env, playlistId, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const { title, artist, artwork_url, stream_url } = body;
+  if (!title) return json({ error: 'title required' }, 400);
+  // Check playlist exists
+  const pl = await env.DB.prepare('SELECT id FROM couple_playlists WHERE id = ?').bind(playlistId).first();
+  if (!pl) return json({ error: 'playlist not found' }, 404);
+  const id = genId();
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.prepare(
+    'INSERT INTO couple_playlist_songs (id, playlist_id, soundcloud_track_id, title, artist, artwork_url, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?)'
+  ).bind(id, playlistId, 0, title, artist || '', artwork_url || '', user?.sub || '', now).run();
+  await env.DB.prepare('UPDATE couple_playlists SET updated_at = ? WHERE id = ?').bind(now, playlistId).run();
+  return json({ id });
+}
+
+async function removeFromPlaylist(env, playlistId, songId, user) {
+  await env.DB.prepare('DELETE FROM couple_playlist_songs WHERE id = ? AND playlist_id = ?').bind(songId, playlistId).run();
+  return json({ ok: true });
+}
+
+async function getMusicRecent(env, url, user) {
+  const coupleId = url.searchParams.get('couple_id') || user?.couple_id;
+  if (!coupleId) return json({ plays: [], total: 0 });
+  try {
+    const rows = await env.DB.prepare(
+      'SELECT title, artist, played_at FROM couple_music_plays WHERE couple_id = ? ORDER BY played_at DESC LIMIT 6'
+    ).bind(coupleId).all();
+    const cnt = await env.DB.prepare('SELECT COUNT(*) as c FROM couple_music_plays WHERE couple_id = ?').bind(coupleId).first();
+    return json({ plays: rows.results || [], total: cnt?.c || 0 });
+  } catch(e) { return json({ plays: [], total: 0 }); }
+}
+
+// ytMatch — optional: needs YOUTUBE_API_KEY in Cloudflare secrets.
+// Returns the best-matching YouTube videoId for a title+artist query.
+// Falls back gracefully (null videoId) if no key is configured.
+async function ytMatch(env, url) {
+  const q = (url.searchParams.get('q') || '').trim();
+  if (!q) return json({ videoId: null });
+  const key = env.YOUTUBE_API_KEY;
+  if (!key) return json({ videoId: null, hint: 'set YOUTUBE_API_KEY for full songs' });
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=id&type=video&videoCategoryId=10&maxResults=1&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!res.ok) return json({ videoId: null, _debug: `yt ${res.status}` });
+    const data = await res.json();
+    const videoId = data.items?.[0]?.id?.videoId || null;
+    return json({ videoId });
+  } catch(e) { return json({ videoId: null }); }
+}
+
+// ── iTunes / music search ──────────────────────────────────────────────────────
 // Music search — uses iTunes Search API (free, no key required).
 // Returns 30-second preview MP3s playable directly in the browser.
 // stream_url is embedded in each track so no second round-trip is needed.

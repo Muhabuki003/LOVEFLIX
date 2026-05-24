@@ -401,6 +401,7 @@
     .music-grid { grid-template-columns: 1fr 1fr; }
     .music-card-value { font-size: 24px; }
     .music-card { padding: 16px; }
+    .music-card--feed { grid-column: span 2; }
   }
   @media (max-width: 420px) {
     .music-grid { grid-template-columns: 1fr; }
@@ -555,33 +556,36 @@
     </div>
   </section>
 
-  <!-- MUSIC: Listen Together -->
+  <!-- MUSIC: Our Music Taste -->
   <section class="music-feature">
     <div class="music-feat-head">
-      <h2 class="row-title">🎵 Listen Together</h2>
+      <div>
+        <h2 class="row-title">🎵 Our Music Taste</h2>
+        <p style="font-size:13px;color:var(--text-dim);margin-top:4px" id="musicSubtitle">Shared songs &amp; playlists</p>
+      </div>
       <a href="music.html" class="row-explore">Open Player ›</a>
     </div>
     <div class="music-grid">
-      <a href="music.html" class="music-card">
-        <div class="music-card-icon">🎵</div>
-        <div class="music-card-value" id="mStatCount">0</div>
-        <div class="music-card-label">Songs Together</div>
-      </a>
-      <a href="music.html" class="music-card">
-        <div class="music-card-icon">▶</div>
-        <div class="music-card-value music-card-value--sm" id="mStatLast">Nothing yet</div>
-        <div class="music-card-label">Last Played</div>
-      </a>
+      <!-- Recent songs feed -->
+      <div class="music-card music-card--feed" style="grid-column:span 2;cursor:default" id="recentMusicCard">
+        <div class="music-card-label" style="margin-bottom:10px">Recently Played Together</div>
+        <div id="recentSongsList" style="display:flex;flex-direction:column;gap:8px">
+          <div style="color:var(--text-dim);font-size:13px">Loading…</div>
+        </div>
+      </div>
+      <!-- Quick search -->
       <div class="music-card music-card--search">
-        <div class="music-card-label">Search a Song</div>
+        <div style="font-size:20px;margin-bottom:4px">🔍</div>
+        <div class="music-card-label" style="margin-bottom:8px">Search a Song</div>
         <div class="music-search-row">
           <input type="text" id="musicQuickSearch" class="music-search-input" placeholder="Artist, song…" autocomplete="off">
           <button class="music-search-btn" id="musicSearchGo" title="Search">›</button>
         </div>
       </div>
+      <!-- Listen Together CTA -->
       <a href="music.html" class="music-card music-card--cta">
         <div style="font-size:36px;margin-bottom:10px">♥</div>
-        <div style="font-weight:700;font-size:17px">Listen with Partner</div>
+        <div style="font-weight:700;font-size:17px">Listen Together</div>
         <div style="font-size:12px;opacity:.75;margin-top:6px">Synced playback</div>
       </a>
     </div>
@@ -652,30 +656,52 @@
   paintContinueWatchingTitle();
   LoveFlix.ensureSettingsReady().then(paintContinueWatchingTitle).catch(() => {});
 
-  // Music section — read stats from localStorage and wire quick search
+  // Music section — fetch recent plays from D1 and wire quick search
   (function () {
-    try {
-      const count = parseInt(localStorage.getItem('loveflix_music_plays_count') || '0', 10);
-      if (count > 0) document.getElementById('mStatCount').textContent = count;
-
-      const last = JSON.parse(localStorage.getItem('loveflix_music_last_song') || 'null');
-      if (last && last.title) {
-        document.getElementById('mStatLast').textContent =
-          last.title + (last.artist ? ' — ' + last.artist : '');
-      }
-    } catch (_) {}
-
     const searchInput = document.getElementById('musicQuickSearch');
     const searchGo    = document.getElementById('musicSearchGo');
-
     function goSearch() {
       const q = searchInput.value.trim();
-      if (q) location.href = 'music.html?q=' + encodeURIComponent(q);
-      else location.href = 'music.html';
+      location.href = q ? 'music.html?q=' + encodeURIComponent(q) : 'music.html';
     }
-
     searchGo.addEventListener('click', goSearch);
     searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') goSearch(); });
+
+    // Fetch real recent plays from API
+    (async function loadMusicStats() {
+      try {
+        const coupleId = (typeof LoveFlix !== 'undefined') ? LoveFlix.getCoupleId() : localStorage.getItem('loveflix_couple_id');
+        const token    = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken()    : localStorage.getItem('loveflix_token');
+        if (!coupleId || !token) return;
+        const r = await fetch('/api/music/recent?couple_id=' + encodeURIComponent(coupleId), {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const d = await r.json();
+        const plays = d.plays || [];
+        const total = d.total || 0;
+        const listEl = document.getElementById('recentSongsList');
+        const sub    = document.getElementById('musicSubtitle');
+        if (sub && total > 0) sub.textContent = total + ' song' + (total===1?'':'s') + ' played together';
+        if (!listEl) return;
+        if (!plays.length) {
+          listEl.innerHTML = '<a href="music.html" style="font-size:13px;color:var(--text-dim);text-decoration:none">No plays yet — search a song to start ›</a>';
+          return;
+        }
+        listEl.innerHTML = plays.slice(0, 4).map(p => `
+          <a href="music.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;border-radius:6px;padding:4px 6px;margin:-4px -6px;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">
+            <div style="width:32px;height:32px;border-radius:4px;background:linear-gradient(135deg,#7a1632,#240611);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);flex-shrink:0">
+              ${escStr(p.title[0]||'♪')}
+            </div>
+            <div style="overflow:hidden">
+              <div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escStr(p.title)}</div>
+              <div style="font-size:11.5px;color:var(--text-dim)">${escStr(p.artist||'')}</div>
+            </div>
+          </a>
+        `).join('');
+      } catch(_) {}
+    })();
+
+    function escStr(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c)); }
   })();
 
   window.addEventListener('loveflix:settings-changed', paintContinueWatchingTitle);

@@ -145,6 +145,7 @@
     cursor:pointer;transition:background .12s;
   }
   .playlist-row:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .playlist-row.active{background:rgba(229,9,20,0.12);color:#fff}
   .playlist-art{
     width:28px;height:28px;border-radius:3px;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
@@ -152,6 +153,71 @@
     overflow:hidden;
   }
   .playlist-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .new-pl-btn{
+    display:flex;align-items:center;gap:8px;width:100%;
+    padding:7px 12px;border-radius:6px;border:none;
+    background:none;color:var(--gold);cursor:pointer;
+    font-size:12.5px;font-family:var(--sans);transition:background .12s;
+  }
+  .new-pl-btn:hover{background:rgba(201,169,110,0.08)}
+  .track-save{
+    width:28px;height:28px;border-radius:50%;border:none;
+    background:transparent;color:var(--text-dim);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:color .15s, background .15s;flex-shrink:0;
+  }
+  .track-save:hover{color:#e50914;background:rgba(229,9,20,0.1)}
+  .track-save svg{width:14px;height:14px;fill:currentColor}
+  /* modals */
+  .lf-modal-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,0.72);
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .lf-modal-backdrop.open{opacity:1;pointer-events:all}
+  .lf-modal{
+    background:var(--panel);border:1px solid var(--border-strong);
+    border-radius:14px;padding:28px 24px;width:340px;max-width:90vw;
+    box-shadow:0 24px 60px rgba(0,0,0,.7);
+  }
+  .lf-modal h3{font-size:18px;font-weight:600;margin-bottom:16px;color:#fff}
+  .lf-modal input{
+    width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border-strong);
+    background:var(--bg-2);color:#fff;font-size:14px;font-family:var(--sans);
+    outline:none;margin-bottom:14px;
+  }
+  .lf-modal input:focus{border-color:var(--gold)}
+  .lf-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+  .lf-modal-btns button{
+    padding:8px 18px;border-radius:8px;border:none;cursor:pointer;
+    font-size:13.5px;font-family:var(--sans);font-weight:500;
+  }
+  .lf-btn-primary{background:var(--red);color:#fff}
+  .lf-btn-primary:hover{background:#c5070f}
+  .lf-btn-cancel{background:rgba(255,255,255,0.08);color:var(--text-light)}
+  .lf-btn-cancel:hover{background:rgba(255,255,255,0.12)}
+  .pl-choice{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    border-radius:8px;cursor:pointer;transition:background .12s;
+    color:var(--text-light);font-size:13.5px;border:none;
+    background:none;width:100%;text-align:left;font-family:var(--sans);
+  }
+  .pl-choice:hover{background:rgba(255,255,255,0.06);color:#fff}
+  .pl-choice .playlist-art{flex-shrink:0}
+  /* YouTube hidden player */
+  #ytPlayer{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none}
+  /* playlist view in main content */
+  .pl-header{padding:0 0 20px;display:flex;align-items:center;gap:18px}
+  .pl-header-art{width:80px;height:80px;border-radius:8px;flex-shrink:0}
+  .pl-header-title{font-size:24px;font-weight:700}
+  .pl-header-meta{font-size:13px;color:var(--text-dim);margin-top:4px}
+  .back-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:13px;color:var(--text-dim);cursor:pointer;
+    background:none;border:none;font-family:var(--sans);
+    padding:4px 0;margin-bottom:14px;transition:color .12s;
+  }
+  .back-btn:hover{color:#fff}
 
   .couple-tag{
     margin:8px 12px 0;
@@ -1189,30 +1255,13 @@
 
     <div class="side-section">
       <div class="side-label">Our Playlists</div>
-      <div class="playlist-row">
-        <div class="playlist-art art-1"><span style="font-family:var(--serif);font-style:italic">Q</span></div>
-        <div class="playlist-name">Quiet Mornings</div>
+      <div id="sidebarPlaylists">
+        <div style="padding:8px 12px;font-size:12.5px;color:var(--text-dim)">Loading…</div>
       </div>
-      <div class="playlist-row">
-        <div class="playlist-art art-4"><span style="font-family:var(--serif);font-style:italic">S</span></div>
-        <div class="playlist-name">Sunset Drives</div>
-      </div>
-      <div class="playlist-row">
-        <div class="playlist-art art-10"><span style="font-family:var(--serif);font-style:italic">A</span></div>
-        <div class="playlist-name">Anniversary No. 3</div>
-      </div>
-      <div class="playlist-row">
-        <div class="playlist-art art-8"><span style="font-family:var(--serif);font-style:italic">L</span></div>
-        <div class="playlist-name">Long Distance</div>
-      </div>
-      <div class="playlist-row">
-        <div class="playlist-art art-6"><span style="font-family:var(--serif);font-style:italic">D</span></div>
-        <div class="playlist-name">Dinner Together</div>
-      </div>
-      <div class="playlist-row" style="color:var(--text-dim)">
-        <div class="playlist-art" style="background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.18)">+</div>
-        <div class="playlist-name">New Playlist</div>
-      </div>
+      <button class="new-pl-btn" id="newPlaylistBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+        New Playlist
+      </button>
     </div>
 
     <div class="couple-tag">
@@ -1626,6 +1675,32 @@
   </div>
 </div>
 
+<!-- NEW PLAYLIST MODAL -->
+<div class="lf-modal-backdrop" id="newPlaylistModal">
+  <div class="lf-modal">
+    <h3>New Shared Playlist</h3>
+    <input type="text" id="newPlaylistName" placeholder="Give it a name…" maxlength="80">
+    <div class="lf-modal-btns">
+      <button class="lf-btn-cancel" id="cancelNewPlaylist">Cancel</button>
+      <button class="lf-btn-primary" id="confirmNewPlaylist">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE TO PLAYLIST MODAL -->
+<div class="lf-modal-backdrop" id="saveToPlaylistModal">
+  <div class="lf-modal">
+    <h3>Save to Playlist</h3>
+    <div id="playlistChoices" style="max-height:240px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="lf-modal-btns">
+      <button class="lf-btn-cancel" id="cancelSaveToPlaylist">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- YouTube IFrame (hidden — used for full-song playback when YOUTUBE_API_KEY is set) -->
+<div id="ytPlayer"></div>
+
 <!-- ===========================
      SCRIPT
      =========================== -->
@@ -1825,14 +1900,17 @@ function renderTrackList(container, list, withNum=true){
       </div>
       <div class="track-artist" style="font-size:12.5px">${escapeHtml(t.album || '')}</div>
       <div class="track-dur">${fmtTime(t.dur)}</div>
-      <button class="track-add" aria-label="Add to queue" data-add="${t.id}">
+      <button class="track-save" aria-label="Save to playlist" data-save="${t.id}" title="Save to playlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+      <button class="track-add" aria-label="Add to queue" data-add="${t.id}" title="Add to queue">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
       </button>
     </div>
   `).join('');
   container.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('click', (e) => {
-      if (e.target.closest('[data-add]')) return;
+      if (e.target.closest('[data-add]') || e.target.closest('[data-save]')) return;
       playFromLibrary(row.dataset.id);
     });
   });
@@ -1841,6 +1919,13 @@ function renderTrackList(container, list, withNum=true){
       e.stopPropagation();
       const t = TRACKS.find(x => x.id === btn.dataset.add);
       if (t) { QUEUE.push(t); renderQueue(); flashAdd(btn); }
+    });
+  });
+  container.querySelectorAll('[data-save]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const t = TRACKS.find(x => x.id === btn.dataset.save);
+      if (t) openSaveToPlaylist(t);
     });
   });
 }
@@ -2016,8 +2101,15 @@ async function playFromLibrary(id){
 }
 
 async function loadAndPlay(t){
-  if (t.stream_url) {
-    // iTunes preview — direct MP3, no extra fetch needed
+  // 1. Try YouTube for full song (only if YOUTUBE_API_KEY is configured server-side)
+  const didYt = await tryYouTube(t);
+  if (didYt) {
+    // YouTube handles playback — update UI state via onStateChange
+    isPlaying = true;
+    updatePlayBtn();
+  } else if (t.stream_url) {
+    // 2. iTunes 30s preview
+    if (ytPlayer && ytReady) try { ytPlayer.stopVideo(); } catch(_) {}
     audioEl.src = t.stream_url;
     audioEl.volume = volume;
     try {
@@ -2026,7 +2118,7 @@ async function loadAndPlay(t){
     } catch(e) { console.warn('Audio play error:', e); }
     updatePlayBtn();
   } else {
-    // Demo/static track — no real audio, simulate playback
+    // 3. Demo/static track — simulate only
     isPlaying = true;
     updatePlayBtn();
   }
@@ -2062,6 +2154,12 @@ audioEl.addEventListener('error', () => { isPlaying = false; updatePlayBtn(); })
 /* ── CONTROLS ── */
 $('#playBtn').addEventListener('click', () => {
   const t = QUEUE[currentIdx];
+  if (ytReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+    ytPlayer.pauseVideo(); return;
+  }
+  if (ytReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT.PlayerState.PAUSED) {
+    ytPlayer.playVideo(); return;
+  }
   if (t && t.stream_url) {
     if (audioEl.paused) audioEl.play(); else audioEl.pause();
   } else {
@@ -2293,6 +2391,235 @@ document.querySelectorAll('.m-tab').forEach(t => {
   });
 });
 
+/* ── PLAYLISTS ── */
+let playlists = [];         // { id, name, song_count, art }
+let pendingSaveTrack = null;
+
+const PLAYLIST_ARTS = ART_CLASSES;
+
+function playlistArtClass(idx) { return PLAYLIST_ARTS[idx % PLAYLIST_ARTS.length]; }
+
+async function loadSidebarPlaylists() {
+  if (!coupleId) { renderSidebarPlaylists([]); return; }
+  const token = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  try {
+    const r = await fetch('/api/music/playlists?couple_id=' + encodeURIComponent(coupleId), {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const d = await r.json();
+    playlists = d.playlists || [];
+  } catch(_) { playlists = []; }
+  renderSidebarPlaylists(playlists);
+}
+
+function renderSidebarPlaylists(list) {
+  const el = document.getElementById('sidebarPlaylists');
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:4px 12px 8px;font-size:12px;color:var(--text-dim)">No playlists yet</div>';
+    return;
+  }
+  el.innerHTML = list.map((pl, i) => `
+    <div class="playlist-row" data-plid="${pl.id}">
+      <div class="playlist-art ${playlistArtClass(i)}">
+        <span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span>
+      </div>
+      <div class="playlist-name">${escapeHtml(pl.name)}</div>
+      <div style="font-size:11px;color:var(--text-dim);flex-shrink:0">${pl.song_count || 0}</div>
+    </div>
+  `).join('');
+  el.querySelectorAll('.playlist-row').forEach(row => {
+    row.addEventListener('click', () => openPlaylistView(row.dataset.plid));
+  });
+}
+
+// ── New Playlist Modal ──
+document.getElementById('newPlaylistBtn').addEventListener('click', () => {
+  document.getElementById('newPlaylistName').value = '';
+  document.getElementById('newPlaylistModal').classList.add('open');
+  setTimeout(() => document.getElementById('newPlaylistName').focus(), 80);
+});
+document.getElementById('cancelNewPlaylist').addEventListener('click', () => {
+  document.getElementById('newPlaylistModal').classList.remove('open');
+});
+document.getElementById('confirmNewPlaylist').addEventListener('click', async () => {
+  const name = document.getElementById('newPlaylistName').value.trim();
+  if (!name) return;
+  const token = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  try {
+    const r = await fetch('/api/music/playlists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ name, couple_id: coupleId })
+    });
+    const pl = await r.json();
+    playlists.unshift({ ...pl, song_count: 0 });
+    renderSidebarPlaylists(playlists);
+    document.getElementById('newPlaylistModal').classList.remove('open');
+    showToast('Playlist "' + name + '" created!');
+  } catch(e) { console.warn('create playlist error', e); }
+});
+document.getElementById('newPlaylistName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('confirmNewPlaylist').click();
+  if (e.key === 'Escape') document.getElementById('cancelNewPlaylist').click();
+});
+
+// ── Save To Playlist Modal ──
+function openSaveToPlaylist(track) {
+  pendingSaveTrack = track;
+  const container = document.getElementById('playlistChoices');
+  if (!playlists.length) {
+    container.innerHTML = '<div style="font-size:13px;color:var(--text-dim);padding:8px 4px">No playlists yet. Create one first!</div>';
+  } else {
+    container.innerHTML = playlists.map((pl, i) => `
+      <button class="pl-choice" data-plid="${pl.id}">
+        <div class="playlist-art ${playlistArtClass(i)}">
+          <span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span>
+        </div>
+        <div>
+          <div style="font-weight:500">${escapeHtml(pl.name)}</div>
+          <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px">${pl.song_count || 0} songs</div>
+        </div>
+      </button>
+    `).join('');
+    container.querySelectorAll('.pl-choice').forEach(btn => {
+      btn.addEventListener('click', () => saveTrackToPlaylist(btn.dataset.plid));
+    });
+  }
+  document.getElementById('saveToPlaylistModal').classList.add('open');
+}
+
+async function saveTrackToPlaylist(playlistId) {
+  if (!pendingSaveTrack) return;
+  const t = pendingSaveTrack;
+  const token = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  try {
+    await fetch('/api/music/playlists/' + playlistId + '/songs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ title: t.title, artist: t.artist, artwork_url: t.artUrl || '', stream_url: t.stream_url || '' })
+    });
+    const pl = playlists.find(p => p.id === playlistId);
+    if (pl) pl.song_count = (pl.song_count || 0) + 1;
+    renderSidebarPlaylists(playlists);
+    document.getElementById('saveToPlaylistModal').classList.remove('open');
+    showToast('"' + t.title + '" saved to ' + (pl?.name || 'playlist'));
+  } catch(e) { console.warn('save to playlist error', e); }
+}
+
+document.getElementById('cancelSaveToPlaylist').addEventListener('click', () => {
+  document.getElementById('saveToPlaylistModal').classList.remove('open');
+});
+// Close modals on backdrop click
+['newPlaylistModal','saveToPlaylistModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+  });
+});
+
+// ── Playlist View (inline, replaces defaultView) ──
+let currentPlaylistView = null;
+async function openPlaylistView(playlistId) {
+  const pl = playlists.find(p => p.id === playlistId);
+  if (!pl) return;
+  currentPlaylistView = playlistId;
+  const defaultView = document.getElementById('defaultView');
+  const searchView  = document.getElementById('searchView');
+  searchView.classList.add('hidden');
+  const token = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  try {
+    const r = await fetch('/api/music/playlists/' + playlistId, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const d = await r.json();
+    const songs = d.songs || [];
+    const artIdx = playlists.indexOf(pl);
+    const artCls = playlistArtClass(artIdx);
+    defaultView.innerHTML = `
+      <button class="back-btn" id="backFromPlaylist">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        Back
+      </button>
+      <div class="pl-header">
+        <div class="pl-header-art ${artCls} playlist-art" style="width:80px;height:80px;font-size:32px">
+          <span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span>
+        </div>
+        <div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Shared Playlist</div>
+          <div class="pl-header-title">${escapeHtml(pl.name)}</div>
+          <div class="pl-header-meta">${songs.length} song${songs.length===1?'':'s'}</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="track-list" id="playlistSongsList"></div>
+        ${songs.length===0 ? '<div style="padding:40px;text-align:center;color:var(--text-dim)">No songs yet — search and save some!</div>' : ''}
+      </div>
+    `;
+    document.getElementById('backFromPlaylist').addEventListener('click', () => {
+      currentPlaylistView = null;
+      defaultView.innerHTML = _defaultViewHTML;
+      // Re-render rails
+      renderTrackList($('#topTracksList'), TOP_TRACKS);
+      renderRail($('#recentRail'), RECENT_ALBUMS);
+      renderRail($('#madeForRail'), MADE_FOR);
+    });
+    if (songs.length > 0) {
+      const mapped = songs.map((s, i) => ({
+        id: 'pl-s-' + s.id,
+        _playlistSongId: s.id,
+        stream_url: s.artwork_url ? null : null, // artwork_url stored in that column for now
+        title: s.title, artist: s.artist || '', album: '', dur: 30,
+        art: ART_CLASSES[i % ART_CLASSES.length],
+        artUrl: s.artwork_url || null,
+        mono: (s.title[0]||'P').toUpperCase()
+      }));
+      mapped.forEach(m => { if (!TRACKS.find(x => x.id === m.id)) TRACKS.push(m); });
+      renderTrackList(document.getElementById('playlistSongsList'), mapped, true);
+    }
+  } catch(e) { console.warn('load playlist error', e); }
+}
+
+// save a reference to the original defaultView HTML so we can restore it
+let _defaultViewHTML = '';
+
+// ── YouTube IFrame API (full songs — optional, needs YOUTUBE_API_KEY) ──
+let ytPlayer = null;
+let ytReady = false;
+window.onYouTubeIframeAPIReady = function() {
+  ytReady = true;
+  ytPlayer = new YT.Player('ytPlayer', {
+    height: '1', width: '1',
+    playerVars: { autoplay: 0 },
+    events: {
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.PLAYING) { isPlaying = true;  updatePlayBtn(); }
+        if (e.data === YT.PlayerState.PAUSED)  { isPlaying = false; updatePlayBtn(); }
+        if (e.data === YT.PlayerState.ENDED)   { $('#nextBtn').click(); }
+      }
+    }
+  });
+};
+
+// Load YouTube IFrame API (non-blocking — the page works fine if it doesn't load)
+(function(){
+  const s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+
+// Try to play via YouTube for full song; returns true if video found & started
+async function tryYouTube(t) {
+  if (!ytReady || !ytPlayer) return false;
+  try {
+    const r = await fetch('/api/music/yt-match?q=' + encodeURIComponent(t.title + ' ' + t.artist));
+    const d = await r.json();
+    if (!d.videoId) return false;
+    ytPlayer.loadVideoById(d.videoId);
+    ytPlayer.setVolume(Math.round(volume * 100));
+    return true;
+  } catch(_) { return false; }
+}
+
 /* ── TRACK PLAY ANALYTICS ── */
 function trackMusicPlay(t){
   const count = parseInt(localStorage.getItem('loveflix_music_plays_count')||'0',10)+1;
@@ -2318,10 +2645,18 @@ position = 0; updateSeek();
 setVol(volume);
 $('#durTime').textContent = fmtTime(QUEUE[currentIdx].dur);
 initRealtime();
+// Save default view HTML so playlist view can restore it
+_defaultViewHTML = document.getElementById('defaultView').innerHTML;
+// Load real playlists from D1
+loadSidebarPlaylists();
 
 /* handle ?q= from home page quick search */
 const _urlQ = new URLSearchParams(location.search).get('q');
 if (_urlQ) { searchInput.value = _urlQ; doSearch(_urlQ); }
+
+/* handle ?playlist= deep link */
+const _plQ = new URLSearchParams(location.search).get('playlist');
+if (_plQ) { setTimeout(() => openPlaylistView(_plQ), 500); }
 </script>
 
 
