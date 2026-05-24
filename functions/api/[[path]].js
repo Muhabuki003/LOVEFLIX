@@ -1321,65 +1321,40 @@ async function getMusicPlays(env, coupleId, user) {
 }
 
 // ── SoundCloud proxy ──────────────────────────────────────────────────────────
-// Set SOUNDCLOUD_CLIENT_ID via: wrangler pages secret put SOUNDCLOUD_CLIENT_ID
-// Obtain a client_id by registering at https://soundcloud.com/you/apps or by
-// inspecting the network tab on soundcloud.com (look for client_id= query param).
+// Music search — uses iTunes Search API (free, no key required).
+// Returns 30-second preview MP3s playable directly in the browser.
+// stream_url is embedded in each track so no second round-trip is needed.
 
 async function soundcloudSearch(env, url) {
   const q = (url.searchParams.get('q') || '').trim();
   if (!q) return json({ tracks: [] });
 
-  const clientId = env.SOUNDCLOUD_CLIENT_ID;
-  if (!clientId) return json({ error: 'soundcloud_not_configured', tracks: [] }, 503);
-
   try {
-    const scRes = await fetch(
-      `https://api.soundcloud.com/tracks?q=${encodeURIComponent(q)}&limit=20&client_id=${encodeURIComponent(clientId)}&linked_partitioning=1`,
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25`,
       { headers: { Accept: 'application/json' } }
     );
-    if (!scRes.ok) return json({ tracks: [], _debug: `SoundCloud HTTP ${scRes.status}` });
+    if (!res.ok) return json({ tracks: [], _debug: `iTunes HTTP ${res.status}` });
 
-    const data = await scRes.json();
-    // v1 returns an array; paginated responses wrap in { collection: [...] }.
-    const raw = Array.isArray(data) ? data : (data.collection || []);
-
-    const tracks = raw
-      .filter(t => t.streamable !== false)
+    const data = await res.json();
+    const tracks = (data.results || [])
+      .filter(t => t.previewUrl)
       .map(t => ({
-        id:      t.id,
-        title:   t.title   || 'Unknown',
-        artist:  t.user?.username || 'Unknown',
-        artwork: t.artwork_url
-          ? t.artwork_url.replace('-large', '-t300x300')
-          : '',
+        id:          t.trackId,
+        title:       t.trackName   || 'Unknown',
+        artist:      t.artistName  || 'Unknown',
+        artwork_url: (t.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+        duration:    t.trackTimeMillis || 0,   // milliseconds — frontend divides by 1000
+        stream_url:  t.previewUrl,             // direct 30s preview MP3
       }));
 
     return json({ tracks });
-  } catch (_) {
-    return json({ tracks: [] });
+  } catch (e) {
+    return json({ tracks: [], _debug: String(e) });
   }
 }
 
 async function soundcloudStream(env, rawId) {
-  const id = parseInt(rawId, 10);
-  if (!id || !isFinite(id)) return json({ error: 'invalid_id' }, 400);
-
-  const clientId = env.SOUNDCLOUD_CLIENT_ID;
-  if (!clientId) return json({ error: 'soundcloud_not_configured' }, 503);
-
-  try {
-    // SoundCloud returns a 302 redirect to the actual CDN audio URL.
-    // Using redirect:'manual' avoids streaming the audio body through the worker.
-    const scRes = await fetch(
-      `https://api.soundcloud.com/tracks/${id}/stream?client_id=${encodeURIComponent(clientId)}`,
-      { redirect: 'manual' }
-    );
-
-    const streamUrl = scRes.headers.get('location');
-    if (!streamUrl) return json({ error: 'not_streamable' }, 404);
-
-    return json({ streamUrl });
-  } catch (_) {
-    return json({ error: 'fetch_failed' }, 502);
-  }
+  // Legacy endpoint kept for compatibility — not needed when stream_url is in search results.
+  return json({ error: 'use_stream_url_from_search' }, 400);
 }
