@@ -897,10 +897,23 @@
       audio.play().then(() => {
         isPlaying = true;
         updatePlayButton();
+        trackMusicPlay();
       }).catch(err => {
         console.error('Playback failed:', err);
         showToast('Click play to start');
       });
+    }
+
+    function trackMusicPlay() {
+      if (!currentTrack) return;
+      try {
+        const count = parseInt(localStorage.getItem('loveflix_music_plays_count') || '0', 10);
+        localStorage.setItem('loveflix_music_plays_count', String(count + 1));
+        localStorage.setItem('loveflix_music_last_song', JSON.stringify({
+          title: currentTrack.title,
+          artist: currentTrack.artist,
+        }));
+      } catch (_) {}
     }
 
     function togglePlay() {
@@ -1150,6 +1163,12 @@
 
     // ── Init ─────────────────────────────────────────────────────────────────────
     initSync();
+
+    // Pre-populate search from ?q= param (set by home page quick-search).
+    (function () {
+      const q = new URL(location.href).searchParams.get('q');
+      if (q) { searchInput.value = q; doSearch(q); }
+    })();
   </script>
 </body>
 </html>
