@@ -23,6 +23,12 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/stripe-config',
   'POST /api/stripe-webhook',
   'POST /api/join-partner',
+  // Google Maps JS API key for the LoveConnect navigation map. The page fetches
+  // this on load (no auth header) before any token-gated work, and the key is a
+  // referrer-restricted public client key that ships in the Maps script URL
+  // anyway — so it is intentionally public here. Lock it down with an HTTP
+  // referrer restriction in the Google Cloud console.
+  'GET /api/maps-config',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -178,6 +184,12 @@ export async function onRequest(context) {
     }
 
     if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
+
+    // Hands the Google Maps JS API key to the LoveConnect page so it can inject
+    // the Maps script without the key ever being hardcoded in static HTML.
+    if (method === 'GET' && path === '/api/maps-config') {
+      return json({ key: env.GOOGLE_MAPS_API_KEY || '' });
+    }
 
     if (method === 'GET' && path === '/api/directions') return getDirections(env, url, user);
 

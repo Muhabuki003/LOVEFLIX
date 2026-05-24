@@ -677,6 +677,27 @@
   .gmap-nav-ui .gm-style a[href^="https://maps.google.com/maps"]{display:none !important}
   .gmap-nav-ui .gmnoprint{display:none !important}
 
+  /* ----- Cinematic mode-shift vignette (MapLibre globe <-> Google nav) -----
+     A full-bleed overlay TransitionManager fades from transparent → crimson →
+     pure black and back. Sits above both map layers and all chrome so the
+     hand-off between the two map engines reads as one deliberate wipe. */
+  #lc-vignette{
+    position:fixed; inset:0; z-index:9990; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at 50% 50%, transparent 0%, rgba(229,9,20,0.92) 100%);
+  }
+
+  /* ----- Arrival state (panel shimmer + centered heart) ----- */
+  @keyframes dirShimmer{
+    0%,100%{border-top-color:rgba(201,169,110,0.30); box-shadow:0 -14px 50px rgba(0,0,0,0.65)}
+    50%{border-top-color:rgba(201,169,110,0.95); box-shadow:0 -14px 50px rgba(0,0,0,0.65),0 0 26px rgba(201,169,110,0.40)}
+  }
+  .dir-panel.arrived{animation:dirShimmer 2.2s ease-in-out infinite}
+  @keyframes dirHeartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  .dir-arrival{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:20px 6px 6px}
+  .dir-arrival .heart-svg{width:58px; height:58px; fill:#e50914; filter:drop-shadow(0 0 14px rgba(229,9,20,0.6)); animation:dirHeartPulse 1.6s ease-in-out infinite}
+  .dir-arrival .who{font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px; line-height:1; color:#e9c87a}
+  .dir-arrival .msg{font-family:'DM Sans','Inter',sans-serif; font-size:16px; color:#fff}
+
   @media (max-width:760px){
     .dir-fab{left:14px; bottom:110px; padding:9px 13px; font-size:14px}
     .dir-panel{padding:10px 16px 26px}
@@ -690,13 +711,11 @@
 </head>
 <body>
 
-<!-- DUAL-MAP DOM: MapLibre (permanent) + Google Maps (navigation-only overlay) -->
-<div id="map"></div>
-<div id="gmap-nav"><div class="gmap-inner" id="gmap-inner"></div></div>
-<div class="vignette"></div>
-<body>
-
-<!-- DUAL-MAP DOM: MapLibre (permanent) + Google Maps (navigation-only overlay) -->
+<!-- DUAL-MAP DOM: MapLibre (permanent base, z-1) + Google Maps (navigation-only
+     overlay, z-3). Both are full-bleed and stacked; visibility is driven purely
+     by opacity / pointer-events (never display:none, which would break either
+     map instance). The cinematic crimson→black wipe between them is handled by
+     TransitionManager below. -->
 <div id="map"></div>
 <div id="gmap-nav"><div class="gmap-inner" id="gmap-inner"></div></div>
 <div class="vignette"></div>
@@ -1840,6 +1859,65 @@ function initGoogleMaps() {
     function closePanel(){ PANEL.classList.remove('open'); }
     function setContent(html){ CONTENT.innerHTML=html; const c=CONTENT.querySelector('[data-cancel]'); if(c) c.addEventListener('click', cancelNav); }
 
+    // ---- Cinematic transition between MapLibre (globe) and Google Maps (nav) ----
+    // A single full-bleed #lc-vignette overlay sweeps transparent → crimson →
+    // pure black and back while the two map layers crossfade underneath. The map
+    // engine swap (init on the way in, destroy on the way out) fires during the
+    // black frame via `callback`, so map load/teardown jank is never visible.
+    // ~1000ms each way. Visibility is opacity/pointer-events only — never
+    // display:none, which would break either map instance.
+    const TransitionManager = {
+      _crimson: 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(229,9,20,0.92) 100%)',
+      _vignette(){
+        let v = document.getElementById('lc-vignette');
+        if (!v){ v = document.createElement('div'); v.id = 'lc-vignette'; document.body.appendChild(v); }
+        return v;
+      },
+      toNavigation(callback){
+        const ml = MAPLIBRE_EL, gm = GMAP_EL, v = this._vignette();
+        v.style.transition = 'none'; v.style.background = this._crimson; v.style.opacity = '0';
+        // 0ms: crimson vignette fades in (300ms) while MapLibre fades out (500ms)
+        requestAnimationFrame(() => {
+          v.style.transition = 'opacity .3s ease'; v.style.opacity = '1';
+          ml.style.transition = 'opacity .5s ease'; ml.style.opacity = '0'; ml.style.pointerEvents = 'none';
+        });
+        // 500ms: crimson → pure black (200ms)
+        setTimeout(() => { v.style.transition = 'background .2s ease'; v.style.background = '#000'; }, 500);
+        // 700ms: black frame — spin up Google Maps. If the callback reports
+        // success, reveal the Google layer; if it returns false (build failed),
+        // bring MapLibre back instead of unveiling an empty layer. Either way the
+        // vignette then fades out.
+        setTimeout(() => {
+          let ok = true;
+          try { if (typeof callback === 'function') ok = callback() !== false; } catch(_){ ok = false; }
+          if (ok) {
+            gm.style.transition = 'opacity .3s ease'; gm.style.opacity = '1'; gm.style.pointerEvents = 'auto';
+          } else {
+            ml.style.transition = 'opacity .3s ease'; ml.style.opacity = '1'; ml.style.pointerEvents = '';
+          }
+          requestAnimationFrame(() => { v.style.transition = 'opacity .3s ease'; v.style.opacity = '0'; });
+        }, 700);
+      },
+      toGlobe(callback){
+        const ml = MAPLIBRE_EL, gm = GMAP_EL, v = this._vignette();
+        v.style.transition = 'none'; v.style.background = '#000'; v.style.opacity = '0';
+        // 0ms: black vignette fades in (300ms) while Google Maps fades out
+        requestAnimationFrame(() => {
+          v.style.transition = 'opacity .3s ease'; v.style.opacity = '1';
+          gm.style.transition = 'opacity .3s ease'; gm.style.opacity = '0'; gm.style.pointerEvents = 'none';
+        });
+        // ~420ms: black midpoint — destroy Google Maps + restore globe/fitBoth
+        setTimeout(() => { try { if (typeof callback === 'function') callback(); } catch(_){} }, 420);
+        // 500ms: black → crimson (200ms)
+        setTimeout(() => { v.style.transition = 'background .2s ease'; v.style.background = this._crimson; }, 500);
+        // 700ms: reveal MapLibre + fade vignette out (300ms)
+        setTimeout(() => {
+          ml.style.transition = 'opacity .3s ease'; ml.style.opacity = '1'; ml.style.pointerEvents = '';
+          requestAnimationFrame(() => { v.style.transition = 'opacity .3s ease'; v.style.opacity = '0'; });
+        }, 700);
+      }
+    };
+
     // ---- Google Maps instance management ----
     let gMap = null;
     let gDirectionsService = null;
@@ -1868,16 +1946,11 @@ function initGoogleMaps() {
       if (GMAP_INNER) GMAP_INNER.innerHTML = '';
     }
 
-    async function initGoogleMap(origin, dest) {
-      // Wait for Google Maps API to be ready
-      if (!window.googleMapsReady) {
-        try { await window._googleMapsReadyPromise; } catch(_) {
-          toast('Navigation service unavailable'); return null;
-        }
-      }
-      if (!window.google || !window.google.maps) {
-        toast('Navigation service unavailable'); return null;
-      }
+    // Build the Google Maps navigation instance. Assumes the JS API is already
+    // loaded — startNav awaits window._googleMapsReadyPromise (with a 5s cap)
+    // before the cinematic transition fires, so this stays synchronous.
+    function buildGoogleMap(origin, dest) {
+      if (!window.google || !window.google.maps) return null;
 
       const mapOptions = {
         center: { lat: origin.lat, lng: origin.lng },
@@ -1922,6 +1995,12 @@ function initGoogleMaps() {
         zIndex: 100
       });
 
+      // Custom partner destination marker — crimson circle + partner name in
+      // gold Bebas Neue, matching the LoveConnect marker aesthetic. NOTE: we stay
+      // on the classic Marker rather than AdvancedMarkerElement on purpose —
+      // Advanced markers require a cloud Map ID, and setting any mapId makes
+      // Google ignore the inline `styles` dark theme above. labelOrigin pushes the
+      // name just below the circle.
       gDestMarker = new google.maps.Marker({
         position: { lat: dest.lat, lng: dest.lng },
         map: gMap,
@@ -1931,7 +2010,15 @@ function initGoogleMaps() {
           fillColor: '#e50914',
           fillOpacity: 1,
           strokeColor: '#fff',
-          strokeWeight: 2
+          strokeWeight: 2,
+          labelOrigin: new google.maps.Point(0, 2.6)
+        },
+        label: {
+          text: HER.name,
+          color: '#e9c87a',
+          fontFamily: "'Bebas Neue', sans-serif",
+          fontSize: '15px',
+          fontWeight: '700'
         },
         zIndex: 99
       });
@@ -1940,7 +2027,7 @@ function initGoogleMaps() {
     }
 
     // ---- navigation state ----
-    const nav={active:false, dest:null, steps:[], stepIdx:0,
+    const nav={active:false, arrived:false, dest:null, steps:[], stepIdx:0,
                lastPos:null, remaining_m:0, eta_s:0, nextTurnDist:0,
                paused:false, staleTimer:null, watchId:null};
 
@@ -2025,6 +2112,12 @@ function initGoogleMaps() {
         if (gDestMarker) gDestMarker.setPosition({ lat: HER.lat, lng: HER.lng });
       }
 
+      // Arrival detection — within 30m of the partner's pin ends navigation.
+      if (nav.dest && hav(userPos.lat, userPos.lng, nav.dest.lat, nav.dest.lng) < 30) {
+        triggerArrival();
+        return;
+      }
+
       recomputeProgress(userPos);
       renderNavPanel();
       nav.lastPos=userPos;
@@ -2032,33 +2125,26 @@ function initGoogleMaps() {
 
     function navError(){ if(nav.active){ nav.paused=true; renderNavPanel(); } }
 
-    async function startNav(){
-      if (FPANEL) FPANEL.classList.remove('open');
-      openPanel();
-      setContent(`<div class="dir-label">Directions to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Locating…</div>`);
+    // ---- arrival experience ----
+    function triggerArrival(){
+      if (nav.arrived) return;
+      nav.arrived = true; nav.active = false;
+      if (nav.watchId !== null && navigator.geolocation){ navigator.geolocation.clearWatch(nav.watchId); nav.watchId = null; }
+      clearTimeout(nav.staleTimer);
+      PANEL.classList.add('arrived');
+      CONTENT.innerHTML =
+        `<div class="dir-arrival">
+           <svg class="heart-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.72-4.35-9.33-8.07C.9 10.27 1.5 6.9 4.2 5.6c1.96-.94 4.2-.2 5.3 1.36L12 9l2.5-2.04c1.1-1.56 3.34-2.3 5.3-1.36 2.7 1.3 3.3 4.67 1.53 7.33C18.72 16.65 12 21 12 21z"/></svg>
+           <div class="who">${esc(HER.name)}</div>
+           <div class="msg">You've arrived</div>
+         </div>`;
+      // Hold the moment, then drift back to the globe with both partners framed.
+      setTimeout(() => { if (nav.arrived) cancelNav(); }, 3000);
+    }
 
-      const dest=await resolvePartnerCoords();
-      if(!dest){ toast('Partner location unavailable'); closePanel(); return; }
-      const origin=await resolveUserCoords();
-      if(!origin){ toast('Your location unavailable'); closePanel(); return; }
-
-      nav.active=true; nav.dest=dest; nav.lastPos=origin; nav.stepIdx=0; nav.paused=false;
-
-      // Cinematic transition: fade MapLibre out, fade Google Maps in
-      MAPLIBRE_EL.classList.add('hidden');
-      GMAP_EL.classList.add('active');
-
-      // Initialize Google Maps
-      const gm = await initGoogleMap(origin, dest);
-      if (!gm) {
-        nav.active=false;
-        MAPLIBRE_EL.classList.remove('hidden');
-        GMAP_EL.classList.remove('active');
-        closePanel();
-        return;
-      }
-
-      // Request directions from Google
+    // Ask Google for the driving route; fall back to a straight crimson line so
+    // the user still gets a heading. Navigation continues on the Google map.
+    function requestRoute(origin, dest){
       const request = {
         origin: { lat: origin.lat, lng: origin.lng },
         destination: { lat: dest.lat, lng: dest.lng },
@@ -2066,12 +2152,10 @@ function initGoogleMaps() {
         unitSystem: google.maps.UnitSystem.IMPERIAL,
         provideRouteAlternatives: false
       };
-
       gDirectionsService.route(request, (result, status) => {
         if (status === google.maps.DirectionsStatus.OK && result.routes[0]) {
           gDirectionsRenderer.setDirections(result);
-          const route = result.routes[0];
-          const leg = route.legs[0];
+          const leg = result.routes[0].legs[0];
           nav.steps = leg.steps;
           nav.remaining_m = leg.distance.value;
           nav.eta_s = leg.duration.value;
@@ -2080,29 +2164,9 @@ function initGoogleMaps() {
           renderNavPanel();
           markFresh();
         } else {
-          // Fallback: straight line
-          const straightPath = [
-            { lat: origin.lat, lng: origin.lng },
-            { lat: dest.lat, lng: dest.lng }
-          ];
-          gDirectionsRenderer.setDirections({
-            routes: [{
-              legs: [{
-                steps: [],
-                distance: { value: hav(origin.lat, origin.lng, dest.lat, dest.lng), text: '' },
-                duration: { value: 0, text: '' }
-              }],
-              overview_polyline: { points: '' }
-            }]
-          });
-          // Draw straight line manually
-          const straightLine = new google.maps.Polyline({
-            path: straightPath,
-            geodesic: true,
-            strokeColor: '#e50914',
-            strokeOpacity: 0.8,
-            strokeWeight: 4,
-            map: gMap
+          new google.maps.Polyline({
+            path: [{ lat: origin.lat, lng: origin.lng }, { lat: dest.lat, lng: dest.lng }],
+            geodesic: true, strokeColor: '#e50914', strokeOpacity: 0.8, strokeWeight: 4, map: gMap
           });
           nav.steps = [];
           nav.remaining_m = hav(origin.lat, origin.lng, dest.lat, dest.lng);
@@ -2112,37 +2176,83 @@ function initGoogleMaps() {
           markFresh();
         }
       });
+    }
 
-      // Start GPS tracking
-      if(navigator.geolocation){
-        nav.watchId = navigator.geolocation.watchPosition(navUpdate, navError, {
-          enableHighAccuracy: true, maximumAge: 5000, timeout: 15000
-        });
+    // Live GPS follow loop. If geolocation is unavailable the panel just shows a
+    // paused badge (navError) rather than breaking.
+    function startGpsWatch(){
+      if (!navigator.geolocation) { navError(); return; }
+      nav.watchId = navigator.geolocation.watchPosition(navUpdate, navError, {
+        enableHighAccuracy: true, maximumAge: 5000, timeout: 15000
+      });
+    }
+
+    // Tear down Google Maps and bring the MapLibre globe back framing both partners.
+    function restoreGlobe(){
+      destroyGoogleMaps();
+      try { map.setProjection({ type:'globe' }); } catch(_){}
+      try { fitBoth(); } catch(_){}
+    }
+
+    async function startNav(){
+      if (FPANEL) FPANEL.classList.remove('open');
+      openPanel();
+      setContent(`<div class="dir-label">Directions to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Locating…</div>`);
+
+      // 1) Resolve coordinates (live → last_seen fallback). Never throw; toast + abort.
+      const dest = await resolvePartnerCoords();
+      if(!dest){ toast('Partner location unavailable'); closePanel(); return; }
+      const origin = await resolveUserCoords();
+      if(!origin){ toast('Your location unavailable'); closePanel(); return; }
+
+      // 2) Ensure the Google Maps JS API is ready — await the loader, capped at 5s.
+      if(!window.googleMapsReady){
+        const ready = await Promise.race([
+          window._googleMapsReadyPromise.then(() => true).catch(() => false),
+          new Promise(r => setTimeout(() => r(false), 5000))
+        ]);
+        if(!ready || !window.google || !window.google.maps){ toast('Maps loading, try again'); closePanel(); return; }
       }
+
+      nav.active=true; nav.arrived=false; nav.dest=dest; nav.lastPos=origin; nav.stepIdx=0; nav.paused=false;
+
+      // 3) Cinematic wipe → build Google Maps + request route during the black frame.
+      TransitionManager.toNavigation(() => {
+        const gm = buildGoogleMap(origin, dest);
+        if (!gm) {
+          nav.active=false;
+          toast('Navigation service unavailable');
+          restoreGlobe();
+          closePanel();
+          return false; // tells TransitionManager to bring MapLibre back, not reveal an empty layer
+        }
+        requestRoute(origin, dest);
+        renderNavPanel();   // auto-start the navigation panel immediately
+        startGpsWatch();
+        return true;
+      });
     }
 
     function cancelNav(){
+      const hadMap = !!gMap;
       nav.active=false;
       if(nav.watchId!==null && navigator.geolocation){
         navigator.geolocation.clearWatch(nav.watchId);
         nav.watchId=null;
       }
       clearTimeout(nav.staleTimer);
-
-      // Cinematic transition: fade Google Maps out, fade MapLibre back in
-      GMAP_EL.classList.remove('active');
-      MAPLIBRE_EL.classList.remove('hidden');
-
-      // Destroy Google Maps instance completely
-      setTimeout(() => {
-        destroyGoogleMaps();
-      }, 600); // Wait for fade-out transition
-
+      PANEL.classList.remove('arrived');
       closePanel();
 
-      // Restore MapLibre to globe view
-      try { map.setProjection({type:'globe'}); } catch(_){}
-      try { fitBoth(); } catch(_){}
+      // Cinematic return: vignette to black, destroy Google Maps + restore the
+      // globe at the black midpoint, then fade MapLibre back in.
+      if (hadMap) TransitionManager.toGlobe(restoreGlobe);
+      else        destroyGoogleMaps();
+
+      // Reset all navigation state — no orphaned watchers, timers, or stale steps.
+      nav.arrived=false; nav.dest=null; nav.lastPos=null;
+      nav.steps=[]; nav.stepIdx=0; nav.remaining_m=0; nav.eta_s=0; nav.nextTurnDist=0; nav.paused=false;
+      CONTENT.innerHTML='';
     }
 
     // ====================== FLIGHTS (independent) ======================
