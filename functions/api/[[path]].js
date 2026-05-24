@@ -202,6 +202,11 @@ export async function onRequest(context) {
     const scStreamMatch = path.match(/^\/api\/soundcloud\/stream\/([^/]+)$/);
     if (scStreamMatch && method === 'GET') return soundcloudStream(env, scStreamMatch[1]);
 
+    // Music tracking endpoints
+    if (method === 'POST' && path === '/api/music/plays') return saveMusicPlay(env, request, user);
+    const musicPlaysMatch = path.match(/^\/api\/music\/plays\/([^/]+)$/);
+    if (musicPlaysMatch && method === 'GET') return getMusicPlays(env, musicPlaysMatch[1], user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -1262,6 +1267,56 @@ async function getDirections(env, url, user) {
     });
   } catch (_) {
     return json({ ok: false, error: 'directions_fetch_failed' });
+  }
+}
+
+// ── Music tracking (D1) ───────────────────────────────────────────────────────
+
+async function saveMusicPlay(env, request, user) {
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  try {
+    const body = await request.json();
+    const { couple_id, soundcloud_track_id, title, artist } = body;
+
+    if (!couple_id || !soundcloud_track_id || !title) {
+      return json({ error: 'missing_fields' }, 400);
+    }
+
+    const id = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    await env.DB.prepare(`
+      INSERT INTO couple_music_plays (id, couple_id, soundcloud_track_id, title, artist, played_by_user_id, played_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, couple_id, soundcloud_track_id, title, artist || null, user.id, timestamp).run();
+
+    return json({ ok: true, id });
+  } catch (err) {
+    console.error('saveMusicPlay error:', err);
+    return json({ error: 'db_error' }, 500);
+  }
+}
+
+async function getMusicPlays(env, coupleId, user) {
+  if (!user) return json({ error: 'unauthorized' }, 401);
+
+  try {
+    const rows = await env.DB.prepare(`
+      SELECT id, soundcloud_track_id, title, artist, played_by_user_id, played_at
+      FROM couple_music_plays
+      WHERE couple_id = ?
+      ORDER BY played_at DESC
+      LIMIT 100
+    `).bind(coupleId).all();
+
+    return json({
+      plays: rows.results || [],
+      total: rows.results?.length || 0,
+    });
+  } catch (err) {
+    console.error('getMusicPlays error:', err);
+    return json({ error: 'db_error' }, 500);
   }
 }
 
