@@ -53,6 +53,46 @@ CREATE TABLE IF NOT EXISTS tenant_settings (
   updated_at INTEGER DEFAULT (strftime('%s','now'))
 );
 
+-- ─── MUSIC FEATURE TABLES ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS couple_playlists (
+  id        TEXT PRIMARY KEY,
+  couple_id TEXT NOT NULL,
+  name      TEXT NOT NULL,
+  created_at INTEGER DEFAULT (strftime('%s','now')),
+  updated_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_couple_playlists_couple_id
+  ON couple_playlists (couple_id);
+
+CREATE TABLE IF NOT EXISTS couple_playlist_songs (
+  id                    TEXT PRIMARY KEY,
+  playlist_id           TEXT NOT NULL,
+  soundcloud_track_id   INTEGER NOT NULL,
+  title                 TEXT NOT NULL,
+  artist                TEXT,
+  artwork_url           TEXT,
+  added_by_user_id      TEXT,
+  added_at              INTEGER DEFAULT (strftime('%s','now')),
+  FOREIGN KEY (playlist_id) REFERENCES couple_playlists(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_playlist_songs_playlist_id
+  ON couple_playlist_songs (playlist_id);
+
+CREATE TABLE IF NOT EXISTS couple_music_plays (
+  id                   TEXT PRIMARY KEY,
+  couple_id            TEXT NOT NULL,
+  soundcloud_track_id  INTEGER NOT NULL,
+  title                TEXT NOT NULL,
+  artist               TEXT,
+  played_by_user_id    TEXT,
+  played_at            INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_music_plays_couple_id
+  ON couple_music_plays (couple_id);
+CREATE INDEX IF NOT EXISTS idx_music_plays_played_at
+  ON couple_music_plays (played_at DESC);
+-- ─────────────────────────────────────────────────────────────────────────────
+
 -- Default tenant so the app works out of the box.
 INSERT OR IGNORE INTO tenants (id, subdomain, couple_name, accent_color)
 VALUES ('default', 'app', 'LoveFlix', '#e50914');

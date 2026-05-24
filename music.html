@@ -914,6 +914,25 @@
           artist: currentTrack.artist,
         }));
       } catch (_) {}
+
+      // Save to D1 database via API for permanent "songs listened together" tracking
+      const coupleId = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId() : null;
+      const token = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken() : null;
+      if (coupleId && token && currentTrack) {
+        fetch('/api/music/plays', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            couple_id: coupleId,
+            soundcloud_track_id: currentTrack.id,
+            title: currentTrack.title,
+            artist: currentTrack.artist,
+          }),
+        }).catch(err => console.error('Failed to save music play:', err));
+      }
     }
 
     function togglePlay() {
