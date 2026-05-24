@@ -1282,14 +1282,14 @@ async function soundcloudSearch(env, url) {
       `https://api.soundcloud.com/tracks?q=${encodeURIComponent(q)}&limit=20&client_id=${encodeURIComponent(clientId)}&linked_partitioning=1`,
       { headers: { Accept: 'application/json' } }
     );
-    if (!scRes.ok) return json({ tracks: [] });
+    if (!scRes.ok) return json({ tracks: [], _debug: `SoundCloud HTTP ${scRes.status}` });
 
     const data = await scRes.json();
     // v1 returns an array; paginated responses wrap in { collection: [...] }.
     const raw = Array.isArray(data) ? data : (data.collection || []);
 
     const tracks = raw
-      .filter(t => t.streamable)
+      .filter(t => t.streamable !== false)
       .map(t => ({
         id:      t.id,
         title:   t.title   || 'Unknown',
