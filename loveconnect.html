@@ -34,7 +34,12 @@
   a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
 
   /* MAP CANVAS */
-  #map{position:fixed;inset:0;background:#0a0a0a}
+  #map{position:fixed;inset:0;background:#0a0a0a;transition:opacity .6s cubic-bezier(.4,0,.2,1), filter .6s cubic-bezier(.4,0,.2,1)}
+  #map.hidden{opacity:0;filter:blur(4px);pointer-events:none}
+  /* Google Maps navigation overlay — lives only during active navigation */
+  #gmap-nav{position:fixed;inset:0;z-index:3;background:#0a0a0a;opacity:0;pointer-events:none;transition:opacity .6s cubic-bezier(.4,0,.2,1)}
+  #gmap-nav.active{opacity:1;pointer-events:auto}
+  #gmap-nav .gmap-inner{width:100%;height:100%}
   /* hide default maplibre attribution / controls — we'll style our own */
   .maplibregl-ctrl-bottom-right, .maplibregl-ctrl-bottom-left{opacity:.35;filter:invert(1) grayscale(1)}
   .maplibregl-ctrl-attrib{background:rgba(0,0,0,0.5) !important;color:#999 !important}
@@ -667,6 +672,11 @@
   .flights-btn.outline{background:transparent; border:1.5px solid #c9a96e; color:#e9c87a}
   .flights-btn.outline:hover{background:rgba(201,169,110,0.12)}
 
+  /* ----- Google Maps nav overlay custom styles ----- */
+  .gmap-nav-ui .gm-style-cc{display:none !important}
+  .gmap-nav-ui .gm-style a[href^="https://maps.google.com/maps"]{display:none !important}
+  .gmap-nav-ui .gmnoprint{display:none !important}
+
   @media (max-width:760px){
     .dir-fab{left:14px; bottom:110px; padding:9px 13px; font-size:14px}
     .dir-panel{padding:10px 16px 26px}
@@ -676,10 +686,19 @@
     .dir-toast{bottom:180px}
   }
 </style>
+<base target="_blank">
 </head>
 <body>
 
+<!-- DUAL-MAP DOM: MapLibre (permanent) + Google Maps (navigation-only overlay) -->
 <div id="map"></div>
+<div id="gmap-nav"><div class="gmap-inner" id="gmap-inner"></div></div>
+<div class="vignette"></div>
+<body>
+
+<!-- DUAL-MAP DOM: MapLibre (permanent) + Google Maps (navigation-only overlay) -->
+<div id="map"></div>
+<div id="gmap-nav"><div class="gmap-inner" id="gmap-inner"></div></div>
 <div class="vignette"></div>
 
 <!-- TOP NAV -->
@@ -808,7 +827,7 @@
       <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
     </button>
     <button id="globeBtn" title="Spin to globe view" aria-label="Globe">
-      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26zm.81 2h2.93a14.5 14.5 0 001.16 3.85A8 8 0 015.07 16zm2.93-8H5.07a8 8 0 014.02-3.85A14.5 14.5 0 008 8zm4 11.96A12.5 12.5 0 0110.08 15h3.84A12.5 12.5 0 0112 19.96zM14.34 14H9.66a14.4 14.4 0 010-4h4.68a14.4 14.4 0 010 4zm.5 5.85A14.5 14.5 0 0016 16h2.93a8 8 0 01-4.09 3.85zM16.36 14a17.2 17.2 0 000-4h3.38a8 8 0 010 4h-3.38z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26z"/></svg>
     </button>
   </div>
 </div>
@@ -989,10 +1008,38 @@
 
 <!-- shared non-blocking toast -->
 <div id="dir-toast" class="dir-toast" role="status" aria-live="polite"></div>
-
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
 <script>
+// ==========================================================================
+// GOOGLE MAPS JS API — dynamic load via Worker proxy (key stays server-side)
+// ==========================================================================
+window.googleMapsReady = false;
+window._googleMapsReadyPromise = new Promise((resolve) => {
+  window._resolveGoogleMapsReady = resolve;
+});
+
+function initGoogleMaps() {
+  window.googleMapsReady = true;
+  if (window._resolveGoogleMapsReady) window._resolveGoogleMapsReady();
+}
+
+(async function loadGoogleMaps() {
+  try {
+    const res = await fetch('/api/maps-config');
+    if (!res.ok) throw new Error('maps-config failed');
+    const { key } = await res.json();
+    if (!key) throw new Error('no key');
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry,places&callback=initGoogleMaps`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  } catch (e) {
+    console.warn('[LoveConnect] Google Maps API load failed:', e);
+  }
+})();
+
 (function(){
   // ---------- AUTH + SUPABASE SETUP ----------
   const SB_URL    = typeof LoveFlix !== 'undefined' ? LoveFlix.SUPABASE_URL     : '';
@@ -1117,7 +1164,6 @@
   });
 
   // ---------- ARC BETWEEN PARTNERS ----------
-  // quadratic bezier curve in lng/lat (same approach as the React MapArc helper)
   function buildArcCoords(from, to, curvature, samples){
     const [x0,y0] = from, [x2,y2] = to;
     const dx = x2 - x0, dy = y2 - y0;
@@ -1236,8 +1282,6 @@
       .toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit', hour12:false });
   }
 
-  // Reverse geocode via Nominatim. Returns "City, ST" (US) or "City, Country" (abroad).
-  // Results are cached on the person object so we only re-fetch when coords move >~1 km.
   async function reverseGeocode(person) {
     const { lat, lng } = person;
     if (person._geoLat !== undefined &&
@@ -1256,7 +1300,6 @@
       const city = a.city || a.town || a.village || a.county || '';
       let region = '';
       if (a.country_code === 'us') {
-        // abbreviate US state from ISO code e.g. "US-NY" → "NY"
         const iso = a['ISO3166-2-lvl4'] || '';
         region = iso.split('-')[1] || a.state || '';
       } else {
@@ -1273,8 +1316,6 @@
   async function fetchAndUpdateLocations() {
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
     try {
-      // Order by updated_at DESC so the seen-set always takes the latest row per user,
-      // even when merge-duplicates didn't fire and old rows accumulated.
       const res = await fetch(
         `${SB_URL}/rest/v1/couple_locations?couple_id=eq.${COUPLE_ID}&select=user_id,location,updated_at&order=updated_at.desc`,
         { headers: sbHeaders() }
@@ -1283,9 +1324,6 @@
       const rows = await res.json();
       if (!Array.isArray(rows)) return;
 
-      // Walk rows newest-first. Stop as soon as we have one row per person.
-      // Using else-if(!herRow) means a ghost/stale third row can never
-      // overwrite the real partner row that was already found.
       let himRow = null, herRow = null;
       const seen = new Set();
       for (const row of rows) {
@@ -1298,7 +1336,6 @@
         else if (!herRow)             herRow = { coords, updated_at: row.updated_at };
       }
 
-      // Only move a marker when we have confirmed data for that person.
       if (himRow) {
         const [lng, lat] = himRow.coords;
         const localTime  = formatLocalTime(lng);
@@ -1324,7 +1361,6 @@
         const localTime  = formatLocalTime(lng);
         const secAgo = herRow.updated_at
           ? Math.round((Date.now() - new Date(herRow.updated_at).getTime()) / 1000) : 9999;
-        // Online = pushed a location in the last 5 minutes.
         HER.online  = secAgo < 300;
         HER.secAgo  = secAgo;
         HER.lng = lng; HER.lat = lat;
@@ -1371,10 +1407,6 @@
     syncSec = 0;
   }
 
-  // Push a single coordinate fix to Supabase.
-  // on_conflict=couple_id,user_id matches the unique constraint
-  // couple_locations_user_couple_unique(couple_id, user_id) so this always
-  // upserts the current user's OWN row and never touches the partner's row.
   function pushCoords(lng, lat) {
     if (!MY_USER || !COUPLE_ID || !TOKEN) return;
     fetch(`${SB_URL}/rest/v1/couple_locations?on_conflict=couple_id,user_id`, {
@@ -1389,9 +1421,6 @@
     }).catch(() => {});
   }
 
-  // Continuous watch — fires whenever the device moves, just like Life360.
-  // Falls back to a 30-second heartbeat so the row's updated_at stays fresh
-  // even when the device is stationary (lets the partner see "online").
   let _watchId = null;
   let _lastPushTime = 0;
   const HEARTBEAT_MS = 30000;
@@ -1406,8 +1435,6 @@
       () => {},
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
     );
-    // Heartbeat: if watchPosition hasn't fired in HEARTBEAT_MS, push again
-    // to keep updated_at fresh so the partner sees "online".
     setInterval(() => {
       if (Date.now() - _lastPushTime >= HEARTBEAT_MS) {
         navigator.geolocation.getCurrentPosition(
@@ -1418,7 +1445,7 @@
     }, HEARTBEAT_MS);
   }
 
-  // ---------- DISTANCE + TIME GAP (computed live from both coordinates) ----------
+  // ---------- DISTANCE + TIME GAP ----------
   function _haversineKm(lat1, lng1, lat2, lng2) {
     const R = 6371, rad = Math.PI / 180;
     const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
@@ -1428,9 +1455,7 @@
   }
 
   function updateDistanceAndGap() {
-    if (!HER._real || !HIM._real) return; // wait until both real positions are known
-
-    // Distance — haversine between the two live fixes.
+    if (!HER._real || !HIM._real) return;
     const km    = _haversineKm(HER.lat, HER.lng, HIM.lat, HIM.lng);
     const kmR   = Math.round(km);
     const miles = Math.round(km / 1.60934);
@@ -1446,7 +1471,6 @@
     const mSheetDistS = document.querySelector('.m-sheet-hero .cell.primary .s');
     if (mSheetDistS) mSheetDistS.textContent = `${kmStr} km`;
 
-    // Time gap — longitude-derived offset, consistent with formatLocalTime().
     const gap    = Math.round(HER.lng / 15) - Math.round(HIM.lng / 15);
     const absGap = Math.abs(gap);
     const dir    = gap > 0 ? 'ahead' : 'behind';
@@ -1460,7 +1484,7 @@
     if (mGapS) mGapS.textContent = absGap === 0 ? 'Same timezone' : `${HER.name} ${absGap}h ${dir}`;
   }
 
-  // ---------- DAYS TOGETHER (from the couple's saved anniversary date) ----------
+  // ---------- DAYS TOGETHER ----------
   function _daysSince(dateStr) {
     if (!dateStr) return 0;
     const t = Date.parse(dateStr);
@@ -1475,14 +1499,14 @@
     el.textContent = d ? d.toLocaleString() : '—';
   }
 
-  // ---------- HTML escaping for injected user data ----------
+  // ---------- HTML escaping ----------
   function _escapeHtml(str) {
     return String(str == null ? '' : str)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // ---------- CALL HISTORY (Supabase call_logs) ----------
+  // ---------- CALL HISTORY ----------
   const _PHONE_SVG = '<svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>';
   const _MISS_SVG  = '<svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>';
 
@@ -1514,7 +1538,7 @@
     const list = document.getElementById('callList');
     if (!list) return;
     if (!rows.length) {
-      list.innerHTML = `<div class="lc-empty">No calls yet — tap “Call ${_escapeHtml(HER.name)}” to start your first LoveConnect call.</div>`;
+      list.innerHTML = `<div class="lc-empty">No calls yet — tap "Call ${_escapeHtml(HER.name)}" to start your first LoveConnect call.</div>`;
       return;
     }
     list.innerHTML = rows.slice(0, 15).map(r => {
@@ -1579,7 +1603,7 @@
     renderHistogram(rows);
   }
 
-  // ---------- TRIPS / JOURNEYS (from videos in the "Trips" category) ----------
+  // ---------- TRIPS / JOURNEYS ----------
   function _tripInitials(title) {
     const words = String(title || '').trim().split(/\s+/).filter(Boolean);
     if (!words.length) return 'TR';
@@ -1631,7 +1655,6 @@
     const title = document.querySelector('.couple-title');
     if (title) title.innerHTML = `${HIM.name} &amp; ${HER.name}`;
 
-    // Top-right status pill
     const onlineText = document.getElementById('onlineText');
     const onlineDot  = document.getElementById('onlineDot');
     if (onlineText && onlineDot) {
@@ -1689,7 +1712,6 @@
     const callingAv = document.querySelector('.calling-av');
     if (callingAv) callingAv.textContent = HER.initial;
 
-    // Mobile updates
     const mTitle = document.querySelector('.m-couple-title');
     if (mTitle) mTitle.innerHTML = `<span class="live">LIVE</span> ${HIM.name} &amp; ${HER.name}`;
     const mCards = document.querySelectorAll('.m-couple-rows .m-couple-card');
@@ -1725,161 +1747,15 @@
 
   async function initLiveData() {
     if (!SB_URL || !TOKEN || !COUPLE_ID) return;
-    startLocationWatch();          // continuous push whenever device moves
+    startLocationWatch();
     await fetchAndUpdateLocations();
-    setInterval(fetchAndUpdateLocations, 10000); // pull partner's location + recompute distance/gap every 10s
+    setInterval(fetchAndUpdateLocations, 10000);
   }
-
-  // ---------- DRAWER TABS ----------
-  document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(t => {
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
-      document.querySelectorAll('.drawer-body .tab-pane').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      const pane = document.querySelector(`.drawer-body [data-pane="${t.dataset.tab}"]`);
-      if (pane) pane.classList.add('active');
-    });
-  });
-
-  // ---------- JOURNEY ROW CLICKS ----------
-  document.querySelectorAll('.journey-row').forEach(r => {
-    r.addEventListener('click', () => {
-      const [lng, lat, z] = r.dataset.fly.split(',').map(Number);
-      map.flyTo({ center:[lng, lat], zoom: z, duration: 1800 });
-    });
-  });
-
-  // ---------- CALL BUTTON ----------
-  // Defer until DOMContentLoaded to ensure loveflix-call.js has loaded and initialized
-  function initCallButton() {
-    function startCall() {
-      if (typeof LoveFlix === 'undefined' || !LoveFlix.Call) {
-        console.error('[LoveConnect] LoveFlix.Call module not loaded');
-        alert('Call service is loading. Please try again.');
-        return;
-      }
-      LoveFlix.Call.start(HER.name, COUPLE_ID, MY_USER, HIM.name, HIM.initial, true);
-    }
-    const callBtn = document.getElementById('callBtn');
-    if (callBtn) callBtn.addEventListener('click', startCall);
-    const mCallBtn = document.getElementById('mCallBtn');
-    if (mCallBtn) mCallBtn.addEventListener('click', startCall);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCallButton);
-  } else {
-    // Already loaded (e.g., via history navigation)
-    setTimeout(initCallButton, 0);
-  }
-
-  // ---------- SYNC TICKER ----------
-  let syncSec = 0;
-  const syncedAgoEl = document.getElementById('syncedAgo');
-  setInterval(() => {
-    syncSec++;
-    syncedAgoEl.textContent = syncSec < 60
-      ? `Synced ${syncSec}s ago`
-      : `Synced ${Math.round(syncSec / 60)}m ago`;
-  }, 1000);
-
-  // ---------- HISTOGRAM (calls by hour) ----------
-  // Painted empty up front; loadCallHistory() fills it from real call_logs.
-  renderHistogram([]);
-
-  // ---------- MOBILE WIRING ----------
-  (function(){
-    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
-
-    // On mobile: move drawer tab panes into sheet body so they're scrollable there
-    if (isMobile()) {
-      const sheetBody = document.getElementById('mSheetBody');
-      if (sheetBody) {
-        document.querySelectorAll('.drawer-body .tab-pane').forEach(p => sheetBody.appendChild(p));
-      }
-    }
-
-    const mSheet     = document.getElementById('mSheet');
-    const mSheetScrim = document.getElementById('mSheetScrim');
-    const mNowbar    = document.getElementById('mNowbar');
-    if (!mSheet) return;
-
-    function openSheet() {
-      mSheet.classList.add('open');
-      mSheetScrim.classList.add('open');
-      mNowbar.classList.add('hidden');
-    }
-    function closeSheet() {
-      mSheet.classList.remove('open');
-      mSheetScrim.classList.remove('open');
-      mNowbar.classList.remove('hidden');
-    }
-    document.getElementById('mExpandSheet').addEventListener('click', openSheet);
-    document.getElementById('mExpandSheet2').addEventListener('click', openSheet);
-    mSheetScrim.addEventListener('click', closeSheet);
-
-    // Drag handle to dismiss sheet
-    let dragStartY = null;
-    const handleArea = mSheet.querySelector('.m-sheet-handle');
-    handleArea.addEventListener('touchstart', e => {
-      dragStartY = e.touches[0].clientY;
-      window.addEventListener('touchmove', onDragMove, { passive:true });
-      window.addEventListener('touchend', onDragEnd);
-    });
-    function onDragMove(e) {
-      if (dragStartY === null) return;
-      const dy = e.touches[0].clientY - dragStartY;
-      if (dy > 0) mSheet.style.transform = `translateY(${dy}px)`;
-    }
-    function onDragEnd(e) {
-      if (dragStartY === null) return;
-      const dy = e.changedTouches[0].clientY - dragStartY;
-      mSheet.style.transform = '';
-      if (dy > 80) closeSheet();
-      dragStartY = null;
-      window.removeEventListener('touchmove', onDragMove);
-      window.removeEventListener('touchend', onDragEnd);
-    }
-
-    // Mobile sheet tabs (data-mtab → data-pane)
-    document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(t => {
-      t.addEventListener('click', () => {
-        document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('#mSheetBody .tab-pane').forEach(x => x.classList.remove('active'));
-        t.classList.add('active');
-        const target = document.querySelector(`#mSheetBody [data-pane="${t.dataset.mtab}"]`);
-        if (target) target.classList.add('active');
-      });
-    });
-
-    // Recenter
-    const mRecenterBtn = document.getElementById('mRecenterBtn');
-    if (mRecenterBtn) mRecenterBtn.addEventListener('click', fitBoth);
-
-    // Hamburger menu
-    const mMenu      = document.getElementById('mMenu');
-    const mMenuScrim = document.getElementById('mMenuScrim');
-    function openMenu()  { mMenu.classList.add('open');    mMenuScrim.classList.add('open'); }
-    function closeMenu() { mMenu.classList.remove('open'); mMenuScrim.classList.remove('open'); }
-    document.getElementById('mMenuBtn').addEventListener('click', e => {
-      e.stopPropagation();
-      mMenu.classList.contains('open') ? closeMenu() : openMenu();
-    });
-    mMenuScrim.addEventListener('click', closeMenu);
-    document.getElementById('mMenuRecenter').addEventListener('click', () => { closeMenu(); fitBoth(); });
-    document.getElementById('mMenuGlobe').addEventListener('click', () => {
-      closeMenu();
-      map.flyTo({ center:[(HER.lng+HIM.lng)/2,(HER.lat+HIM.lat)/2], zoom:1.6, duration:1500 });
-    });
-    document.getElementById('mMenuDetails').addEventListener('click', () => { closeMenu(); openSheet(); });
-  })();
 
   // ==========================================================================
-  // DIRECTIONS (Apple-Maps nav) + FLIGHTS  — additive, hooks into existing
-  // `map`, HER, HIM, fitBoth, fetchAndUpdateLocations. No new map instance, no
-  // new dependencies. Coordinate source of truth: couple_locations.location
-  // (latest fix = live when fresh, last-seen when stale); the user's own
-  // position prefers live GPS, then that same Supabase fallback.
+  // DIRECTIONS — Google Maps JS API Navigation (dual-map cinematic transition)
+  // MapLibre = permanent base map. Google Maps = temporary navigation overlay.
+  // Google Maps instance is created on nav start, destroyed on cancel.
   // ==========================================================================
   (function initDirectionsAndFlights(){
     const FAB     = document.getElementById('dir-fab');
@@ -1888,21 +1764,34 @@
     const CANCEL  = document.getElementById('dir-cancel');
     const FFAB    = document.getElementById('flights-fab');
     const FPANEL  = document.getElementById('flights-panel');
+    const GMAP_EL = document.getElementById('gmap-nav');
+    const GMAP_INNER = document.getElementById('gmap-inner');
+    const MAPLIBRE_EL = document.getElementById('map');
     if (!FAB || !PANEL || !CONTENT) return;
 
-    const NAV_ZOOM=16, NAV_PITCH=60;
-    const DRIVE_KMH=50;        // fallback ETA speed when Directions is unavailable
-    const REFETCH_M=75;        // re-fetch the route after the user moves this far
-    const TURN_ADVANCE_M=30;   // pop to the next turn within this distance of its maneuver
-    const STALE_MS=20000;      // no GPS for this long → "Location paused"
+    // ---- Google Maps dark theme (matches LoveFlix design system) ----
+    const GMAP_DARK_STYLE = [
+      { featureType: 'all', elementType: 'geometry', stylers: [{ color: '#141414' }] },
+      { featureType: 'all', elementType: 'labels.text.stroke', stylers: [{ color: '#141414' }] },
+      { featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
+      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0a0a0a' }] },
+      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+      { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2a2a2a' }] },
+      { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+      { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#141414' }] },
+      { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#0f1a0f' }] },
+      { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#141414' }] },
+      { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+      { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] }
+    ];
 
-    // ---- geo + format helpers ----
-    function hav(aLat,aLng,bLat,bLng){ // metres
+    // ---- helpers ----
+    function hav(aLat,aLng,bLat,bLng){
       const R=6371000, rad=Math.PI/180, dLat=(bLat-aLat)*rad, dLng=(bLng-aLng)*rad;
       const a=Math.sin(dLat/2)**2+Math.cos(aLat*rad)*Math.cos(bLat*rad)*Math.sin(dLng/2)**2;
       return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
     }
-    function bearing(a,b){ // {lat,lng}
+    function bearing(a,b){
       const rad=Math.PI/180;
       const y=Math.sin((b.lng-a.lng)*rad)*Math.cos(b.lat*rad);
       const x=Math.cos(a.lat*rad)*Math.sin(b.lat*rad)-Math.sin(a.lat*rad)*Math.cos(b.lat*rad)*Math.cos((b.lng-a.lng)*rad);
@@ -1914,7 +1803,7 @@
     function fmtETA(sec){ const m=Math.round(sec/60); if(m<1) return '<1 min'; if(m<60) return `${m} min`; const h=Math.floor(m/60),r=m%60; return r?`${h}h ${r}m`:`${h}h`; }
     function arrowFor(man){ man=(man||'').toLowerCase(); if(man.indexOf('left')>=0) return '←'; if(man.indexOf('right')>=0) return '→'; if(man.indexOf('uturn')>=0) return '⤺'; return '↑'; }
 
-    // ---- toast (non-blocking) ----
+    // ---- toast ----
     let toastTimer=null;
     function toast(msg){
       const t=document.getElementById('dir-toast'); if(!t) return;
@@ -1922,7 +1811,7 @@
       clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), 2600);
     }
 
-    // ---- coordinate resolution: live → Supabase last-known ----
+    // ---- coordinate resolution ----
     async function refreshSupabaseCoords(){ try{ await fetchAndUpdateLocations(); }catch(_){} }
     async function resolvePartnerCoords(){
       if (HER._real) return {lat:HER.lat,lng:HER.lng};
@@ -1946,66 +1835,118 @@
       return HIM._real ? {lat:HIM.lat,lng:HIM.lng} : null;
     }
 
-    // ---- map layer helpers (directions-* namespace, guarded) ----
-    function delLayer(id){ if(map.getLayer(id)) map.removeLayer(id); }
-    function delSource(id){ if(map.getSource(id)) map.removeSource(id); }
-    function lineFeature(coords){ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}}; }
-    const DASH=[[0,4,3],[0.5,4,2.5],[1,4,2],[1.5,4,1.5],[2,4,1],[2.5,4,0.5],[3,4,0],[3,0.5,3.5],[3,1,3],[3,1.5,2.5],[3,2,2],[3,2.5,1.5],[3,3,1],[3,3.5,0.5]];
-    let dashRaf=null;
-    function startDash(id){
-      stopDash(); let last=0, step=0;
-      (function frame(ts){
-        if(!map.getLayer(id)){ dashRaf=null; return; }
-        if(ts-last>90){ step=(step+1)%DASH.length; map.setPaintProperty(id,'line-dasharray',DASH[step]); last=ts; }
-        dashRaf=requestAnimationFrame(frame);
-      })(0);
-    }
-    function stopDash(){ if(dashRaf){ cancelAnimationFrame(dashRaf); dashRaf=null; } }
-    function drawRoute(coords){
-      const id='directions-drive-out', src=id+'-src';
-      if(map.getSource(src)){ map.getSource(src).setData(lineFeature(coords)); }
-      else {
-        map.addSource(src,{type:'geojson',data:lineFeature(coords)});
-        map.addLayer({id,type:'line',source:src,layout:{'line-join':'round','line-cap':'round'},
-          paint:{'line-color':'#e50914','line-width':5,'line-opacity':0.95}});
-      }
-      startDash(id);
-    }
-    function clearMapLayers(){
-      stopDash();
-      delLayer('directions-drive-out'); delSource('directions-drive-out-src');
-    }
-
-    // ---- route fetch (Worker proxy → straight-line fallback) ----
-    function straightLine(from,to){
-      const N=24, pts=[];
-      for(let i=0;i<=N;i++){ const t=i/N; pts.push([from.lng+(to.lng-from.lng)*t, from.lat+(to.lat-from.lat)*t]); }
-      return pts;
-    }
-    async function getRoute(from,to){
-      try{
-        const r=await LoveFlix.api(`/api/directions?origin=${from.lat},${from.lng}&dest=${to.lat},${to.lng}&mode=driving`);
-        if(r && r.ok && Array.isArray(r.coords) && r.coords.length>1){
-          return {coords:r.coords, steps:Array.isArray(r.steps)?r.steps:[], distance_m:r.distance_m, duration_s:r.duration_s, real:true};
-        }
-      }catch(_){}
-      const m=hav(from.lat,from.lng,to.lat,to.lng);
-      return {coords:straightLine(from,to), steps:[], distance_m:m, duration_s:(m/1000/DRIVE_KMH)*3600, real:false};
-    }
-
-    // ---- directions panel ----
+    // ---- panel helpers ----
     function openPanel(){ PANEL.classList.add('open'); }
     function closePanel(){ PANEL.classList.remove('open'); }
     function setContent(html){ CONTENT.innerHTML=html; const c=CONTENT.querySelector('[data-cancel]'); if(c) c.addEventListener('click', cancelNav); }
 
-    // ====================== FEATURE 1: APPLE-MAPS NAVIGATION ======================
-    const nav={active:false, watchId:null, steps:[], stepIdx:0, dest:null,
-               lastFetchOrigin:null, lastPos:null, real:true, speed:14,
-               remaining_m:0, eta_s:0, nextTurnDist:0, paused:false, fetching:false, staleTimer:null};
+    // ---- Google Maps instance management ----
+    let gMap = null;
+    let gDirectionsService = null;
+    let gDirectionsRenderer = null;
+    let gWatchId = null;
+    let gUserMarker = null;
+    let gDestMarker = null;
+
+    function destroyGoogleMaps() {
+      if (gWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(gWatchId);
+        gWatchId = null;
+      }
+      if (gDirectionsRenderer) {
+        gDirectionsRenderer.setMap(null);
+        gDirectionsRenderer = null;
+      }
+      if (gUserMarker) { gUserMarker.setMap(null); gUserMarker = null; }
+      if (gDestMarker) { gDestMarker.setMap(null); gDestMarker = null; }
+      if (gMap) {
+        // Clear all listeners
+        google.maps.event.clearInstanceListeners(gMap);
+        gMap = null;
+      }
+      // Clear the inner div so next init is clean
+      if (GMAP_INNER) GMAP_INNER.innerHTML = '';
+    }
+
+    async function initGoogleMap(origin, dest) {
+      // Wait for Google Maps API to be ready
+      if (!window.googleMapsReady) {
+        try { await window._googleMapsReadyPromise; } catch(_) {
+          toast('Navigation service unavailable'); return null;
+        }
+      }
+      if (!window.google || !window.google.maps) {
+        toast('Navigation service unavailable'); return null;
+      }
+
+      const mapOptions = {
+        center: { lat: origin.lat, lng: origin.lng },
+        zoom: 16,
+        tilt: 60,
+        heading: bearing(origin, dest),
+        mapTypeId: 'roadmap',
+        styles: GMAP_DARK_STYLE,
+        disableDefaultUI: true,
+        zoomControl: false,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        gestureHandling: 'greedy',
+        backgroundColor: '#0a0a0a'
+      };
+
+      gMap = new google.maps.Map(GMAP_INNER, mapOptions);
+      gDirectionsService = new google.maps.DirectionsService();
+      gDirectionsRenderer = new google.maps.DirectionsRenderer({
+        map: gMap,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#e50914',
+          strokeWeight: 5,
+          strokeOpacity: 0.95
+        }
+      });
+
+      // Custom markers in LoveFlix style
+      gUserMarker = new google.maps.Marker({
+        position: { lat: origin.lat, lng: origin.lng },
+        map: gMap,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#3a7bff',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2
+        },
+        zIndex: 100
+      });
+
+      gDestMarker = new google.maps.Marker({
+        position: { lat: dest.lat, lng: dest.lng },
+        map: gMap,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#e50914',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2
+        },
+        zIndex: 99
+      });
+
+      return gMap;
+    }
+
+    // ---- navigation state ----
+    const nav={active:false, dest:null, steps:[], stepIdx:0,
+               lastPos:null, remaining_m:0, eta_s:0, nextTurnDist:0,
+               paused:false, staleTimer:null, watchId:null};
 
     function navInstruction(){
       const s=nav.steps[nav.stepIdx];
-      if(s) return {arrow:arrowFor(s.maneuver), text:s.instruction||'Continue', dist: nav.nextTurnDist? fmtShort(nav.nextTurnDist) : (s.distance_text||'')};
+      if(s) return {arrow:arrowFor(s.maneuver), text:s.instructions||'Continue', dist: nav.nextTurnDist? fmtShort(nav.nextTurnDist) : ''};
       return {arrow:'↑', text:`Head toward ${HER.name}`, dist:''};
     }
     function renderNavPanel(){
@@ -2033,92 +1974,178 @@
     function recomputeProgress(userPos){
       while(nav.stepIdx < nav.steps.length){
         const s=nav.steps[nav.stepIdx];
-        if(s && s.end && hav(userPos.lat,userPos.lng,s.end.lat,s.end.lng) < TURN_ADVANCE_M){ nav.stepIdx++; }
+        if(s && s.end_location && hav(userPos.lat,userPos.lng,s.end_location.lat(),s.end_location.lng()) < 30){ nav.stepIdx++; }
         else break;
       }
       if(nav.steps.length && nav.stepIdx < nav.steps.length){
         const cur=nav.steps[nav.stepIdx];
-        nav.nextTurnDist = cur && cur.end ? hav(userPos.lat,userPos.lng,cur.end.lat,cur.end.lng) : 0;
+        nav.nextTurnDist = cur && cur.end_location ? hav(userPos.lat,userPos.lng,cur.end_location.lat(),cur.end_location.lng()) : 0;
         let rem=nav.nextTurnDist;
-        for(let i=nav.stepIdx+1;i<nav.steps.length;i++) rem += nav.steps[i].distance_m||0;
+        for(let i=nav.stepIdx+1;i<nav.steps.length;i++) {
+          const step = nav.steps[i];
+          if (step && step.distance && step.distance.value) rem += step.distance.value;
+        }
         nav.remaining_m=rem;
       } else {
         nav.nextTurnDist=0;
         nav.remaining_m = nav.dest ? hav(userPos.lat,userPos.lng,nav.dest.lat,nav.dest.lng) : 0;
       }
-      nav.eta_s = nav.remaining_m / Math.max(3, nav.speed); // metres ÷ (m/s)
-    }
-
-    async function fetchAndRenderRoute(origin){
-      if(nav.fetching) return; nav.fetching=true;
-      const route=await getRoute(origin, nav.dest);
-      nav.fetching=false;
-      if(!nav.active) return;
-      drawRoute(route.coords);
-      nav.steps=route.steps; nav.stepIdx=0; nav.real=route.real;
-      nav.remaining_m=route.distance_m; nav.eta_s=route.duration_s; nav.nextTurnDist=0;
-      nav.speed = route.duration_s>0 ? (route.distance_m/route.duration_s) : 14;
-      nav.lastFetchOrigin=origin;
-      if(!route.real) toast('Using estimated route');
-      renderNavPanel();
+      nav.eta_s = nav.remaining_m / Math.max(3, 14);
     }
 
     function markFresh(){
       nav.paused=false;
       clearTimeout(nav.staleTimer);
-      nav.staleTimer=setTimeout(()=>{ if(nav.active){ nav.paused=true; renderNavPanel(); } }, STALE_MS);
+      nav.staleTimer=setTimeout(()=>{ if(nav.active){ nav.paused=true; renderNavPanel(); } }, 20000);
     }
 
     function navUpdate(pos){
-      if(!nav.active) return;
+      if(!nav.active || !gMap) return;
       const userPos={lat:pos.coords.latitude, lng:pos.coords.longitude};
       markFresh();
+
+      // Update user marker
+      if (gUserMarker) gUserMarker.setPosition({ lat: userPos.lat, lng: userPos.lng });
+
+      // Camera: follow user with heading
       let hdg = (pos.coords.heading!=null && isFinite(pos.coords.heading)) ? pos.coords.heading : null;
       if(hdg==null && nav.lastPos && hav(nav.lastPos.lat,nav.lastPos.lng,userPos.lat,userPos.lng)>5) hdg=bearing(nav.lastPos,userPos);
       if(hdg==null) hdg=bearing(userPos, nav.dest);
-      map.easeTo({center:[userPos.lng,userPos.lat], bearing:hdg, pitch:NAV_PITCH, zoom:NAV_ZOOM, duration:1000, essential:true});
-      // Track the partner if they move during navigation (HER stays fresh via the 10s poll).
-      if(HER._real && hav(nav.dest.lat,nav.dest.lng,HER.lat,HER.lng) > REFETCH_M){
-        nav.dest={lat:HER.lat,lng:HER.lng}; nav.lastFetchOrigin=null;
+
+      gMap.moveCamera({
+        center: { lat: userPos.lat, lng: userPos.lng },
+        heading: hdg,
+        tilt: 60,
+        zoom: 17
+      });
+
+      // Track partner movement
+      if(HER._real && nav.dest && hav(nav.dest.lat,nav.dest.lng,HER.lat,HER.lng) > 75){
+        nav.dest={lat:HER.lat,lng:HER.lng};
+        if (gDestMarker) gDestMarker.setPosition({ lat: HER.lat, lng: HER.lng });
       }
+
       recomputeProgress(userPos);
       renderNavPanel();
-      if(!nav.lastFetchOrigin || hav(userPos.lat,userPos.lng,nav.lastFetchOrigin.lat,nav.lastFetchOrigin.lng) > REFETCH_M){
-        fetchAndRenderRoute(userPos);
-      }
       nav.lastPos=userPos;
     }
+
     function navError(){ if(nav.active){ nav.paused=true; renderNavPanel(); } }
 
     async function startNav(){
-      clearMapLayers(); if(FPANEL) FPANEL.classList.remove('open');
+      if (FPANEL) FPANEL.classList.remove('open');
       openPanel();
       setContent(`<div class="dir-label">Directions to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Locating…</div>`);
+
       const dest=await resolvePartnerCoords();
       if(!dest){ toast('Partner location unavailable'); closePanel(); return; }
       const origin=await resolveUserCoords();
       if(!origin){ toast('Your location unavailable'); closePanel(); return; }
-      nav.active=true; nav.dest=dest; nav.lastPos=origin; nav.stepIdx=0; nav.paused=false; nav.lastFetchOrigin=null;
-      try{ map.setProjection({type:'mercator'}); }catch(_){}
-      map.flyTo({center:[origin.lng,origin.lat], zoom:NAV_ZOOM, pitch:NAV_PITCH, bearing:bearing(origin,dest), duration:1500, essential:true});
-      await fetchAndRenderRoute(origin);
-      markFresh();
+
+      nav.active=true; nav.dest=dest; nav.lastPos=origin; nav.stepIdx=0; nav.paused=false;
+
+      // Cinematic transition: fade MapLibre out, fade Google Maps in
+      MAPLIBRE_EL.classList.add('hidden');
+      GMAP_EL.classList.add('active');
+
+      // Initialize Google Maps
+      const gm = await initGoogleMap(origin, dest);
+      if (!gm) {
+        nav.active=false;
+        MAPLIBRE_EL.classList.remove('hidden');
+        GMAP_EL.classList.remove('active');
+        closePanel();
+        return;
+      }
+
+      // Request directions from Google
+      const request = {
+        origin: { lat: origin.lat, lng: origin.lng },
+        destination: { lat: dest.lat, lng: dest.lng },
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
+        provideRouteAlternatives: false
+      };
+
+      gDirectionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result.routes[0]) {
+          gDirectionsRenderer.setDirections(result);
+          const route = result.routes[0];
+          const leg = route.legs[0];
+          nav.steps = leg.steps;
+          nav.remaining_m = leg.distance.value;
+          nav.eta_s = leg.duration.value;
+          nav.nextTurnDist = 0;
+          recomputeProgress(origin);
+          renderNavPanel();
+          markFresh();
+        } else {
+          // Fallback: straight line
+          const straightPath = [
+            { lat: origin.lat, lng: origin.lng },
+            { lat: dest.lat, lng: dest.lng }
+          ];
+          gDirectionsRenderer.setDirections({
+            routes: [{
+              legs: [{
+                steps: [],
+                distance: { value: hav(origin.lat, origin.lng, dest.lat, dest.lng), text: '' },
+                duration: { value: 0, text: '' }
+              }],
+              overview_polyline: { points: '' }
+            }]
+          });
+          // Draw straight line manually
+          const straightLine = new google.maps.Polyline({
+            path: straightPath,
+            geodesic: true,
+            strokeColor: '#e50914',
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+            map: gMap
+          });
+          nav.steps = [];
+          nav.remaining_m = hav(origin.lat, origin.lng, dest.lat, dest.lng);
+          nav.eta_s = 0;
+          toast('Using estimated route');
+          renderNavPanel();
+          markFresh();
+        }
+      });
+
+      // Start GPS tracking
       if(navigator.geolocation){
-        nav.watchId=navigator.geolocation.watchPosition(navUpdate, navError, {enableHighAccuracy:true, maximumAge:5000, timeout:15000});
+        nav.watchId = navigator.geolocation.watchPosition(navUpdate, navError, {
+          enableHighAccuracy: true, maximumAge: 5000, timeout: 15000
+        });
       }
     }
+
     function cancelNav(){
       nav.active=false;
-      if(nav.watchId!=null && navigator.geolocation){ navigator.geolocation.clearWatch(nav.watchId); nav.watchId=null; }
+      if(nav.watchId!==null && navigator.geolocation){
+        navigator.geolocation.clearWatch(nav.watchId);
+        nav.watchId=null;
+      }
       clearTimeout(nav.staleTimer);
-      clearMapLayers();
+
+      // Cinematic transition: fade Google Maps out, fade MapLibre back in
+      GMAP_EL.classList.remove('active');
+      MAPLIBRE_EL.classList.remove('hidden');
+
+      // Destroy Google Maps instance completely
+      setTimeout(() => {
+        destroyGoogleMaps();
+      }, 600); // Wait for fade-out transition
+
       closePanel();
-      try{ map.setProjection({type:'globe'}); }catch(_){}
-      try{ map.setPitch(0); map.setBearing(0); }catch(_){}
-      try{ fitBoth(); }catch(_){}
+
+      // Restore MapLibre to globe view
+      try { map.setProjection({type:'globe'}); } catch(_){}
+      try { fitBoth(); } catch(_){}
     }
 
-    // ====================== FEATURE 2: FLIGHTS (independent) ======================
+    // ====================== FLIGHTS (independent) ======================
     async function geocodeCity(lat,lng){
       try{
         const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`, {headers:{'Accept-Language':'en'}});
@@ -2157,6 +2184,142 @@
     if(CANCEL) CANCEL.addEventListener('click', cancelNav);
     if(FFAB) FFAB.addEventListener('click', startFlights);
     if(FPANEL){ const fc=FPANEL.querySelector('.flights-close'); if(fc) fc.addEventListener('click', ()=>FPANEL.classList.remove('open')); }
+  })();
+
+  // ---------- DRAWER TABS ----------
+  document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.drawer-body .tab-pane').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const pane = document.querySelector(`.drawer-body [data-pane="${t.dataset.tab}"]`);
+      if (pane) pane.classList.add('active');
+    });
+  });
+
+  // ---------- JOURNEY ROW CLICKS ----------
+  document.querySelectorAll('.journey-row').forEach(r => {
+    r.addEventListener('click', () => {
+      const [lng, lat, z] = r.dataset.fly.split(',').map(Number);
+      map.flyTo({ center:[lng, lat], zoom: z, duration: 1800 });
+    });
+  });
+
+  // ---------- CALL BUTTON ----------
+  function initCallButton() {
+    function startCall() {
+      if (typeof LoveFlix === 'undefined' || !LoveFlix.Call) {
+        console.error('[LoveConnect] LoveFlix.Call module not loaded');
+        alert('Call service is loading. Please try again.');
+        return;
+      }
+      LoveFlix.Call.start(HER.name, COUPLE_ID, MY_USER, HIM.name, HIM.initial, true);
+    }
+    const callBtn = document.getElementById('callBtn');
+    if (callBtn) callBtn.addEventListener('click', startCall);
+    const mCallBtn = document.getElementById('mCallBtn');
+    if (mCallBtn) mCallBtn.addEventListener('click', startCall);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCallButton);
+  } else {
+    setTimeout(initCallButton, 0);
+  }
+
+  // ---------- SYNC TICKER ----------
+  let syncSec = 0;
+  const syncedAgoEl = document.getElementById('syncedAgo');
+  setInterval(() => {
+    syncSec++;
+    syncedAgoEl.textContent = syncSec < 60
+      ? `Synced ${syncSec}s ago`
+      : `Synced ${Math.round(syncSec / 60)}m ago`;
+  }, 1000);
+
+  // ---------- HISTOGRAM ----------
+  renderHistogram([]);
+
+  // ---------- MOBILE WIRING ----------
+  (function(){
+    const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
+
+    if (isMobile()) {
+      const sheetBody = document.getElementById('mSheetBody');
+      if (sheetBody) {
+        document.querySelectorAll('.drawer-body .tab-pane').forEach(p => sheetBody.appendChild(p));
+      }
+    }
+
+    const mSheet     = document.getElementById('mSheet');
+    const mSheetScrim = document.getElementById('mSheetScrim');
+    const mNowbar    = document.getElementById('mNowbar');
+    if (!mSheet) return;
+
+    function openSheet() {
+      mSheet.classList.add('open');
+      mSheetScrim.classList.add('open');
+      mNowbar.classList.add('hidden');
+    }
+    function closeSheet() {
+      mSheet.classList.remove('open');
+      mSheetScrim.classList.remove('open');
+      mNowbar.classList.remove('hidden');
+    }
+    document.getElementById('mExpandSheet').addEventListener('click', openSheet);
+    document.getElementById('mExpandSheet2').addEventListener('click', openSheet);
+    mSheetScrim.addEventListener('click', closeSheet);
+
+    let dragStartY = null;
+    const handleArea = mSheet.querySelector('.m-sheet-handle');
+    handleArea.addEventListener('touchstart', e => {
+      dragStartY = e.touches[0].clientY;
+      window.addEventListener('touchmove', onDragMove, { passive:true });
+      window.addEventListener('touchend', onDragEnd);
+    });
+    function onDragMove(e) {
+      if (dragStartY === null) return;
+      const dy = e.touches[0].clientY - dragStartY;
+      if (dy > 0) mSheet.style.transform = `translateY(${dy}px)`;
+    }
+    function onDragEnd(e) {
+      if (dragStartY === null) return;
+      const dy = e.changedTouches[0].clientY - dragStartY;
+      mSheet.style.transform = '';
+      if (dy > 80) closeSheet();
+      dragStartY = null;
+      window.removeEventListener('touchmove', onDragMove);
+      window.removeEventListener('touchend', onDragEnd);
+    }
+
+    document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('#mSheetBody .tab-pane').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        const target = document.querySelector(`#mSheetBody [data-pane="${t.dataset.mtab}"]`);
+        if (target) target.classList.add('active');
+      });
+    });
+
+    const mRecenterBtn = document.getElementById('mRecenterBtn');
+    if (mRecenterBtn) mRecenterBtn.addEventListener('click', fitBoth);
+
+    const mMenu      = document.getElementById('mMenu');
+    const mMenuScrim = document.getElementById('mMenuScrim');
+    function openMenu()  { mMenu.classList.add('open');    mMenuScrim.classList.add('open'); }
+    function closeMenu() { mMenu.classList.remove('open'); mMenuScrim.classList.remove('open'); }
+    document.getElementById('mMenuBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      mMenu.classList.contains('open') ? closeMenu() : openMenu();
+    });
+    mMenuScrim.addEventListener('click', closeMenu);
+    document.getElementById('mMenuRecenter').addEventListener('click', () => { closeMenu(); fitBoth(); });
+    document.getElementById('mMenuGlobe').addEventListener('click', () => {
+      closeMenu();
+      map.flyTo({ center:[(HER.lng+HIM.lng)/2,(HER.lat+HIM.lat)/2], zoom:1.6, duration:1500 });
+    });
+    document.getElementById('mMenuDetails').addEventListener('click', () => { closeMenu(); openSheet(); });
   })();
 
 })();
