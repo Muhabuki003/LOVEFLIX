@@ -1,1193 +1,2336 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>LoveFlix — Music</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <script src="/assets/loveflix.js"></script>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>LoveFlix — Music</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --crimson: #e50914;
-      --void: #141414;
-      --void-light: #1a1a1a;
-      --gold: #c9a96e;
-      --gold-dim: rgba(201, 169, 110, 0.3);
-      --text: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.6);
-      --text-dim: rgba(255, 255, 255, 0.4);
-      --surface: rgba(255, 255, 255, 0.05);
-      --surface-hover: rgba(255, 255, 255, 0.08);
-      --border: rgba(255, 255, 255, 0.1);
-      --radius: 12px;
-      --radius-sm: 8px;
+
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0b0b0b;
+    --bg-2:#141414;
+    --panel:#1a1a1a;
+    --panel-2:#202020;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --red:#e50914;
+    --red-soft:rgba(229,9,20,0.18);
+    --gold:#c9a96e;
+    --gold-soft:rgba(201,169,110,0.16);
+    --text:#fafafa;
+    --text-dim:#8a8a8a;
+    --text-light:#cfcfcf;
+    --green:#10b981;
+    --serif:'DM Serif Display', Georgia, serif;
+    --sans:'DM Sans', 'Inter', system-ui, sans-serif;
+    --display:'Bebas Neue', Impact, sans-serif;
+  }
+  html,body{height:100%}
+  body{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
+  ::selection{background:var(--red);color:#fff}
+
+  /* ===========================
+     LAYOUT
+     =========================== */
+  .app{
+    display:grid;
+    grid-template-columns:240px 1fr 340px;
+    grid-template-rows:64px 1fr 96px;
+    grid-template-areas:
+      "nav nav nav"
+      "sidebar main queue"
+      "player player player";
+    height:100vh;
+    width:100vw;
+  }
+
+  /* ===========================
+     TOP NAV
+     =========================== */
+  nav.topnav{
+    grid-area:nav;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;
+    background:rgba(10,10,10,0.85);
+    backdrop-filter:blur(20px) saturate(160%);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);
+    border-bottom:1px solid var(--border);
+    z-index:30;
+  }
+  .nav-left{display:flex;align-items:center;gap:32px}
+  .nf-logo{font-family:var(--display);font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:24px}
+  .nav-links a{font-size:13px;color:var(--text-light);transition:color .15s;letter-spacing:.2px}
+  .nav-links a:hover{color:#fff}
+  .nav-links a.active{color:#fff;font-weight:600;position:relative}
+  .nav-links a.active::after{
+    content:'';position:absolute;bottom:-22px;left:0;right:0;height:2px;background:var(--red);
+  }
+
+  .nav-right{display:flex;align-items:center;gap:14px}
+  .sync-pill{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--gold-soft);
+    border:1px solid rgba(201,169,110,0.32);
+    border-radius:999px;
+    padding:6px 12px 6px 10px;
+    font-size:12px;color:var(--gold);
+    font-weight:500;letter-spacing:.2px;
+  }
+  .sync-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 0 rgba(201,169,110,0.6);
+    animation:pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(201,169,110,0.55)}
+    70%{box-shadow:0 0 0 10px rgba(201,169,110,0)}
+    100%{box-shadow:0 0 0 0 rgba(201,169,110,0)}
+  }
+  .nav-avatar{
+    width:32px;height:32px;border-radius:4px;
+    background:radial-gradient(circle at 30% 25%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,#ff5f8f 0%,#d6336c 55%,#8f1d4a 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-size:18px;letter-spacing:1px;
+  }
+
+  /* ===========================
+     LEFT SIDEBAR
+     =========================== */
+  aside.sidebar{
+    grid-area:sidebar;
+    background:#0a0a0a;
+    border-right:1px solid var(--border);
+    overflow-y:auto;
+    padding:24px 0 20px;
+  }
+  .side-section{padding:0 12px 24px}
+  .side-label{
+    font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+    color:var(--text-dim);padding:0 12px 10px;
+  }
+  .side-item{
+    display:flex;align-items:center;gap:12px;
+    padding:9px 12px;border-radius:6px;
+    font-size:13.5px;color:var(--text-light);
+    cursor:pointer;transition:background .12s, color .12s;
+    position:relative;
+  }
+  .side-item:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .side-item.active{background:rgba(229,9,20,0.12);color:#fff}
+  .side-item.active::before{
+    content:'';position:absolute;left:-12px;top:8px;bottom:8px;width:3px;background:var(--red);border-radius:0 2px 2px 0;
+  }
+  .side-item svg{width:16px;height:16px;fill:currentColor;flex-shrink:0;opacity:.85}
+  .side-item.active svg{opacity:1}
+
+  .playlist-row{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 12px;border-radius:6px;
+    font-size:13px;color:var(--text-light);
+    cursor:pointer;transition:background .12s;
+  }
+  .playlist-row:hover{background:rgba(255,255,255,0.04);color:#fff}
+  .playlist-art{
+    width:28px;height:28px;border-radius:3px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:13px;color:rgba(255,255,255,0.9);
+    overflow:hidden;
+  }
+  .playlist-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .couple-tag{
+    margin:8px 12px 0;
+    padding:12px;border-radius:8px;
+    background:linear-gradient(135deg, rgba(229,9,20,0.12), rgba(201,169,110,0.08));
+    border:1px solid rgba(201,169,110,0.2);
+  }
+  .couple-tag-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px;font-weight:600}
+  .couple-tag-name{font-family:var(--serif);font-size:18px;color:#fff;line-height:1.1}
+  .couple-tag-name em{font-style:italic;color:var(--gold);font-size:14px;margin:0 4px}
+
+  /* ===========================
+     MAIN
+     =========================== */
+  main.content{
+    grid-area:main;
+    overflow-y:auto;
+    padding:0;
+    background:linear-gradient(180deg, #131313 0%, #0b0b0b 600px);
+    scroll-behavior:smooth;
+  }
+  .content-inner{padding:24px 32px 40px;max-width:1200px}
+
+  /* search */
+  .search-wrap{
+    position:sticky;top:0;
+    padding:8px 32px 16px;
+    background:linear-gradient(180deg, rgba(19,19,19,0.96) 0%, rgba(19,19,19,0.88) 80%, rgba(19,19,19,0) 100%);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    z-index:10;margin:0 -32px 0;
+  }
+  .search-bar{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:11px 14px;
+    transition:border-color .15s, background .15s;
+    max-width:520px;
+  }
+  .search-bar:focus-within{border-color:var(--border-strong);background:rgba(255,255,255,0.08)}
+  .search-bar svg{width:16px;height:16px;fill:var(--text-dim);flex-shrink:0}
+  .search-bar input{
+    background:none;border:none;outline:none;color:#fff;
+    font:inherit;font-size:14px;flex:1;letter-spacing:.2px;
+  }
+  .search-bar input::placeholder{color:var(--text-dim)}
+  .search-bar kbd{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:10px;color:var(--text-dim);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--border);
+    padding:2px 6px;border-radius:3px;
+  }
+
+  /* section heads */
+  .section{margin-top:8px}
+  .section + .section{margin-top:36px}
+  .sec-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:18px;gap:16px;
+  }
+  .sec-title{
+    font-family:var(--serif);
+    font-size:28px;letter-spacing:-0.2px;line-height:1.1;
+    color:#fff;
+  }
+  .sec-title em{font-style:italic;color:var(--gold)}
+  .sec-sub{font-size:12px;color:var(--text-dim);margin-top:4px;letter-spacing:.3px}
+  .sec-more{font-size:12px;color:var(--text-dim);transition:color .12s;cursor:pointer}
+  .sec-more:hover{color:#fff}
+
+  /* featured rail (Listen Now style) */
+  .feature-rail{
+    display:grid;grid-template-columns:repeat(2, 1fr);gap:18px;
+  }
+  .feature-card{
+    position:relative;overflow:hidden;border-radius:10px;
+    aspect-ratio:16/10;cursor:pointer;
+    transition:transform .25s ease, box-shadow .25s ease;
+    border:1px solid var(--border);
+  }
+  .feature-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(0,0,0,0.5)}
+  .feature-card .fc-bg{position:absolute;inset:0}
+  .feature-card .fc-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 0%, transparent 30%, rgba(0,0,0,0.85) 100%);
+  }
+  .feature-card .fc-content{
+    position:absolute;left:22px;right:22px;bottom:20px;z-index:2;
+  }
+  .fc-label{
+    font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:8px;
+  }
+  .fc-title{
+    font-family:var(--serif);font-size:26px;line-height:1.05;
+    color:#fff;margin-bottom:4px;text-wrap:balance;
+  }
+  .fc-desc{font-size:12.5px;color:var(--text-light);line-height:1.4;opacity:.9}
+
+  /* horizontal rail (album row) */
+  .rail{
+    display:flex;gap:18px;
+    overflow-x:auto;scrollbar-width:none;
+    margin:0 -32px;padding:4px 32px 8px;
+  }
+  .rail::-webkit-scrollbar{display:none}
+  .album-card{
+    flex:0 0 168px;cursor:pointer;
+    transition:transform .18s ease;
+  }
+  .album-card:hover{transform:translateY(-2px)}
+  .album-art{
+    width:168px;height:168px;border-radius:6px;overflow:hidden;
+    position:relative;
+    box-shadow:0 6px 18px rgba(0,0,0,0.45);
+    margin-bottom:10px;
+  }
+  .album-art .play-hover{
+    position:absolute;right:8px;bottom:8px;
+    width:36px;height:36px;border-radius:50%;
+    background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translateY(6px);
+    transition:opacity .15s, transform .15s;
+    box-shadow:0 6px 14px rgba(229,9,20,0.45);
+  }
+  .album-art .play-hover svg{width:14px;height:14px;fill:#fff;margin-left:1px}
+  .album-card:hover .play-hover{opacity:1;transform:translateY(0)}
+  .album-title{font-size:13.5px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .album-artist{font-size:12px;color:var(--text-dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* art gradients */
+  .art-1{background:linear-gradient(135deg,#7a1632 0%,#240611 100%)}
+  .art-2{background:linear-gradient(135deg,#1e3a8a 0%,#0a1029 100%)}
+  .art-3{background:linear-gradient(135deg,#3a1078 0%,#1a0930 100%)}
+  .art-4{background:linear-gradient(135deg,#c9a96e 0%,#3d2f12 100%)}
+  .art-5{background:linear-gradient(135deg,#e50914 0%,#5a0410 100%)}
+  .art-6{background:linear-gradient(135deg,#0f766e 0%,#042f2e 100%)}
+  .art-7{background:linear-gradient(135deg,#ea580c 0%,#451a03 100%)}
+  .art-8{background:linear-gradient(135deg,#6b21a8 0%,#1f0a2e 100%)}
+  .art-9{background:linear-gradient(135deg,#475569 0%,#0f172a 100%)}
+  .art-10{background:linear-gradient(135deg,#be185d 0%,#3d0a25 100%)}
+  .art-11{background:linear-gradient(135deg,#0891b2 0%,#0c2d3a 100%)}
+  .art-12{background:linear-gradient(135deg,#a16207 0%,#3d1f02 100%)}
+
+  .art-mono{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:54px;color:rgba(255,255,255,0.85);
+    text-shadow:0 4px 14px rgba(0,0,0,0.4);
+    font-style:italic;
+  }
+  .art-mono.small{font-size:18px}
+
+  /* TRACK LIST (search results / top songs) */
+  .track-list{
+    display:flex;flex-direction:column;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .track-row{
+    display:grid;
+    grid-template-columns:32px 48px 1fr 1fr 60px 36px;
+    align-items:center;gap:14px;
+    padding:10px 16px;cursor:pointer;
+    transition:background .12s;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .track-row:last-child{border-bottom:none}
+  .track-row:hover{background:rgba(255,255,255,0.04)}
+  .track-row.playing{background:rgba(229,9,20,0.08)}
+  .track-row.playing .track-title{color:var(--red)}
+  .track-num{
+    font-size:13px;color:var(--text-dim);text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .track-row:hover .track-num{display:none}
+  .track-row:hover .track-num + .num-hover{display:flex}
+  .num-hover{display:none;align-items:center;justify-content:center}
+  .num-hover svg{width:14px;height:14px;fill:#fff}
+  .track-art{
+    width:40px;height:40px;border-radius:4px;overflow:hidden;position:relative;
+  }
+  .track-title{font-size:13.5px;font-weight:500;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track-artist{font-size:12.5px;color:var(--text-dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track-dur{font-size:12.5px;color:var(--text-dim);text-align:right;font-variant-numeric:tabular-nums}
+  .track-add{
+    width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .12s, background .12s;
+  }
+  .track-row:hover .track-add{opacity:1}
+  .track-add:hover{background:rgba(255,255,255,0.08)}
+  .track-add svg{width:14px;height:14px;fill:var(--text-light)}
+
+  /* badge for search results */
+  .results-count{
+    font-size:12px;color:var(--text-dim);margin-bottom:14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .results-count strong{color:#fff;font-weight:600}
+
+  /* hero feature - top playlist of the day */
+  .listen-hero{
+    position:relative;overflow:hidden;border-radius:12px;
+    border:1px solid var(--border);
+    background:linear-gradient(135deg, #2b0710 0%, #0a0a0a 60%);
+    padding:32px;
+    display:grid;grid-template-columns:200px 1fr auto;gap:28px;align-items:center;
+    margin-bottom:36px;
+  }
+  .listen-hero::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 85% 30%, rgba(229,9,20,0.22), transparent 50%),
+               radial-gradient(circle at 15% 70%, rgba(201,169,110,0.16), transparent 50%);
+    pointer-events:none;
+  }
+  .listen-hero > *{position:relative}
+  .hero-art{
+    width:200px;height:200px;border-radius:8px;overflow:hidden;position:relative;
+    box-shadow:0 14px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .hero-art-mono{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:64px;color:rgba(255,255,255,0.9);font-style:italic;
+  }
+  .hero-info .label{
+    font-size:10px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:10px;
+  }
+  .hero-info .title{
+    font-family:var(--serif);font-size:42px;line-height:1.05;color:#fff;
+    margin-bottom:8px;letter-spacing:-0.4px;
+  }
+  .hero-info .title em{font-style:italic;color:var(--gold)}
+  .hero-info .desc{
+    font-size:14px;color:var(--text-light);line-height:1.5;max-width:520px;
+  }
+  .hero-info .meta{
+    font-size:12px;color:var(--text-dim);margin-top:14px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .hero-info .meta-dot{width:3px;height:3px;border-radius:50%;background:var(--text-dim)}
+  .hero-play{
+    width:60px;height:60px;border-radius:50%;
+    background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 30px rgba(229,9,20,0.45);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .hero-play:hover{transform:scale(1.06);box-shadow:0 14px 38px rgba(229,9,20,0.6)}
+  .hero-play svg{width:22px;height:22px;fill:#fff;margin-left:2px}
+
+  /* ===========================
+     RIGHT QUEUE
+     =========================== */
+  aside.queue{
+    grid-area:queue;
+    background:#0a0a0a;
+    border-left:1px solid var(--border);
+    overflow-y:auto;
+    display:flex;flex-direction:column;
+  }
+  .queue-head{
+    padding:24px 24px 18px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:#0a0a0a;z-index:5;
+  }
+  .queue-eyebrow{
+    font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:6px;
+  }
+  .queue-title{
+    font-family:var(--serif);font-size:26px;line-height:1.05;color:#fff;letter-spacing:-0.2px;
+  }
+  .queue-title em{font-style:italic;color:var(--gold)}
+  .queue-meta{
+    font-size:11.5px;color:var(--text-dim);margin-top:8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .queue-meta .partner-tag{
+    display:inline-flex;align-items:center;gap:5px;color:var(--gold);
+  }
+  .queue-meta .partner-tag::before{
+    content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);
+    animation:pulse 1.8s ease-out infinite;
+  }
+  .queue-list{flex:1;padding:8px 12px 24px;overflow-y:auto}
+  .queue-section-label{
+    font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--text-dim);font-weight:600;
+    padding:14px 12px 8px;display:flex;align-items:center;gap:8px;
+  }
+  .queue-section-label .now-bars{
+    display:inline-flex;align-items:flex-end;gap:2px;height:10px;
+  }
+  .queue-section-label .now-bars span{
+    display:block;width:2px;background:var(--red);
+    animation:bars 1s ease-in-out infinite;
+  }
+  .queue-section-label .now-bars span:nth-child(1){height:60%;animation-delay:-0.2s}
+  .queue-section-label .now-bars span:nth-child(2){height:100%;animation-delay:-0.5s}
+  .queue-section-label .now-bars span:nth-child(3){height:40%;animation-delay:-0.8s}
+  @keyframes bars{
+    0%,100%{transform:scaleY(0.4)}
+    50%{transform:scaleY(1)}
+  }
+
+  .queue-item{
+    display:grid;grid-template-columns:14px 40px 1fr 24px;
+    gap:10px;align-items:center;
+    padding:8px 10px;border-radius:6px;
+    cursor:grab;transition:background .12s;
+    margin-bottom:2px;
+  }
+  .queue-item:hover{background:rgba(255,255,255,0.04)}
+  .queue-item.dragging{opacity:.4}
+  .queue-item.drag-over{box-shadow:0 -2px 0 var(--gold) inset}
+  .queue-item .drag-handle{
+    color:var(--text-dim);font-size:14px;line-height:1;
+    opacity:0;transition:opacity .12s;cursor:grab;user-select:none;
+  }
+  .queue-item:hover .drag-handle{opacity:.6}
+  .queue-item .drag-handle:hover{opacity:1}
+  .queue-art{
+    width:40px;height:40px;border-radius:4px;overflow:hidden;position:relative;
+  }
+  .queue-info{min-width:0}
+  .queue-tname{
+    font-size:12.5px;font-weight:500;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;
+  }
+  .queue-tartist{
+    font-size:11.5px;color:var(--text-dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .queue-remove{
+    width:24px;height:24px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .12s, background .12s, color .12s;color:var(--text-dim);
+  }
+  .queue-item:hover .queue-remove{opacity:1}
+  .queue-remove:hover{background:rgba(229,9,20,0.18);color:#fff}
+  .queue-remove svg{width:12px;height:12px;fill:currentColor}
+
+  .queue-item.current{background:rgba(229,9,20,0.1)}
+  .queue-item.current .queue-tname{color:var(--red)}
+
+  .queue-empty{
+    text-align:center;color:var(--text-dim);font-size:12px;padding:30px 20px;line-height:1.6;
+  }
+
+  /* ===========================
+     PLAYER BAR
+     =========================== */
+  footer.player{
+    grid-area:player;
+    background:rgba(15,15,15,0.78);
+    backdrop-filter:blur(22px) saturate(160%);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);
+    border-top:1px solid var(--border);
+    padding:0 24px;
+    display:grid;
+    grid-template-columns:1fr 1.4fr 1fr;
+    align-items:center;
+    gap:24px;
+    z-index:40;
+    position:relative;
+  }
+  footer.player::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg, rgba(229,9,20,0.04) 0%, transparent 60%);
+  }
+
+  /* track info */
+  .now-playing{display:flex;align-items:center;gap:14px;min-width:0;position:relative}
+  .np-art{
+    width:56px;height:56px;border-radius:5px;overflow:hidden;
+    flex-shrink:0;position:relative;
+    box-shadow:0 4px 14px rgba(0,0,0,0.5);
+  }
+  .np-art::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.06), transparent 50%);
+  }
+  .np-info{min-width:0;flex:1}
+  .np-title{
+    font-size:14px;font-weight:600;color:#fff;line-height:1.25;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .np-artist{
+    font-size:12px;color:var(--text-dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;
+  }
+  .np-fav{
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-dim);transition:color .12s, background .12s;
+  }
+  .np-fav:hover{background:rgba(255,255,255,0.06);color:#fff}
+  .np-fav.active{color:var(--red)}
+  .np-fav svg{width:16px;height:16px;fill:currentColor}
+
+  /* controls */
+  .controls{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .control-row{display:flex;align-items:center;gap:18px}
+  .ctrl-btn{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-light);transition:color .12s, background .12s, transform .1s;
+  }
+  .ctrl-btn:hover{color:#fff}
+  .ctrl-btn:active{transform:scale(0.94)}
+  .ctrl-btn svg{width:18px;height:18px;fill:currentColor}
+  .ctrl-btn.small svg{width:14px;height:14px}
+  .ctrl-btn.small{color:var(--text-dim)}
+  .ctrl-btn.small:hover{color:#fff}
+  .ctrl-btn.small.active{color:var(--gold)}
+
+  .play-btn{
+    width:42px;height:42px;border-radius:50%;
+    background:#fff;color:#000;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .12s, box-shadow .12s;
+    box-shadow:0 4px 14px rgba(255,255,255,0.18);
+  }
+  .play-btn:hover{transform:scale(1.05)}
+  .play-btn:active{transform:scale(0.97)}
+  .play-btn svg{width:18px;height:18px;fill:currentColor}
+  .play-btn .pause-icon{display:none}
+  .play-btn.playing .play-icon{display:none}
+  .play-btn.playing .pause-icon{display:block}
+
+  /* seek */
+  .seek-row{
+    display:flex;align-items:center;gap:10px;width:100%;max-width:560px;
+  }
+  .time{
+    font-size:11px;color:var(--text-dim);
+    font-variant-numeric:tabular-nums;letter-spacing:.2px;min-width:36px;
+  }
+  .time.right{text-align:right}
+  .seek{
+    flex:1;height:14px;position:relative;cursor:pointer;
+    display:flex;align-items:center;
+  }
+  .seek-track{
+    width:100%;height:3px;border-radius:2px;
+    background:rgba(255,255,255,0.12);
+    position:relative;overflow:visible;
+    transition:height .12s;
+  }
+  .seek:hover .seek-track{height:5px}
+  .seek-fill{
+    position:absolute;left:0;top:0;bottom:0;
+    background:var(--red);
+    border-radius:2px;
+  }
+  .seek-buffer{
+    position:absolute;left:0;top:0;bottom:0;
+    background:rgba(255,255,255,0.18);
+    border-radius:2px;
+  }
+  .seek-thumb{
+    position:absolute;top:50%;
+    width:13px;height:13px;border-radius:50%;
+    background:var(--gold);
+    transform:translate(-50%,-50%) scale(0);
+    transition:transform .15s;
+    box-shadow:0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.2);
+  }
+  .seek:hover .seek-thumb,
+  .seek.dragging .seek-thumb{transform:translate(-50%,-50%) scale(1)}
+
+  /* right cluster (volume + extras) */
+  .right-cluster{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+  .volume{display:flex;align-items:center;gap:8px;margin-left:8px}
+  .vol-bar{
+    width:88px;height:14px;position:relative;cursor:pointer;
+    display:flex;align-items:center;
+  }
+  .vol-track{
+    width:100%;height:3px;border-radius:2px;
+    background:rgba(255,255,255,0.12);position:relative;
+    transition:height .12s;
+  }
+  .vol-bar:hover .vol-track{height:5px}
+  .vol-fill{
+    position:absolute;left:0;top:0;bottom:0;
+    background:#fff;border-radius:2px;
+  }
+  .vol-thumb{
+    position:absolute;top:50%;width:11px;height:11px;border-radius:50%;
+    background:var(--gold);
+    transform:translate(-50%,-50%) scale(0);
+    transition:transform .15s;
+  }
+  .vol-bar:hover .vol-thumb{transform:translate(-50%,-50%) scale(1)}
+
+  /* attribution */
+  .attribution{
+    position:absolute;left:0;right:0;bottom:6px;
+    text-align:center;font-size:9.5px;letter-spacing:1.5px;
+    color:rgba(255,255,255,0.22);
+    text-transform:uppercase;font-weight:500;
+    pointer-events:none;
+  }
+  .attribution span{color:rgba(255,255,255,0.32)}
+
+  /* ===========================
+     TOAST
+     =========================== */
+  .toast{
+    position:fixed;bottom:120px;left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(20,20,20,0.92);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--border-strong);
+    border-radius:10px;
+    padding:12px 18px 12px 14px;
+    display:flex;align-items:center;gap:12px;
+    font-size:13px;color:#fff;
+    box-shadow:0 16px 40px rgba(0,0,0,0.5);
+    opacity:0;pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast-avatar{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;
+    background:radial-gradient(circle at 30% 25%, #a4d1ff 0%, transparent 55%),linear-gradient(135deg,#3a7bff 0%,#1e3a8a 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-size:14px;letter-spacing:1px;
+  }
+  .toast-text strong{font-weight:600}
+  .toast-text small{display:block;color:var(--text-dim);font-size:11px;margin-top:1px}
+
+  /* ===========================
+     scroll
+     =========================== */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.16)}
+
+  /* utility */
+  .hidden{display:none !important}
+
+  /* ===========================
+     MOBILE STRUCTURES (hidden on desktop, shown <=900px)
+     =========================== */
+  .mobile-only{display:none}
+
+  /* mobile page header (big serif title like apple music) */
+  .m-page-head{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    padding:8px 20px 14px;gap:16px;
+  }
+  .m-page-title{
+    font-family:var(--serif);font-size:34px;line-height:1;color:#fff;
+    letter-spacing:-0.4px;
+  }
+  .m-page-title em{font-style:italic;color:var(--gold)}
+  .m-avatar{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    background:radial-gradient(circle at 30% 25%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,#ff5f8f 0%,#d6336c 55%,#8f1d4a 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-size:16px;letter-spacing:1px;color:#fff;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08);
+  }
+
+  /* mobile mini player (above tab bar) */
+  .m-miniplayer{
+    display:none;
+    position:fixed;left:8px;right:8px;bottom:62px;
+    background:rgba(28,28,28,0.88);
+    backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:8px 10px;
+    align-items:center;gap:10px;
+    z-index:60;
+    box-shadow:0 12px 28px rgba(0,0,0,0.4);
+  }
+  .m-mini-art{
+    width:42px;height:42px;border-radius:5px;overflow:hidden;
+    flex-shrink:0;position:relative;
+  }
+  .m-mini-info{flex:1;min-width:0}
+  .m-mini-title{
+    font-size:13px;font-weight:600;color:#fff;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .m-mini-artist{
+    font-size:11.5px;color:var(--text-dim);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .m-mini-progress{
+    position:absolute;left:8px;right:8px;bottom:-1px;height:2px;
+    background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;
+  }
+  .m-mini-progress span{
+    display:block;height:100%;background:var(--red);width:0;
+    transition:width .25s linear;
+  }
+  .m-mini-btn{
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;flex-shrink:0;
+  }
+  .m-mini-btn svg{width:20px;height:20px;fill:currentColor}
+  .m-mini-btn.play-icon{display:flex}
+  .m-mini-btn.pause-icon{display:none}
+  .m-miniplayer.playing .m-mini-btn.play-icon{display:none}
+  .m-miniplayer.playing .m-mini-btn.pause-icon{display:flex}
+
+  /* mobile bottom tab bar */
+  .m-tabbar{
+    display:none;
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(8,8,8,0.92);
+    backdrop-filter:blur(20px) saturate(160%);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);
+    border-top:1px solid var(--border);
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom)) 4px;
+    z-index:55;
+    justify-content:space-around;align-items:center;
+  }
+  .m-tab{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:4px 8px;font-size:10px;color:var(--text-dim);
+    flex:1;letter-spacing:.2px;
+    transition:color .12s;
+  }
+  .m-tab svg{width:22px;height:22px;fill:currentColor}
+  .m-tab.active{color:var(--red)}
+  .m-tab:active{transform:scale(0.95)}
+
+  /* fullscreen now playing */
+  .m-fullscreen{
+    position:fixed;inset:0;
+    background:linear-gradient(180deg,#1a0710 0%, #0a0a0a 60%);
+    z-index:200;
+    transform:translateY(100%);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1);
+    display:flex;flex-direction:column;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    overflow:hidden;
+  }
+  .m-fullscreen.open{transform:translateY(0)}
+  .m-fullscreen::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 0%, var(--mfBgColor, rgba(229,9,20,0.28)), transparent 55%);
+  }
+  .m-fs-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px 4px;position:relative;flex-shrink:0;
+  }
+  .m-fs-handle{
+    position:absolute;left:50%;top:8px;transform:translateX(-50%);
+    width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.25);
+  }
+  .m-fs-context{text-align:center;flex:1;padding-top:8px}
+  .m-fs-context .eyebrow{
+    font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);
+    font-weight:600;margin-bottom:2px;
+  }
+  .m-fs-context .album{
+    font-size:12.5px;color:#fff;font-weight:500;
+    max-width:60vw;margin:0 auto;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .m-fs-close{
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;background:rgba(255,255,255,0.08);
+  }
+  .m-fs-close svg{width:18px;height:18px;fill:currentColor}
+  .m-fs-menu{
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;background:rgba(255,255,255,0.08);
+    font-size:18px;letter-spacing:1px;
+  }
+
+  .m-fs-body{
+    flex:1;display:flex;flex-direction:column;
+    padding:16px 28px 20px;gap:18px;overflow-y:auto;
+    position:relative;
+  }
+  .m-fs-art{
+    width:100%;aspect-ratio:1;border-radius:12px;
+    overflow:hidden;position:relative;
+    box-shadow:0 24px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+    transform:scale(0.86);
+    transition:transform .3s ease;
+    margin:0 auto;max-width:380px;
+  }
+  .m-fullscreen.playing .m-fs-art{transform:scale(1)}
+  .m-fs-art .art-mono{font-size:140px}
+
+  .m-fs-info{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .m-fs-info-text{flex:1;min-width:0}
+  .m-fs-title{
+    font-family:var(--serif);font-size:26px;line-height:1.1;color:#fff;
+    letter-spacing:-0.2px;margin-bottom:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .m-fs-artist{
+    font-size:15px;color:var(--gold);font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .m-fs-fav{
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;background:rgba(255,255,255,0.08);
+  }
+  .m-fs-fav.active{color:var(--red);background:rgba(229,9,20,0.16)}
+  .m-fs-fav svg{width:18px;height:18px;fill:currentColor}
+
+  .m-fs-seek-wrap{display:flex;flex-direction:column;gap:6px}
+  .m-fs-seek{
+    height:18px;position:relative;cursor:pointer;
+    display:flex;align-items:center;
+  }
+  .m-fs-seek .seek-track{
+    width:100%;height:4px;border-radius:2px;
+    background:rgba(255,255,255,0.14);position:relative;
+  }
+  .m-fs-seek .seek-fill{
+    position:absolute;left:0;top:0;bottom:0;
+    background:var(--red);border-radius:2px;
+  }
+  .m-fs-seek .seek-thumb{
+    position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    background:var(--gold);
+    transform:translate(-50%,-50%);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  }
+  .m-fs-times{
+    display:flex;justify-content:space-between;
+    font-size:11.5px;color:rgba(255,255,255,0.55);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .m-fs-controls{
+    display:flex;align-items:center;justify-content:space-around;
+    padding:4px 0;
+  }
+  .m-fs-ctrl{
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;transition:transform .1s;
+  }
+  .m-fs-ctrl:active{transform:scale(0.92)}
+  .m-fs-ctrl svg{width:28px;height:28px;fill:currentColor}
+  .m-fs-ctrl.small{width:44px;height:44px;color:rgba(255,255,255,0.7)}
+  .m-fs-ctrl.small.active{color:var(--gold)}
+  .m-fs-ctrl.small svg{width:20px;height:20px}
+  .m-fs-play{
+    width:74px;height:74px;border-radius:50%;
+    background:#fff;color:#000;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(255,255,255,0.15);
+  }
+  .m-fs-play svg{width:32px;height:32px;fill:currentColor}
+  .m-fs-play .pause-icon{display:none}
+  .m-fullscreen.playing .m-fs-play .play-icon{display:none}
+  .m-fullscreen.playing .m-fs-play .pause-icon{display:block}
+
+  .m-fs-volume{
+    display:flex;align-items:center;gap:12px;padding:0 4px;
+  }
+  .m-fs-volume svg{width:16px;height:16px;fill:rgba(255,255,255,0.55);flex-shrink:0}
+  .m-fs-vol-bar{
+    flex:1;height:18px;position:relative;display:flex;align-items:center;cursor:pointer;
+  }
+  .m-fs-vol-bar .vol-track{
+    width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,0.14);position:relative;
+  }
+  .m-fs-vol-bar .vol-fill{
+    position:absolute;left:0;top:0;bottom:0;background:#fff;border-radius:2px;
+  }
+  .m-fs-vol-bar .vol-thumb{
+    position:absolute;top:50%;width:12px;height:12px;border-radius:50%;
+    background:var(--gold);transform:translate(-50%,-50%);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  .m-fs-actions{
+    display:flex;align-items:center;justify-content:space-around;
+    padding:8px 0 4px;
+  }
+  .m-fs-action{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:rgba(255,255,255,0.55);font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  }
+  .m-fs-action svg{width:20px;height:20px;fill:currentColor}
+  .m-fs-action.active{color:var(--gold)}
+
+  .m-fs-sync{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    font-size:11.5px;color:var(--gold);letter-spacing:.3px;
+    padding-top:6px;
+  }
+  .m-fs-sync .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--gold);
+    animation:pulse 1.8s ease-out infinite;
+  }
+  .m-fs-attr{
+    text-align:center;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;
+    color:rgba(255,255,255,0.22);font-weight:500;padding:6px 0 4px;
+  }
+  .m-fs-attr span{color:rgba(255,255,255,0.4)}
+
+  /* queue sheet (slides up over fullscreen) */
+  .m-queue-sheet{
+    position:fixed;left:0;right:0;bottom:0;top:0;
+    background:linear-gradient(180deg,#181818 0%,#0a0a0a 100%);
+    z-index:220;
+    transform:translateY(100%);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1);
+    display:flex;flex-direction:column;
+    padding-top:env(safe-area-inset-top);
+  }
+  .m-queue-sheet.open{transform:translateY(0)}
+  .m-qs-head{
+    padding:18px 20px 14px;border-bottom:1px solid var(--border);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    flex-shrink:0;position:relative;
+  }
+  .m-qs-handle{
+    position:absolute;left:50%;top:6px;transform:translateX(-50%);
+    width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.25);
+  }
+  .m-qs-titles{padding-top:12px}
+  .m-qs-eyebrow{
+    font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:4px;
+  }
+  .m-qs-title{
+    font-family:var(--serif);font-size:24px;line-height:1.05;color:#fff;
+  }
+  .m-qs-title em{font-style:italic;color:var(--gold)}
+  .m-qs-done{
+    align-self:center;padding:8px 14px;font-size:13px;color:var(--gold);
+    font-weight:600;letter-spacing:.3px;
+  }
+  .m-qs-meta{
+    font-size:11.5px;color:var(--text-dim);margin-top:6px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .m-qs-meta .partner{display:inline-flex;align-items:center;gap:5px;color:var(--gold)}
+  .m-qs-meta .partner::before{
+    content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);
+    animation:pulse 1.8s ease-out infinite;
+  }
+  .m-qs-list{flex:1;overflow-y:auto;padding:8px 12px 30px}
+
+  /* ===========================
+     MEDIA QUERY: <= 900px
+     =========================== */
+  @media (max-width: 900px) {
+    body{overflow:auto}
+    .app{
+      grid-template-columns:1fr;
+      grid-template-rows:54px 1fr;
+      grid-template-areas:
+        "nav"
+        "main";
+      height:auto;min-height:100vh;
     }
+    /* hide desktop chrome */
+    aside.sidebar, aside.queue, footer.player{display:none !important}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: var(--void);
-      color: var(--text);
-      font-family: 'DM Sans', -apple-system, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding-bottom: 140px;
+    /* nav adjustments */
+    nav.topnav{padding:0 14px}
+    .nf-logo{font-size:24px;letter-spacing:2px}
+    .nf-logo .heart{font-size:16px}
+    .nav-links{display:none}
+    .nav-right{gap:8px}
+    .sync-pill{
+      padding:5px 10px 5px 8px;font-size:11px;
     }
+    .sync-pill .sync-dot{width:7px;height:7px}
+    .nav-right .ctrl-btn[title="Notifications"]{display:none}
+    .nav-avatar{width:30px;height:30px;font-size:15px}
 
-    .bg-gradient {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, #2b0710 0%, #140509 40%, #0b0b0b 100%);
-      z-index: -1;
-      pointer-events: none;
+    /* main */
+    main.content{
+      background:linear-gradient(180deg, #131313 0%, #0b0b0b 400px);
+      padding-bottom:140px;  /* room for mini-player + tab bar */
     }
+    .content-inner{padding:0 0 30px;max-width:none}
 
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border);
+    /* mobile-only show */
+    .mobile-only{display:block}
+    .m-miniplayer{display:flex}
+    .m-tabbar{display:flex}
+
+    /* search */
+    .search-wrap{padding:6px 16px 14px;margin:0;position:sticky}
+    .search-bar{max-width:none;padding:10px 12px}
+    .search-bar kbd{display:none}
+
+    /* hero - stacks vertically */
+    .listen-hero{
+      grid-template-columns:1fr;
+      text-align:center;
+      padding:22px 22px 24px;
+      gap:18px;
+      margin:0 16px 28px;
     }
+    .hero-art{width:62%;height:auto;aspect-ratio:1;margin:0 auto;max-width:240px}
+    .hero-art-mono{font-size:48px}
+    .hero-info{text-align:center}
+    .hero-info .title{font-size:30px}
+    .hero-info .desc{font-size:13px;margin:0 auto}
+    .hero-info .meta{justify-content:center;flex-wrap:wrap;gap:10px}
+    .hero-play{margin:0 auto;width:54px;height:54px}
+    .hero-play svg{width:20px;height:20px}
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+    /* sections */
+    .section{padding:0 16px}
+    .section + .section{margin-top:30px}
+    .sec-head{margin-bottom:14px}
+    .sec-title{font-size:24px;letter-spacing:-0.3px}
+    .sec-sub{font-size:11.5px}
+
+    /* feature rail - single column */
+    .feature-rail{grid-template-columns:1fr;gap:14px}
+    .feature-card{aspect-ratio:16/11;border-radius:12px}
+    .fc-title{font-size:22px}
+
+    /* album rails - smaller cards, peek next card */
+    .rail{margin:0 -16px;padding:4px 16px 8px;gap:14px}
+    .album-card{flex:0 0 140px}
+    .album-art{width:140px;height:140px;border-radius:8px}
+    .album-art .play-hover{opacity:1;transform:translateY(0)}
+
+    /* track list - tighter, no album column */
+    .track-list{border:none;background:transparent;border-radius:0;margin:0 -4px}
+    .track-row{
+      grid-template-columns:24px 44px 1fr 50px;
+      gap:12px;padding:8px 8px;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      border-radius:0;
     }
-
-    .back-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 20px;
-      padding: 4px;
-      line-height: 1;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .back-btn:hover { color: var(--text); }
-
-    .logo {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      letter-spacing: 4px;
-      color: var(--crimson);
-    }
-
-    .logo span { color: var(--text); }
-
-    .partner-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--gold);
-      box-shadow: 0 0 8px var(--gold-dim);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    .search-section {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .search-bar {
-      position: relative;
-      margin-bottom: 20px;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 14px 20px 14px 48px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .search-input:focus {
-      border-color: var(--crimson);
-      background: var(--surface-hover);
-    }
-
-    .search-input::placeholder { color: var(--text-dim); }
-
-    .search-icon {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      font-size: 18px;
-    }
-
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
-    }
-
-    .track-card {
-      background: var(--surface);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-    }
-
-    .track-card:hover {
-      background: var(--surface-hover);
-      border-color: var(--border);
-      transform: translateY(-2px);
-    }
-
-    .track-card.active { border-color: var(--crimson); }
-
-    .track-artwork {
-      width: 100%;
-      aspect-ratio: 1;
-      background: linear-gradient(135deg, var(--crimson), #5a0410);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .track-artwork img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .track-artwork .play-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .track-card:hover .play-overlay { opacity: 1; }
-
-    .play-overlay svg {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-
-    .track-info { padding: 12px; }
-
-    .track-title {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .track-artist {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .player-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(20, 20, 20, 0.95);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      z-index: 100;
-    }
-
-    .player-track {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 200px;
-      flex: 0 1 280px;
-    }
-
-    .player-artwork {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--crimson), #5a0410);
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-
-    .player-artwork img { width: 100%; height: 100%; object-fit: cover; }
-
-    .player-meta { min-width: 0; }
-
-    .player-title {
-      font-size: 14px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .player-artist {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .player-controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex: 1;
-      justify-content: center;
-    }
-
-    .control-btn {
-      background: none;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .control-btn:hover { background: var(--surface-hover); }
-
-    .control-btn.play-btn {
-      width: 48px;
-      height: 48px;
-      background: white;
-      color: var(--void);
-    }
-
-    .control-btn.play-btn:hover { transform: scale(1.05); }
-
-    .control-btn svg { width: 20px; height: 20px; fill: currentColor; }
-    .control-btn.play-btn svg { width: 24px; height: 24px; }
-
-    .progress-section {
-      flex: 1;
-      max-width: 400px;
-    }
-
-    .time-display {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(255,255,255,0.14);
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--crimson);
-      border-radius: 2px;
-      position: relative;
-      transition: width 0.1s linear;
-    }
-
-    .progress-thumb {
-      position: absolute;
-      right: -6px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 12px;
-      height: 12px;
-      background: var(--gold);
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .progress-bar:hover .progress-thumb { opacity: 1; }
-
-    .volume-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 0 0 120px;
-    }
-
-    .volume-slider {
-      width: 80px;
-      height: 4px;
-      background: rgba(255,255,255,0.14);
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .volume-fill {
-      height: 100%;
-      background: var(--text-muted);
-      border-radius: 2px;
-    }
-
-    .queue-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 8px;
-      position: relative;
-    }
-
-    .queue-btn svg { width: 20px; height: 20px; fill: currentColor; }
-
-    .queue-badge {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 16px;
-      height: 16px;
-      background: var(--crimson);
-      border-radius: 50%;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .queue-panel {
-      position: fixed;
-      right: -360px;
-      top: 0;
-      bottom: 140px;
-      width: 340px;
-      background: rgba(20, 20, 20, 0.98);
-      backdrop-filter: blur(20px);
-      border-left: 1px solid var(--border);
-      padding: 24px;
-      transition: right 0.3s ease;
-      z-index: 99;
-      overflow-y: auto;
-    }
-
-    .queue-panel.open { right: 0; }
-
-    .queue-header {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .queue-close {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 20px;
-    }
-
-    .queue-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .queue-item:hover { background: var(--surface-hover); }
-    .queue-item.active { background: var(--surface); }
-
-    .queue-item-thumb {
-      width: 40px;
-      height: 40px;
-      border-radius: 6px;
-      background: linear-gradient(135deg, var(--crimson), #5a0410);
-      flex-shrink: 0;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .queue-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-    .queue-item-info { flex: 1; min-width: 0; }
-
-    .queue-item-title {
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .queue-item-artist {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .queue-item-remove {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      padding: 4px;
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    .queue-item-remove:hover { color: var(--crimson); }
-
-    .attribution {
-      position: fixed;
-      bottom: 140px;
-      right: 24px;
-      font-size: 11px;
-      color: var(--text-dim);
-      z-index: 98;
-    }
-
-    .toast {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      padding: 12px 24px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s;
-      z-index: 200;
-      white-space: nowrap;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-dim);
-    }
-
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 2px solid var(--border);
-      border-top-color: var(--crimson);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 12px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-dim);
-    }
-
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      opacity: 0.3;
-    }
-
-    .empty-state h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-  </style>
+    .track-row > div:nth-child(4){display:none} /* album col */
+    .track-add{display:none}
+    .track-num{font-size:14px}
+    .track-art{width:44px;height:44px}
+    .track-title{font-size:14px}
+    .track-artist{font-size:12.5px}
+    .track-dur{font-size:12.5px}
+
+    /* search view padding */
+    #searchView{padding:0 16px}
+    .results-count{flex-wrap:wrap}
+  }
+
+  /* very small screens */
+  @media (max-width: 380px) {
+    .nf-logo{font-size:20px}
+    .sync-pill{font-size:10px;padding:4px 8px 4px 7px}
+    .m-page-title{font-size:30px}
+    .sec-title{font-size:22px}
+    .hero-info .title{font-size:26px}
+  }
+
+</style>
+<script src="/assets/loveflix.js"></script>
 </head>
 <body>
-  <div class="bg-gradient"></div>
+<audio id="audioEl" preload="auto"></audio>
 
-  <header class="header">
-    <div class="header-left">
-      <a class="back-btn" href="home.html" title="Back to home">&#8592;</a>
-      <div class="logo">LOVE<span>♥</span>FLIX</div>
-    </div>
-    <div class="partner-status">
-      <div class="status-dot" id="syncDot"></div>
-      <span id="syncText">Connecting...</span>
-    </div>
-  </header>
+<div class="app">
 
-  <section class="search-section">
-    <div class="search-bar">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        class="search-input"
-        id="searchInput"
-        placeholder="Search for songs, artists..."
-        autocomplete="off"
-      >
-    </div>
-    <div id="resultsContainer">
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-        <h3>Start Listening Together</h3>
-        <p>Search for a song and hit play to sync with your partner</p>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="nav-left">
+      <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
+      <div class="nav-links">
+        <a href="home.html">Home</a>
+        <a href="browse.html">Browse</a>
+        <a href="loveconnect.html">LoveConnect</a>
+        <a class="active">Music</a>
+        <a>Memories</a>
       </div>
     </div>
-  </section>
-
-  <aside class="queue-panel" id="queuePanel">
-    <div class="queue-header">
-      Our Playlist
-      <button class="queue-close" id="queueClose">×</button>
+    <div class="nav-right">
+      <div class="sync-pill" id="syncPill" title="Partner listening status">
+        <span class="sync-dot"></span>
+        <span><strong style="font-weight:600;color:#fff">Adrien</strong> is listening</span>
+      </div>
+      <button class="ctrl-btn small" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 003-3H9a3 3 0 003 3z"></path></svg>
+      </button>
+      <div class="nav-avatar">M</div>
     </div>
-    <div id="queueList"></div>
+  </nav>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="side-section">
+      <div class="side-label">Library</div>
+      <div class="side-item active">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>
+        Listen Now
+      </div>
+      <div class="side-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>
+        Radio
+      </div>
+      <div class="side-item">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h10v4H4z"></path></svg>
+        Recently Played
+      </div>
+      <div class="side-item">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+        Loved Songs
+      </div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Our Playlists</div>
+      <div class="playlist-row">
+        <div class="playlist-art art-1"><span style="font-family:var(--serif);font-style:italic">Q</span></div>
+        <div class="playlist-name">Quiet Mornings</div>
+      </div>
+      <div class="playlist-row">
+        <div class="playlist-art art-4"><span style="font-family:var(--serif);font-style:italic">S</span></div>
+        <div class="playlist-name">Sunset Drives</div>
+      </div>
+      <div class="playlist-row">
+        <div class="playlist-art art-10"><span style="font-family:var(--serif);font-style:italic">A</span></div>
+        <div class="playlist-name">Anniversary No. 3</div>
+      </div>
+      <div class="playlist-row">
+        <div class="playlist-art art-8"><span style="font-family:var(--serif);font-style:italic">L</span></div>
+        <div class="playlist-name">Long Distance</div>
+      </div>
+      <div class="playlist-row">
+        <div class="playlist-art art-6"><span style="font-family:var(--serif);font-style:italic">D</span></div>
+        <div class="playlist-name">Dinner Together</div>
+      </div>
+      <div class="playlist-row" style="color:var(--text-dim)">
+        <div class="playlist-art" style="background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.18)">+</div>
+        <div class="playlist-name">New Playlist</div>
+      </div>
+    </div>
+
+    <div class="couple-tag">
+      <div class="couple-tag-label">Listening together</div>
+      <div class="couple-tag-name">Mira <em>&amp;</em> Adrien</div>
+    </div>
+
   </aside>
 
-  <footer class="player-bar" id="playerBar" style="display: none;">
-    <div class="player-track">
-      <div class="player-artwork" id="playerArtwork"></div>
-      <div class="player-meta">
-        <div class="player-title" id="playerTitle">Select a song</div>
-        <div class="player-artist" id="playerArtist">—</div>
+  <!-- MAIN -->
+  <main class="content">
+
+    <div class="search-wrap">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+        <input id="searchInput" type="text" placeholder="Search SoundCloud — songs, artists, playlists…">
+        <kbd>⌘ K</kbd>
       </div>
     </div>
 
-    <div class="player-controls">
-      <button class="control-btn" id="prevBtn" title="Previous">
-        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </button>
-      <button class="control-btn play-btn" id="playBtn">
-        <svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
-        <svg viewBox="0 0 24 24" id="pauseIcon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button class="control-btn" id="nextBtn" title="Next">
-        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    <div class="content-inner">
+
+      <!-- DEFAULT VIEW -->
+      <div id="defaultView">
+
+        <!-- MOBILE PAGE TITLE (Apple Music style) -->
+        <div class="m-page-head mobile-only">
+          <div>
+            <div class="m-page-title">Listen <em>Now</em></div>
+            <div class="m-qs-meta" style="margin-top:8px">
+              <span class="partner">Adrien is listening</span>
+            </div>
+          </div>
+          <div class="m-avatar">M</div>
+        </div>
+
+        <!-- LISTEN HERO -->
+        <div class="listen-hero">
+          <div class="hero-art art-1">
+            <div class="hero-art-mono">Q</div>
+          </div>
+          <div class="hero-info">
+            <div class="label">Made for you both</div>
+            <div class="title">Quiet Mornings <em>vol. ii</em></div>
+            <div class="desc">A slow-brew mix Adrien started Tuesday at 7:14am. Lo-fi piano, soft folk, and the kind of jazz that pairs with toast. Updated weekly from your listens.</div>
+            <div class="meta">
+              <span>32 tracks</span>
+              <span class="meta-dot"></span>
+              <span>1 hr 48 min</span>
+              <span class="meta-dot"></span>
+              <span>Updated 2 days ago</span>
+            </div>
+          </div>
+          <button class="hero-play" aria-label="Play">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+          </button>
+        </div>
+
+        <!-- LISTEN NOW FEATURED -->
+        <div class="section">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Listen <em>Now</em></div>
+              <div class="sec-sub">Editorial picks · curated for couples</div>
+            </div>
+            <div class="sec-more">See all →</div>
+          </div>
+          <div class="feature-rail">
+            <div class="feature-card">
+              <div class="fc-bg art-5"></div>
+              <div class="art-mono" style="opacity:.45;font-size:120px">M</div>
+              <div class="fc-overlay"></div>
+              <div class="fc-content">
+                <div class="fc-label">Couple's station</div>
+                <div class="fc-title">Music for Slow Sundays</div>
+                <div class="fc-desc">Soft tempo, low BPM, all heart — perfect for staying in.</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="fc-bg art-4"></div>
+              <div class="art-mono" style="opacity:.45;font-size:120px">G</div>
+              <div class="fc-overlay"></div>
+              <div class="fc-content">
+                <div class="fc-label">From the gold mix</div>
+                <div class="fc-title">Golden Hour, On Repeat</div>
+                <div class="fc-desc">Indie folk, French soul, the kind of songs Adrien sends at 6pm.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP SONGS (track list) -->
+        <div class="section">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Top Songs <em>this week</em></div>
+              <div class="sec-sub">Most-played tracks across LoveFlix couples</div>
+            </div>
+            <div class="sec-more">See all →</div>
+          </div>
+          <div class="track-list" id="topTracksList"></div>
+        </div>
+
+        <!-- RECENTLY PLAYED -->
+        <div class="section">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Recently <em>Played</em></div>
+              <div class="sec-sub">From your shared session history</div>
+            </div>
+            <div class="sec-more">See all →</div>
+          </div>
+          <div class="rail" id="recentRail"></div>
+        </div>
+
+        <!-- MADE FOR YOU -->
+        <div class="section">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Made for <em>you two</em></div>
+              <div class="sec-sub">Stations built from what you listen to together</div>
+            </div>
+            <div class="sec-more">See all →</div>
+          </div>
+          <div class="rail" id="madeForRail"></div>
+        </div>
+
+      </div>
+
+      <!-- SEARCH VIEW -->
+      <div id="searchView" class="hidden">
+        <div class="section">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Search <em>results</em></div>
+              <div class="results-count" id="resultsCount"></div>
+            </div>
+          </div>
+          <div class="track-list" id="searchResults"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- RIGHT QUEUE -->
+  <aside class="queue">
+    <div class="queue-head">
+      <div class="queue-eyebrow">Our Queue · Synced</div>
+      <div class="queue-title">Our <em>Playlist</em></div>
+      <div class="queue-meta">
+        <span id="queueCount">8 tracks</span>
+        <span>·</span>
+        <span class="partner-tag">Synced with Adrien</span>
+      </div>
+    </div>
+    <div class="queue-list" id="queueList"></div>
+  </aside>
+
+  <!-- PLAYER BAR -->
+  <footer class="player">
+    <!-- left: track info -->
+    <div class="now-playing">
+      <div class="np-art" id="npArt">
+        <div class="art-mono small" id="npArtMono">Q</div>
+      </div>
+      <div class="np-info">
+        <div class="np-title" id="npTitle">Tides (Reprise)</div>
+        <div class="np-artist" id="npArtist">Laura Misch · Quiet Mornings vol. ii</div>
+      </div>
+      <button class="np-fav active" id="favBtn" aria-label="Love">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
       </button>
     </div>
 
-    <div class="progress-section">
-      <div class="time-display">
-        <span id="currentTime">0:00</span>
-        <span id="duration">0:00</span>
+    <!-- center: controls + seek -->
+    <div class="controls">
+      <div class="control-row">
+        <button class="ctrl-btn small" aria-label="Shuffle">
+          <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg>
+        </button>
+        <button class="ctrl-btn" aria-label="Previous" id="prevBtn">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+        </button>
+        <button class="play-btn" id="playBtn" aria-label="Play/Pause">
+          <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+          <svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg>
+        </button>
+        <button class="ctrl-btn" aria-label="Next" id="nextBtn">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+        </button>
+        <button class="ctrl-btn small active" aria-label="Repeat">
+          <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg>
+        </button>
       </div>
-      <div class="progress-bar" id="progressBar">
-        <div class="progress-fill" id="progressFill" style="width: 0%">
-          <div class="progress-thumb"></div>
+      <div class="seek-row">
+        <span class="time" id="curTime">0:00</span>
+        <div class="seek" id="seek">
+          <div class="seek-track">
+            <div class="seek-buffer" id="seekBuffer" style="width:60%"></div>
+            <div class="seek-fill" id="seekFill" style="width:34%"></div>
+            <div class="seek-thumb" id="seekThumb" style="left:34%"></div>
+          </div>
+        </div>
+        <span class="time right" id="durTime">3:42</span>
+      </div>
+    </div>
+
+    <!-- right: extras -->
+    <div class="right-cluster">
+      <button class="ctrl-btn small" title="Lyrics">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg>
+      </button>
+      <button class="ctrl-btn small" title="Devices">
+        <svg viewBox="0 0 24 24"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg>
+      </button>
+      <button class="ctrl-btn small active" title="Queue">
+        <svg viewBox="0 0 24 24"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg>
+      </button>
+      <div class="volume">
+        <button class="ctrl-btn small" id="muteBtn" title="Mute">
+          <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zm-2.5-9.04v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06a9 9 0 000-17.62z"></path></svg>
+        </button>
+        <div class="vol-bar" id="volBar">
+          <div class="vol-track">
+            <div class="vol-fill" id="volFill" style="width:72%"></div>
+            <div class="vol-thumb" id="volThumb" style="left:72%"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="volume-section">
-      <button class="control-btn" id="muteBtn">
-        <svg viewBox="0 0 24 24" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    <div class="attribution">Powered by <span>SoundCloud</span></div>
+  </footer>
+
+</div>
+
+<!-- ===========================
+     MOBILE: MINI PLAYER (above tab bar)
+     =========================== -->
+<div class="m-miniplayer" id="mMini">
+  <div class="m-mini-art" id="mMiniArt">
+    <div class="art-mono small" id="mMiniArtMono">T</div>
+  </div>
+  <div class="m-mini-info">
+    <div class="m-mini-title" id="mMiniTitle">Tides (Reprise)</div>
+    <div class="m-mini-artist" id="mMiniArtist">Laura Misch</div>
+  </div>
+  <button class="m-mini-btn play-icon" data-mini-play="" aria-label="Play">
+    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+  <button class="m-mini-btn pause-icon" data-mini-play="" aria-label="Pause">
+    <svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg>
+  </button>
+  <button class="m-mini-btn" data-mini-next="" aria-label="Next">
+    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+  </button>
+  <div class="m-mini-progress"><span id="mMiniProgress"></span></div>
+</div>
+
+<!-- ===========================
+     MOBILE: BOTTOM TAB BAR
+     =========================== -->
+<nav class="m-tabbar" id="mTabbar">
+  <button class="m-tab active" data-tab="listen">
+    <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>
+    Listen Now
+  </button>
+  <button class="m-tab" data-tab="browse">
+    <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"></path></svg>
+    Browse
+  </button>
+  <button class="m-tab" data-tab="radio">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>
+    Radio
+  </button>
+  <button class="m-tab" data-tab="search">
+    <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+    Search
+  </button>
+  <button class="m-tab" data-tab="library">
+    <svg viewBox="0 0 24 24"><path d="M4 3h2v18H4zm4 0h2v18H8zm5 0l5 18 1.93-.52L13 2.5 13 3z"></path></svg>
+    Library
+  </button>
+</nav>
+
+<!-- ===========================
+     MOBILE: FULLSCREEN NOW PLAYING
+     =========================== -->
+<div class="m-fullscreen" id="mFullscreen">
+  <div class="m-fs-header">
+    <div class="m-fs-handle"></div>
+    <button class="m-fs-close" id="mFsClose" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z" transform="rotate(180 12 12)"></path></svg>
+    </button>
+    <div class="m-fs-context">
+      <div class="eyebrow">From the album</div>
+      <div class="album" id="mFsAlbum">Quiet Mornings vol. ii</div>
+    </div>
+    <button class="m-fs-menu" aria-label="More">⋯</button>
+  </div>
+
+  <div class="m-fs-body">
+    <div class="m-fs-art" id="mFsArt">
+      <div class="art-mono" id="mFsArtMono">T</div>
+    </div>
+
+    <div class="m-fs-info">
+      <div class="m-fs-info-text">
+        <div class="m-fs-title" id="mFsTitle">Tides (Reprise)</div>
+        <div class="m-fs-artist" id="mFsArtist">Laura Misch</div>
+      </div>
+      <button class="m-fs-fav active" id="mFsFav" aria-label="Love">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
       </button>
-      <div class="volume-slider" id="volumeSlider">
-        <div class="volume-fill" id="volumeFill" style="width: 80%"></div>
+    </div>
+
+    <div class="m-fs-seek-wrap">
+      <div class="m-fs-seek" id="mFsSeek">
+        <div class="seek-track">
+          <div class="seek-fill" id="mFsSeekFill" style="width:34%"></div>
+          <div class="seek-thumb" id="mFsSeekThumb" style="left:34%"></div>
+        </div>
+      </div>
+      <div class="m-fs-times">
+        <span id="mFsCurTime">1:16</span>
+        <span id="mFsDurTime">3:42</span>
       </div>
     </div>
 
-    <button class="queue-btn" id="queueToggle" title="Queue">
-      <svg viewBox="0 0 24 24"><path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm16-8V6H8.023v2H18zm0 5v-2H8.023v2H18zm0 5v-2H8.023v2H18z"/></svg>
-      <span class="queue-badge" id="queueBadge" style="display:none">0</span>
-    </button>
-  </footer>
+    <div class="m-fs-controls">
+      <button class="m-fs-ctrl small active" aria-label="Shuffle">
+        <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg>
+      </button>
+      <button class="m-fs-ctrl" data-mini-prev="" aria-label="Previous">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+      </button>
+      <button class="m-fs-play" data-mini-play="" aria-label="Play/Pause">
+        <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+        <svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg>
+      </button>
+      <button class="m-fs-ctrl" data-mini-next="" aria-label="Next">
+        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+      </button>
+      <button class="m-fs-ctrl small active" aria-label="Repeat">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg>
+      </button>
+    </div>
 
-  <div class="attribution">Powered by SoundCloud</div>
-  <div class="toast" id="toast"></div>
-  <audio id="audioPlayer" preload="none"></audio>
+    <div class="m-fs-volume">
+      <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"></path></svg>
+      <div class="m-fs-vol-bar" id="mFsVolBar">
+        <div class="vol-track">
+          <div class="vol-fill" id="mFsVolFill" style="width:72%"></div>
+          <div class="vol-thumb" id="mFsVolThumb" style="left:72%"></div>
+        </div>
+      </div>
+      <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zm-2.5-9.04v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06a9 9 0 000-17.62z"></path></svg>
+    </div>
 
-  <script>
-    // ── Auth guard ──────────────────────────────────────────────────────────────
-    (function () {
-      const token = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken() : null;
-      if (!token) { location.replace('loveflix_login_screen.html'); }
-    })();
+    <div class="m-fs-actions">
+      <button class="m-fs-action">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg>
+        Lyrics
+      </button>
+      <button class="m-fs-action">
+        <svg viewBox="0 0 24 24"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg>
+        Devices
+      </button>
+      <button class="m-fs-action active" id="mFsQueueBtn">
+        <svg viewBox="0 0 24 24"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg>
+        Queue
+      </button>
+    </div>
 
-    // ── Config ──────────────────────────────────────────────────────────────────
-    // SoundCloud endpoints live on the same domain as this page (Pages Functions).
-    const WORKER_URL = '';
-    const SB_URL = typeof LoveFlix !== 'undefined'
-      ? LoveFlix.SUPABASE_URL
-      : 'https://jeblgjjutyzzdursjqnn.supabase.co';
-    const SB_KEY = typeof LoveFlix !== 'undefined'
-      ? LoveFlix.SUPABASE_ANON_KEY
-      : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
+    <div class="m-fs-sync">
+      <span class="dot"></span>
+      <span><strong style="font-weight:600;color:#fff">Adrien</strong> is listening with you</span>
+    </div>
 
-    // ── Supabase Realtime mini-client ───────────────────────────────────────────
-    // Mirrors the implementation in loveflix-call.js; kept here to avoid pulling
-    // in the full calling library just for music sync.
-    function RealtimeChannel(sbUrl, anonKey, token, channelName, onStatusChange) {
-      this._wsUrl = sbUrl.replace(/^https?/, p => p === 'https' ? 'wss' : 'ws')
-        + '/realtime/v1/websocket?apikey=' + anonKey + '&vsn=1.0.0';
-      this._token    = token;
-      this._channel  = 'realtime:' + channelName;
-      this._ws       = null;
-      this._ref      = 0;
-      this._handlers = {};
-      this._ready    = false;
-      this._queue    = [];
-      this._closed   = false;
-      this._hbTimer  = null;
-      this._retTimer = null;
-      this._onStatus = onStatusChange || (() => {});
-    }
+    <div class="m-fs-attr">Powered by <span>SoundCloud</span></div>
+  </div>
+</div>
 
-    RealtimeChannel.prototype.connect = function () {
-      if (this._closed) return;
-      const self = this;
-      try { this._ws = new WebSocket(this._wsUrl); } catch (e) { return; }
+<!-- ===========================
+     MOBILE: QUEUE SHEET
+     =========================== -->
+<div class="m-queue-sheet" id="mQueueSheet">
+  <div class="m-qs-head">
+    <div class="m-qs-handle"></div>
+    <div class="m-qs-titles">
+      <div class="m-qs-eyebrow">Our Queue · Synced</div>
+      <div class="m-qs-title">Our <em>Playlist</em></div>
+      <div class="m-qs-meta">
+        <span id="mQsCount">8 tracks</span>
+        <span>·</span>
+        <span class="partner">Synced with Adrien</span>
+      </div>
+    </div>
+    <button class="m-qs-done" id="mQsClose">Done</button>
+  </div>
+  <div class="m-qs-list" id="mQueueList"></div>
+</div>
 
-      this._ws.onopen = () => {
-        self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
-        self._send({
-          topic: self._channel,
-          event: 'phx_join',
-          payload: { config: { broadcast: { self: false } }, access_token: self._token },
-          ref: self._nextRef(),
-        });
-        self._hbTimer = setInterval(() => {
-          if (self._ws && self._ws.readyState === 1)
-            self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
-        }, 28000);
-      };
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-avatar">A</div>
+  <div class="toast-text">
+    <strong>Adrien paused the music</strong>
+    <small>Sync paused at 1:23 · Tides (Reprise)</small>
+  </div>
+</div>
 
-      this._ws.onmessage = ev => {
-        try {
-          const msg = JSON.parse(ev.data);
-          if (msg.event === 'phx_reply' && msg.payload?.status === 'ok' && msg.topic === self._channel) {
-            self._ready = true;
-            self._onStatus('connected');
-            self._queue.forEach(m => self._send(m));
-            self._queue = [];
-          }
-          if (msg.event === 'broadcast' && msg.payload?.event) {
-            const h = self._handlers[msg.payload.event];
-            if (h) h(msg.payload.payload || {});
-          }
-        } catch (_) {}
-      };
+<!-- ===========================
+     SCRIPT
+     =========================== -->
+<script>
+/* === LOVEFLIX MUSIC — wired up === */
 
-      this._ws.onclose = () => {
-        self._ready = false;
-        clearInterval(self._hbTimer);
-        if (!self._closed) {
-          self._onStatus('disconnected');
-          self._retTimer = setTimeout(() => self.connect(), 3500);
-        }
-      };
-    };
+// ── AUTH GUARD ──
+(function(){
+  const token = localStorage.getItem('loveflix_token');
+  if (!token) { window.location.href = 'loveflix_login_screen.html'; }
+})();
 
-    RealtimeChannel.prototype.on = function (ev, fn) { this._handlers[ev] = fn; return this; };
-    RealtimeChannel.prototype.close = function () {
-      this._closed = true;
-      clearInterval(this._hbTimer);
-      clearTimeout(this._retTimer);
-      if (this._ws) try { this._ws.close(); } catch (_) {}
-    };
-    RealtimeChannel.prototype._send = function (msg) {
-      if (this._ws && this._ws.readyState === 1) this._ws.send(JSON.stringify(msg));
-    };
-    RealtimeChannel.prototype._nextRef = function () { return String(++this._ref); };
-    RealtimeChannel.prototype.broadcast = function (event, payload) {
-      const msg = {
-        topic: this._channel,
-        event: 'broadcast',
-        payload: { type: 'broadcast', event, payload },
-        ref: this._nextRef(),
-      };
-      if (this._ready) this._send(msg);
-      else this._queue.push(msg);
-    };
+// ── COUPLE CONTEXT ──
+let coupleId = null;
+let myName = 'You';
+let partnerName = 'Partner';
 
-    // ── State ───────────────────────────────────────────────────────────────────
-    let currentTrack = null;
-    let isPlaying = false;
-    let queue = [];
-    let currentQueueIndex = -1;
-    let syncChannel = null;
-    let lastSyncTime = 0;
-    let isSyncing = false;
-    // Search results stored here so track cards can reference by index (no
-    // inline JS string interpolation needed, which avoids escaping headaches).
-    let searchResults = [];
+function initCoupleContext() {
+  coupleId = (typeof LoveFlix !== 'undefined') ? LoveFlix.getCoupleId() : localStorage.getItem('loveflix_couple_id');
+  myName      = localStorage.getItem('loveflix_user_name')    || 'You';
+  partnerName = localStorage.getItem('loveflix_partner_name') || 'Partner';
+  const syncPill = document.getElementById('syncPill');
+  if (syncPill) {
+    const last = syncPill.querySelector('span:last-child');
+    if (last) last.innerHTML = '<strong style="font-weight:600;color:#fff">' + partnerName + '</strong> is listening';
+  }
+  document.querySelectorAll('.partner, .partner-tag').forEach(el => {
+    el.textContent = partnerName + ' is listening';
+  });
+  const coupleTag = document.querySelector('.couple-tag-name');
+  if (coupleTag) coupleTag.innerHTML = myName + ' <em>&amp;</em> ' + partnerName;
+  const avatar = document.querySelector('.nav-avatar');
+  if (avatar) avatar.textContent = (myName[0] || 'M').toUpperCase();
+}
 
-    // ── DOM refs ────────────────────────────────────────────────────────────────
-    const audio           = document.getElementById('audioPlayer');
-    const searchInput     = document.getElementById('searchInput');
-    const resultsContainer = document.getElementById('resultsContainer');
-    const playerBar       = document.getElementById('playerBar');
-    const playIcon        = document.getElementById('playIcon');
-    const pauseIcon       = document.getElementById('pauseIcon');
-    const progressFill    = document.getElementById('progressFill');
-    const currentTimeEl   = document.getElementById('currentTime');
-    const durationEl      = document.getElementById('duration');
-    const queuePanel      = document.getElementById('queuePanel');
-    const queueList       = document.getElementById('queueList');
-    const queueBadge      = document.getElementById('queueBadge');
-    const toast           = document.getElementById('toast');
-
-    // ── Search ──────────────────────────────────────────────────────────────────
-    let searchTimeout;
-
-    searchInput.addEventListener('input', e => {
-      clearTimeout(searchTimeout);
-      const query = e.target.value.trim();
-      if (!query) { showEmptyState(); return; }
-      searchTimeout = setTimeout(() => doSearch(query), 300);
-    });
-
-    async function doSearch(query) {
-      resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
-      try {
-        const res = await fetch(`${WORKER_URL}/api/soundcloud/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-
-        if (!data.tracks?.length) {
-          resultsContainer.innerHTML = '<div class="empty-state"><h3>No results</h3><p>Try a different search term</p></div>';
-          return;
-        }
-
-        searchResults = data.tracks;
-
-        // Use data-idx to avoid XSS via inline onclick string interpolation.
-        resultsContainer.innerHTML = '<div class="results-grid">'
-          + data.tracks.map((track, i) => `
-            <div class="track-card" data-idx="${i}">
-              <div class="track-artwork">
-                ${track.artwork
-                  ? `<img src="${escapeAttr(track.artwork)}" alt="" loading="lazy">`
-                  : '<span style="font-family:Georgia,serif;font-style:italic;font-size:40px;opacity:.9">♪</span>'}
-                <div class="play-overlay">
-                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-              </div>
-              <div class="track-info">
-                <div class="track-title">${escapeHtml(track.title)}</div>
-                <div class="track-artist">${escapeHtml(track.artist)}</div>
-              </div>
-            </div>`).join('')
-          + '</div>';
-      } catch (err) {
-        showToast('Search failed. Check your connection.');
-        console.error(err);
+// ── REALTIME CHANNEL ──
+function RealtimeChannel(sbUrl, anonKey, token, channelName) {
+  this._wsUrl = sbUrl.replace(/^https?/, p => p === 'https' ? 'wss' : 'ws')
+    + '/realtime/v1/websocket?apikey=' + anonKey + '&vsn=1.0.0';
+  this._token = token;
+  this._channel = 'realtime:' + channelName;
+  this._ws = null; this._ref = 0; this._handlers = {};
+  this._ready = false; this._queue = []; this._closed = false; this._hbTimer = null;
+}
+RealtimeChannel.prototype.connect = function() {
+  if (this._closed) return;
+  const self = this;
+  try { this._ws = new WebSocket(this._wsUrl); } catch(e) { return; }
+  this._ws.onopen = function() {
+    self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
+    self._send({ topic: self._channel, event: 'phx_join', payload: { config: { broadcast: { self: false } }, access_token: self._token }, ref: self._nextRef() });
+    self._hbTimer = setInterval(function() {
+      if (self._ws && self._ws.readyState === 1) self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
+    }, 28000);
+  };
+  this._ws.onmessage = function(ev) {
+    try {
+      const msg = JSON.parse(ev.data);
+      if (msg.event === 'phx_reply' && msg.payload && msg.payload.status === 'ok' && msg.topic === self._channel) {
+        self._ready = true; self._queue.forEach(m => self._send(m)); self._queue = [];
       }
-    }
+      if (msg.event === 'broadcast' && msg.payload && msg.payload.event) {
+        const h = self._handlers[msg.payload.event];
+        if (h) h(msg.payload.payload || {});
+      }
+    } catch(_) {}
+  };
+  this._ws.onclose = function() {
+    self._ready = false; clearInterval(self._hbTimer);
+    if (!self._closed) setTimeout(() => self.connect(), 3500);
+  };
+};
+RealtimeChannel.prototype.on = function(ev, fn) { this._handlers[ev] = fn; return this; };
+RealtimeChannel.prototype.close = function() {
+  this._closed = true; clearInterval(this._hbTimer);
+  if (this._ws) try { this._ws.close(); } catch(_) {}
+};
+RealtimeChannel.prototype._send = function(msg) {
+  if (this._ws && this._ws.readyState === 1) this._ws.send(JSON.stringify(msg));
+};
+RealtimeChannel.prototype._nextRef = function() { return String(++this._ref); };
+RealtimeChannel.prototype.broadcast = function(event, payload) {
+  const msg = { topic: this._channel, event: 'broadcast', payload: { type: 'broadcast', event, payload }, ref: this._nextRef() };
+  if (this._ready) this._send(msg); else this._queue.push(msg);
+};
 
-    // Event delegation for track card clicks — no inline JS handlers.
-    resultsContainer.addEventListener('click', e => {
-      const card = e.target.closest('.track-card[data-idx]');
-      if (!card) return;
-      const track = searchResults[parseInt(card.dataset.idx, 10)];
-      if (track) playTrack(track.id, track.title, track.artist, track.artwork);
+let rtChannel = null;
+function initRealtime() {
+  if (!coupleId) return;
+  const SB_URL = (typeof LoveFlix !== 'undefined') ? LoveFlix.SUPABASE_URL  : '';
+  const SB_KEY = (typeof LoveFlix !== 'undefined') ? LoveFlix.SUPABASE_ANON_KEY : '';
+  const token  = (typeof LoveFlix !== 'undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  if (!SB_URL || !SB_KEY) return;
+  rtChannel = new RealtimeChannel(SB_URL, SB_KEY, token, 'music-session:' + coupleId);
+  rtChannel.on('PLAY_PROGRESS', handlePartnerSync);
+  rtChannel.connect();
+}
+
+/* ── AUDIO ELEMENT ── */
+const audioEl = document.getElementById('audioEl');
+let streamCache = {};
+
+/* ── DATA ── */
+const ART_CLASSES = ['art-1','art-2','art-3','art-4','art-5','art-6','art-7','art-8','art-9','art-10','art-11','art-12'];
+
+const TRACKS = [
+  {id:'sc-001', title:'Tides (Reprise)',        artist:'Laura Misch',        album:'Quiet Mornings vol. ii',        dur:222, art:'art-1',  mono:'T'},
+  {id:'sc-002', title:'Slow Light',             artist:'Hiatus Kaiyote',     album:'Mood Valiant',                  dur:248, art:'art-6',  mono:'S'},
+  {id:'sc-003', title:'Paris Always Lovely',    artist:'Lola Marsh',         album:'Shot Shot Cherry',              dur:201, art:'art-10', mono:'P'},
+  {id:'sc-004', title:'Golden Hour',            artist:'JVKE',               album:'this is what... falls',        dur:209, art:'art-4',  mono:'G'},
+  {id:'sc-005', title:'Velvet Room',            artist:'Men I Trust',        album:'Untourable Album',              dur:235, art:'art-8',  mono:'V'},
+  {id:'sc-006', title:'Late Night Drive',       artist:'Sundara Karma',      album:'EARTH:DREAMS',                  dur:264, art:'art-9',  mono:'L'},
+  {id:'sc-007', title:'Mira',                   artist:'Wun Two',            album:'Salt',                          dur:178, art:'art-3',  mono:'M'},
+  {id:'sc-008', title:'Couplets',               artist:'Faye Webster',       album:'Underdressed at the Symphony',  dur:255, art:'art-7',  mono:'C'},
+  {id:'sc-009', title:'A Long Way Home',        artist:'Khruangbin',         album:'A LA SALA',                     dur:294, art:'art-2',  mono:'A'},
+  {id:'sc-010', title:'Hold On (Live Cut)',     artist:'Madison Cunningham', album:'Revealer',                      dur:241, art:'art-11', mono:'H'},
+  {id:'sc-011', title:"Adrien's Theme",         artist:'Nils Frahm',         album:'Music for Animals',             dur:312, art:'art-5',  mono:'A'},
+  {id:'sc-012', title:'Pale Blue Eyes (Cover)', artist:'Coeur de Pirate',    album:'Sessions',                      dur:226, art:'art-12', mono:'P'},
+  {id:'sc-013', title:'Wash Over Me',           artist:'Phoebe Bridgers',    album:'Punisher',                      dur:217, art:'art-9',  mono:'W'},
+  {id:'sc-014', title:'Sundays in Bed',         artist:'Tom Misch',          album:'Geography',                     dur:268, art:'art-1',  mono:'S'},
+  {id:'sc-015', title:'Anniversary',            artist:'Sam Evian',          album:'You, Forever',                  dur:198, art:'art-10', mono:'A'},
+  {id:'sc-016', title:'Spanish Sahara',         artist:'Foals',              album:'Total Life Forever',            dur:419, art:'art-2',  mono:'S'},
+  {id:'sc-017', title:'Soft Talk',              artist:'Sault',              album:'Untitled (Black Is)',            dur:185, art:'art-6',  mono:'S'},
+  {id:'sc-018', title:'Ours',                   artist:'The Marías',    album:'Submarine',                     dur:204, art:'art-10', mono:'O'},
+];
+
+const TOP_TRACKS    = [TRACKS[3], TRACKS[2], TRACKS[7], TRACKS[1], TRACKS[14], TRACKS[17]];
+const RECENT_ALBUMS = [
+  {title:'Quiet Mornings vol. ii', artist:'Your shared mix',  art:'art-1',  mono:'Q'},
+  {title:'Shot Shot Cherry',       artist:'Lola Marsh',       art:'art-10', mono:'L'},
+  {title:'A LA SALA',              artist:'Khruangbin',       art:'art-2',  mono:'K'},
+  {title:'Music for Animals',      artist:'Nils Frahm',       art:'art-5',  mono:'N'},
+  {title:'Mood Valiant',           artist:'Hiatus Kaiyote',   art:'art-6',  mono:'H'},
+  {title:'You, Forever',           artist:'Sam Evian',        art:'art-7',  mono:'S'},
+  {title:'Geography',              artist:'Tom Misch',        art:'art-4',  mono:'T'},
+];
+const MADE_FOR = [
+  {title:'The Slow Sunday Station',  artist:'Built from your loves',   art:'art-3',  mono:'S'},
+  {title:'Late-Night Picks',         artist:'Curated by partner',      art:'art-8',  mono:'A'},
+  {title:'Anniversary Mix',          artist:'Updated monthly',         art:'art-10', mono:'M'},
+  {title:'Long Distance Frequencies',artist:'For when apart',          art:'art-11', mono:'L'},
+  {title:'Dinner Together',          artist:'Slow tempo · 67–84 BPM', art:'art-4', mono:'D'},
+  {title:'Walks Around the Block',   artist:'Spring 2026 edition',     art:'art-6',  mono:'W'},
+];
+
+let QUEUE = [TRACKS[0], TRACKS[1], TRACKS[10], TRACKS[2], TRACKS[14], TRACKS[7], TRACKS[5], TRACKS[16]];
+let currentIdx = 0;
+let isPlaying = false;
+let position = 0;
+let volume = 0.72;
+const SEEK_BROADCAST_INTERVAL_MS = 3000;
+let lastBroadcast = 0;
+
+/* ── HELPERS ── */
+const $ = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => [...p.querySelectorAll(s)];
+const fmtTime = (s) => {
+  s = Math.max(0, Math.floor(s));
+  const m = Math.floor(s/60), r = (s%60).toString().padStart(2,'0');
+  return `${m}:${r}`;
+};
+function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c)); }
+
+function makeArt(t, sizeCls=''){
+  if (t.artUrl) {
+    return `<img src="${t.artUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block">`;
+  }
+  return `<div class="art-mono ${sizeCls}">${escapeHtml(t.mono)}</div>`;
+}
+
+function setArtEl(artDiv, monoEl, t) {
+  if (t.artUrl) {
+    artDiv.className = artDiv.className.replace(/\bart-\d+\b/g, '').trim();
+    monoEl.innerHTML = `<img src="${t.artUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block">`;
+  } else {
+    if (!artDiv.className.includes(t.art)) {
+      artDiv.className = artDiv.className.replace(/\bart-\d+\b/g, '').trim() + ' ' + t.art;
+    }
+    monoEl.textContent = t.mono;
+  }
+}
+
+/* ── RENDER: TRACK LIST ── */
+function renderTrackList(container, list, withNum=true){
+  container.innerHTML = list.map((t, i)=>`
+    <div class="track-row" data-id="${t.id}">
+      <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <span class="track-num">${withNum ? (i+1) : ''}</span>
+        <span class="num-hover">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </span>
+      </div>
+      <div class="track-art ${t.artUrl ? '' : t.art}">${makeArt(t,'small')}</div>
+      <div>
+        <div class="track-title">${escapeHtml(t.title)}</div>
+        <div class="track-artist">${escapeHtml(t.artist)}</div>
+      </div>
+      <div class="track-artist" style="font-size:12.5px">${escapeHtml(t.album || '')}</div>
+      <div class="track-dur">${fmtTime(t.dur)}</div>
+      <button class="track-add" aria-label="Add to queue" data-add="${t.id}">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+      </button>
+    </div>
+  `).join('');
+  container.querySelectorAll('.track-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-add]')) return;
+      playFromLibrary(row.dataset.id);
     });
+  });
+  container.querySelectorAll('[data-add]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const t = TRACKS.find(x => x.id === btn.dataset.add);
+      if (t) { QUEUE.push(t); renderQueue(); flashAdd(btn); }
+    });
+  });
+}
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = String(text || '');
-      return div.innerHTML;
-    }
+function flashAdd(btn){
+  btn.style.background = 'rgba(201,169,110,0.25)';
+  btn.style.color = '#fff';
+  setTimeout(()=>{ btn.style.background=''; btn.style.color=''; }, 400);
+}
 
-    function escapeAttr(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
+/* ── RENDER: ALBUM RAIL ── */
+function renderRail(container, list){
+  container.innerHTML = list.map(a=>`
+    <div class="album-card">
+      <div class="album-art ${a.artUrl ? '' : a.art}">
+        ${a.artUrl
+          ? `<img src="${a.artUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`
+          : `<div class="art-mono">${escapeHtml(a.mono)}</div>`}
+        <button class="play-hover" aria-label="Play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+      <div class="album-title">${escapeHtml(a.title)}</div>
+      <div class="album-artist">${escapeHtml(a.artist)}</div>
+    </div>
+  `).join('');
+}
 
-    function showEmptyState() {
-      resultsContainer.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-          <h3>Start Listening Together</h3>
-          <p>Search for a song and hit play to sync with your partner</p>
+/* ── RENDER: QUEUE ── */
+function renderQueue(){
+  const list  = $('#queueList');
+  const mList = $('#mQueueList');
+  const cur = QUEUE[currentIdx];
+  const upcoming = QUEUE.slice(currentIdx+1);
+  $('#queueCount').textContent = `${QUEUE.length} tracks`;
+  const mc = $('#mQsCount'); if (mc) mc.textContent = `${QUEUE.length} tracks`;
+
+  let html = '';
+  if (cur) {
+    html += `
+      <div class="queue-section-label">
+        <span class="now-bars"><span></span><span></span><span></span></span>
+        Now Playing
+      </div>
+      <div class="queue-item current" data-qidx="${currentIdx}">
+        <div class="drag-handle">⋮⋮</div>
+        <div class="queue-art ${cur.artUrl ? '' : cur.art}">${makeArt(cur,'small')}</div>
+        <div class="queue-info">
+          <div class="queue-tname">${escapeHtml(cur.title)}</div>
+          <div class="queue-tartist">${escapeHtml(cur.artist)}</div>
+        </div>
+        <button class="queue-remove" data-remove="${currentIdx}" aria-label="Remove">
+          <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg>
+        </button>
+      </div>`;
+  }
+  if (upcoming.length) {
+    html += `<div class="queue-section-label">Up Next</div>`;
+    upcoming.forEach((t, i) => {
+      const realIdx = currentIdx + 1 + i;
+      html += `
+        <div class="queue-item" draggable="true" data-qidx="${realIdx}">
+          <div class="drag-handle">⋮⋮</div>
+          <div class="queue-art ${t.artUrl ? '' : t.art}">${makeArt(t,'small')}</div>
+          <div class="queue-info">
+            <div class="queue-tname">${escapeHtml(t.title)}</div>
+            <div class="queue-tartist">${escapeHtml(t.artist)}</div>
+          </div>
+          <button class="queue-remove" data-remove="${realIdx}" aria-label="Remove">
+            <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg>
+          </button>
         </div>`;
-    }
-
-    // ── Playback ─────────────────────────────────────────────────────────────────
-    async function playTrack(trackId, title, artist, artwork) {
-      try {
-        const res = await fetch(`${WORKER_URL}/api/soundcloud/stream/${encodeURIComponent(trackId)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-
-        if (!data.streamUrl) {
-          showToast('This track is not available for streaming');
-          return;
-        }
-
-        currentTrack = { id: trackId, title, artist, artwork: artwork || '', streamUrl: data.streamUrl };
-
-        const existingIndex = queue.findIndex(t => t.id === trackId);
-        if (existingIndex === -1) {
-          queue.push(currentTrack);
-          currentQueueIndex = queue.length - 1;
-        } else {
-          currentQueueIndex = existingIndex;
-        }
-
-        updateQueueUI();
-        loadAndPlay(data.streamUrl);
-        updatePlayerUI();
-        playerBar.style.display = 'flex';
-        broadcastState();
-      } catch (err) {
-        showToast('Failed to load track');
-        console.error(err);
-      }
-    }
-
-    function loadAndPlay(url) {
-      audio.src = url;
-      audio.play().then(() => {
-        isPlaying = true;
-        updatePlayButton();
-        trackMusicPlay();
-      }).catch(err => {
-        console.error('Playback failed:', err);
-        showToast('Click play to start');
-      });
-    }
-
-    function trackMusicPlay() {
-      if (!currentTrack) return;
-      try {
-        const count = parseInt(localStorage.getItem('loveflix_music_plays_count') || '0', 10);
-        localStorage.setItem('loveflix_music_plays_count', String(count + 1));
-        localStorage.setItem('loveflix_music_last_song', JSON.stringify({
-          title: currentTrack.title,
-          artist: currentTrack.artist,
-        }));
-      } catch (_) {}
-
-      // Save to D1 database via API for permanent "songs listened together" tracking
-      const coupleId = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId() : null;
-      const token = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken() : null;
-      if (coupleId && token && currentTrack) {
-        fetch('/api/music/plays', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            couple_id: coupleId,
-            soundcloud_track_id: currentTrack.id,
-            title: currentTrack.title,
-            artist: currentTrack.artist,
-          }),
-        }).catch(err => console.error('Failed to save music play:', err));
-      }
-    }
-
-    function togglePlay() {
-      if (!currentTrack) return;
-      if (isPlaying) {
-        audio.pause();
-        isPlaying = false;
-      } else {
-        audio.play().then(() => { isPlaying = true; updatePlayButton(); }).catch(() => {});
-        return; // updatePlayButton called in .then()
-      }
-      updatePlayButton();
-      broadcastState();
-    }
-
-    function updatePlayButton() {
-      playIcon.style.display  = isPlaying ? 'none'  : 'block';
-      pauseIcon.style.display = isPlaying ? 'block' : 'none';
-    }
-
-    function prevTrack() {
-      if (currentQueueIndex > 0) {
-        currentQueueIndex--;
-        const t = queue[currentQueueIndex];
-        playTrack(t.id, t.title, t.artist, t.artwork);
-      }
-    }
-
-    function nextTrack() {
-      if (currentQueueIndex < queue.length - 1) {
-        currentQueueIndex++;
-        const t = queue[currentQueueIndex];
-        playTrack(t.id, t.title, t.artist, t.artwork);
-      }
-    }
-
-    function seek(e) {
-      if (!audio.duration) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
-      broadcastState();
-    }
-
-    function toggleMute() {
-      audio.muted = !audio.muted;
-      document.getElementById('volIcon').style.opacity = audio.muted ? '0.5' : '1';
-    }
-
-    function setVolume(e) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      audio.volume = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      document.getElementById('volumeFill').style.width = `${audio.volume * 100}%`;
-    }
-
-    // ── Player UI ────────────────────────────────────────────────────────────────
-    function updatePlayerUI() {
-      if (!currentTrack) return;
-      document.getElementById('playerTitle').textContent  = currentTrack.title;
-      document.getElementById('playerArtist').textContent = currentTrack.artist;
-      const artEl = document.getElementById('playerArtwork');
-      artEl.innerHTML = currentTrack.artwork
-        ? `<img src="${escapeAttr(currentTrack.artwork)}" alt="">`
-        : '<span style="font-family:Georgia,serif;font-style:italic;font-size:20px;display:flex;align-items:center;justify-content:center;height:100%;opacity:.9">♪</span>';
-    }
-
-    // ── Progress ─────────────────────────────────────────────────────────────────
-    audio.addEventListener('timeupdate', () => {
-      if (!audio.duration) return;
-      const pct = (audio.currentTime / audio.duration) * 100;
-      progressFill.style.width = `${pct}%`;
-      currentTimeEl.textContent = formatTime(audio.currentTime);
-      durationEl.textContent    = formatTime(audio.duration);
-
-      const now = Date.now();
-      if (isPlaying && now - lastSyncTime > 3000) {
-        broadcastState();
-        lastSyncTime = now;
-      }
     });
+  } else {
+    html += `<div class="queue-empty">No upcoming tracks.<br>Add some from search or your library.</div>`;
+  }
+  list.innerHTML = html;
+  if (mList) mList.innerHTML = html;
 
-    audio.addEventListener('ended', nextTrack);
-
-    function formatTime(s) {
-      if (!s || isNaN(s)) return '0:00';
-      const m = Math.floor(s / 60);
-      return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    }
-
-    // ── Queue ────────────────────────────────────────────────────────────────────
-    function toggleQueue() { queuePanel.classList.toggle('open'); }
-
-    function updateQueueUI() {
-      queueBadge.style.display = queue.length > 0 ? 'flex' : 'none';
-      queueBadge.textContent   = queue.length;
-
-      if (!queue.length) {
-        queueList.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px">Queue is empty</div>';
-        return;
-      }
-
-      // data-idx on each item; event delegation below handles clicks and removes.
-      queueList.innerHTML = queue.map((t, i) => `
-        <div class="queue-item${i === currentQueueIndex ? ' active' : ''}" data-idx="${i}">
-          <div class="queue-item-thumb">
-            ${t.artwork ? `<img src="${escapeAttr(t.artwork)}" alt="" loading="lazy">` : '♪'}
-          </div>
-          <div class="queue-item-info">
-            <div class="queue-item-title">${escapeHtml(t.title)}</div>
-            <div class="queue-item-artist">${escapeHtml(t.artist)}</div>
-          </div>
-          <button class="queue-item-remove" data-remove-idx="${i}" title="Remove">×</button>
-        </div>`).join('');
-    }
-
-    queueList.addEventListener('click', e => {
-      const removeBtn = e.target.closest('[data-remove-idx]');
-      if (removeBtn) {
+  function wire(container) {
+    if (!container) return;
+    container.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        removeFromQueue(parseInt(removeBtn.dataset.removeIdx, 10));
-        return;
-      }
-      const item = e.target.closest('.queue-item[data-idx]');
-      if (item) {
-        const t = queue[parseInt(item.dataset.idx, 10)];
-        if (t) playTrack(t.id, t.title, t.artist, t.artwork);
-      }
-    });
-
-    function removeFromQueue(index) {
-      queue.splice(index, 1);
-      if (currentQueueIndex >= index) currentQueueIndex--;
-      updateQueueUI();
-    }
-
-    // ── Sync (Supabase Realtime) ──────────────────────────────────────────────────
-    function initSync() {
-      const coupleId = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId() : null;
-      const token    = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken()    : null;
-
-      if (!coupleId || !token) {
-        document.getElementById('syncText').textContent = 'Sync offline';
-        document.getElementById('syncDot').style.background = 'var(--text-dim)';
-        document.getElementById('syncDot').style.animation = 'none';
-        return;
-      }
-
-      syncChannel = new RealtimeChannel(
-        SB_URL, SB_KEY, token,
-        `music-session:${coupleId}`,
-        status => {
-          if (status === 'connected') {
-            document.getElementById('syncText').textContent = 'Partner synced';
-            document.getElementById('syncDot').style.background = 'var(--gold)';
-          } else {
-            document.getElementById('syncText').textContent = 'Reconnecting...';
-            document.getElementById('syncDot').style.background = 'var(--text-dim)';
-          }
-        }
-      );
-
-      syncChannel.on('playback-state', handlePartnerState);
-      syncChannel.connect();
-    }
-
-    function broadcastState() {
-      if (!syncChannel || !currentTrack) return;
-      syncChannel.broadcast('playback-state', {
-        trackId:   currentTrack.id,
-        position:  Math.floor(audio.currentTime * 1000),
-        isPlaying,
-        timestamp: Date.now(),
+        const idx = +btn.dataset.remove;
+        if (idx === currentIdx) { QUEUE.splice(idx,1); if (currentIdx >= QUEUE.length) currentIdx = Math.max(0, QUEUE.length-1); }
+        else if (idx < currentIdx) { QUEUE.splice(idx,1); currentIdx--; }
+        else { QUEUE.splice(idx,1); }
+        renderQueue(); updateNowPlaying();
       });
-    }
-
-    function handlePartnerState(state) {
-      if (isSyncing) return;
-
-      const delay           = (Date.now() - state.timestamp) / 1000;
-      const adjustedPosition = (state.position / 1000) + delay;
-
-      // Different track — switch to it if we have it in the local queue.
-      if (!currentTrack || currentTrack.id !== state.trackId) {
-        const track = queue.find(t => t.id === state.trackId);
-        if (track) {
-          isSyncing = true;
-          try {
-            currentTrack      = track;
-            currentQueueIndex = queue.indexOf(track);
-            audio.src         = track.streamUrl;
-            audio.currentTime = adjustedPosition;
-            if (state.isPlaying) {
-              audio.play()
-                .then(() => { isPlaying = true; updatePlayButton(); })
-                .catch(() => {});
-            }
-            updatePlayerUI();
-            playerBar.style.display = 'flex';
-            updateQueueUI();
-          } finally {
-            isSyncing = false;
-          }
-        }
-        return;
-      }
-
-      // Same track — correct position drift > 2 s.
-      if (Math.abs(audio.currentTime - adjustedPosition) > 2) {
-        audio.currentTime = adjustedPosition;
-      }
-
-      // Sync play/pause state.
-      if (state.isPlaying && !isPlaying) {
-        audio.play().then(() => { isPlaying = true; updatePlayButton(); }).catch(() => {});
-        showToast('Partner started playing');
-      } else if (!state.isPlaying && isPlaying) {
-        audio.pause();
-        isPlaying = false;
-        updatePlayButton();
-        showToast('Partner paused');
-      }
-    }
-
-    // ── Toast ─────────────────────────────────────────────────────────────────────
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    // ── Wire up controls ──────────────────────────────────────────────────────────
-    document.getElementById('playBtn').addEventListener('click', togglePlay);
-    document.getElementById('prevBtn').addEventListener('click', prevTrack);
-    document.getElementById('nextBtn').addEventListener('click', nextTrack);
-    document.getElementById('progressBar').addEventListener('click', seek);
-    document.getElementById('muteBtn').addEventListener('click', toggleMute);
-    document.getElementById('volumeSlider').addEventListener('click', setVolume);
-    document.getElementById('queueToggle').addEventListener('click', toggleQueue);
-    document.getElementById('queueClose').addEventListener('click', toggleQueue);
-
-    // Space bar: play / pause (not when typing in the search box).
-    document.addEventListener('keydown', e => {
-      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
-        e.preventDefault();
-        togglePlay();
-      }
     });
+    container.querySelectorAll('.queue-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('[data-remove]') || e.target.closest('.drag-handle')) return;
+        const idx = +item.dataset.qidx;
+        currentIdx = idx; position = 0; isPlaying = false;
+        updateNowPlaying(); renderQueue();
+        loadAndPlay(QUEUE[currentIdx]);
+      });
+    });
+    let dragIdx = null;
+    container.querySelectorAll('[draggable="true"]').forEach(item => {
+      item.addEventListener('dragstart', (e) => { dragIdx = +item.dataset.qidx; item.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+      item.addEventListener('dragend',   () => { item.classList.remove('dragging'); container.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over')); });
+      item.addEventListener('dragover',  (e) => { e.preventDefault(); container.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over')); item.classList.add('drag-over'); });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const targetIdx = +item.dataset.qidx;
+        if (dragIdx == null || dragIdx === targetIdx) return;
+        const [moved] = QUEUE.splice(dragIdx, 1);
+        const adjusted = targetIdx > dragIdx ? targetIdx-1 : targetIdx;
+        QUEUE.splice(adjusted, 0, moved);
+        if (dragIdx === currentIdx) currentIdx = adjusted;
+        else if (dragIdx < currentIdx && adjusted >= currentIdx) currentIdx--;
+        else if (dragIdx > currentIdx && adjusted <= currentIdx) currentIdx++;
+        dragIdx = null; renderQueue();
+      });
+    });
+  }
+  wire(list); wire(mList);
+}
 
-    // ── Init ─────────────────────────────────────────────────────────────────────
-    initSync();
+/* ── NOW PLAYING ── */
+function updateNowPlaying(){
+  const t = QUEUE[currentIdx];
+  if (!t) return;
+  $('#npTitle').textContent = t.title;
+  $('#npArtist').textContent = t.artist + (t.album ? ' · ' + t.album : '');
+  setArtEl($('#npArt'), $('#npArtMono'), t);
+  $('#durTime').textContent = fmtTime(t.dur);
+  $('#mMiniTitle').textContent = t.title;
+  $('#mMiniArtist').textContent = t.artist;
+  setArtEl($('#mMiniArt'), $('#mMiniArtMono'), t);
+  $('#mFsTitle').textContent = t.title;
+  $('#mFsArtist').textContent = t.artist;
+  $('#mFsAlbum').textContent = t.album || '';
+  setArtEl($('#mFsArt'), $('#mFsArtMono'), t);
+  $('#mFsDurTime').textContent = fmtTime(t.dur);
+  updateSeek();
+}
 
-    // Pre-populate search from ?q= param (set by home page quick-search).
-    (function () {
-      const q = new URL(location.href).searchParams.get('q');
-      if (q) { searchInput.value = q; doSearch(q); }
-    })();
-  </script>
-</body>
-</html>
+function updateSeek(){
+  const t = QUEUE[currentIdx];
+  if (!t) return;
+  const pct = t.dur > 0 ? Math.min(100, (position / t.dur) * 100) : 0;
+  $('#seekFill').style.width = pct + '%';
+  $('#seekThumb').style.left = pct + '%';
+  $('#curTime').textContent = fmtTime(position);
+  $('#mFsSeekFill').style.width = pct + '%';
+  $('#mFsSeekThumb').style.left = pct + '%';
+  $('#mFsCurTime').textContent = fmtTime(position);
+  const mp = $('#mMiniProgress'); if (mp) mp.style.width = pct + '%';
+}
+
+function updatePlayBtn(){
+  $('#playBtn').classList.toggle('playing', isPlaying);
+  $('#mMini').classList.toggle('playing', isPlaying);
+  $('#mFullscreen').classList.toggle('playing', isPlaying);
+}
+
+/* ── PLAY FROM LIBRARY ── */
+async function playFromLibrary(id){
+  const t = TRACKS.find(x => x.id === id);
+  if (!t) return;
+  QUEUE.splice(currentIdx+1, 0, t);
+  currentIdx++;
+  position = 0;
+  isPlaying = false;
+  updateNowPlaying();
+  updatePlayBtn();
+  renderQueue();
+  await loadAndPlay(t);
+}
+
+async function loadAndPlay(t){
+  if (t._scId) {
+    $('#playBtn').classList.add('loading');
+    try {
+      let url = streamCache[t._scId];
+      if (!url) {
+        const r = await fetch('/api/soundcloud/stream/' + t._scId);
+        const j = await r.json();
+        url = j.streamUrl || j.url || '';
+        if (url) streamCache[t._scId] = url;
+      }
+      if (url) {
+        audioEl.src = url;
+        audioEl.volume = volume;
+        await audioEl.play();
+        isPlaying = true;
+      }
+    } catch(e) { console.warn('SC stream error:', e); }
+    $('#playBtn').classList.remove('loading');
+  } else {
+    isPlaying = true;
+    updatePlayBtn();
+  }
+  trackMusicPlay(t);
+}
+
+/* ── AUDIO EVENTS ── */
+audioEl.addEventListener('timeupdate', () => {
+  if (!QUEUE[currentIdx] || !QUEUE[currentIdx]._scId) return;
+  position = audioEl.currentTime;
+  updateSeek();
+  broadcastPosition();
+});
+audioEl.addEventListener('durationchange', () => {
+  const t = QUEUE[currentIdx];
+  if (t && audioEl.duration && isFinite(audioEl.duration)) {
+    t.dur = Math.floor(audioEl.duration);
+    $('#durTime').textContent = fmtTime(t.dur);
+    $('#mFsDurTime').textContent = fmtTime(t.dur);
+  }
+});
+audioEl.addEventListener('ended', () => {
+  if (currentIdx < QUEUE.length-1) {
+    currentIdx++; position = 0; isPlaying = false;
+    updateNowPlaying(); renderQueue();
+    loadAndPlay(QUEUE[currentIdx]);
+  } else { isPlaying = false; updatePlayBtn(); }
+});
+audioEl.addEventListener('play',  () => { isPlaying = true;  updatePlayBtn(); });
+audioEl.addEventListener('pause', () => { isPlaying = false; updatePlayBtn(); });
+audioEl.addEventListener('error', () => { isPlaying = false; updatePlayBtn(); });
+
+/* ── CONTROLS ── */
+$('#playBtn').addEventListener('click', () => {
+  const t = QUEUE[currentIdx];
+  if (t && t._scId) {
+    if (audioEl.paused) audioEl.play(); else audioEl.pause();
+  } else {
+    isPlaying = !isPlaying;
+    updatePlayBtn();
+  }
+});
+$('#nextBtn').addEventListener('click', () => {
+  if (currentIdx < QUEUE.length-1) {
+    currentIdx++; position = 0; isPlaying = false;
+    updateNowPlaying(); renderQueue();
+    loadAndPlay(QUEUE[currentIdx]);
+  }
+});
+$('#prevBtn').addEventListener('click', () => {
+  if (position > 4 || currentIdx === 0) {
+    position = 0;
+    const t = QUEUE[currentIdx];
+    if (t && t._scId && audioEl.readyState >= 2) audioEl.currentTime = 0;
+    updateSeek(); return;
+  }
+  currentIdx--; position = 0; isPlaying = false;
+  updateNowPlaying(); renderQueue();
+  loadAndPlay(QUEUE[currentIdx]);
+});
+$('#favBtn').addEventListener('click', () => { $('#favBtn').classList.toggle('active'); });
+
+/* seek */
+function pctFromEvent(el, e){
+  const r = el.getBoundingClientRect();
+  return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+}
+const seek = $('#seek');
+let seekDrag = false;
+seek.addEventListener('mousedown', (e) => {
+  seekDrag = true; seek.classList.add('dragging');
+  const t = QUEUE[currentIdx]; if (!t) return;
+  position = pctFromEvent(seek, e) * t.dur;
+  if (t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+  updateSeek();
+});
+window.addEventListener('mousemove', (e) => {
+  if (!seekDrag) return;
+  const t = QUEUE[currentIdx]; if (!t) return;
+  position = pctFromEvent(seek, e) * t.dur;
+  updateSeek();
+});
+window.addEventListener('mouseup', () => {
+  if (seekDrag) {
+    seekDrag = false; seek.classList.remove('dragging');
+    const t = QUEUE[currentIdx];
+    if (t && t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+    broadcastPosition(true);
+  }
+});
+
+/* volume */
+const volBar = $('#volBar');
+let volDrag = false;
+function setVol(v){
+  volume = Math.max(0, Math.min(1, v));
+  audioEl.volume = volume;
+  $('#volFill').style.width = (volume*100) + '%';
+  $('#volThumb').style.left = (volume*100) + '%';
+  const mvf = $('#mFsVolFill'); if (mvf) mvf.style.width = (volume*100)+'%';
+  const mvt = $('#mFsVolThumb'); if (mvt) mvt.style.left = (volume*100)+'%';
+}
+volBar.addEventListener('mousedown', (e) => { volDrag = true; setVol(pctFromEvent(volBar, e)); });
+window.addEventListener('mousemove', (e) => { if (volDrag) setVol(pctFromEvent(volBar, e)); });
+window.addEventListener('mouseup',   () => { volDrag = false; });
+$('#muteBtn').addEventListener('click', () => { setVol(volume > 0 ? 0 : 0.72); });
+
+/* ── SIMULATED PLAYBACK (demo tracks only) ── */
+function broadcastPosition(force=false){
+  if (!rtChannel || !QUEUE[currentIdx]) return;
+  const now = Date.now();
+  if (!force && now - lastBroadcast < SEEK_BROADCAST_INTERVAL_MS) return;
+  lastBroadcast = now;
+  rtChannel.broadcast('PLAY_PROGRESS', {
+    trackId: QUEUE[currentIdx].id,
+    positionMs: position * 1000,
+    isPlaying
+  });
+}
+
+setInterval(() => {
+  if (!isPlaying) return;
+  const t = QUEUE[currentIdx];
+  if (!t || t._scId) return;
+  position += 1;
+  if (position >= t.dur) {
+    if (currentIdx < QUEUE.length-1) { currentIdx++; position = 0; updateNowPlaying(); renderQueue(); }
+    else { isPlaying = false; position = t.dur; updatePlayBtn(); }
+  }
+  updateSeek();
+  broadcastPosition();
+}, 1000);
+
+/* ── PARTNER SYNC ── */
+function handlePartnerSync(payload){
+  showToast(partnerName + (payload.isPlaying === false ? ' paused' : ' resumed') + ' · ' + fmtTime((payload.positionMs||0) / 1000));
+}
+
+/* ── SEARCH (real SoundCloud API) ── */
+const searchInput = $('#searchInput');
+const defaultView = $('#defaultView');
+const searchView  = $('#searchView');
+let searchTimer = null;
+let searchAbort = null;
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  clearTimeout(searchTimer);
+  if (!q) { searchView.classList.add('hidden'); defaultView.classList.remove('hidden'); return; }
+  searchTimer = setTimeout(() => doSearch(q), 300);
+});
+
+async function doSearch(q){
+  if (searchAbort) try { searchAbort.abort(); } catch(_) {}
+  searchAbort = new AbortController();
+  defaultView.classList.add('hidden');
+  searchView.classList.remove('hidden');
+  document.getElementById('resultsCount').innerHTML = 'Searching SoundCloud…';
+  document.getElementById('searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">Searching…</div>';
+  try {
+    const r = await fetch('/api/soundcloud/search?q=' + encodeURIComponent(q), { signal: searchAbort.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const raw = data.tracks || [];
+    const results = raw.map((t, i) => ({
+      id:     'sc-live-' + t.id,
+      _scId:  t.id,
+      title:  t.title  || 'Unknown',
+      artist: t.artist || t.user || 'Unknown',
+      album:  '',
+      dur:    t.duration ? Math.floor(t.duration / 1000) : 0,
+      art:    ART_CLASSES[i % ART_CLASSES.length],
+      artUrl: t.artwork_url ? t.artwork_url.replace(/-large\./, '-t300x300.') : null,
+      mono:   ((t.title||'?')[0]||'?').toUpperCase()
+    }));
+    results.forEach(res => { if (!TRACKS.find(x => x.id === res.id)) TRACKS.push(res); });
+    document.getElementById('resultsCount').innerHTML =
+      `<strong>${results.length}</strong> result${results.length===1?'':'s'} for <strong>"${escapeHtml(q)}"</strong> · via SoundCloud`;
+    if (results.length === 0) {
+      document.getElementById('searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">No results — try a different term.</div>';
+    } else {
+      renderTrackList(document.getElementById('searchResults'), results, false);
+    }
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+    document.getElementById('resultsCount').textContent = 'Search failed — try again';
+    document.getElementById('searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">Error loading results. Check connection and try again.</div>';
+  }
+}
+
+/* ── KEYBOARD ── */
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault(); searchInput.focus(); searchInput.select();
+  }
+  if (e.key === ' ' && document.activeElement !== searchInput) {
+    e.preventDefault(); $('#playBtn').click();
+  }
+});
+
+/* ── TOAST ── */
+const toast = $('#toast');
+function showToast(msg){
+  const strong = toast.querySelector('.toast-text strong');
+  if (strong) strong.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3800);
+}
+
+/* ── MOBILE BINDINGS ── */
+const mFs = $('#mFullscreen');
+const mQs = $('#mQueueSheet');
+
+document.querySelectorAll('[data-mini-play]').forEach(b => {
+  b.addEventListener('click', (e) => { e.stopPropagation(); $('#playBtn').click(); });
+});
+document.querySelectorAll('[data-mini-next]').forEach(b => {
+  b.addEventListener('click', (e) => { e.stopPropagation(); $('#nextBtn').click(); });
+});
+document.querySelectorAll('[data-mini-prev]').forEach(b => {
+  b.addEventListener('click', (e) => { e.stopPropagation(); $('#prevBtn').click(); });
+});
+
+$('#mMini').addEventListener('click', (e) => { if (e.target.closest('button')) return; mFs.classList.add('open'); });
+$('#mFsClose').addEventListener('click', () => { mFs.classList.remove('open'); });
+$('#mFsFav').addEventListener('click', () => { $('#mFsFav').classList.toggle('active'); });
+$('#mFsQueueBtn').addEventListener('click', () => { mQs.classList.add('open'); });
+$('#mQsClose').addEventListener('click',    () => { mQs.classList.remove('open'); });
+
+/* mobile seek */
+const mFsSeek = $('#mFsSeek');
+let mSeekDrag = false;
+function mSetSeek(e){
+  const t = QUEUE[currentIdx]; if (!t) return;
+  const touch = e.touches ? e.touches[0] : e;
+  const r = mFsSeek.getBoundingClientRect();
+  position = Math.max(0, Math.min(1, (touch.clientX - r.left) / r.width)) * t.dur;
+  if (t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+  updateSeek();
+}
+['mousedown','touchstart'].forEach(ev => { mFsSeek.addEventListener(ev, (e)=>{ mSeekDrag=true; mSetSeek(e); }, {passive:true}); });
+['mousemove','touchmove'].forEach(ev  => { window.addEventListener(ev,  (e)=>{ if(mSeekDrag) mSetSeek(e); }, {passive:true}); });
+['mouseup','touchend','touchcancel'].forEach(ev => { window.addEventListener(ev, ()=>{ if(mSeekDrag){ mSeekDrag=false; broadcastPosition(true); } }); });
+
+/* mobile volume */
+const mFsVol = $('#mFsVolBar');
+let mVolDrag = false;
+function mSetVol(e){
+  const touch = e.touches ? e.touches[0] : e;
+  const r = mFsVol.getBoundingClientRect();
+  setVol(Math.max(0, Math.min(1, (touch.clientX - r.left) / r.width)));
+}
+['mousedown','touchstart'].forEach(ev => { mFsVol.addEventListener(ev, (e)=>{ mVolDrag=true; mSetVol(e); }, {passive:true}); });
+['mousemove','touchmove'].forEach(ev  => { window.addEventListener(ev,  (e)=>{ if(mVolDrag) mSetVol(e); }, {passive:true}); });
+['mouseup','touchend','touchcancel'].forEach(ev => { window.addEventListener(ev, ()=>{ mVolDrag=false; }); });
+
+/* mobile tabs */
+document.querySelectorAll('.m-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.m-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    if (t.dataset.tab === 'search') { window.scrollTo({top:0,behavior:'smooth'}); setTimeout(()=>searchInput.focus(),250); }
+    else window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ── TRACK PLAY ANALYTICS ── */
+function trackMusicPlay(t){
+  const count = parseInt(localStorage.getItem('loveflix_music_plays_count')||'0',10)+1;
+  localStorage.setItem('loveflix_music_plays_count', String(count));
+  localStorage.setItem('loveflix_music_last_song', JSON.stringify({title:t.title,artist:t.artist}));
+  if (!coupleId) return;
+  const token = (typeof LoveFlix!=='undefined') ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+  fetch('/api/music/plays', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+    body: JSON.stringify({ couple_id:coupleId, soundcloud_track_id:t._scId||0, title:t.title, artist:t.artist||'' })
+  }).catch(()=>{});
+}
+
+/* ── INIT ── */
+initCoupleContext();
+renderTrackList($('#topTracksList'), TOP_TRACKS);
+renderRail($('#recentRail'), RECENT_ALBUMS);
+renderRail($('#madeForRail'), MADE_FOR);
+renderQueue();
+updateNowPlaying();
+position = 0; updateSeek();
+setVol(volume);
+$('#durTime').textContent = fmtTime(QUEUE[currentIdx].dur);
+initRealtime();
+
+/* handle ?q= from home page quick search */
+const _urlQ = new URLSearchParams(location.search).get('q');
+if (_urlQ) { searchInput.value = _urlQ; doSearch(_urlQ); }
+</script>
+
+
+</body></html>
