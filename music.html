@@ -1228,7 +1228,7 @@
     <div class="search-wrap">
       <div class="search-bar">
         <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
-        <input id="searchInput" type="text" placeholder="Search SoundCloud — songs, artists, playlists…">
+        <input id="searchInput" type="text" placeholder="Search songs, artists, albums…">
         <kbd>⌘ K</kbd>
       </div>
     </div>
@@ -1445,7 +1445,7 @@
       </div>
     </div>
 
-    <div class="attribution">Powered by <span>SoundCloud</span></div>
+    <div class="attribution">Previews via <span>Apple Music</span></div>
   </footer>
 
 </div>
@@ -1593,7 +1593,7 @@
       <span><strong style="font-weight:600;color:#fff">Adrien</strong> is listening with you</span>
     </div>
 
-    <div class="m-fs-attr">Powered by <span>SoundCloud</span></div>
+    <div class="m-fs-attr">Previews via <span>Apple Music</span></div>
   </div>
 </div>
 
@@ -2016,25 +2016,17 @@ async function playFromLibrary(id){
 }
 
 async function loadAndPlay(t){
-  if (t._scId) {
-    $('#playBtn').classList.add('loading');
+  if (t.stream_url) {
+    // iTunes preview — direct MP3, no extra fetch needed
+    audioEl.src = t.stream_url;
+    audioEl.volume = volume;
     try {
-      let url = streamCache[t._scId];
-      if (!url) {
-        const r = await fetch('/api/soundcloud/stream/' + t._scId);
-        const j = await r.json();
-        url = j.streamUrl || j.url || '';
-        if (url) streamCache[t._scId] = url;
-      }
-      if (url) {
-        audioEl.src = url;
-        audioEl.volume = volume;
-        await audioEl.play();
-        isPlaying = true;
-      }
-    } catch(e) { console.warn('SC stream error:', e); }
-    $('#playBtn').classList.remove('loading');
+      await audioEl.play();
+      isPlaying = true;
+    } catch(e) { console.warn('Audio play error:', e); }
+    updatePlayBtn();
   } else {
+    // Demo/static track — no real audio, simulate playback
     isPlaying = true;
     updatePlayBtn();
   }
@@ -2043,7 +2035,7 @@ async function loadAndPlay(t){
 
 /* ── AUDIO EVENTS ── */
 audioEl.addEventListener('timeupdate', () => {
-  if (!QUEUE[currentIdx] || !QUEUE[currentIdx]._scId) return;
+  if (!QUEUE[currentIdx] || !QUEUE[currentIdx].stream_url) return;
   position = audioEl.currentTime;
   updateSeek();
   broadcastPosition();
@@ -2070,7 +2062,7 @@ audioEl.addEventListener('error', () => { isPlaying = false; updatePlayBtn(); })
 /* ── CONTROLS ── */
 $('#playBtn').addEventListener('click', () => {
   const t = QUEUE[currentIdx];
-  if (t && t._scId) {
+  if (t && t.stream_url) {
     if (audioEl.paused) audioEl.play(); else audioEl.pause();
   } else {
     isPlaying = !isPlaying;
@@ -2088,7 +2080,7 @@ $('#prevBtn').addEventListener('click', () => {
   if (position > 4 || currentIdx === 0) {
     position = 0;
     const t = QUEUE[currentIdx];
-    if (t && t._scId && audioEl.readyState >= 2) audioEl.currentTime = 0;
+    if (t && t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = 0;
     updateSeek(); return;
   }
   currentIdx--; position = 0; isPlaying = false;
@@ -2108,7 +2100,7 @@ seek.addEventListener('mousedown', (e) => {
   seekDrag = true; seek.classList.add('dragging');
   const t = QUEUE[currentIdx]; if (!t) return;
   position = pctFromEvent(seek, e) * t.dur;
-  if (t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+  if (t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
   updateSeek();
 });
 window.addEventListener('mousemove', (e) => {
@@ -2121,7 +2113,7 @@ window.addEventListener('mouseup', () => {
   if (seekDrag) {
     seekDrag = false; seek.classList.remove('dragging');
     const t = QUEUE[currentIdx];
-    if (t && t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+    if (t && t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
     broadcastPosition(true);
   }
 });
@@ -2158,7 +2150,7 @@ function broadcastPosition(force=false){
 setInterval(() => {
   if (!isPlaying) return;
   const t = QUEUE[currentIdx];
-  if (!t || t._scId) return;
+  if (!t || t.stream_url) return;
   position += 1;
   if (position >= t.dur) {
     if (currentIdx < QUEUE.length-1) { currentIdx++; position = 0; updateNowPlaying(); renderQueue(); }
@@ -2173,7 +2165,7 @@ function handlePartnerSync(payload){
   showToast(partnerName + (payload.isPlaying === false ? ' paused' : ' resumed') + ' · ' + fmtTime((payload.positionMs||0) / 1000));
 }
 
-/* ── SEARCH (real SoundCloud API) ── */
+/* ── SEARCH ── */
 const searchInput = $('#searchInput');
 const defaultView = $('#defaultView');
 const searchView  = $('#searchView');
@@ -2192,7 +2184,7 @@ async function doSearch(q){
   searchAbort = new AbortController();
   defaultView.classList.add('hidden');
   searchView.classList.remove('hidden');
-  document.getElementById('resultsCount').innerHTML = 'Searching SoundCloud…';
+  document.getElementById('resultsCount').innerHTML = 'Searching…';
   document.getElementById('searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">Searching…</div>';
   try {
     const r = await fetch('/api/soundcloud/search?q=' + encodeURIComponent(q), { signal: searchAbort.signal });
@@ -2200,19 +2192,19 @@ async function doSearch(q){
     const data = await r.json();
     const raw = data.tracks || [];
     const results = raw.map((t, i) => ({
-      id:     'sc-live-' + t.id,
-      _scId:  t.id,
-      title:  t.title  || 'Unknown',
-      artist: t.artist || t.user || 'Unknown',
-      album:  '',
-      dur:    t.duration ? Math.floor(t.duration / 1000) : 0,
-      art:    ART_CLASSES[i % ART_CLASSES.length],
-      artUrl: t.artwork_url ? t.artwork_url.replace(/-large\./, '-t300x300.') : null,
-      mono:   ((t.title||'?')[0]||'?').toUpperCase()
+      id:         'it-' + t.id,
+      stream_url: t.stream_url || null,      // direct 30s preview MP3
+      title:      t.title      || 'Unknown',
+      artist:     t.artist     || 'Unknown',
+      album:      '',
+      dur:        t.duration   ? Math.floor(t.duration / 1000) : 30,
+      art:        ART_CLASSES[i % ART_CLASSES.length],
+      artUrl:     t.artwork_url || null,
+      mono:       ((t.title||'?')[0]||'?').toUpperCase()
     }));
     results.forEach(res => { if (!TRACKS.find(x => x.id === res.id)) TRACKS.push(res); });
     document.getElementById('resultsCount').innerHTML =
-      `<strong>${results.length}</strong> result${results.length===1?'':'s'} for <strong>"${escapeHtml(q)}"</strong> · via SoundCloud`;
+      `<strong>${results.length}</strong> result${results.length===1?'':'s'} for <strong>"${escapeHtml(q)}"</strong>`;
     if (results.length === 0) {
       document.getElementById('searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">No results — try a different term.</div>';
     } else {
@@ -2272,7 +2264,7 @@ function mSetSeek(e){
   const touch = e.touches ? e.touches[0] : e;
   const r = mFsSeek.getBoundingClientRect();
   position = Math.max(0, Math.min(1, (touch.clientX - r.left) / r.width)) * t.dur;
-  if (t._scId && audioEl.readyState >= 2) audioEl.currentTime = position;
+  if (t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
   updateSeek();
 }
 ['mousedown','touchstart'].forEach(ev => { mFsSeek.addEventListener(ev, (e)=>{ mSeekDrag=true; mSetSeek(e); }, {passive:true}); });
@@ -2311,7 +2303,7 @@ function trackMusicPlay(t){
   fetch('/api/music/plays', {
     method: 'POST',
     headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-    body: JSON.stringify({ couple_id:coupleId, soundcloud_track_id:t._scId||0, title:t.title, artist:t.artist||'' })
+    body: JSON.stringify({ couple_id:coupleId, soundcloud_track_id:0, title:t.title, artist:t.artist||'' })
   }).catch(()=>{});
 }
 
