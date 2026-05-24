@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LoveFlix — Music</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="/assets/loveflix.js"></script>
+
+  <style>
+    :root {
+      --crimson: #e50914;
+      --void: #141414;
+      --void-light: #1a1a1a;
+      --gold: #c9a96e;
+      --gold-dim: rgba(201, 169, 110, 0.3);
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --text-dim: rgba(255, 255, 255, 0.4);
+      --surface: rgba(255, 255, 255, 0.05);
+      --surface-hover: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 140px;
+    }
+
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #2b0710 0%, #140509 40%, #0b0b0b 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+      line-height: 1;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover { color: var(--text); }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: var(--crimson);
+    }
+
+    .logo span { color: var(--text); }
+
+    .partner-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold-dim);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .search-section {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .search-bar {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--crimson);
+      background: var(--surface-hover);
+    }
+
+    .search-input::placeholder { color: var(--text-dim); }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 18px;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .track-card {
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .track-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border);
+      transform: translateY(-2px);
+    }
+
+    .track-card.active { border-color: var(--crimson); }
+
+    .track-artwork {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--crimson), #5a0410);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .track-artwork img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .track-artwork .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .track-card:hover .play-overlay { opacity: 1; }
+
+    .play-overlay svg {
+      width: 40px;
+      height: 40px;
+      fill: white;
+    }
+
+    .track-info { padding: 12px; }
+
+    .track-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-artist {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .player-track {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 200px;
+      flex: 0 1 280px;
+    }
+
+    .player-artwork {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--crimson), #5a0410);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .player-artwork img { width: 100%; height: 100%; object-fit: cover; }
+
+    .player-meta { min-width: 0; }
+
+    .player-title {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-artist {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover { background: var(--surface-hover); }
+
+    .control-btn.play-btn {
+      width: 48px;
+      height: 48px;
+      background: white;
+      color: var(--void);
+    }
+
+    .control-btn.play-btn:hover { transform: scale(1.05); }
+
+    .control-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .control-btn.play-btn svg { width: 24px; height: 24px; }
+
+    .progress-section {
+      flex: 1;
+      max-width: 400px;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--crimson);
+      border-radius: 2px;
+      position: relative;
+      transition: width 0.1s linear;
+    }
+
+    .progress-thumb {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: var(--gold);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .progress-bar:hover .progress-thumb { opacity: 1; }
+
+    .volume-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 120px;
+    }
+
+    .volume-slider {
+      width: 80px;
+      height: 4px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .volume-fill {
+      height: 100%;
+      background: var(--text-muted);
+      border-radius: 2px;
+    }
+
+    .queue-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+      position: relative;
+    }
+
+    .queue-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .queue-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: var(--crimson);
+      border-radius: 50%;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .queue-panel {
+      position: fixed;
+      right: -360px;
+      top: 0;
+      bottom: 140px;
+      width: 340px;
+      background: rgba(20, 20, 20, 0.98);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      transition: right 0.3s ease;
+      z-index: 99;
+      overflow-y: auto;
+    }
+
+    .queue-panel.open { right: 0; }
+
+    .queue-header {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .queue-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .queue-item:hover { background: var(--surface-hover); }
+    .queue-item.active { background: var(--surface); }
+
+    .queue-item-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--crimson), #5a0410);
+      flex-shrink: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .queue-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .queue-item-info { flex: 1; min-width: 0; }
+
+    .queue-item-title {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-item-artist {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .queue-item-remove {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .queue-item-remove:hover { color: var(--crimson); }
+
+    .attribution {
+      position: fixed;
+      bottom: 140px;
+      right: 24px;
+      font-size: 11px;
+      color: var(--text-dim);
+      z-index: 98;
+    }
+
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--crimson);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .empty-state h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <header class="header">
+    <div class="header-left">
+      <a class="back-btn" href="home.html" title="Back to home">&#8592;</a>
+      <div class="logo">LOVE<span>♥</span>FLIX</div>
+    </div>
+    <div class="partner-status">
+      <div class="status-dot" id="syncDot"></div>
+      <span id="syncText">Connecting...</span>
+    </div>
+  </header>
+
+  <section class="search-section">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="Search for songs, artists..."
+        autocomplete="off"
+      >
+    </div>
+    <div id="resultsContainer">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <h3>Start Listening Together</h3>
+        <p>Search for a song and hit play to sync with your partner</p>
+      </div>
+    </div>
+  </section>
+
+  <aside class="queue-panel" id="queuePanel">
+    <div class="queue-header">
+      Our Playlist
+      <button class="queue-close" id="queueClose">×</button>
+    </div>
+    <div id="queueList"></div>
+  </aside>
+
+  <footer class="player-bar" id="playerBar" style="display: none;">
+    <div class="player-track">
+      <div class="player-artwork" id="playerArtwork"></div>
+      <div class="player-meta">
+        <div class="player-title" id="playerTitle">Select a song</div>
+        <div class="player-artist" id="playerArtist">—</div>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <button class="control-btn" id="prevBtn" title="Previous">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="control-btn play-btn" id="playBtn">
+        <svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" id="pauseIcon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="control-btn" id="nextBtn" title="Next">
+        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+    </div>
+
+    <div class="progress-section">
+      <div class="time-display">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill" style="width: 0%">
+          <div class="progress-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="volume-section">
+      <button class="control-btn" id="muteBtn">
+        <svg viewBox="0 0 24 24" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
+      <div class="volume-slider" id="volumeSlider">
+        <div class="volume-fill" id="volumeFill" style="width: 80%"></div>
+      </div>
+    </div>
+
+    <button class="queue-btn" id="queueToggle" title="Queue">
+      <svg viewBox="0 0 24 24"><path d="M4 6h2v2H4zm0 5h2v2H4zm0 5h2v2H4zm16-8V6H8.023v2H18zm0 5v-2H8.023v2H18zm0 5v-2H8.023v2H18z"/></svg>
+      <span class="queue-badge" id="queueBadge" style="display:none">0</span>
+    </button>
+  </footer>
+
+  <div class="attribution">Powered by SoundCloud</div>
+  <div class="toast" id="toast"></div>
+  <audio id="audioPlayer" preload="none"></audio>
+
+  <script>
+    // ── Auth guard ──────────────────────────────────────────────────────────────
+    (function () {
+      const token = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken() : null;
+      if (!token) { location.replace('loveflix_login_screen.html'); }
+    })();
+
+    // ── Config ──────────────────────────────────────────────────────────────────
+    // SoundCloud endpoints live on the same domain as this page (Pages Functions).
+    const WORKER_URL = '';
+    const SB_URL = typeof LoveFlix !== 'undefined'
+      ? LoveFlix.SUPABASE_URL
+      : 'https://jeblgjjutyzzdursjqnn.supabase.co';
+    const SB_KEY = typeof LoveFlix !== 'undefined'
+      ? LoveFlix.SUPABASE_ANON_KEY
+      : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
+
+    // ── Supabase Realtime mini-client ───────────────────────────────────────────
+    // Mirrors the implementation in loveflix-call.js; kept here to avoid pulling
+    // in the full calling library just for music sync.
+    function RealtimeChannel(sbUrl, anonKey, token, channelName, onStatusChange) {
+      this._wsUrl = sbUrl.replace(/^https?/, p => p === 'https' ? 'wss' : 'ws')
+        + '/realtime/v1/websocket?apikey=' + anonKey + '&vsn=1.0.0';
+      this._token    = token;
+      this._channel  = 'realtime:' + channelName;
+      this._ws       = null;
+      this._ref      = 0;
+      this._handlers = {};
+      this._ready    = false;
+      this._queue    = [];
+      this._closed   = false;
+      this._hbTimer  = null;
+      this._retTimer = null;
+      this._onStatus = onStatusChange || (() => {});
+    }
+
+    RealtimeChannel.prototype.connect = function () {
+      if (this._closed) return;
+      const self = this;
+      try { this._ws = new WebSocket(this._wsUrl); } catch (e) { return; }
+
+      this._ws.onopen = () => {
+        self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
+        self._send({
+          topic: self._channel,
+          event: 'phx_join',
+          payload: { config: { broadcast: { self: false } }, access_token: self._token },
+          ref: self._nextRef(),
+        });
+        self._hbTimer = setInterval(() => {
+          if (self._ws && self._ws.readyState === 1)
+            self._send({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: self._nextRef() });
+        }, 28000);
+      };
+
+      this._ws.onmessage = ev => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg.event === 'phx_reply' && msg.payload?.status === 'ok' && msg.topic === self._channel) {
+            self._ready = true;
+            self._onStatus('connected');
+            self._queue.forEach(m => self._send(m));
+            self._queue = [];
+          }
+          if (msg.event === 'broadcast' && msg.payload?.event) {
+            const h = self._handlers[msg.payload.event];
+            if (h) h(msg.payload.payload || {});
+          }
+        } catch (_) {}
+      };
+
+      this._ws.onclose = () => {
+        self._ready = false;
+        clearInterval(self._hbTimer);
+        if (!self._closed) {
+          self._onStatus('disconnected');
+          self._retTimer = setTimeout(() => self.connect(), 3500);
+        }
+      };
+    };
+
+    RealtimeChannel.prototype.on = function (ev, fn) { this._handlers[ev] = fn; return this; };
+    RealtimeChannel.prototype.close = function () {
+      this._closed = true;
+      clearInterval(this._hbTimer);
+      clearTimeout(this._retTimer);
+      if (this._ws) try { this._ws.close(); } catch (_) {}
+    };
+    RealtimeChannel.prototype._send = function (msg) {
+      if (this._ws && this._ws.readyState === 1) this._ws.send(JSON.stringify(msg));
+    };
+    RealtimeChannel.prototype._nextRef = function () { return String(++this._ref); };
+    RealtimeChannel.prototype.broadcast = function (event, payload) {
+      const msg = {
+        topic: this._channel,
+        event: 'broadcast',
+        payload: { type: 'broadcast', event, payload },
+        ref: this._nextRef(),
+      };
+      if (this._ready) this._send(msg);
+      else this._queue.push(msg);
+    };
+
+    // ── State ───────────────────────────────────────────────────────────────────
+    let currentTrack = null;
+    let isPlaying = false;
+    let queue = [];
+    let currentQueueIndex = -1;
+    let syncChannel = null;
+    let lastSyncTime = 0;
+    let isSyncing = false;
+    // Search results stored here so track cards can reference by index (no
+    // inline JS string interpolation needed, which avoids escaping headaches).
+    let searchResults = [];
+
+    // ── DOM refs ────────────────────────────────────────────────────────────────
+    const audio           = document.getElementById('audioPlayer');
+    const searchInput     = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const playerBar       = document.getElementById('playerBar');
+    const playIcon        = document.getElementById('playIcon');
+    const pauseIcon       = document.getElementById('pauseIcon');
+    const progressFill    = document.getElementById('progressFill');
+    const currentTimeEl   = document.getElementById('currentTime');
+    const durationEl      = document.getElementById('duration');
+    const queuePanel      = document.getElementById('queuePanel');
+    const queueList       = document.getElementById('queueList');
+    const queueBadge      = document.getElementById('queueBadge');
+    const toast           = document.getElementById('toast');
+
+    // ── Search ──────────────────────────────────────────────────────────────────
+    let searchTimeout;
+
+    searchInput.addEventListener('input', e => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      if (!query) { showEmptyState(); return; }
+      searchTimeout = setTimeout(() => doSearch(query), 300);
+    });
+
+    async function doSearch(query) {
+      resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+      try {
+        const res = await fetch(`${WORKER_URL}/api/soundcloud/search?q=${encodeURIComponent(query)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (!data.tracks?.length) {
+          resultsContainer.innerHTML = '<div class="empty-state"><h3>No results</h3><p>Try a different search term</p></div>';
+          return;
+        }
+
+        searchResults = data.tracks;
+
+        // Use data-idx to avoid XSS via inline onclick string interpolation.
+        resultsContainer.innerHTML = '<div class="results-grid">'
+          + data.tracks.map((track, i) => `
+            <div class="track-card" data-idx="${i}">
+              <div class="track-artwork">
+                ${track.artwork
+                  ? `<img src="${escapeAttr(track.artwork)}" alt="" loading="lazy">`
+                  : '<span style="font-family:Georgia,serif;font-style:italic;font-size:40px;opacity:.9">♪</span>'}
+                <div class="play-overlay">
+                  <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              <div class="track-info">
+                <div class="track-title">${escapeHtml(track.title)}</div>
+                <div class="track-artist">${escapeHtml(track.artist)}</div>
+              </div>
+            </div>`).join('')
+          + '</div>';
+      } catch (err) {
+        showToast('Search failed. Check your connection.');
+        console.error(err);
+      }
+    }
+
+    // Event delegation for track card clicks — no inline JS handlers.
+    resultsContainer.addEventListener('click', e => {
+      const card = e.target.closest('.track-card[data-idx]');
+      if (!card) return;
+      const track = searchResults[parseInt(card.dataset.idx, 10)];
+      if (track) playTrack(track.id, track.title, track.artist, track.artwork);
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = String(text || '');
+      return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function showEmptyState() {
+      resultsContainer.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          <h3>Start Listening Together</h3>
+          <p>Search for a song and hit play to sync with your partner</p>
+        </div>`;
+    }
+
+    // ── Playback ─────────────────────────────────────────────────────────────────
+    async function playTrack(trackId, title, artist, artwork) {
+      try {
+        const res = await fetch(`${WORKER_URL}/api/soundcloud/stream/${encodeURIComponent(trackId)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (!data.streamUrl) {
+          showToast('This track is not available for streaming');
+          return;
+        }
+
+        currentTrack = { id: trackId, title, artist, artwork: artwork || '', streamUrl: data.streamUrl };
+
+        const existingIndex = queue.findIndex(t => t.id === trackId);
+        if (existingIndex === -1) {
+          queue.push(currentTrack);
+          currentQueueIndex = queue.length - 1;
+        } else {
+          currentQueueIndex = existingIndex;
+        }
+
+        updateQueueUI();
+        loadAndPlay(data.streamUrl);
+        updatePlayerUI();
+        playerBar.style.display = 'flex';
+        broadcastState();
+      } catch (err) {
+        showToast('Failed to load track');
+        console.error(err);
+      }
+    }
+
+    function loadAndPlay(url) {
+      audio.src = url;
+      audio.play().then(() => {
+        isPlaying = true;
+        updatePlayButton();
+      }).catch(err => {
+        console.error('Playback failed:', err);
+        showToast('Click play to start');
+      });
+    }
+
+    function togglePlay() {
+      if (!currentTrack) return;
+      if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+      } else {
+        audio.play().then(() => { isPlaying = true; updatePlayButton(); }).catch(() => {});
+        return; // updatePlayButton called in .then()
+      }
+      updatePlayButton();
+      broadcastState();
+    }
+
+    function updatePlayButton() {
+      playIcon.style.display  = isPlaying ? 'none'  : 'block';
+      pauseIcon.style.display = isPlaying ? 'block' : 'none';
+    }
+
+    function prevTrack() {
+      if (currentQueueIndex > 0) {
+        currentQueueIndex--;
+        const t = queue[currentQueueIndex];
+        playTrack(t.id, t.title, t.artist, t.artwork);
+      }
+    }
+
+    function nextTrack() {
+      if (currentQueueIndex < queue.length - 1) {
+        currentQueueIndex++;
+        const t = queue[currentQueueIndex];
+        playTrack(t.id, t.title, t.artist, t.artwork);
+      }
+    }
+
+    function seek(e) {
+      if (!audio.duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+      broadcastState();
+    }
+
+    function toggleMute() {
+      audio.muted = !audio.muted;
+      document.getElementById('volIcon').style.opacity = audio.muted ? '0.5' : '1';
+    }
+
+    function setVolume(e) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      audio.volume = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      document.getElementById('volumeFill').style.width = `${audio.volume * 100}%`;
+    }
+
+    // ── Player UI ────────────────────────────────────────────────────────────────
+    function updatePlayerUI() {
+      if (!currentTrack) return;
+      document.getElementById('playerTitle').textContent  = currentTrack.title;
+      document.getElementById('playerArtist').textContent = currentTrack.artist;
+      const artEl = document.getElementById('playerArtwork');
+      artEl.innerHTML = currentTrack.artwork
+        ? `<img src="${escapeAttr(currentTrack.artwork)}" alt="">`
+        : '<span style="font-family:Georgia,serif;font-style:italic;font-size:20px;display:flex;align-items:center;justify-content:center;height:100%;opacity:.9">♪</span>';
+    }
+
+    // ── Progress ─────────────────────────────────────────────────────────────────
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      progressFill.style.width = `${pct}%`;
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      durationEl.textContent    = formatTime(audio.duration);
+
+      const now = Date.now();
+      if (isPlaying && now - lastSyncTime > 3000) {
+        broadcastState();
+        lastSyncTime = now;
+      }
+    });
+
+    audio.addEventListener('ended', nextTrack);
+
+    function formatTime(s) {
+      if (!s || isNaN(s)) return '0:00';
+      const m = Math.floor(s / 60);
+      return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    }
+
+    // ── Queue ────────────────────────────────────────────────────────────────────
+    function toggleQueue() { queuePanel.classList.toggle('open'); }
+
+    function updateQueueUI() {
+      queueBadge.style.display = queue.length > 0 ? 'flex' : 'none';
+      queueBadge.textContent   = queue.length;
+
+      if (!queue.length) {
+        queueList.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px">Queue is empty</div>';
+        return;
+      }
+
+      // data-idx on each item; event delegation below handles clicks and removes.
+      queueList.innerHTML = queue.map((t, i) => `
+        <div class="queue-item${i === currentQueueIndex ? ' active' : ''}" data-idx="${i}">
+          <div class="queue-item-thumb">
+            ${t.artwork ? `<img src="${escapeAttr(t.artwork)}" alt="" loading="lazy">` : '♪'}
+          </div>
+          <div class="queue-item-info">
+            <div class="queue-item-title">${escapeHtml(t.title)}</div>
+            <div class="queue-item-artist">${escapeHtml(t.artist)}</div>
+          </div>
+          <button class="queue-item-remove" data-remove-idx="${i}" title="Remove">×</button>
+        </div>`).join('');
+    }
+
+    queueList.addEventListener('click', e => {
+      const removeBtn = e.target.closest('[data-remove-idx]');
+      if (removeBtn) {
+        e.stopPropagation();
+        removeFromQueue(parseInt(removeBtn.dataset.removeIdx, 10));
+        return;
+      }
+      const item = e.target.closest('.queue-item[data-idx]');
+      if (item) {
+        const t = queue[parseInt(item.dataset.idx, 10)];
+        if (t) playTrack(t.id, t.title, t.artist, t.artwork);
+      }
+    });
+
+    function removeFromQueue(index) {
+      queue.splice(index, 1);
+      if (currentQueueIndex >= index) currentQueueIndex--;
+      updateQueueUI();
+    }
+
+    // ── Sync (Supabase Realtime) ──────────────────────────────────────────────────
+    function initSync() {
+      const coupleId = typeof LoveFlix !== 'undefined' ? LoveFlix.getCoupleId() : null;
+      const token    = typeof LoveFlix !== 'undefined' ? LoveFlix.getToken()    : null;
+
+      if (!coupleId || !token) {
+        document.getElementById('syncText').textContent = 'Sync offline';
+        document.getElementById('syncDot').style.background = 'var(--text-dim)';
+        document.getElementById('syncDot').style.animation = 'none';
+        return;
+      }
+
+      syncChannel = new RealtimeChannel(
+        SB_URL, SB_KEY, token,
+        `music-session:${coupleId}`,
+        status => {
+          if (status === 'connected') {
+            document.getElementById('syncText').textContent = 'Partner synced';
+            document.getElementById('syncDot').style.background = 'var(--gold)';
+          } else {
+            document.getElementById('syncText').textContent = 'Reconnecting...';
+            document.getElementById('syncDot').style.background = 'var(--text-dim)';
+          }
+        }
+      );
+
+      syncChannel.on('playback-state', handlePartnerState);
+      syncChannel.connect();
+    }
+
+    function broadcastState() {
+      if (!syncChannel || !currentTrack) return;
+      syncChannel.broadcast('playback-state', {
+        trackId:   currentTrack.id,
+        position:  Math.floor(audio.currentTime * 1000),
+        isPlaying,
+        timestamp: Date.now(),
+      });
+    }
+
+    function handlePartnerState(state) {
+      if (isSyncing) return;
+
+      const delay           = (Date.now() - state.timestamp) / 1000;
+      const adjustedPosition = (state.position / 1000) + delay;
+
+      // Different track — switch to it if we have it in the local queue.
+      if (!currentTrack || currentTrack.id !== state.trackId) {
+        const track = queue.find(t => t.id === state.trackId);
+        if (track) {
+          isSyncing = true;
+          try {
+            currentTrack      = track;
+            currentQueueIndex = queue.indexOf(track);
+            audio.src         = track.streamUrl;
+            audio.currentTime = adjustedPosition;
+            if (state.isPlaying) {
+              audio.play()
+                .then(() => { isPlaying = true; updatePlayButton(); })
+                .catch(() => {});
+            }
+            updatePlayerUI();
+            playerBar.style.display = 'flex';
+            updateQueueUI();
+          } finally {
+            isSyncing = false;
+          }
+        }
+        return;
+      }
+
+      // Same track — correct position drift > 2 s.
+      if (Math.abs(audio.currentTime - adjustedPosition) > 2) {
+        audio.currentTime = adjustedPosition;
+      }
+
+      // Sync play/pause state.
+      if (state.isPlaying && !isPlaying) {
+        audio.play().then(() => { isPlaying = true; updatePlayButton(); }).catch(() => {});
+        showToast('Partner started playing');
+      } else if (!state.isPlaying && isPlaying) {
+        audio.pause();
+        isPlaying = false;
+        updatePlayButton();
+        showToast('Partner paused');
+      }
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────────────
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ── Wire up controls ──────────────────────────────────────────────────────────
+    document.getElementById('playBtn').addEventListener('click', togglePlay);
+    document.getElementById('prevBtn').addEventListener('click', prevTrack);
+    document.getElementById('nextBtn').addEventListener('click', nextTrack);
+    document.getElementById('progressBar').addEventListener('click', seek);
+    document.getElementById('muteBtn').addEventListener('click', toggleMute);
+    document.getElementById('volumeSlider').addEventListener('click', setVolume);
+    document.getElementById('queueToggle').addEventListener('click', toggleQueue);
+    document.getElementById('queueClose').addEventListener('click', toggleQueue);
+
+    // Space bar: play / pause (not when typing in the search box).
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        togglePlay();
+      }
+    });
+
+    // ── Init ─────────────────────────────────────────────────────────────────────
+    initSync();
+  </script>
+</body>
+</html>

@@ -45,3 +45,5 @@ STRIPE_PRICE_FOREVER_YEARLY  = "price_1TY6rhA20Y7L8XqMeJ8advP5"
 #   LIVEKIT_API_KEY             — from LiveKit Cloud dashboard → Settings → Keys  ← required for calling
 #   LIVEKIT_API_SECRET          — from LiveKit Cloud dashboard → Settings → Keys  ← required for calling
 #   LIVEKIT_URL                 — your LiveKit Cloud WebSocket URL, e.g. wss://your-project.livekit.cloud  ← required for calling
+#   SOUNDCLOUD_CLIENT_ID        — SoundCloud API client_id for the /music page; get one at
+#                                 https://soundcloud.com/you/apps (or extract from soundcloud.com network tab)

@@ -29,6 +29,9 @@ const PUBLIC_ROUTES = new Set([
   // anyway — so it is intentionally public here. Lock it down with an HTTP
   // referrer restriction in the Google Cloud console.
   'GET /api/maps-config',
+  // SoundCloud proxy — search is public so the music page can search before
+  // the auth token is fully checked. Stream uses a dynamic path matched below.
+  'GET /api/soundcloud/search',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -137,7 +140,9 @@ export async function onRequest(context) {
 
   try {
     const routeKey = `${method} ${path}`;
-    const isPublic = PUBLIC_ROUTES.has(routeKey);
+    // SoundCloud stream has a dynamic segment so it can't be in PUBLIC_ROUTES set.
+    const isSoundCloudRoute = method === 'GET' && path.startsWith('/api/soundcloud/');
+    const isPublic = PUBLIC_ROUTES.has(routeKey) || isSoundCloudRoute;
 
     let user = null;
     if (!isPublic) {
@@ -192,6 +197,10 @@ export async function onRequest(context) {
     }
 
     if (method === 'GET' && path === '/api/directions') return getDirections(env, url, user);
+
+    if (method === 'GET' && path === '/api/soundcloud/search') return soundcloudSearch(env, url);
+    const scStreamMatch = path.match(/^\/api\/soundcloud\/stream\/([^/]+)$/);
+    if (scStreamMatch && method === 'GET') return soundcloudStream(env, scStreamMatch[1]);
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
@@ -1253,5 +1262,69 @@ async function getDirections(env, url, user) {
     });
   } catch (_) {
     return json({ ok: false, error: 'directions_fetch_failed' });
+  }
+}
+
+// ── SoundCloud proxy ──────────────────────────────────────────────────────────
+// Set SOUNDCLOUD_CLIENT_ID via: wrangler pages secret put SOUNDCLOUD_CLIENT_ID
+// Obtain a client_id by registering at https://soundcloud.com/you/apps or by
+// inspecting the network tab on soundcloud.com (look for client_id= query param).
+
+async function soundcloudSearch(env, url) {
+  const q = (url.searchParams.get('q') || '').trim();
+  if (!q) return json({ tracks: [] });
+
+  const clientId = env.SOUNDCLOUD_CLIENT_ID;
+  if (!clientId) return json({ error: 'soundcloud_not_configured', tracks: [] }, 503);
+
+  try {
+    const scRes = await fetch(
+      `https://api.soundcloud.com/tracks?q=${encodeURIComponent(q)}&limit=20&client_id=${encodeURIComponent(clientId)}&linked_partitioning=1`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!scRes.ok) return json({ tracks: [] });
+
+    const data = await scRes.json();
+    // v1 returns an array; paginated responses wrap in { collection: [...] }.
+    const raw = Array.isArray(data) ? data : (data.collection || []);
+
+    const tracks = raw
+      .filter(t => t.streamable)
+      .map(t => ({
+        id:      t.id,
+        title:   t.title   || 'Unknown',
+        artist:  t.user?.username || 'Unknown',
+        artwork: t.artwork_url
+          ? t.artwork_url.replace('-large', '-t300x300')
+          : '',
+      }));
+
+    return json({ tracks });
+  } catch (_) {
+    return json({ tracks: [] });
+  }
+}
+
+async function soundcloudStream(env, rawId) {
+  const id = parseInt(rawId, 10);
+  if (!id || !isFinite(id)) return json({ error: 'invalid_id' }, 400);
+
+  const clientId = env.SOUNDCLOUD_CLIENT_ID;
+  if (!clientId) return json({ error: 'soundcloud_not_configured' }, 503);
+
+  try {
+    // SoundCloud returns a 302 redirect to the actual CDN audio URL.
+    // Using redirect:'manual' avoids streaming the audio body through the worker.
+    const scRes = await fetch(
+      `https://api.soundcloud.com/tracks/${id}/stream?client_id=${encodeURIComponent(clientId)}`,
+      { redirect: 'manual' }
+    );
+
+    const streamUrl = scRes.headers.get('location');
+    if (!streamUrl) return json({ error: 'not_streamable' }, 404);
+
+    return json({ streamUrl });
+  } catch (_) {
+    return json({ error: 'fetch_failed' }, 502);
   }
 }
