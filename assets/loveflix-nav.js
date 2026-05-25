@@ -20,7 +20,7 @@
       'nav.lf-topnav.lf-hero{background:linear-gradient(to bottom,rgba(0,0,0,0.85),transparent)}',
       'nav.lf-topnav.lf-hero.lf-scrolled{background:rgba(10,10,10,0.95)}',
       '.lf-nav-left{display:flex;align-items:center;gap:40px}',
-      '.lf-nf-logo{font-family:"Bebas Neue",sans-serif;font-size:36px;color:#e50914;letter-spacing:3px;line-height:1;text-decoration:none}',
+      '.lf-nf-logo{font-family:"Bebas Neue",sans-serif;font-size:36px;color:var(--brand-accent,#e50914);letter-spacing:3px;line-height:1;text-decoration:none}',
       '.lf-nf-logo .lf-heart{color:#fff;font-size:24px;vertical-align:middle;transform:translateY(-2px);display:inline-block;margin:0 2px}',
       '.lf-nav-links{display:flex;gap:22px}',
       '.lf-nav-links a{font-size:14px;color:#d4d4d4;transition:color .18s ease;text-decoration:none}',
