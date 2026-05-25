@@ -205,8 +205,9 @@
   }
   .pl-choice:hover{background:rgba(255,255,255,0.06);color:#fff}
   .pl-choice .playlist-art{flex-shrink:0}
-  /* YouTube hidden player */
-  #ytPlayer{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none}
+  /* YouTube hidden player — must be full-size with opacity:0 so the IFrame API
+     can measure its container. 1px off-screen causes silent init failure. */
+  #ytPlayer{position:fixed;inset:0;z-index:-1;opacity:0;pointer-events:none;}
   /* playlist view in main content */
   .pl-header{padding:0 0 20px;display:flex;align-items:center;gap:18px}
   .pl-header-art{width:80px;height:80px;border-radius:8px;flex-shrink:0}
@@ -1482,6 +1483,9 @@
       <button class="ctrl-btn small active" title="Queue">
         <svg viewBox="0 0 24 24"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg>
       </button>
+      <button class="ctrl-btn small active" id="syncToggle" title="Sync with partner (following)">
+        <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+      </button>
       <div class="volume">
         <button class="ctrl-btn small" id="muteBtn" title="Mute">
           <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zm-2.5-9.04v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06a9 9 0 000-17.62z"></path></svg>
@@ -1561,6 +1565,10 @@
     <div class="m-fs-context">
       <div class="eyebrow">From the album</div>
       <div class="album" id="mFsAlbum">Quiet Mornings vol. ii</div>
+      <div id="ytBadge" style="display:none;font-size:10px;color:var(--red);margin-top:4px;align-items:center;gap:4px">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block"></span>
+        Full Song via YouTube
+      </div>
     </div>
     <button class="m-fs-menu" aria-label="More">⋯</button>
   </div>
@@ -1855,6 +1863,11 @@ let volume = 0.72;
 const SEEK_BROADCAST_INTERVAL_MS = 3000;
 let lastBroadcast = 0;
 
+// ── SYNC STATE ──
+let syncMode = 'following'; // 'following' | 'independent'
+let lastPartnerTrackId = null;
+let isRemoteUpdate = false; // blocks re-broadcast during partner-driven seeks
+
 /* ── HELPERS ── */
 const $ = (s, p=document) => p.querySelector(s);
 const $$ = (s, p=document) => [...p.querySelectorAll(s)];
@@ -2065,6 +2078,9 @@ function updateNowPlaying(){
   $('#mFsAlbum').textContent = t.album || '';
   setArtEl($('#mFsArt'), $('#mFsArtMono'), t);
   $('#mFsDurTime').textContent = fmtTime(t.dur);
+  // YouTube badge
+  const badge = $('#ytBadge');
+  if (badge) badge.style.display = t.youtubeId ? 'flex' : 'none';
   updateSeek();
 }
 
@@ -2180,6 +2196,7 @@ $('#prevBtn').addEventListener('click', () => {
     position = 0;
     const t = QUEUE[currentIdx];
     if (t && t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = 0;
+    if (ytReady && ytPlayer && t?.youtubeId) try { ytPlayer.seekTo(0, true); } catch(_) {}
     updateSeek(); return;
   }
   currentIdx--; position = 0; isPlaying = false;
@@ -2187,6 +2204,13 @@ $('#prevBtn').addEventListener('click', () => {
   loadAndPlay(QUEUE[currentIdx]);
 });
 $('#favBtn').addEventListener('click', () => { $('#favBtn').classList.toggle('active'); });
+$('#syncToggle').addEventListener('click', () => {
+  syncMode = syncMode === 'following' ? 'independent' : 'following';
+  const btn = $('#syncToggle');
+  btn.classList.toggle('active', syncMode === 'following');
+  btn.title = syncMode === 'following' ? 'Sync with partner (following)' : 'Sync off (independent)';
+  showToast(syncMode === 'following' ? 'Synced with ' + partnerName : 'Listening independently');
+});
 
 /* seek */
 function pctFromEvent(el, e){
@@ -2200,6 +2224,7 @@ seek.addEventListener('mousedown', (e) => {
   const t = QUEUE[currentIdx]; if (!t) return;
   position = pctFromEvent(seek, e) * t.dur;
   if (t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
+  if (ytReady && ytPlayer && t.youtubeId) try { ytPlayer.seekTo(position, true); } catch(_) {}
   updateSeek();
 });
 window.addEventListener('mousemove', (e) => {
@@ -2213,6 +2238,7 @@ window.addEventListener('mouseup', () => {
     seekDrag = false; seek.classList.remove('dragging');
     const t = QUEUE[currentIdx];
     if (t && t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
+    if (ytReady && ytPlayer && t?.youtubeId) try { ytPlayer.seekTo(position, true); } catch(_) {}
     broadcastPosition(true);
   }
 });
@@ -2223,6 +2249,7 @@ let volDrag = false;
 function setVol(v){
   volume = Math.max(0, Math.min(1, v));
   audioEl.volume = volume;
+  if (ytReady && ytPlayer) try { ytPlayer.setVolume(Math.round(volume * 100)); } catch(_) {}
   $('#volFill').style.width = (volume*100) + '%';
   $('#volThumb').style.left = (volume*100) + '%';
   const mvf = $('#mFsVolFill'); if (mvf) mvf.style.width = (volume*100)+'%';
@@ -2236,20 +2263,33 @@ $('#muteBtn').addEventListener('click', () => { setVol(volume > 0 ? 0 : 0.72); }
 /* ── SIMULATED PLAYBACK (demo tracks only) ── */
 function broadcastPosition(force=false){
   if (!rtChannel || !QUEUE[currentIdx]) return;
+  if (isRemoteUpdate) return;
   const now = Date.now();
   if (!force && now - lastBroadcast < SEEK_BROADCAST_INTERVAL_MS) return;
   lastBroadcast = now;
+  const t = QUEUE[currentIdx];
   rtChannel.broadcast('PLAY_PROGRESS', {
-    trackId: QUEUE[currentIdx].id,
-    positionMs: position * 1000,
-    isPlaying
+    trackId: t.id,
+    positionMs: Math.floor(position * 1000),
+    isPlaying,
+    timestamp: Date.now(),
+    source: 'self'
   });
 }
 
 setInterval(() => {
   if (!isPlaying) return;
   const t = QUEUE[currentIdx];
-  if (!t || t.stream_url) return;
+  if (!t) return;
+  // YT tracks: sync position from player
+  if (ytReady && ytPlayer && t.youtubeId) {
+    try { position = ytPlayer.getCurrentTime() || position; } catch(_) {}
+    updateSeek();
+    broadcastPosition();
+    return;
+  }
+  if (t.stream_url) return; // audio element drives its own position via timeupdate
+  // demo / static tracks: simulate
   position += 1;
   if (position >= t.dur) {
     if (currentIdx < QUEUE.length-1) { currentIdx++; position = 0; updateNowPlaying(); renderQueue(); }
@@ -2261,7 +2301,65 @@ setInterval(() => {
 
 /* ── PARTNER SYNC ── */
 function handlePartnerSync(payload){
-  showToast(partnerName + (payload.isPlaying === false ? ' paused' : ' resumed') + ' · ' + fmtTime((payload.positionMs||0) / 1000));
+  if (!payload || payload.source === 'self') return;
+  if (syncMode === 'independent') return;
+
+  const remoteTrackId = payload.trackId;
+  const remotePos     = (payload.positionMs || 0) / 1000;
+  const remotePlay    = payload.isPlaying !== false;
+  const latencyOffset = payload.timestamp ? (Date.now() - payload.timestamp) / 1000 : 0;
+  const correctedPos  = remotePos + latencyOffset;
+
+  isRemoteUpdate = true;
+
+  // ── Track switch ──
+  if (remoteTrackId && remoteTrackId !== (QUEUE[currentIdx] && QUEUE[currentIdx].id)) {
+    // Try to find the track already in QUEUE
+    const qIdx = QUEUE.findIndex(q => q.id === remoteTrackId);
+    if (qIdx !== -1) {
+      currentIdx = qIdx;
+      position = 0;
+      isPlaying = false;
+      updateNowPlaying(); renderQueue();
+      loadAndPlay(QUEUE[currentIdx]).then(() => {
+        // Seek to partner's position after load
+        setTimeout(() => {
+          position = correctedPos;
+          if (QUEUE[currentIdx]?.stream_url && audioEl.readyState >= 2) audioEl.currentTime = correctedPos;
+          if (ytReady && ytPlayer && QUEUE[currentIdx]?.youtubeId) try { ytPlayer.seekTo(correctedPos, true); } catch(_) {}
+          updateSeek();
+          isRemoteUpdate = false;
+        }, 800);
+      });
+      showToast(partnerName + ' switched to "' + (QUEUE[currentIdx]?.title || 'new track') + '"');
+      lastPartnerTrackId = remoteTrackId;
+      return;
+    }
+  }
+  lastPartnerTrackId = remoteTrackId;
+
+  // ── Drift correction (>3 s off) ──
+  if (Math.abs(position - correctedPos) > 3) {
+    position = correctedPos;
+    if (QUEUE[currentIdx]?.stream_url && audioEl.readyState >= 2) audioEl.currentTime = correctedPos;
+    if (ytReady && ytPlayer && QUEUE[currentIdx]?.youtubeId) try { ytPlayer.seekTo(correctedPos, true); } catch(_) {}
+    updateSeek();
+  }
+
+  // ── Play / pause sync ──
+  if (remotePlay !== isPlaying) {
+    if (QUEUE[currentIdx]?.youtubeId && ytReady && ytPlayer) {
+      try { remotePlay ? ytPlayer.playVideo() : ytPlayer.pauseVideo(); } catch(_) {}
+    } else if (QUEUE[currentIdx]?.stream_url) {
+      remotePlay ? audioEl.play().catch(()=>{}) : audioEl.pause();
+    } else {
+      isPlaying = remotePlay;
+      updatePlayBtn();
+    }
+    showToast(partnerName + (remotePlay ? ' resumed' : ' paused') + ' · ' + fmtTime(correctedPos));
+  }
+
+  isRemoteUpdate = false;
 }
 
 /* ── SEARCH ── */
@@ -2364,6 +2462,7 @@ function mSetSeek(e){
   const r = mFsSeek.getBoundingClientRect();
   position = Math.max(0, Math.min(1, (touch.clientX - r.left) / r.width)) * t.dur;
   if (t.stream_url && audioEl.readyState >= 2) audioEl.currentTime = position;
+  if (ytReady && ytPlayer && t.youtubeId) try { ytPlayer.seekTo(position, true); } catch(_) {}
   updateSeek();
 }
 ['mousedown','touchstart'].forEach(ev => { mFsSeek.addEventListener(ev, (e)=>{ mSeekDrag=true; mSetSeek(e); }, {passive:true}); });
@@ -2497,7 +2596,7 @@ async function saveTrackToPlaylist(playlistId) {
     await fetch('/api/music/playlists/' + playlistId + '/songs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ title: t.title, artist: t.artist, artwork_url: t.artUrl || '', stream_url: t.stream_url || '' })
+      body: JSON.stringify({ title: t.title, artist: t.artist, artwork_url: t.artUrl || '', stream_url: t.stream_url || null, youtube_id: t.youtubeId || '', duration: t.dur || 30 })
     });
     const pl = playlists.find(p => p.id === playlistId);
     if (pl) pl.song_count = (pl.song_count || 0) + 1;
@@ -2567,8 +2666,9 @@ async function openPlaylistView(playlistId) {
       const mapped = songs.map((s, i) => ({
         id: 'pl-s-' + s.id,
         _playlistSongId: s.id,
-        stream_url: s.artwork_url ? null : null, // artwork_url stored in that column for now
-        title: s.title, artist: s.artist || '', album: '', dur: 30,
+        stream_url: s.stream_url || null,
+        youtubeId: s.youtube_id || null,
+        title: s.title, artist: s.artist || '', album: '', dur: s.duration || 30,
         art: ART_CLASSES[i % ART_CLASSES.length],
         artUrl: s.artwork_url || null,
         mono: (s.title[0]||'P').toUpperCase()
@@ -2586,15 +2686,37 @@ let _defaultViewHTML = '';
 let ytPlayer = null;
 let ytReady = false;
 window.onYouTubeIframeAPIReady = function() {
-  ytReady = true;
   ytPlayer = new YT.Player('ytPlayer', {
-    height: '1', width: '1',
-    playerVars: { autoplay: 0 },
+    height: '100%', width: '100%',
+    playerVars: {
+      autoplay: 0, controls: 0, disablekb: 1,
+      fs: 0, iv_load_policy: 3, modestbranding: 1,
+      rel: 0, showinfo: 0, playsinline: 1
+    },
     events: {
+      onReady: () => {
+        ytReady = true;
+        ytPlayer.setVolume(Math.round(volume * 100));
+      },
       onStateChange: (e) => {
-        if (e.data === YT.PlayerState.PLAYING) { isPlaying = true;  updatePlayBtn(); }
-        if (e.data === YT.PlayerState.PAUSED)  { isPlaying = false; updatePlayBtn(); }
-        if (e.data === YT.PlayerState.ENDED)   { $('#nextBtn').click(); }
+        if (e.data === YT.PlayerState.PLAYING) {
+          isPlaying = true; updatePlayBtn(); broadcastPosition(true);
+        }
+        if (e.data === YT.PlayerState.PAUSED) {
+          isPlaying = false; updatePlayBtn(); broadcastPosition(true);
+        }
+        if (e.data === YT.PlayerState.ENDED) { $('#nextBtn').click(); }
+      },
+      onError: () => {
+        // YouTube failed — fall back to iTunes preview if available
+        const t = QUEUE[currentIdx];
+        if (t && t.stream_url) {
+          audioEl.src = t.stream_url;
+          audioEl.volume = volume;
+          audioEl.play().catch(()=>{});
+        } else {
+          isPlaying = true; updatePlayBtn(); // demo fallback
+        }
       }
     }
   });
@@ -2611,12 +2733,43 @@ window.onYouTubeIframeAPIReady = function() {
 // Try to play via YouTube for full song; returns true if video found & started
 async function tryYouTube(t) {
   if (!ytReady || !ytPlayer) return false;
+  // Use cached youtubeId if we already matched this track
+  let videoId = t.youtubeId || null;
+  let duration = t.dur || 30;
+  if (!videoId) {
+    try {
+      const r = await fetch('/api/music/yt-match?q=' + encodeURIComponent(t.title + ' ' + t.artist));
+      if (!r.ok) return false;
+      const d = await r.json();
+      if (!d.videoId) return false;
+      videoId = d.videoId;
+      if (d.duration) duration = d.duration;
+    } catch(_) { return false; }
+  }
+  // Store on track object so openPlaylistView / broadcastPosition can use it
+  t.youtubeId = videoId;
+  if (duration !== t.dur) {
+    t.dur = duration;
+    $('#durTime').textContent = fmtTime(t.dur);
+    $('#mFsDurTime').textContent = fmtTime(t.dur);
+  }
+  // Wait up to 800 ms for player to reach UNSTARTED (state -1) before loading
+  await new Promise(resolve => {
+    let waited = 0;
+    const check = setInterval(() => {
+      waited += 50;
+      try {
+        const state = ytPlayer.getPlayerState();
+        if (state === -1 || state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED || waited >= 800) {
+          clearInterval(check); resolve();
+        }
+      } catch(_) { clearInterval(check); resolve(); }
+    }, 50);
+  });
   try {
-    const r = await fetch('/api/music/yt-match?q=' + encodeURIComponent(t.title + ' ' + t.artist));
-    const d = await r.json();
-    if (!d.videoId) return false;
-    ytPlayer.loadVideoById(d.videoId);
+    ytPlayer.loadVideoById({ videoId, startSeconds: 0 });
     ytPlayer.setVolume(Math.round(volume * 100));
+    updateNowPlaying(); // refresh badge
     return true;
   } catch(_) { return false; }
 }

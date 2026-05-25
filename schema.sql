@@ -71,6 +71,9 @@ CREATE TABLE IF NOT EXISTS couple_playlist_songs (
   title                 TEXT NOT NULL,
   artist                TEXT,
   artwork_url           TEXT,
+  stream_url            TEXT,
+  youtube_id            TEXT,
+  duration              INTEGER DEFAULT 30,
   added_by_user_id      TEXT,
   added_at              INTEGER DEFAULT (strftime('%s','now')),
   FOREIGN KEY (playlist_id) REFERENCES couple_playlists(id) ON DELETE CASCADE

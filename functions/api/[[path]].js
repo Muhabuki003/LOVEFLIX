@@ -1425,16 +1425,15 @@ async function listPlaylistSongs(env, playlistId, user) {
 
 async function addToPlaylist(env, playlistId, request, user) {
   const body = await request.json().catch(() => ({}));
-  const { title, artist, artwork_url, stream_url } = body;
+  const { title, artist, artwork_url, stream_url, youtube_id, duration } = body;
   if (!title) return json({ error: 'title required' }, 400);
-  // Check playlist exists
   const pl = await env.DB.prepare('SELECT id FROM couple_playlists WHERE id = ?').bind(playlistId).first();
   if (!pl) return json({ error: 'playlist not found' }, 404);
   const id = genId();
   const now = Math.floor(Date.now() / 1000);
   await env.DB.prepare(
-    'INSERT INTO couple_playlist_songs (id, playlist_id, soundcloud_track_id, title, artist, artwork_url, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?)'
-  ).bind(id, playlistId, 0, title, artist || '', artwork_url || '', user?.sub || '', now).run();
+    'INSERT INTO couple_playlist_songs (id, playlist_id, soundcloud_track_id, title, artist, artwork_url, stream_url, youtube_id, duration, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+  ).bind(id, playlistId, 0, title, artist || '', artwork_url || '', stream_url || null, youtube_id || null, duration || 30, user?.sub || '', now).run();
   await env.DB.prepare('UPDATE couple_playlists SET updated_at = ? WHERE id = ?').bind(now, playlistId).run();
   return json({ id });
 }
@@ -1457,22 +1456,45 @@ async function getMusicRecent(env, url, user) {
 }
 
 // ytMatch — optional: needs YOUTUBE_API_KEY in Cloudflare secrets.
-// Returns the best-matching YouTube videoId for a title+artist query.
-// Falls back gracefully (null videoId) if no key is configured.
+// Returns the best embeddable YouTube video for a title+artist query, including
+// duration so the UI can show accurate seek bar length.
 async function ytMatch(env, url) {
   const q = (url.searchParams.get('q') || '').trim();
   if (!q) return json({ videoId: null });
   const key = env.YOUTUBE_API_KEY;
   if (!key) return json({ videoId: null, hint: 'set YOUTUBE_API_KEY for full songs' });
   try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=id&type=video&videoCategoryId=10&maxResults=1&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
+    // Search for embeddable music videos
+    const searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=3&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
       { headers: { Accept: 'application/json' } }
     );
-    if (!res.ok) return json({ videoId: null, _debug: `yt ${res.status}` });
-    const data = await res.json();
-    const videoId = data.items?.[0]?.id?.videoId || null;
-    return json({ videoId });
+    if (!searchRes.ok) return json({ videoId: null, _debug: `yt search ${searchRes.status}` });
+    const searchData = await searchRes.json();
+    const item = searchData.items?.[0];
+    if (!item) return json({ videoId: null });
+    const videoId = item.id?.videoId;
+    if (!videoId) return json({ videoId: null });
+    const title = item.snippet?.title || q;
+
+    // Fetch content details for duration
+    let duration = null;
+    try {
+      const detailRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(videoId)}&key=${encodeURIComponent(key)}`,
+        { headers: { Accept: 'application/json' } }
+      );
+      if (detailRes.ok) {
+        const dd = await detailRes.json();
+        const iso = dd.items?.[0]?.contentDetails?.duration; // e.g. "PT3M42S"
+        if (iso) {
+          const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+          if (m) duration = ((+m[1]||0)*3600) + ((+m[2]||0)*60) + (+m[3]||0);
+        }
+      }
+    } catch(_) {}
+
+    return json({ videoId, title, duration });
   } catch(e) { return json({ videoId: null }); }
 }
 
