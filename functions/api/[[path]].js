@@ -180,6 +180,9 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/settings') return getSettings(env, url, user, request);
     if (method === 'PUT' && path === '/api/settings') return putSettings(env, request, user);
 
+    if (method === 'GET'   && path === '/api/couple/settings') return getCoupleSettings(env, user);
+    if (method === 'PATCH' && path === '/api/couple/settings') return patchCoupleSettings(env, request, user);
+
     if (method === 'POST' && path === '/api/create-checkout-session') return createCheckoutSession(env, request, url);
     if (method === 'POST' && path === '/api/create-subscription-intent') return createSubscriptionIntent(env, request);
     if (method === 'POST' && path === '/api/activate-subscription') return activateSubscription(env, request);
@@ -1512,65 +1515,118 @@ async function soundcloudStream(env, rawId) {
   return json({ error: 'use_stream_url_from_search' }, 400);
 }
 
-// ---------- Favorites (My List) ----------
-async function listFavorites(env, user) {
-  const { results } = await env.DB.prepare(
-    `SELECT v.id, v.tenant_id, v.title, v.description, v.date, v.category,
-            v.thumbnail_url, v.video_url, v.duration_seconds, v.is_published,
-            v.display_order, v.created_at, 1 as is_favorite
-       FROM favorites f
-       JOIN videos v ON v.id = f.video_id
-      WHERE f.user_id = ?
-      ORDER BY f.created_at DESC`
-  ).bind(user.id).all();
-  return json({ videos: results || [] });
+// ---------- Couple Settings (locked identity + editable preferences) ----------
+
+const VALID_ACCENT_COLORS = new Set([
+  '#e50914', // Crimson
+  '#f59e0b', // Warm Gold
+  '#1d4ed8', // Deep Navy
+  '#fb7185', // Soft Rose
+  '#059669', // Forest Green
+  '#8b5cf6', // Lavender
+  '#64748b', // Slate Gray
+]);
+
+async function getCoupleSettings(env, user) {
+  const tenantId = user.id;
+  const row = await env.DB.prepare(
+    'SELECT * FROM couple_settings WHERE tenant_id = ?'
+  ).bind(tenantId).first();
+  if (!row) {
+    return json({
+      settings: {
+        is_locked: false,
+        brand_accent_color: '#e50914',
+        notifications_enabled: true,
+        privacy_level: 'private',
+        anniversary_date: null,
+        partner_1_name: null,
+        partner_2_name: null,
+      }
+    });
+  }
+  return json({
+    settings: {
+      tenant_id: row.tenant_id,
+      anniversary_date: row.anniversary_date || null,
+      partner_1_name: row.partner_1_name || null,
+      partner_2_name: row.partner_2_name || null,
+      is_locked: !!row.is_locked,
+      brand_accent_color: row.brand_accent_color || '#e50914',
+      notifications_enabled: row.notifications_enabled !== 0,
+      privacy_level: row.privacy_level || 'private',
+      updated_at: row.updated_at || 0,
+    }
+  });
 }
 
-async function addFavorite(env, videoId, user) {
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO favorites (user_id, video_id) VALUES (?, ?)`
-  ).bind(user.id, videoId).run();
-  return json({ ok: true });
-}
+async function patchCoupleSettings(env, request, user) {
+  const body = await request.json().catch(() => ({}));
+  const tenantId = user.id;
+  const now = Math.floor(Date.now() / 1000);
 
-async function removeFavorite(env, videoId, user) {
-  await env.DB.prepare(
-    `DELETE FROM favorites WHERE user_id = ? AND video_id = ?`
-  ).bind(user.id, videoId).run();
-  return json({ ok: true });
-}
+  const existing = await env.DB.prepare(
+    'SELECT is_locked, brand_accent_color, notifications_enabled, privacy_level FROM couple_settings WHERE tenant_id = ?'
+  ).bind(tenantId).first();
 
-// ---------- Couple Stats (Our Story) ----------
-async function getCoupleStats(env, request, user) {
-  const requested = (request && request.headers.get('x-tenant-id')) || (user && user.id) || env.DEFAULT_TENANT_ID || 'default';
-  const tenantId = user
-    ? (await verifyTenantAccess(env, user, requested) || (user && user.id))
-    : (env.DEFAULT_TENANT_ID || 'default');
+  const isLocked = existing ? !!existing.is_locked : false;
+  const updates = {};
 
-  const [statsRow, settingsRow] = await Promise.all([
-    env.DB.prepare(
-      `SELECT COUNT(*) as video_count,
-              SUM(duration_seconds) as total_duration_seconds,
-              MIN(created_at) as first_video_at,
-              MIN(date) as first_video_date
-         FROM videos
-        WHERE tenant_id = ? AND is_published = 1`
-    ).bind(tenantId).first(),
-    env.DB.prepare(
-      `SELECT data FROM tenant_settings WHERE tenant_id = ?`
-    ).bind(tenantId).first(),
-  ]);
+  // Identity fields — only writable before lock
+  if (!isLocked) {
+    if (typeof body.partner_1_name === 'string') updates.partner_1_name = sanitizeUserText(body.partner_1_name, 100);
+    if (typeof body.partner_2_name === 'string') updates.partner_2_name = sanitizeUserText(body.partner_2_name, 100);
+    if (typeof body.anniversary_date === 'string') {
+      // Accept YYYY-MM-DD or empty string
+      updates.anniversary_date = /^\d{4}-\d{2}-\d{2}$/.test(body.anniversary_date) ? body.anniversary_date : '';
+    }
+    // Lock on first identity save (when at least one name or date is provided)
+    const hasIdentity = updates.partner_1_name || updates.partner_2_name || updates.anniversary_date;
+    if (hasIdentity) updates.is_locked = 1;
+  }
 
-  let settings = {};
-  try { settings = JSON.parse((settingsRow && settingsRow.data) || '{}') || {}; } catch (_) {}
+  // Always editable
+  if (typeof body.brand_accent_color === 'string' && VALID_ACCENT_COLORS.has(body.brand_accent_color.trim())) {
+    updates.brand_accent_color = body.brand_accent_color.trim();
+  }
+  if (typeof body.notifications_enabled === 'boolean') {
+    updates.notifications_enabled = body.notifications_enabled ? 1 : 0;
+  }
+  const VALID_PRIVACY = ['private', 'friends', 'public'];
+  if (typeof body.privacy_level === 'string' && VALID_PRIVACY.includes(body.privacy_level)) {
+    updates.privacy_level = body.privacy_level;
+  }
+
+  updates.updated_at = now;
+
+  if (!existing) {
+    await env.DB.prepare(
+      `INSERT INTO couple_settings
+         (tenant_id, anniversary_date, partner_1_name, partner_2_name,
+          is_locked, brand_accent_color, notifications_enabled, privacy_level, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      tenantId,
+      updates.anniversary_date || null,
+      updates.partner_1_name || null,
+      updates.partner_2_name || null,
+      updates.is_locked || 0,
+      updates.brand_accent_color || '#e50914',
+      updates.notifications_enabled !== undefined ? updates.notifications_enabled : 1,
+      updates.privacy_level || 'private',
+      now
+    ).run();
+  } else {
+    const keys = Object.keys(updates);
+    if (keys.length === 1 && keys[0] === 'updated_at') return json({ ok: true, changed: false });
+    const setClauses = keys.map(k => `${k} = ?`).join(', ');
+    const values = [...keys.map(k => updates[k]), tenantId];
+    await env.DB.prepare(`UPDATE couple_settings SET ${setClauses} WHERE tenant_id = ?`)
+      .bind(...values).run();
+  }
 
   return json({
-    adminName: settings.adminName || null,
-    partnerName: settings.partnerName || null,
-    anniversaryDate: settings.anniversaryDate || null,
-    videoCount: (statsRow && statsRow.video_count) || 0,
-    totalDurationSeconds: (statsRow && statsRow.total_duration_seconds) || 0,
-    firstVideoAt: (statsRow && statsRow.first_video_at) || null,
-    firstVideoDate: (statsRow && statsRow.first_video_date) || null,
+    ok: true,
+    is_locked: updates.is_locked !== undefined ? !!updates.is_locked : isLocked,
   });
 }

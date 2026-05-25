@@ -93,6 +93,19 @@ CREATE INDEX IF NOT EXISTS idx_music_plays_played_at
   ON couple_music_plays (played_at DESC);
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Per-couple settings with locked identity fields and editable preferences
+CREATE TABLE IF NOT EXISTS couple_settings (
+  tenant_id             TEXT PRIMARY KEY,
+  anniversary_date      TEXT,
+  partner_1_name        TEXT,
+  partner_2_name        TEXT,
+  is_locked             INTEGER DEFAULT 0,
+  brand_accent_color    TEXT DEFAULT '#e50914',
+  notifications_enabled INTEGER DEFAULT 1,
+  privacy_level         TEXT DEFAULT 'private',
+  updated_at            INTEGER DEFAULT (strftime('%s','now'))
+);
+
 -- Default tenant so the app works out of the box.
 INSERT OR IGNORE INTO tenants (id, subdomain, couple_name, accent_color)
 VALUES ('default', 'app', 'LoveFlix', '#e50914');

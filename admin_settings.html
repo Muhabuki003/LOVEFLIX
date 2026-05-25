@@ -9,19 +9,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
+  :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--brand-accent:var(--red);--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
   .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
   aside{background:#0a0a0a;border-right:1px solid var(--border);padding:24px 0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
   .side-logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:18px}
-  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--brand-accent);letter-spacing:3px;line-height:1}
   .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
   .side-eyebrow{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;padding:0 24px 8px;margin-top:6px}
   .side-link{display:flex;align-items:center;gap:12px;padding:11px 24px;color:var(--text-light);font-size:14px;font-weight:500;border-left:3px solid transparent;transition:background .15s,color .15s}
   .side-link:hover{background:rgba(255,255,255,0.04);color:#fff}
-  .side-link.active{color:#fff;background:rgba(229,9,20,0.08);border-left-color:var(--red)}
+  .side-link.active{color:#fff;background:rgba(var(--brand-r,229),var(--brand-g,9),var(--brand-b,20),0.08);border-left-color:var(--brand-accent)}
   .side-link svg{width:18px;height:18px;fill:currentColor;opacity:.85}
   .side-foot{margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:10px}
   .side-foot .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3a7bff,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px}
@@ -43,12 +43,29 @@
   .field textarea{min-height:100px;resize:vertical}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
-  /* color picker */
-  .colors{display:flex;gap:10px;flex-wrap:wrap}
-  .color-swatch{width:48px;height:48px;border-radius:8px;cursor:pointer;border:2px solid transparent;position:relative;transition:transform .15s}
+  /* locked fields */
+  .field-locked{position:relative}
+  .field-locked input{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.08);color:var(--text-dim);cursor:not-allowed;padding-right:44px}
+  .field-locked input:focus{border-color:rgba(255,255,255,0.08)}
+  .lock-badge{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:4px;font-size:10px;color:#8a8a8a;pointer-events:none}
+  .lock-badge svg{width:12px;height:12px;fill:currentColor}
+  .lock-tooltip{position:relative;display:inline-flex}
+  .lock-tooltip .tip{position:absolute;bottom:calc(100% + 8px);right:0;background:#1f1f1f;border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text-light);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:10;min-width:260px;text-align:center;line-height:1.4}
+  .lock-tooltip:hover .tip{opacity:1}
+  .locked-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .locked-header label{margin-bottom:0}
+  .locked-label{display:flex;align-items:center;gap:5px;font-size:10px;color:#8a8a8a;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:3px;padding:2px 7px}
+  .locked-label svg{width:10px;height:10px;fill:currentColor}
+
+  /* color presets */
+  .colors{display:flex;gap:12px;flex-wrap:wrap}
+  .color-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+  .color-swatch{width:48px;height:48px;border-radius:8px;border:2px solid transparent;position:relative;transition:transform .15s,border-color .15s}
   .color-swatch:hover{transform:scale(1.08)}
   .color-swatch.selected{border-color:#fff}
-  .color-swatch.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+  .color-swatch.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+  .color-name{font-size:10px;color:var(--text-dim);letter-spacing:.3px;text-align:center;white-space:nowrap}
+  .color-item:hover .color-name{color:var(--text-light)}
 
   /* avatar uploaders */
   .avatar-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -61,10 +78,25 @@
   .avatar-card .name{font-size:13px;font-weight:600;margin-bottom:2px}
   .avatar-card .role{font-size:11px;color:var(--text-dim)}
 
+  /* toggle switch */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+  .toggle-label{font-size:14px;color:var(--text-light)}
+  .toggle-sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+  .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+  .toggle input{opacity:0;width:0;height:0;position:absolute}
+  .toggle-track{position:absolute;inset:0;background:#333;border-radius:12px;transition:background .2s;cursor:pointer}
+  .toggle input:checked ~ .toggle-track{background:var(--brand-accent)}
+  .toggle-thumb{position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+  .toggle input:checked ~ .toggle-thumb{transform:translateX(20px)}
+
+  /* privacy select */
+  .field select{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:11px 14px;color:#fff;font:inherit;font-size:14px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a8a8a' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+  .field select:focus{outline:none;border-color:#666}
+
   /* preview card */
   .preview-card{background:#141414;border:1px solid var(--border);border-radius:8px;overflow:hidden;position:sticky;top:20px}
-  .preview-frame{aspect-ratio:16/9;background:linear-gradient(135deg,var(--accent,#e50914),#1a0712);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px}
-  .preview-frame .lf{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent,#e50914);letter-spacing:3px;text-shadow:0 0 30px rgba(229,9,20,0.5)}
+  .preview-frame{aspect-ratio:16/9;background:linear-gradient(135deg,var(--accent,var(--brand-accent)),#1a0712);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px}
+  .preview-frame .lf{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--accent,var(--brand-accent));letter-spacing:3px;text-shadow:0 0 30px rgba(229,9,20,0.5)}
   .preview-frame .lf .heart{color:#fff;font-size:28px;vertical-align:middle;margin:0 3px;display:inline-block;transform:translateY(-2px)}
   .preview-frame .tagline{font-family:'Bebas Neue',sans-serif;font-size:18px;color:rgba(255,255,255,0.7);letter-spacing:2px;margin-top:8px}
   .preview-body{padding:18px}
@@ -72,19 +104,31 @@
   .preview-note{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1.1;color:#fff;margin-bottom:10px}
   .preview-meta{font-size:12px;color:var(--text-dim)}
 
-  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
   .btn{padding:11px 22px;border-radius:4px;font-size:13px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
   .btn svg{width:16px;height:16px;fill:currentColor}
-  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-primary{background:var(--brand-accent);color:#fff}.btn-primary:hover{filter:brightness(1.1)}
   .btn-ghost{background:transparent;color:var(--text-light);border:1px solid var(--border)}.btn-ghost:hover{border-color:#fff;color:#fff}
 
-  .saved-toast{position:fixed;bottom:30px;right:30px;background:#10b981;color:#000;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+  /* auto-save toast */
+  .saved-toast{position:fixed;bottom:30px;right:30px;background:#10b981;color:#000;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px;z-index:100}
   .saved-toast.show{opacity:1;transform:translateY(0)}
+  .saved-toast svg{width:16px;height:16px;fill:currentColor}
+
+  /* auto-save indicator in header */
+  .save-status{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;transition:color .2s}
+  .save-status.saving{color:var(--text-dim)}
+  .save-status.saved{color:#10b981}
+  .save-status.error{color:#f87171}
+  .save-status svg{width:14px;height:14px;fill:currentColor}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{animation:spin .7s linear infinite}
 
   .danger{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.3)}
   .danger h2{color:#fca5a5}
   .btn-danger{background:transparent;border:1px solid rgba(248,113,113,0.5);color:#fca5a5}
   .btn-danger:hover{background:rgba(248,113,113,0.12);border-color:#fca5a5;color:#fff}
+
+  .partner-joined{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:6px;padding:14px 16px}
 
   @media (max-width: 1000px){.grid{grid-template-columns:1fr}.preview-card{position:static}}
   @media (max-width: 720px){
@@ -92,21 +136,18 @@
     aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:14px;-webkit-overflow-scrolling:touch}
     .side-logo,.side-foot,.side-eyebrow{display:none}
     .side-link{padding:10px 14px;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0}
-    .side-link.active{border-left:none;border-bottom-color:var(--red)}
+    .side-link.active{border-left:none;border-bottom-color:var(--brand-accent)}
     main{padding:20px 16px 40px}
     .page-title{font-size:32px}
     .panel{padding:18px}
     .field-grid,.avatar-row{grid-template-columns:1fr}
     .colors{gap:8px}
     .color-swatch{width:40px;height:40px}
-    .actions{flex-direction:column-reverse;gap:10px}
-    .actions .btn{width:100%;justify-content:center}
+    .color-item{gap:4px}
     .danger>div{flex-direction:column}
     .danger .btn{width:100%;justify-content:center}
     .avatar-pic{width:100px;height:100px;font-size:48px}
   }
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .partner-joined{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:6px;padding:14px 16px}
 </style>
 </head>
 <body>
@@ -130,21 +171,94 @@
 
   <main>
     <div class="crumbs"><a href="admin.html" style="color:var(--text-dim)">Dashboard</a> › Site Settings</div>
-    <h1 class="page-title">Site Settings</h1>
-    <p class="page-sub">Personalize your private streaming service.</p>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px">
+      <h1 class="page-title" style="margin-bottom:0">Site Settings</h1>
+      <div class="save-status" id="saveStatus">
+        <!-- status injected by JS -->
+      </div>
+    </div>
+    <p class="page-sub">Personalize your private streaming service. Changes save automatically.</p>
 
     <div class="grid">
       <div>
 
+        <!-- Couple Identity (locks after first save) -->
         <div class="panel">
-          <h2>Couple Names</h2>
-          <p class="desc">These appear on profile selectors and across your site.</p>
+          <h2>Couple Identity</h2>
+          <p class="desc" id="coupleIdentityDesc">Set your names and anniversary. These are locked once saved.</p>
+
           <div class="field-grid">
-            <div class="field"><label>Partner 1 Name</label><input id="name1" type="text" placeholder="My Love"></div>
-            <div class="field"><label>Partner 2 Name (you)</label><input id="name2" type="text" placeholder="You"></div>
+            <div class="field" id="field-name1-wrap">
+              <div class="locked-header">
+                <label for="name1">Partner 1 Name</label>
+                <span class="locked-label" id="name1-lock-badge" style="display:none">
+                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  Locked
+                </span>
+              </div>
+              <div class="field-locked" id="name1-field-inner">
+                <input id="name1" type="text" placeholder="My Love" autocomplete="off">
+                <div class="lock-badge" id="name1-lock-icon" style="display:none">
+                  <div class="lock-tooltip">
+                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <div class="tip">This information was set during signup and cannot be changed.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field" id="field-name2-wrap">
+              <div class="locked-header">
+                <label for="name2">Partner 2 Name (you)</label>
+                <span class="locked-label" id="name2-lock-badge" style="display:none">
+                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  Locked
+                </span>
+              </div>
+              <div class="field-locked" id="name2-field-inner">
+                <input id="name2" type="text" placeholder="You" autocomplete="off">
+                <div class="lock-badge" id="name2-lock-icon" style="display:none">
+                  <div class="lock-tooltip">
+                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <div class="tip">This information was set during signup and cannot be changed.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <div class="field" id="field-anniversary-wrap">
+            <div class="locked-header">
+              <label for="anniversary">Anniversary Date</label>
+              <span class="locked-label" id="anniversary-lock-badge" style="display:none">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                Locked
+              </span>
+            </div>
+            <div class="field-locked" id="anniversary-field-inner">
+              <input id="anniversary" type="date">
+              <div class="lock-badge" id="anniversary-lock-icon" style="display:none">
+                <div class="lock-tooltip">
+                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <div class="tip">This information was set during signup and cannot be changed.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="lockNowWrap" style="display:none;margin-top:4px">
+            <button class="btn btn-primary" id="lockNowBtn" style="font-size:12px;padding:8px 16px">
+              <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              Save &amp; Lock Couple Data
+            </button>
+            <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Once saved, names and anniversary date cannot be changed.</p>
+          </div>
+        </div>
+
+        <!-- Custom URL & Tagline -->
+        <div class="panel">
+          <h2>Site Identity</h2>
+          <p class="desc">Tagline and URL shown across your private site.</p>
           <div class="field"><label>Site Tagline</label><input id="tagline" type="text" value="A private streaming service of two."></div>
-          <div class="field"><label>Anniversary Date</label><input id="anniversary" type="date"></div>
           <div class="field">
             <label>Your custom URL</label>
             <div style="display:flex;align-items:stretch;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;overflow:hidden">
@@ -154,6 +268,7 @@
           </div>
         </div>
 
+        <!-- Profile Photos -->
         <div class="panel">
           <h2>Profile Photos</h2>
           <p class="desc">The two avatars on the "Who's Watching?" screen.</p>
@@ -173,22 +288,51 @@
           </div>
           <input type="file" id="av1File" accept="image/*" hidden>
           <input type="file" id="av2File" accept="image/*" hidden>
-        </div>
-
-        <div class="panel">
-          <h2>Brand Accent Color</h2>
-          <p class="desc">The signature red used in your logo and CTA buttons.</p>
-          <div class="colors" id="colors">
-            <div class="color-swatch selected" style="background:#e50914" data-c="#e50914"></div>
-            <div class="color-swatch" style="background:#ec4899" data-c="#ec4899"></div>
-            <div class="color-swatch" style="background:#a855f7" data-c="#a855f7"></div>
-            <div class="color-swatch" style="background:#3b82f6" data-c="#3b82f6"></div>
-            <div class="color-swatch" style="background:#10b981" data-c="#10b981"></div>
-            <div class="color-swatch" style="background:#f59e0b" data-c="#f59e0b"></div>
-            <div class="color-swatch" style="background:#fb7185" data-c="#fb7185"></div>
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" id="savePhotosBtn" style="font-size:12px;padding:9px 18px">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              Save Photos
+            </button>
           </div>
         </div>
 
+        <!-- Brand Accent Color -->
+        <div class="panel">
+          <h2>Brand Accent Color</h2>
+          <p class="desc">Choose from seven preset colors. Your selection applies site-wide instantly.</p>
+          <div class="colors" id="colors">
+            <div class="color-item" data-c="#e50914">
+              <div class="color-swatch selected" style="background:#e50914" data-c="#e50914"></div>
+              <div class="color-name">Crimson</div>
+            </div>
+            <div class="color-item" data-c="#f59e0b">
+              <div class="color-swatch" style="background:#f59e0b" data-c="#f59e0b"></div>
+              <div class="color-name">Warm Gold</div>
+            </div>
+            <div class="color-item" data-c="#1d4ed8">
+              <div class="color-swatch" style="background:#1d4ed8" data-c="#1d4ed8"></div>
+              <div class="color-name">Deep Navy</div>
+            </div>
+            <div class="color-item" data-c="#fb7185">
+              <div class="color-swatch" style="background:#fb7185" data-c="#fb7185"></div>
+              <div class="color-name">Soft Rose</div>
+            </div>
+            <div class="color-item" data-c="#059669">
+              <div class="color-swatch" style="background:#059669" data-c="#059669"></div>
+              <div class="color-name">Forest Green</div>
+            </div>
+            <div class="color-item" data-c="#8b5cf6">
+              <div class="color-swatch" style="background:#8b5cf6" data-c="#8b5cf6"></div>
+              <div class="color-name">Lavender</div>
+            </div>
+            <div class="color-item" data-c="#64748b">
+              <div class="color-swatch" style="background:#64748b" data-c="#64748b"></div>
+              <div class="color-name">Slate Gray</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured Love Note -->
         <div class="panel">
           <h2>Featured Love Note</h2>
           <p class="desc">Shown on the home page hero. Make it good.</p>
@@ -196,6 +340,34 @@
           <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" placeholder="— Your Name, Day 1"></div>
         </div>
 
+        <!-- Account Preferences -->
+        <div class="panel">
+          <h2>Account Preferences</h2>
+          <p class="desc">Notification and privacy settings. Changes save automatically.</p>
+
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Email Notifications</div>
+              <div class="toggle-sub">Get notified when your partner adds a video or sends a love note.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="notificationsToggle" checked>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label>Privacy Level</label>
+            <select id="privacyLevel">
+              <option value="private">Private — only the two of you</option>
+              <option value="friends">Friends — anyone with the link</option>
+              <option value="public">Public — discoverable</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Partner Access -->
         <div class="panel" id="partnerPanel">
           <h2>Partner Access</h2>
           <p class="desc">Give your partner their own login — they'll land on the Watch screen, not the admin dashboard.</p>
@@ -214,6 +386,7 @@
           </div>
         </div>
 
+        <!-- Danger Zone -->
         <div class="panel danger">
           <h2>Danger Zone</h2>
           <p class="desc">Irreversible. Be sure.</p>
@@ -224,13 +397,6 @@
           </div>
         </div>
 
-        <div class="actions">
-          <button class="btn btn-ghost" onclick="location.href='admin.html'">Cancel</button>
-          <button class="btn btn-primary" id="saveBtn">
-            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            Save Changes
-          </button>
-        </div>
       </div>
 
       <div>
@@ -251,25 +417,106 @@
   </main>
 </div>
 
-<div class="saved-toast" id="toast">Saved.</div>
+<div class="saved-toast" id="toast">
+  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  <span id="toastText">Saved</span>
+</div>
 
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
 <script>
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
   function slugify(s) {
     return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
-  const colors = document.getElementById('colors');
+  const TOAST_ICONS = {
+    saved: '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>',
+    saving: '',
+    error: '<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
+  };
+
+  let _toastTimer = null;
+  function showToast(msg, type) {
+    type = type || 'saved';
+    const t = document.getElementById('toast');
+    const svg = t.querySelector('svg');
+    const txt = document.getElementById('toastText');
+    svg.innerHTML = TOAST_ICONS[type] || TOAST_ICONS.saved;
+    txt.textContent = msg || 'Saved';
+    t.style.background = type === 'error' ? '#e87c03' : '#10b981';
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function setStatus(state, label) {
+    const el = document.getElementById('saveStatus');
+    if (!el) return;
+    const icons = {
+      saving: '<svg class="spin" viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>',
+      saved:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+      error:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+    };
+    el.className = 'save-status ' + state;
+    el.innerHTML = (icons[state] || '') + '<span>' + (label || state) + '</span>';
+  }
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+
+  const colorsEl    = document.getElementById('colors');
   const previewLogo = document.getElementById('previewLogo');
-  const previewFrame = document.getElementById('previewFrame');
+  const previewFrame= document.getElementById('previewFrame');
   const previewNote = document.getElementById('previewNote');
   const previewMeta = document.getElementById('previewMeta');
-  const previewName1 = document.getElementById('previewName1');
-  const previewName2 = document.getElementById('previewName2');
+  const previewName1= document.getElementById('previewName1');
+  const previewName2= document.getElementById('previewName2');
 
   let partnerPhoto = '';
-  let adminPhoto = '';
+  let adminPhoto   = '';
+  let _isLocked    = false;   // locked state from /api/couple/settings
+  let _coupleSettingsLoaded = false;
+
+  // ── Brand accent helpers ──────────────────────────────────────────────────
+
+  function applyPreviewColor(c) {
+    previewLogo.style.color = c;
+    previewFrame.style.setProperty('--accent', c);
+    // Also update live page brand color immediately
+    LoveFlix.applyBrandColor({ accentColor: c });
+  }
+
+  // ── Lock state helpers ────────────────────────────────────────────────────
+
+  function applyLockState(isLocked) {
+    _isLocked = isLocked;
+    ['name1', 'name2', 'anniversary'].forEach(id => {
+      const input = document.getElementById(id);
+      const badge = document.getElementById(id + '-lock-badge');
+      const icon  = document.getElementById(id + '-lock-icon');
+      if (!input) return;
+      if (isLocked) {
+        input.readOnly = true;
+        input.setAttribute('tabindex', '-1');
+        if (badge) badge.style.display = '';
+        if (icon)  icon.style.display  = '';
+      } else {
+        input.readOnly = false;
+        input.removeAttribute('tabindex');
+        if (badge) badge.style.display = 'none';
+        if (icon)  icon.style.display  = 'none';
+      }
+    });
+    const lockWrap = document.getElementById('lockNowWrap');
+    if (lockWrap) lockWrap.style.display = isLocked ? 'none' : '';
+    const desc = document.getElementById('coupleIdentityDesc');
+    if (desc) desc.textContent = isLocked
+      ? 'These were set during signup and are permanently locked.'
+      : 'Set your names and anniversary. These will be locked once saved.';
+  }
+
+  // ── Settings population ───────────────────────────────────────────────────
 
   function applyAvatarPhoto(picEl, photoUrl) {
     if (photoUrl) {
@@ -280,6 +527,7 @@
       picEl.style.color = '';
     }
   }
+
   function applySidebarAvatar(letter, photoUrl) {
     const el = document.getElementById('sideAvatar');
     el.textContent = letter;
@@ -292,26 +540,26 @@
     }
   }
 
-  // Load saved settings on page load. Paint optimistically from cache, then
-  // re-paint once the server pull resolves so this page never shows stale
-  // defaults on a fresh device or after the user changed names elsewhere.
   function loadSettings(s) {
     s = s || {};
-    const name1 = s.partnerName || 'My Love';
-    const name2 = s.adminName || 'You';
-    const slug = s.urlSlug || (slugify(name2) + '-and-' + slugify(name1));
-    const accent = s.accentColor || '#e50914';
-    const note = s.loveNote || 'Every day with you is a new episode.';
-    const attr = s.attribution || ('— ' + name2 + ', Day 1');
+    const name1  = s.partnerName || s.partner_1_name || 'My Love';
+    const name2  = s.adminName   || s.partner_2_name || 'You';
+    const slug   = s.urlSlug || (slugify(name2) + '-and-' + slugify(name1));
+    const accent = s.accentColor || s.brand_accent_color || '#e50914';
+    const note   = s.loveNote || 'Every day with you is a new episode.';
+    const attr   = s.attribution || ('— ' + name2 + ', Day 1');
     partnerPhoto = s.partnerPhoto || '';
-    adminPhoto = s.adminPhoto || '';
-    if (s.anniversaryDate) document.getElementById('anniversary').value = s.anniversaryDate;
+    adminPhoto   = s.adminPhoto   || '';
 
-    document.getElementById('name1').value = name1;
-    document.getElementById('name2').value = name2;
-    document.getElementById('urlSlug').value = slug;
+    if (s.anniversaryDate || s.anniversary_date) {
+      document.getElementById('anniversary').value = s.anniversaryDate || s.anniversary_date || '';
+    }
+
+    document.getElementById('name1').value    = name1;
+    document.getElementById('name2').value    = name2;
+    document.getElementById('urlSlug').value  = slug;
     document.getElementById('loveNote').value = note;
-    document.getElementById('attr').value = attr;
+    document.getElementById('attr').value     = attr;
 
     // Avatar cards
     const av1 = document.getElementById('av1');
@@ -323,7 +571,7 @@
     applyAvatarPhoto(av1, partnerPhoto);
     applyAvatarPhoto(av2, adminPhoto);
     document.getElementById('av1Reset').style.display = partnerPhoto ? '' : 'none';
-    document.getElementById('av2Reset').style.display = adminPhoto ? '' : 'none';
+    document.getElementById('av2Reset').style.display = adminPhoto   ? '' : 'none';
 
     // Sidebar
     applySidebarAvatar((name2[0] || '?').toUpperCase(), adminPhoto);
@@ -333,21 +581,68 @@
     // Preview
     previewName1.textContent = name1;
     previewName2.textContent = name2;
-    previewNote.textContent = '"' + note + '"';
-    previewMeta.textContent = attr;
-    previewLogo.style.color = accent;
-    previewFrame.style.setProperty('--accent', accent);
+    previewNote.textContent  = '"' + note + '"';
+    previewMeta.textContent  = attr;
+    applyPreviewColor(accent);
 
     // Select matching color swatch
-    colors.querySelectorAll('.color-swatch').forEach(sw => {
+    colorsEl.querySelectorAll('.color-swatch').forEach(sw => {
       sw.classList.toggle('selected', sw.dataset.c === accent);
     });
+
+    // Notifications and privacy
+    if (typeof s.notifications_enabled !== 'undefined') {
+      document.getElementById('notificationsToggle').checked = !!s.notifications_enabled;
+    }
+    if (s.privacy_level) {
+      document.getElementById('privacyLevel').value = s.privacy_level;
+    }
   }
+
+  // Load from localStorage cache immediately (no flash)
   loadSettings(LoveFlix.getSettings());
+  // Then pull from server
   LoveFlix.ensureSettingsReady().then(loadSettings).catch(() => {});
   window.addEventListener('loveflix:settings-changed', () => loadSettings(LoveFlix.getSettings()));
 
-  // --- Partner Access Panel ---
+  // ── Load couple_settings (locked state + preferences) ─────────────────────
+
+  async function loadCoupleSettings() {
+    try {
+      const data = await LoveFlix.api('/api/couple/settings');
+      const s = data && data.settings;
+      if (!s) return;
+      _coupleSettingsLoaded = true;
+      applyLockState(!!s.is_locked);
+
+      // Apply stored preferences if present
+      if (s.brand_accent_color) {
+        colorsEl.querySelectorAll('.color-swatch').forEach(sw => {
+          sw.classList.toggle('selected', sw.dataset.c === s.brand_accent_color);
+        });
+        applyPreviewColor(s.brand_accent_color);
+        // Merge into local settings for brand color injection
+        LoveFlix.saveSettings({ accentColor: s.brand_accent_color });
+      }
+      if (typeof s.notifications_enabled !== 'undefined') {
+        document.getElementById('notificationsToggle').checked = !!s.notifications_enabled;
+      }
+      if (s.privacy_level) {
+        document.getElementById('privacyLevel').value = s.privacy_level;
+      }
+      // Populate locked identity fields if server has them
+      if (s.partner_1_name) document.getElementById('name1').value = s.partner_1_name;
+      if (s.partner_2_name) document.getElementById('name2').value = s.partner_2_name;
+      if (s.anniversary_date) document.getElementById('anniversary').value = s.anniversary_date;
+    } catch (_) {
+      // API unavailable — show unlock state by default
+      applyLockState(false);
+    }
+  }
+  LoveFlix.ensureSettingsReady().then(loadCoupleSettings).catch(() => applyLockState(false));
+
+  // ── Partner Access Panel ──────────────────────────────────────────────────
+
   (async function() {
     const userId = LoveFlix.getUserId && LoveFlix.getUserId();
     const token  = LoveFlix.getToken  && LoveFlix.getToken();
@@ -395,29 +690,127 @@
     }
   })();
 
-  colors.addEventListener('click', e => {
-    const sw = e.target.closest('.color-swatch');
-    if (!sw) return;
-    colors.querySelectorAll('.color-swatch').forEach(c => c.classList.remove('selected'));
-    sw.classList.add('selected');
-    const c = sw.dataset.c;
-    previewLogo.style.color = c;
-    previewFrame.style.setProperty('--accent', c);
+  // ── Auto-save with debounce (500ms) ────────────────────────────────────────
+
+  let _autoSaveTimer = null;
+
+  function scheduleAutoSave() {
+    clearTimeout(_autoSaveTimer);
+    setStatus('saving', 'Saving…');
+    _autoSaveTimer = setTimeout(autoSave, 500);
+  }
+
+  async function autoSave() {
+    const name1  = document.getElementById('name1').value.trim();
+    const name2  = document.getElementById('name2').value.trim();
+    const slug   = document.getElementById('urlSlug').value.trim();
+    const note   = document.getElementById('loveNote').value.trim();
+    const attr   = document.getElementById('attr').value.trim();
+    const accent = (colorsEl.querySelector('.color-swatch.selected') || {}).dataset?.c || '#e50914';
+
+    // Save general settings (love note, tagline, slug, photos) via existing API
+    try {
+      await LoveFlix.saveSettings({
+        urlSlug:      slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
+        accentColor:  accent,
+        loveNote:     note,
+        attribution:  attr,
+        partnerPhoto: partnerPhoto || '',
+        adminPhoto:   adminPhoto   || '',
+      }, { flush: true });
+      setStatus('saved', 'Saved');
+    } catch (_) {
+      setStatus('error', 'Sync failed');
+    }
+  }
+
+  // Immediate save for color: apply + persist without waiting for debounce
+  async function saveColorNow(hex) {
+    setStatus('saving', 'Saving…');
+    // Always update general settings for cross-page color sync
+    LoveFlix.saveSettings({ accentColor: hex });
+    LoveFlix.applyBrandColor({ accentColor: hex });
+    // Also update couple_settings for the dedicated color field
+    try {
+      await LoveFlix.api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { brand_accent_color: hex },
+      });
+      setStatus('saved', 'Saved');
+      showToast('Color saved');
+    } catch (_) {
+      setStatus('error', 'Sync failed');
+    }
+  }
+
+  async function savePreferencesNow() {
+    const notifications = document.getElementById('notificationsToggle').checked;
+    const privacy       = document.getElementById('privacyLevel').value;
+    setStatus('saving', 'Saving…');
+    try {
+      await LoveFlix.api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { notifications_enabled: notifications, privacy_level: privacy },
+      });
+      setStatus('saved', 'Saved');
+      showToast('Preferences saved');
+    } catch (_) {
+      setStatus('error', 'Sync failed');
+    }
+  }
+
+  // ── Color swatch click ────────────────────────────────────────────────────
+
+  colorsEl.addEventListener('click', e => {
+    const item = e.target.closest('.color-item');
+    if (!item) return;
+    const c = item.dataset.c;
+    if (!c) return;
+    colorsEl.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('selected'));
+    item.querySelector('.color-swatch').classList.add('selected');
+    applyPreviewColor(c);
+    saveColorNow(c);
   });
 
-  document.getElementById('loveNote').addEventListener('input', e => previewNote.textContent = '"' + e.target.value + '"');
-  document.getElementById('attr').addEventListener('input', e => previewMeta.textContent = e.target.value);
+  // ── Input event bindings (auto-save) ─────────────────────────────────────
+
+  document.getElementById('loveNote').addEventListener('input', e => {
+    previewNote.textContent = '"' + e.target.value + '"';
+    scheduleAutoSave();
+  });
+  document.getElementById('attr').addEventListener('input', e => {
+    previewMeta.textContent = e.target.value;
+    scheduleAutoSave();
+  });
   document.getElementById('name1').addEventListener('input', e => {
+    if (_isLocked) return;
     previewName1.textContent = e.target.value;
     document.getElementById('av1').textContent = (e.target.value[0] || 'M').toUpperCase();
     document.getElementById('av1Name').textContent = e.target.value;
     autoSlug();
   });
   document.getElementById('name2').addEventListener('input', e => {
+    if (_isLocked) return;
     previewName2.textContent = e.target.value;
     document.getElementById('av2').textContent = (e.target.value[0] || 'Y').toUpperCase();
     document.getElementById('av2Name').textContent = e.target.value;
+    const letter = (e.target.value[0] || 'Y').toUpperCase();
+    document.getElementById('sideAdminName').textContent = e.target.value || 'You';
+    applySidebarAvatar(letter, adminPhoto);
     autoSlug();
+  });
+  document.getElementById('urlSlug').addEventListener('input', e => {
+    document.getElementById('sideUrl').textContent = 'loveflix.us/' + (e.target.value || 'yourname');
+    scheduleAutoSave();
+  });
+
+  document.getElementById('notificationsToggle').addEventListener('change', () => {
+    clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(savePreferencesNow, 500);
+  });
+  document.getElementById('privacyLevel').addEventListener('change', () => {
+    clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(savePreferencesNow, 500);
   });
 
   function autoSlug() {
@@ -428,29 +821,42 @@
       document.getElementById('urlSlug').value = slug;
       document.getElementById('sideUrl').textContent = 'loveflix.us/' + slug;
     }
+    scheduleAutoSave();
   }
 
-  document.getElementById('urlSlug').addEventListener('input', e => {
-    document.getElementById('sideUrl').textContent = 'loveflix.us/' + (e.target.value || 'yourname');
+  // ── Lock Couple Data button ────────────────────────────────────────────────
+
+  document.getElementById('lockNowBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('lockNowBtn');
+    const n1  = document.getElementById('name1').value.trim();
+    const n2  = document.getElementById('name2').value.trim();
+    const ann = document.getElementById('anniversary').value;
+    if (!n1 || !n2) { showToast('Enter both names first', 'error'); return; }
+    btn.disabled = true;
+    btn.textContent = 'Locking…';
+    try {
+      await LoveFlix.api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { partner_1_name: n1, partner_2_name: n2, anniversary_date: ann },
+      });
+      // Also mirror into general settings
+      await LoveFlix.saveSettings({ partnerName: n1, adminName: n2, anniversaryDate: ann }, { flush: true });
+      applyLockState(true);
+      showToast('Couple data locked');
+    } catch (_) {
+      showToast('Save failed', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> Save &amp; Lock Couple Data';
+    }
   });
 
-  document.getElementById('name2').addEventListener('input', e => {
-    const letter = (e.target.value[0] || 'Y').toUpperCase();
-    document.getElementById('sideAdminName').textContent = e.target.value || 'You';
-    applySidebarAvatar(letter, adminPhoto);
-  });
+  // ── Profile picture upload ─────────────────────────────────────────────────
 
-  // --- Profile picture upload ---
   function readImageFile(file) {
     return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
-        reject(new Error('Please choose an image file.'));
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        reject(new Error('Image is too large (max 10 MB).'));
-        return;
-      }
+      if (!file.type.startsWith('image/')) { reject(new Error('Please choose an image file.')); return; }
+      if (file.size > 10 * 1024 * 1024) { reject(new Error('Image is too large (max 10 MB).')); return; }
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result);
       reader.onerror = () => reject(new Error('Could not read the file.'));
@@ -458,8 +864,6 @@
     });
   }
 
-  // Resize and re-encode to a small JPEG thumbnail so it fits in D1 and
-  // syncs across devices. Max 200px on longest side, JPEG quality 0.78.
   function compressImage(dataUrl, maxDim, quality) {
     return new Promise(function(resolve) {
       const img = new Image();
@@ -468,8 +872,7 @@
         const w = Math.max(1, Math.round(img.width * scale));
         const h = Math.max(1, Math.round(img.height * scale));
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
+        canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         resolve(canvas.toDataURL('image/jpeg', quality != null ? quality : 0.78));
       };
@@ -479,19 +882,17 @@
   }
 
   function wirePhotoPicker(picId, fileId, resetId, which) {
-    const pic = document.getElementById(picId);
-    const file = document.getElementById(fileId);
+    const pic   = document.getElementById(picId);
+    const file  = document.getElementById(fileId);
     const reset = document.getElementById(resetId);
     pic.style.cursor = 'pointer';
     pic.addEventListener('click', () => file.click());
-    pic.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); }
-    });
+    pic.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
     file.addEventListener('change', async e => {
       const f = e.target.files && e.target.files[0];
       if (!f) return;
       try {
-        const raw = await readImageFile(f);
+        const raw     = await readImageFile(f);
         const dataUrl = await compressImage(raw, 200, 0.78);
         if (which === 'partner') partnerPhoto = dataUrl;
         else adminPhoto = dataUrl;
@@ -521,43 +922,21 @@
   wirePhotoPicker('av1', 'av1File', 'av1Reset', 'partner');
   wirePhotoPicker('av2', 'av2File', 'av2Reset', 'admin');
 
-  document.getElementById('saveBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('saveBtn');
-    const t = document.getElementById('toast');
-    const name1 = document.getElementById('name1').value.trim();
-    const name2 = document.getElementById('name2').value.trim();
-    const slug = document.getElementById('urlSlug').value.trim();
-    const accentEl = colors.querySelector('.color-swatch.selected');
-    const originalLabel = btn.innerHTML;
+  // ── Save Photos button ────────────────────────────────────────────────────
+
+  document.getElementById('savePhotosBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('savePhotosBtn');
+    const orig = btn.innerHTML;
     btn.disabled = true;
     btn.textContent = 'Saving…';
     try {
-      // flush:true → returns a promise that resolves only after the server
-      // PUT completes (or fails). This is what locks the new name in across
-      // sessions and devices — no more silent debounce drops.
-      await LoveFlix.saveSettings({
-        partnerName: name1 || 'My Love',
-        adminName: name2 || 'You',
-        urlSlug: slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
-        accentColor: accentEl ? accentEl.dataset.c : '#e50914',
-        loveNote: document.getElementById('loveNote').value.trim(),
-        attribution: document.getElementById('attr').value.trim(),
-        anniversaryDate: document.getElementById('anniversary').value,
-        partnerPhoto: partnerPhoto || '',
-        adminPhoto: adminPhoto || '',
-      }, { flush: true });
-      t.textContent = 'Saved.';
-      t.style.background = '#10b981';
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 1800);
-    } catch (err) {
-      t.textContent = 'Saved locally — sync will retry.';
-      t.style.background = '#e87c03';
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2600);
+      await LoveFlix.saveSettings({ partnerPhoto: partnerPhoto || '', adminPhoto: adminPhoto || '' }, { flush: true });
+      showToast('Photos saved');
+    } catch (_) {
+      showToast('Save failed — will retry', 'error');
     } finally {
       btn.disabled = false;
-      btn.innerHTML = originalLabel;
+      btn.innerHTML = orig;
     }
   });
 </script>
