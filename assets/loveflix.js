@@ -417,10 +417,79 @@
   // without requiring per-page CSS changes.
   function applyBrandColor(settings) {
     const s = settings || getSettings();
-    const color = (s && (s.accentColor || s.brand_accent_color)) || '#e50914';
+    const hex = (s && (s.accentColor || s.brand_accent_color)) || '#e50914';
+    // Validate hex so bad data can't inject CSS
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+
+    // CSS variable approach — covers all elements already using var(--red) / var(--brand-accent)
     try {
-      document.documentElement.style.setProperty('--brand-accent', color);
-      document.documentElement.style.setProperty('--red', color);
+      document.documentElement.style.setProperty('--brand-accent', hex);
+      document.documentElement.style.setProperty('--red', hex);
+      // Individual RGB channels let stylesheets build their own rgba() without JS injection
+      document.documentElement.style.setProperty('--brand-r', String(parseInt(hex.slice(1,3),16)));
+      document.documentElement.style.setProperty('--brand-g', String(parseInt(hex.slice(3,5),16)));
+      document.documentElement.style.setProperty('--brand-b', String(parseInt(hex.slice(5,7),16)));
+    } catch (_) {}
+
+    // Parse to RGB components so we can reconstruct rgba() values
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const rgba = (a) => `rgba(${r},${g},${b},${a})`;
+
+    // Inject / update a <style> tag to override every hardcoded #e50914 and
+    // rgba(229,9,20,...) across all pages without requiring per-file edits.
+    // Uses !important so it wins over inline styles too.
+    try {
+      let style = document.getElementById('lf-brand-style');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'lf-brand-style';
+        document.head.appendChild(style);
+      }
+      style.textContent = [
+        // CSS variables (belt + suspenders — inline JS setProperty above already does this)
+        `:root{--brand-accent:${hex}!important;--red:${hex}!important;}`,
+        // Logo text — login, join, profile selector, waitlist, etc.
+        `.nf-logo{color:${hex}!important;}`,
+        // Sidebar active highlight (rgba hardcoded in every admin page)
+        `.side-link.active{background:${rgba(0.08)}!important;border-left-color:${hex}!important;}`,
+        `.side-link.active.bottom{border-left-color:${hex}!important;}`,
+        // Primary action buttons (hardcoded on login/join/checkout)
+        `.btn-primary,.btn-join,.btn-enter{background:${hex}!important;}`,
+        // Hero eyebrow pill (home.html)
+        `.hero-eyebrow{color:${hex}!important;background:${rgba(0.1)}!important;border-color:${rgba(0.3)}!important;}`,
+        `.hero-eyebrow::before{color:${hex}!important;border-color:${hex}!important;}`,
+        // Hero tag badge (home.html)
+        `.hero-tag{background:${rgba(0.18)}!important;border-color:${rgba(0.4)}!important;}`,
+        // Card watch-progress bar (home.html)
+        `.card-progress::after{background:${hex}!important;}`,
+        // Admin dashboard stat accent bar
+        `.stat::before{background:${hex}!important;}`,
+        `.stat:nth-child(1){--accent:${hex}!important;}`,
+        // Storage usage fill bar (inline style — !important beats it)
+        `#storageFill{background:${hex}!important;}`,
+        // Admin love-note card
+        `.love-note{background:linear-gradient(135deg,${rgba(0.15)},rgba(168,85,247,0.1))!important;border-color:${rgba(0.3)}!important;}`,
+        // Quick-action icon (covers inline --qbg/--qfg custom props too)
+        `.quick-icon{--qbg:${rgba(0.15)}!important;--qfg:${hex}!important;color:${hex}!important;}`,
+        // Preview logo shadow (admin_settings.html)
+        `.preview-frame .lf{color:${hex}!important;text-shadow:0 0 30px ${rgba(0.5)}!important;}`,
+        // Profile selector pin dots
+        `.pin-dot.filled{background:${hex}!important;border-color:${hex}!important;}`,
+        // Checkbox/toggle accent color
+        `input[type="checkbox"]{accent-color:${hex}!important;}`,
+        // Toggle track (admin_settings custom toggle)
+        `.toggle input:checked~.toggle-track{background:${hex}!important;}`,
+        // Input focus ring
+        `.field input:focus,.field textarea:focus,.field select:focus{border-color:${hex}!important;}`,
+        // Waitlist/landing glow radials (best-effort via ::before on known elements)
+        `.waitlist-glow,.hero-glow{background:${rgba(0.2)}!important;}`,
+        // Plan card selected state (onboarding)
+        `.plan-card.selected{border-color:${hex}!important;background:${rgba(0.06)}!important;}`,
+        // Heart icon in browse/search results (hardcoded fill)
+        `svg path[fill="#e50914"]{fill:${hex}!important;}`,
+      ].join('\n');
     } catch (_) {}
   }
 
