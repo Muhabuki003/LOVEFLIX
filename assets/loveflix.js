@@ -411,6 +411,19 @@
     });
   }
 
+  // Apply the brand accent color from settings by overriding --brand-accent and
+  // --red CSS custom properties. All pages reference var(--red) for the logo
+  // and buttons, so overriding it here updates every styled element site-wide
+  // without requiring per-page CSS changes.
+  function applyBrandColor(settings) {
+    const s = settings || getSettings();
+    const color = (s && (s.accentColor || s.brand_accent_color)) || '#e50914';
+    try {
+      document.documentElement.style.setProperty('--brand-accent', color);
+      document.documentElement.style.setProperty('--red', color);
+    } catch (_) {}
+  }
+
   // Kick off a settings refresh on every page load. Pages that need to wait
   // for it can `await LoveFlix.ensureSettingsReady()`. We only pull when
   // authenticated; an anonymous pull would hit the public /api/settings
@@ -419,22 +432,24 @@
   // post-signin pull.
   if (typeof document !== 'undefined') {
     const run = () => {
+      // Apply cached color immediately (synchronous) to eliminate flash.
+      applyBrandColor(getSettings());
       if (getToken()) {
-        pullSettings().catch(() => {});
+        pullSettings().then(s => { applyBrandColor(s); }).catch(() => {});
       } else {
-        // Resolve ready immediately with whatever's local so anonymous pages
-        // (login screen, landing) don't hang waiting on a pull we won't make.
         resolveSettingsReady(getSettings());
       }
     };
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', run, { once: true });
     } else { run(); }
-    window.addEventListener('focus', () => { if (getToken()) pullSettings().catch(() => {}); });
+    window.addEventListener('focus', () => {
+      if (getToken()) pullSettings().then(s => { applyBrandColor(s); }).catch(() => {});
+    });
     // Cross-tab updates: if another tab changes settings, mirror in this tab.
     window.addEventListener('storage', e => {
       if (e.key === SETTINGS_KEY) {
-        // Storage event already wrote the new value; just notify listeners.
+        applyBrandColor(getSettings());
         try { window.dispatchEvent(new Event('loveflix:settings-changed')); } catch (_) {}
       }
     });
@@ -593,6 +608,7 @@
     pushSettings,
     flushPushSettings,
     ensureSettingsReady,
+    applyBrandColor,
     signIn,
     signUp,
     signOut,
