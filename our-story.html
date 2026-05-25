@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){if(k==='mukstudio2026'){try{localStorage.setItem('lf_access','1');}catch(e){}u.searchParams.delete('unlock');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);}else{location.replace('/waitlist.html');return;}}var ok=false;try{ok=localStorage.getItem('lf_access')==='1';}catch(e){}if(!ok){location.replace('/waitlist.html');}}catch(e){location.replace('/waitlist.html');}})();</script><!-- LF_GATE_END -->
+
+<meta charset="UTF-8">
+<title>LoveFlix — Our Story</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0d0d0d;
+    --red:#e50914;
+    --gold:#c9a96e;
+    --gold-soft:rgba(201,169,110,0.12);
+    --text:#fafafa;
+    --text-dim:#7a7a7a;
+    --text-light:#cfcfcf;
+    --border:rgba(255,255,255,0.07);
+    --serif:'DM Serif Display',Georgia,serif;
+  }
+  html,body{height:100%;scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  /* ── HERO ── */
+  .story-hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    padding:140px 48px 80px;
+    overflow:hidden;
+  }
+  .story-hero::before{
+    content:'';
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 40%, rgba(201,169,110,0.07) 0%, transparent 70%),
+      radial-gradient(circle at 20% 80%, rgba(229,9,20,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(201,169,110,0.04) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:12px;
+    font-size:11px;letter-spacing:5px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;margin-bottom:32px;
+  }
+  .hero-eyebrow::before,.hero-eyebrow::after{
+    content:'';display:inline-block;width:40px;height:1px;background:var(--gold);opacity:.5;
+  }
+  .hero-names{
+    font-family:var(--serif);
+    font-size:clamp(56px,8vw,120px);
+    line-height:.95;
+    letter-spacing:-1px;
+    margin-bottom:28px;
+    background:linear-gradient(135deg,#fff 30%,var(--gold) 70%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .hero-ampersand{
+    font-style:italic;
+    color:var(--gold);
+    -webkit-text-fill-color:var(--gold);
+    display:block;
+    font-size:.7em;
+    margin:0 0 4px;
+    opacity:.7;
+  }
+  .hero-since{
+    font-size:14px;letter-spacing:4px;text-transform:uppercase;
+    color:var(--text-dim);margin-bottom:40px;
+  }
+  .hero-since span{color:var(--gold);font-weight:600}
+
+  .stats-row{
+    display:flex;align-items:center;gap:0;
+    flex-wrap:wrap;justify-content:center;
+    border:1px solid var(--border);border-radius:12px;
+    background:rgba(255,255,255,0.03);
+    backdrop-filter:blur(12px);
+    overflow:hidden;
+    max-width:600px;
+    margin:0 auto 0;
+  }
+  .stat-item{
+    flex:1;min-width:140px;
+    padding:24px 28px;
+    text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-item:last-child{border-right:none}
+  .stat-val{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:42px;letter-spacing:1px;
+    color:var(--gold);line-height:1;margin-bottom:6px;
+  }
+  .stat-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim)}
+
+  /* ── SCROLL INDICATOR ── */
+  .scroll-cue{
+    position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    color:var(--text-dim);font-size:11px;letter-spacing:3px;text-transform:uppercase;
+    animation:fadeFloat 2.4s ease-in-out infinite;
+  }
+  .scroll-cue svg{width:20px;height:20px;fill:none;stroke:var(--text-dim);stroke-width:1.5}
+  @keyframes fadeFloat{0%,100%{opacity:.4;transform:translateX(-50%) translateY(0)}50%{opacity:.9;transform:translateX(-50%) translateY(6px)}}
+
+  /* ── TIMELINE ── */
+  .timeline-section{
+    padding:100px 0 120px;
+    position:relative;
+  }
+  .section-header{
+    text-align:center;
+    margin-bottom:72px;
+    padding:0 48px;
+  }
+  .section-label{
+    font-size:11px;letter-spacing:5px;text-transform:uppercase;
+    color:var(--gold);margin-bottom:16px;
+  }
+  .section-title{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(40px,5vw,72px);
+    letter-spacing:3px;color:#fff;
+  }
+
+  /* vertical spine */
+  .timeline{
+    position:relative;
+    max-width:900px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+  .timeline::before{
+    content:'';
+    position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);
+    width:1px;
+    background:linear-gradient(to bottom,transparent,var(--gold) 8%,var(--gold) 92%,transparent);
+    opacity:.2;
+  }
+
+  .tl-entry{
+    display:grid;
+    grid-template-columns:1fr 64px 1fr;
+    align-items:start;
+    margin-bottom:72px;
+    position:relative;
+  }
+  .tl-entry:last-child{margin-bottom:0}
+
+  /* alternating sides */
+  .tl-entry:nth-child(odd) .tl-card{grid-column:1;margin-right:32px;text-align:right}
+  .tl-entry:nth-child(odd) .tl-card .card-inner{align-items:flex-end}
+  .tl-entry:nth-child(odd) .tl-mid{grid-column:2}
+  .tl-entry:nth-child(odd) .tl-thumb{grid-column:3;margin-left:32px}
+
+  .tl-entry:nth-child(even) .tl-thumb{grid-column:1;margin-right:32px}
+  .tl-entry:nth-child(even) .tl-mid{grid-column:2}
+  .tl-entry:nth-child(even) .tl-card{grid-column:3;margin-left:32px}
+
+  .tl-mid{
+    display:flex;flex-direction:column;align-items:center;
+    padding-top:20px;
+    z-index:2;
+  }
+  .tl-dot{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--gold);
+    background:var(--bg);
+    flex-shrink:0;
+    box-shadow:0 0 0 4px rgba(201,169,110,0.12);
+  }
+
+  .tl-card{display:flex;align-items:flex-start}
+  .card-inner{display:flex;flex-direction:column;gap:8px}
+  .tl-date{
+    font-size:11px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;
+  }
+  .tl-title{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;letter-spacing:1px;color:#fff;line-height:1;
+  }
+  .tl-cat{
+    display:inline-block;
+    font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--red);font-weight:700;
+  }
+  .tl-desc{
+    font-size:13px;line-height:1.6;color:var(--text-dim);
+    max-width:260px;
+  }
+  .tl-entry:nth-child(odd) .tl-desc{margin-left:auto}
+  .tl-dur{
+    font-size:12px;color:var(--text-dim);letter-spacing:1px;
+  }
+  .tl-play{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--gold);font-weight:600;
+    background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);
+    border-radius:3px;padding:6px 12px;
+    transition:background .18s,border-color .18s;
+  }
+  .tl-play:hover{background:rgba(201,169,110,0.18);border-color:rgba(201,169,110,0.5)}
+  .tl-play svg{width:12px;height:12px;fill:var(--gold)}
+
+  .tl-thumb{cursor:pointer}
+  .tl-thumb-inner{
+    aspect-ratio:16/9;border-radius:8px;overflow:hidden;
+    background:var(--thumb,linear-gradient(135deg,#2a2a2a,#1a1a1a));
+    position:relative;
+    transition:transform .25s ease,box-shadow .25s ease;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tl-thumb:hover .tl-thumb-inner{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.6)}
+  .tl-thumb-inner img{width:100%;height:100%;object-fit:cover;display:block}
+  .tl-thumb-placeholder{
+    font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;
+    color:rgba(255,255,255,0.6);text-align:center;padding:14px;line-height:1.2;
+  }
+  .tl-thumb-overlay{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0);transition:background .2s ease;
+  }
+  .tl-thumb:hover .tl-thumb-overlay{background:rgba(0,0,0,0.35)}
+  .tl-play-icon{
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,0.9);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:scale(0.8);
+    transition:opacity .2s ease,transform .2s ease;
+  }
+  .tl-play-icon svg{width:20px;height:20px;fill:#111;margin-left:3px}
+  .tl-thumb:hover .tl-play-icon{opacity:1;transform:scale(1)}
+
+  /* tint classes for thumbnails */
+  .t-rose{--thumb:linear-gradient(135deg,#ff7aa2,#5a0a23)}
+  .t-rose2{--thumb:linear-gradient(135deg,#d6336c,#4a0e2c)}
+  .t-blue{--thumb:linear-gradient(135deg,#3a7bff,#1e3a8a)}
+  .t-blue2{--thumb:linear-gradient(135deg,#0ea5e9,#082f49)}
+  .t-violet{--thumb:linear-gradient(135deg,#a855f7,#2e1065)}
+  .t-amber{--thumb:linear-gradient(135deg,#f59e0b,#6b3a02)}
+  .t-emerald{--thumb:linear-gradient(135deg,#10b981,#064e3b)}
+  .t-coral{--thumb:linear-gradient(135deg,#ff8c69,#3d0f08)}
+  .t-mauve{--thumb:linear-gradient(135deg,#c084fc,#2e0a4d)}
+  .t-twilight{--thumb:linear-gradient(135deg,#fbbf24,#1e1b4b)}
+  .t-sunset{--thumb:linear-gradient(135deg,#fb923c,#4c1d95)}
+  .t-ocean{--thumb:linear-gradient(135deg,#22d3ee,#0c0a1f)}
+  .t-night{--thumb:linear-gradient(135deg,#1e293b,#020617)}
+  .t-forest{--thumb:linear-gradient(135deg,#34d399,#022c22)}
+  .t-rust{--thumb:linear-gradient(135deg,#f97316,#451a03)}
+  .t-orchid{--thumb:linear-gradient(135deg,#e879f9,#581c87)}
+
+  /* ── EMPTY STATE ── */
+  .timeline-empty{
+    display:none;
+    text-align:center;padding:80px 24px;
+  }
+  .timeline-empty p{color:var(--text-dim);font-size:15px;line-height:1.7;max-width:380px;margin:0 auto 28px}
+  .timeline-empty a{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--red);color:#fff;padding:12px 28px;border-radius:4px;font-size:15px;font-weight:600;
+  }
+
+  /* ── FOOTER ── */
+  .story-footer{
+    border-top:1px solid var(--border);
+    padding:48px;text-align:center;
+  }
+  .story-footer-logo{
+    font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--red);letter-spacing:3px;margin-bottom:12px;
+  }
+  .story-footer p{font-size:13px;color:var(--text-dim)}
+
+  /* ── LOADING ── */
+  .loading{
+    display:flex;align-items:center;justify-content:center;
+    padding:120px 24px;gap:12px;color:var(--text-dim);font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  }
+  .loading::before{
+    content:'';width:20px;height:20px;border-radius:50%;
+    border:2px solid var(--gold);border-top-color:transparent;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:720px){
+    .story-hero{padding:120px 24px 60px}
+    .hero-names{font-size:clamp(40px,10vw,80px)}
+    .stats-row{flex-direction:column;border-radius:8px}
+    .stat-item{border-right:none;border-bottom:1px solid var(--border);padding:18px 24px}
+    .stat-item:last-child{border-bottom:none}
+    .timeline::before{left:24px;transform:none}
+    .tl-entry{grid-template-columns:0 32px 1fr;margin-bottom:48px}
+    .tl-entry:nth-child(odd) .tl-card,
+    .tl-entry:nth-child(even) .tl-card{grid-column:3;margin-left:16px;margin-right:0;text-align:left}
+    .tl-entry:nth-child(odd) .tl-card .card-inner,
+    .tl-entry:nth-child(even) .tl-card .card-inner{align-items:flex-start}
+    .tl-entry:nth-child(odd) .tl-desc,
+    .tl-entry:nth-child(even) .tl-desc{margin-left:0}
+    .tl-entry:nth-child(odd) .tl-thumb,
+    .tl-entry:nth-child(even) .tl-thumb{display:none}
+    .tl-mid{grid-column:2;padding-top:22px}
+    .section-header{padding:0 24px}
+    .story-footer{padding:32px 24px}
+    .scroll-cue{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="site-nav"></div>
+
+<!-- HERO -->
+<section class="story-hero">
+  <div class="hero-eyebrow">LoveFlix Original</div>
+  <h1 class="hero-names" id="heroNames">
+    <span class="hero-ampersand">&amp;</span>
+  </h1>
+  <p class="hero-since" id="heroSince">Together since <span id="sinceYear">—</span></p>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-val" id="statDays">—</div>
+      <div class="stat-label">Days Together</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" id="statVideos">—</div>
+      <div class="stat-label">Memories</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" id="statHours">—</div>
+      <div class="stat-label">Hours Filmed</div>
+    </div>
+  </div>
+
+  <div class="scroll-cue">
+    <span>Our Timeline</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <div class="section-header">
+    <div class="section-label">Chapter by Chapter</div>
+    <h2 class="section-title">The Story So Far</h2>
+  </div>
+
+  <div class="loading" id="loading">Loading your story</div>
+  <div class="timeline" id="timeline" style="display:none"></div>
+  <div class="timeline-empty" id="timelineEmpty">
+    <p>No memories uploaded yet. Every great story has a first chapter — upload yours.</p>
+    <a href="admin_upload.html">Upload First Memory</a>
+  </div>
+</section>
+
+<footer class="story-footer">
+  <div class="story-footer-logo">LOVE♥FLIX</div>
+  <p>A private streaming service for two.</p>
+</footer>
+
+<script src="assets/loveflix.js"></script>
+<script src="assets/loveflix-nav.js"></script>
+<script src="assets/loveflix-call.js"></script>
+<script>
+  if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  const TINTS = ['t-rose','t-rose2','t-blue','t-blue2','t-violet','t-amber','t-emerald','t-coral','t-mauve','t-twilight','t-sunset','t-ocean','t-night','t-forest','t-rust','t-orchid'];
+  function tintFor(id) {
+    let h = 0;
+    for (let i = 0; i < (id || '').length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+    return TINTS[Math.abs(h) % TINTS.length];
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function safeCssUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    if (!/^https?:\/\//i.test(url)) return null;
+    return url.replace(/'/g,'%27').replace(/\)/g,'%29').replace(/\\/g,'%5C');
+  }
+  function fmtDur(sec) {
+    if (!sec) return null;
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function fmtHours(sec) {
+    if (!sec) return '0';
+    const h = Math.floor(sec / 3600);
+    const m = Math.round((sec % 3600) / 60);
+    if (h >= 1) return h + (m ? '.' + Math.round(m / 6) : '');
+    return '< 1';
+  }
+  function daysSince(dateStr) {
+    if (!dateStr) return null;
+    const start = new Date(dateStr);
+    if (isNaN(start)) return null;
+    return Math.floor((Date.now() - start.getTime()) / 86400000);
+  }
+  function sortByDate(videos) {
+    return [...videos].sort((a, b) => {
+      const da = a.date || String(a.created_at || '');
+      const db = b.date || String(b.created_at || '');
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+  }
+
+  async function load() {
+    const [statsRes, videosRes] = await Promise.all([
+      LoveFlix.api('/api/couple-stats').catch(() => ({})),
+      LoveFlix.api('/api/videos').catch(() => ({ videos: [] })),
+    ]);
+
+    // ── Hero names ──
+    const adminName = statsRes.adminName || (await LoveFlix.ensureSettingsReady().then(s => s && s.adminName)) || 'You';
+    const partnerName = statsRes.partnerName || (await LoveFlix.ensureSettingsReady().then(s => s && s.partnerName)) || 'My Love';
+    const anniversaryDate = statsRes.anniversaryDate || (await LoveFlix.ensureSettingsReady().then(s => s && s.anniversaryDate)) || null;
+
+    const heroNames = document.getElementById('heroNames');
+    heroNames.innerHTML =
+      escapeHtml(adminName) +
+      '<span class="hero-ampersand">&amp;</span>' +
+      escapeHtml(partnerName);
+
+    // ── Anniversary / days together ──
+    const days = daysSince(anniversaryDate);
+    if (anniversaryDate) {
+      const d = new Date(anniversaryDate);
+      const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('sinceYear').textContent = d.toLocaleDateString('en-US', opts);
+      document.getElementById('statDays').textContent = days !== null ? days.toLocaleString() : '—';
+    } else {
+      document.getElementById('heroSince').style.display = 'none';
+      document.getElementById('statDays').textContent = '—';
+    }
+
+    // ── Stats ──
+    const videos = videosRes.videos || [];
+    document.getElementById('statVideos').textContent = videos.length || statsRes.videoCount || '0';
+    document.getElementById('statHours').textContent = fmtHours(statsRes.totalDurationSeconds || videos.reduce((s, v) => s + (v.duration_seconds || 0), 0));
+
+    // ── Timeline ──
+    document.getElementById('loading').style.display = 'none';
+    const sorted = sortByDate(videos);
+    if (!sorted.length) {
+      document.getElementById('timelineEmpty').style.display = 'block';
+      return;
+    }
+    const tlEl = document.getElementById('timeline');
+    tlEl.style.display = 'block';
+    tlEl.innerHTML = sorted.map(v => {
+      const tintClass = v.thumbnail_url ? '' : tintFor(v.id);
+      const safeThumb = safeCssUrl(v.thumbnail_url);
+      const dur = fmtDur(v.duration_seconds);
+      const cat = v.category || 'Moments';
+      const date = v.date || '';
+      const desc = v.description ? `<div class="tl-desc">${escapeHtml(v.description)}</div>` : '';
+      const thumbInner = safeThumb
+        ? `<img src="${safeThumb}" alt="${escapeHtml(v.title || '')}" loading="lazy">`
+        : `<div class="tl-thumb-placeholder">${escapeHtml(v.title || 'Untitled').replace(/ · /, '<br>')}</div>`;
+      const thumbStyle = !safeThumb ? ` style="--thumb:${tintFor(v.id).replace('t-','')}"` : '';
+
+      return `
+      <div class="tl-entry">
+        <div class="tl-card">
+          <div class="card-inner">
+            <div class="tl-date">${escapeHtml(date)}</div>
+            <div class="tl-title">${escapeHtml(v.title || 'Untitled')}</div>
+            <div class="tl-cat">${escapeHtml(cat)}</div>
+            ${desc}
+            ${dur ? `<div class="tl-dur">${dur}</div>` : ''}
+            <a href="player.html?id=${encodeURIComponent(v.id)}" class="tl-play">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              Play
+            </a>
+          </div>
+        </div>
+        <div class="tl-mid"><div class="tl-dot"></div></div>
+        <div class="tl-thumb ${tintClass}" data-id="${escapeHtml(v.id)}">
+          <div class="tl-thumb-inner">
+            ${thumbInner}
+            <div class="tl-thumb-overlay">
+              <div class="tl-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    tlEl.querySelectorAll('.tl-thumb').forEach(el => {
+      el.addEventListener('click', () => {
+        location.href = `player.html?id=${encodeURIComponent(el.dataset.id)}`;
+      });
+    });
+  }
+
+  load().catch(err => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('timelineEmpty').style.display = 'block';
+    console.error('Our Story load error:', err);
+  });
+</script>
+</body>
+</html>

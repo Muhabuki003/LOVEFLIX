@@ -29,39 +29,6 @@
   a { color: inherit; text-decoration: none; }
   button { font: inherit; cursor: pointer; }
 
-  /* ---------- top nav ---------- */
-  nav.topnav {
-    position: fixed; top: 0; left: 0; right: 0;
-    padding: 18px 48px; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
-    transition: background 0.25s ease;
-  }
-  nav.topnav.scrolled { background: rgba(10,10,10,0.95); }
-
-  .nav-left { display: flex; align-items: center; gap: 40px; }
-  .nf-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 36px; color: var(--red);
-    letter-spacing: 3px; line-height: 1;
-  }
-  .nf-logo .heart { color: #fff; font-size: 24px; vertical-align: middle; transform: translateY(-2px); display: inline-block; margin: 0 2px; }
-
-  .nav-links { display: flex; gap: 22px; }
-  .nav-links a { font-size: 14px; color: var(--text-light); transition: color 0.18s ease; }
-  .nav-links a:hover { color: #fff; }
-  .nav-links a.active { color: #fff; font-weight: 600; }
-
-  .nav-right { display: flex; align-items: center; gap: 18px; }
-  .icon-btn { background: none; border: none; color: #fff; width: 24px; height: 24px; padding: 0; }
-  .icon-btn svg { width: 100%; height: 100%; fill: #fff; }
-  .nav-avatar {
-    width: 32px; height: 32px; border-radius: 4px;
-    background: radial-gradient(circle at 30% 25%, #ffb3c7 0%, transparent 55%), linear-gradient(135deg, #ff5f8f 0%, #d6336c 55%, #8f1d4a 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
-  }
-
   /* ---------- hero banner ---------- */
   .hero {
     position: relative;
@@ -310,16 +277,9 @@
   @keyframes heroIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
   @media (max-width: 900px) {
-    nav.topnav { padding: 14px 24px; }
     .hero { padding: 0 24px 100px; }
   }
   @media (max-width: 720px) {
-    nav.topnav { padding: 12px 16px; }
-    .nav-left { gap: 18px; }
-    .nf-logo { font-size: 28px; }
-    .nf-logo .heart { font-size: 20px; }
-    .nav-links { display: none; }
-    .nav-right { gap: 12px; }
     .hero { padding: 0 16px 70px; min-height: 480px; height: auto; }
     .hero-title { font-size: clamp(40px, 11vw, 64px); }
     .hero-desc { font-size: 14px; margin-bottom: 20px; }
@@ -410,27 +370,7 @@
 </head>
 <body>
 
-<nav class="topnav" id="topnav">
-  <div class="nav-left">
-    <a href="#" class="nf-logo" aria-label="LoveFlix home">LOVE<span class="heart">♥</span>FLIX</a>
-    <div class="nav-links">
-      <a href="home.html" class="active">Home</a>
-      <a href="browse.html">Browse</a>
-      <a href="music.html">Music</a>
-      <a href="#">Our Story</a>
-      <a href="#">My List</a>
-    </div>
-  </div>
-  <div class="nav-right">
-    <button class="icon-btn" aria-label="Search">
-      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    </button>
-    <button class="icon-btn" aria-label="Notifications">
-      <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
-    </button>
-    <a href="whos_watching.html" class="nav-avatar" id="navAvatar" title="Switch profile">M</a>
-  </div>
-</nav>
+<div id="site-nav"></div>
 
 <!-- HERO -->
 <section class="hero" id="hero">
@@ -640,11 +580,10 @@
 </footer>
 
 <script src="assets/loveflix.js"></script>
+<script src="assets/loveflix-nav.js"></script>
 <script src="assets/loveflix-call.js"></script>
 <script>
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
-
-  LoveFlix.paintNavAvatar(document.getElementById('navAvatar'));
 
   // Personalize the "Continue Watching" row for whoever's signed in.
   function paintContinueWatchingTitle() {
@@ -705,11 +644,6 @@
   })();
 
   window.addEventListener('loveflix:settings-changed', paintContinueWatchingTitle);
-
-  const nav = document.getElementById('topnav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 60);
-  });
 
   function bindArrows(root) {
     (root || document).querySelectorAll('.scroll-arrow').forEach(btn => {
