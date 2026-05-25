@@ -231,6 +231,13 @@ export async function onRequest(context) {
     // YouTube track match — returns a YouTube videoId for full-song playback
     if (method === 'GET' && path === '/api/music/yt-match') return ytMatch(env, url);
 
+    // Favorites (My List)
+    if (method === 'GET'    && path === '/api/favorites') return listFavorites(env, user);
+    if (method === 'GET'    && path === '/api/couple-stats') return getCoupleStats(env, request, user);
+    const favMatch = path.match(/^\/api\/favorites\/([^/]+)$/);
+    if (favMatch && method === 'POST')   return addFavorite(env, favMatch[1], user);
+    if (favMatch && method === 'DELETE') return removeFavorite(env, favMatch[1], user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -267,15 +274,30 @@ async function listVideos(env, url, user, request) {
   const tenantId = user
     ? (await verifyTenantAccess(env, user, requested) || (user && user.id))
     : (env.DEFAULT_TENANT_ID || 'default');
-  const stmt = env.DB.prepare(
-    `SELECT id, tenant_id, title, description, date, category,
-            thumbnail_url, video_url, duration_seconds, is_published,
-            display_order, created_at
-       FROM videos
-      WHERE tenant_id = ? AND is_published = 1
-      ORDER BY display_order ASC, created_at DESC`
-  ).bind(tenantId);
-  const { results } = await stmt.all();
+  let results;
+  if (user) {
+    const stmt = env.DB.prepare(
+      `SELECT v.id, v.tenant_id, v.title, v.description, v.date, v.category,
+              v.thumbnail_url, v.video_url, v.duration_seconds, v.is_published,
+              v.display_order, v.created_at,
+              CASE WHEN f.video_id IS NOT NULL THEN 1 ELSE 0 END as is_favorite
+         FROM videos v
+         LEFT JOIN favorites f ON f.video_id = v.id AND f.user_id = ?
+        WHERE v.tenant_id = ? AND v.is_published = 1
+        ORDER BY v.display_order ASC, v.created_at DESC`
+    ).bind(user.id, tenantId);
+    ({ results } = await stmt.all());
+  } else {
+    const stmt = env.DB.prepare(
+      `SELECT id, tenant_id, title, description, date, category,
+              thumbnail_url, video_url, duration_seconds, is_published,
+              display_order, created_at
+         FROM videos
+        WHERE tenant_id = ? AND is_published = 1
+        ORDER BY display_order ASC, created_at DESC`
+    ).bind(tenantId);
+    ({ results } = await stmt.all());
+  }
   return json({ videos: results || [] });
 }
 
@@ -1488,4 +1510,67 @@ async function soundcloudSearch(env, url) {
 async function soundcloudStream(env, rawId) {
   // Legacy endpoint kept for compatibility — not needed when stream_url is in search results.
   return json({ error: 'use_stream_url_from_search' }, 400);
+}
+
+// ---------- Favorites (My List) ----------
+async function listFavorites(env, user) {
+  const { results } = await env.DB.prepare(
+    `SELECT v.id, v.tenant_id, v.title, v.description, v.date, v.category,
+            v.thumbnail_url, v.video_url, v.duration_seconds, v.is_published,
+            v.display_order, v.created_at, 1 as is_favorite
+       FROM favorites f
+       JOIN videos v ON v.id = f.video_id
+      WHERE f.user_id = ?
+      ORDER BY f.created_at DESC`
+  ).bind(user.id).all();
+  return json({ videos: results || [] });
+}
+
+async function addFavorite(env, videoId, user) {
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO favorites (user_id, video_id) VALUES (?, ?)`
+  ).bind(user.id, videoId).run();
+  return json({ ok: true });
+}
+
+async function removeFavorite(env, videoId, user) {
+  await env.DB.prepare(
+    `DELETE FROM favorites WHERE user_id = ? AND video_id = ?`
+  ).bind(user.id, videoId).run();
+  return json({ ok: true });
+}
+
+// ---------- Couple Stats (Our Story) ----------
+async function getCoupleStats(env, request, user) {
+  const requested = (request && request.headers.get('x-tenant-id')) || (user && user.id) || env.DEFAULT_TENANT_ID || 'default';
+  const tenantId = user
+    ? (await verifyTenantAccess(env, user, requested) || (user && user.id))
+    : (env.DEFAULT_TENANT_ID || 'default');
+
+  const [statsRow, settingsRow] = await Promise.all([
+    env.DB.prepare(
+      `SELECT COUNT(*) as video_count,
+              SUM(duration_seconds) as total_duration_seconds,
+              MIN(created_at) as first_video_at,
+              MIN(date) as first_video_date
+         FROM videos
+        WHERE tenant_id = ? AND is_published = 1`
+    ).bind(tenantId).first(),
+    env.DB.prepare(
+      `SELECT data FROM tenant_settings WHERE tenant_id = ?`
+    ).bind(tenantId).first(),
+  ]);
+
+  let settings = {};
+  try { settings = JSON.parse((settingsRow && settingsRow.data) || '{}') || {}; } catch (_) {}
+
+  return json({
+    adminName: settings.adminName || null,
+    partnerName: settings.partnerName || null,
+    anniversaryDate: settings.anniversaryDate || null,
+    videoCount: (statsRow && statsRow.video_count) || 0,
+    totalDurationSeconds: (statsRow && statsRow.total_duration_seconds) || 0,
+    firstVideoAt: (statsRow && statsRow.first_video_at) || null,
+    firstVideoDate: (statsRow && statsRow.first_video_date) || null,
+  });
 }
