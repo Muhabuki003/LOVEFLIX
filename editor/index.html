@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Archivo+Black&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Bungee&family=Caveat:wght@400;700&family=Cinzel:wght@400;700;900&family=Comfortaa:wght@300;400;700&family=Concert+One&family=Creepster&family=Dancing+Script:wght@400;700&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=Fredoka+One&family=Great+Vibes&family=Inter:wght@300;400;500;600;700;800;900&family=Lato:wght@300;400;700;900&family=Lexend:wght@300;400;500;600;700&family=Lobster&family=Lora:wght@400;500;600;700&family=Merriweather:wght@300;400;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Nunito:wght@300;400;600;700;800&family=Open+Sans:wght@300;400;600;700;800&family=Oswald:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Press+Start+2P&family=Quicksand:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700;800&family=Righteous&family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@300;400;700&family=Roboto+Mono:wght@300;400;500;700&family=Roboto+Slab:wght@300;400;500;700&family=Rock+Salt&family=Rubik:wght@300;400;500;600;700;800&family=Sacramento&family=Satisfy&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Staatliches&family=Teko:wght@300;400;500;600;700&family=Titan+One&family=Ubuntu:wght@300;400;500;700&family=Work+Sans:wght@300;400;500;600;700;800&family=Yellowtail&family=Zilla+Slab:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>LoveFlix Video Editor</title>
+    <script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);document.documentElement.style.setProperty('--color-primary',h);document.documentElement.style.setProperty('--color-accent',h);document.documentElement.style.setProperty('--lf-red',h);}}catch(e){}})();</script>
     <script>
       // AudioContext autoplay-policy shim: must run BEFORE the module bundle so
       // every AudioContext the editor creates is tracked and resumed on the
@@ -65,16 +66,91 @@
     <link rel="stylesheet" crossorigin href="/editor/assets/index-DoDdf0aP.css">
     <style id="loveflix-editor-overlays">
       :root {
-        --lf-red: #e50914;
-        --lf-red-hover: #f40612;
-        --lf-red-dark: #b20710;
+        --lf-red: var(--brand-accent, #e50914);
+        --lf-red-hover: var(--brand-accent, #f40612);
+        --lf-red-dark: var(--brand-accent, #b20710);
         --lf-bg: #141414;
         --lf-surface: #1f1f1f;
         --lf-elevated: #2a2a2a;
         --lf-border: #333333;
         --lf-text: #ffffff;
         --lf-text-muted: #b3b3b3;
+        /* Override compiled bundle CSS variables — our style block loads after the
+           compiled <link> so later-source wins at equal specificity, no !important needed */
+        --color-primary: var(--brand-accent, #e50914);
+        --color-primary-hover: var(--brand-accent, #f40612);
+        --color-accent: var(--brand-accent, #e50914);
+        --color-scrollbar-thumb: var(--brand-accent, #e50914);
       }
+      /* The compiled bundle also sets these vars on .dark — override it too */
+      .dark {
+        --color-primary: var(--brand-accent, #e50914) !important;
+        --color-primary-hover: var(--brand-accent, #f40612) !important;
+        --color-accent: var(--brand-accent, #e50914) !important;
+        --color-scrollbar-thumb: var(--brand-accent, #e50914) !important;
+      }
+      /* Tailwind utility class overrides — compiled CSS hardcodes #e50914 in
+         class definitions; !important here beats those non-!important rules */
+      .bg-primary { background-color: var(--color-primary) !important; }
+      .text-primary { color: var(--color-primary) !important; }
+      .fill-primary { fill: var(--color-primary) !important; }
+      .border-primary { border-color: var(--color-primary) !important; }
+      .accent-primary { accent-color: var(--color-primary) !important; }
+      .from-primary { --tw-gradient-from: var(--color-primary) !important; }
+      /* Opacity variants via color-mix (Chrome 111+, FF 113+, Safari 16.2+) */
+      .bg-primary\/5  { background-color: color-mix(in srgb,var(--color-primary) 5%,transparent) !important; }
+      .bg-primary\/10 { background-color: color-mix(in srgb,var(--color-primary) 10%,transparent) !important; }
+      .bg-primary\/15 { background-color: color-mix(in srgb,var(--color-primary) 15%,transparent) !important; }
+      .bg-primary\/20 { background-color: color-mix(in srgb,var(--color-primary) 20%,transparent) !important; }
+      .bg-primary\/25 { background-color: color-mix(in srgb,var(--color-primary) 25%,transparent) !important; }
+      .bg-primary\/30 { background-color: color-mix(in srgb,var(--color-primary) 30%,transparent) !important; }
+      .bg-primary\/40 { background-color: color-mix(in srgb,var(--color-primary) 40%,transparent) !important; }
+      .bg-primary\/50 { background-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .bg-primary\/60 { background-color: color-mix(in srgb,var(--color-primary) 60%,transparent) !important; }
+      .bg-primary\/70 { background-color: color-mix(in srgb,var(--color-primary) 70%,transparent) !important; }
+      .bg-primary\/80 { background-color: color-mix(in srgb,var(--color-primary) 80%,transparent) !important; }
+      .bg-primary\/90 { background-color: color-mix(in srgb,var(--color-primary) 90%,transparent) !important; }
+      .text-primary\/50 { color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .text-primary\/70 { color: color-mix(in srgb,var(--color-primary) 70%,transparent) !important; }
+      .border-primary\/20 { border-color: color-mix(in srgb,var(--color-primary) 20%,transparent) !important; }
+      .border-primary\/30 { border-color: color-mix(in srgb,var(--color-primary) 30%,transparent) !important; }
+      .border-primary\/40 { border-color: color-mix(in srgb,var(--color-primary) 40%,transparent) !important; }
+      .border-primary\/50 { border-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .border-primary\/60 { border-color: color-mix(in srgb,var(--color-primary) 60%,transparent) !important; }
+      .hover\:border-primary\/30:hover { border-color: color-mix(in srgb,var(--color-primary) 30%,transparent) !important; }
+      .hover\:border-primary\/40:hover { border-color: color-mix(in srgb,var(--color-primary) 40%,transparent) !important; }
+      .hover\:border-primary\/50:hover { border-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .hover\:bg-primary\/10:hover  { background-color: color-mix(in srgb,var(--color-primary) 10%,transparent) !important; }
+      .hover\:bg-primary\/20:hover  { background-color: color-mix(in srgb,var(--color-primary) 20%,transparent) !important; }
+      .hover\:bg-primary\/30:hover  { background-color: color-mix(in srgb,var(--color-primary) 30%,transparent) !important; }
+      .hover\:bg-primary\/40:hover  { background-color: color-mix(in srgb,var(--color-primary) 40%,transparent) !important; }
+      .hover\:bg-primary\/5:hover   { background-color: color-mix(in srgb,var(--color-primary) 5%,transparent) !important; }
+      .hover\:bg-primary\/50:hover  { background-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .hover\:bg-primary\/80:hover  { background-color: color-mix(in srgb,var(--color-primary) 80%,transparent) !important; }
+      .hover\:bg-primary\/90:hover  { background-color: color-mix(in srgb,var(--color-primary) 90%,transparent) !important; }
+      .hover\:text-primary { color: var(--color-primary) !important; }
+      .group:hover .group-hover\:bg-primary\/10 { background-color: color-mix(in srgb,var(--color-primary) 10%,transparent) !important; }
+      .group:hover .group-hover\:bg-primary\/20 { background-color: color-mix(in srgb,var(--color-primary) 20%,transparent) !important; }
+      .group:hover .group-hover\:text-primary\/50 { color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      .group:hover .group-hover\:border-primary\/50 { border-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      /* Glow shadows */
+      [class*=shadow-glow],[class*=glow-lg] { box-shadow: 0 0 18px color-mix(in srgb,var(--color-primary) 35%,transparent) !important; }
+      /* Timeline and scrubber elements */
+      [class*=scrubber],[class*=Scrubber] { background-color: var(--color-primary) !important; border-color: var(--color-primary) !important; }
+      [class*=timeline-cursor],[class*=TimelineCursor] { background-color: var(--color-primary) !important; }
+      /* Active/selected states in the editor */
+      [aria-selected=true],[data-state=active] { border-color: color-mix(in srgb,var(--color-primary) 40%,transparent) !important; }
+      /* Input focus state */
+      input:focus,select:focus,textarea:focus { border-color: var(--color-primary) !important; box-shadow: 0 0 0 1px var(--color-primary) !important; }
+      /* Tutorial step indicators */
+      [class*=step][aria-current=true],[class*=StepDot][data-active=true] { background: var(--color-primary) !important; border-color: var(--color-primary) !important; }
+      /* Status info override (compiled CSS maps status-info to primary) */
+      .bg-status-info\/20 { background-color: color-mix(in srgb,var(--color-primary) 20%,transparent) !important; }
+      .text-status-info\/50 { color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      /* Disabled primary button */
+      .disabled\:bg-primary\/50:disabled { background-color: color-mix(in srgb,var(--color-primary) 50%,transparent) !important; }
+      /* SVG paths and fills */
+      svg path[fill="#e50914"],svg [fill="#e50914"] { fill: var(--color-primary) !important; }
       /* Make room for the sticky LoveFlix header above the editor */
       body { padding-top: 48px; background: #141414; }
       #lf-header {
@@ -88,7 +164,7 @@
       /* Same .nf-logo used in admin.html / home.html / landing.html */
       #lf-header .nf-logo {
         font-family: 'Bebas Neue', sans-serif;
-        font-size: 32px; color: #e50914;
+        font-size: 32px; color: var(--lf-red);
         letter-spacing: 3px; line-height: 1;
         text-decoration: none; user-select: none;
         flex-shrink: 0;
@@ -374,7 +450,7 @@
       ::-webkit-scrollbar { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track { background: #0a0a0a; }
       ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: #e50914; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--lf-red); }
     </style>
   </head>
   <body>
@@ -507,5 +583,6 @@
         });
       })();
     </script>
+    <script src="/assets/loveflix.js"></script>
   </body>
 </html>

@@ -489,6 +489,33 @@
         `.plan-card.selected{border-color:${hex}!important;background:${rgba(0.06)}!important;}`,
         // Heart icon in browse/search results (hardcoded fill)
         `svg path[fill="#e50914"]{fill:${hex}!important;}`,
+        // Music page — sidebar active item
+        `.side-item.active{background:${rgba(0.12)}!important;color:#fff!important;}`,
+        `.side-item.active::before{background:${hex}!important;}`,
+        // Music page — playlist row active
+        `.playlist-row.active{background:${rgba(0.12)}!important;color:#fff!important;}`,
+        // Music page — track save button hover
+        `.track-save:hover{color:${hex}!important;background:${rgba(0.1)}!important;}`,
+        // Music page — queue item currently playing
+        `.queue-item.current{background:${rgba(0.1)}!important;}`,
+        // Music page — mini-player fav button active
+        `.m-fs-fav.active{color:${hex}!important;background:${rgba(0.16)}!important;}`,
+        // Music page — album art gradient
+        `.art-5{background:linear-gradient(135deg,${hex} 0%,#5a0410 100%)!important;}`,
+        // Music page — hero play button and glow
+        `.hero-play{background:${hex}!important;box-shadow:0 6px 14px ${rgba(0.45)}!important;}`,
+        `.hero-play:hover{box-shadow:0 14px 38px ${rgba(0.6)}!important;}`,
+        // Music page — currently playing track row
+        `.track-row.playing{background:${rgba(0.08)}!important;}`,
+        // Music page — remove from queue hover
+        `.queue-remove:hover{background:${rgba(0.18)}!important;}`,
+        // Home page — music card CTA gradient
+        `.music-card--cta{background:linear-gradient(135deg,${hex} 0%,#8f1d4a 100%)!important;}`,
+        `.music-card--cta:hover{background:linear-gradient(135deg,${hex} 0%,#8f1d4a 100%)!important;}`,
+        // Editor header logo (when editor loads loveflix.js)
+        `#lf-header .nf-logo{color:${hex}!important;}`,
+        // Compiled editor bundle CSS variable overrides
+        `.dark,html{--color-primary:${hex}!important;--color-accent:${hex}!important;--color-scrollbar-thumb:${hex}!important;}`,
       ].join('\n');
     } catch (_) {}
   }
