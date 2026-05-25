@@ -369,10 +369,20 @@
     transform: translateY(-2px);
   }
   .music-card--cta {
-    background: linear-gradient(135deg, #e50914 0%, #8f1d4a 100%);
+    background: linear-gradient(135deg, var(--brand-accent, #e50914) 0%, #8f1d4a 100%);
     border-color: transparent; align-items: center; text-align: center; justify-content: center;
   }
-  .music-card--cta:hover { filter: brightness(1.12); transform: translateY(-2px); background: linear-gradient(135deg, #e50914 0%, #8f1d4a 100%); }
+  .music-card--cta:hover { filter: brightness(1.12); transform: translateY(-2px); background: linear-gradient(135deg, var(--brand-accent, #e50914) 0%, #8f1d4a 100%); }
+  .music-card--link {
+    gap: 0; padding: 16px 20px; flex-direction: row; align-items: center;
+    justify-content: space-between;
+  }
+  .music-card--link:hover { transform: translateY(-1px); }
+  .music-card--link .ml-icon { font-size: 20px; margin-right: 12px; flex-shrink: 0; }
+  .music-card--link .ml-body { flex: 1; min-width: 0; }
+  .music-card--link .ml-title { font-size: 14px; font-weight: 600; }
+  .music-card--link .ml-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .music-card--link .ml-arrow { font-size: 18px; color: var(--text-dim); margin-left: 8px; flex-shrink: 0; }
   .music-card--search:hover { transform: none; background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.08); cursor: default; }
   .music-card-icon { font-size: 22px; margin-bottom: 6px; }
   .music-card-value { font-size: 32px; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -562,6 +572,40 @@
         <div style="font-weight:700;font-size:17px">Listen Together</div>
         <div style="font-size:12px;opacity:.75;margin-top:6px">Synced playback</div>
       </a>
+
+      <!-- Row 2: quick-access link cards -->
+      <a href="music.html" class="music-card music-card--link" id="musicNowPlayingCard">
+        <span class="ml-icon">▶</span>
+        <div class="ml-body">
+          <div class="ml-title" id="homeNpTitle">Open Player</div>
+          <div class="ml-sub" id="homeNpArtist">Full music experience</div>
+        </div>
+        <span class="ml-arrow">›</span>
+      </a>
+      <a href="music.html" class="music-card music-card--link">
+        <span class="ml-icon">📋</span>
+        <div class="ml-body">
+          <div class="ml-title">Our Playlists</div>
+          <div class="ml-sub">Saved songs &amp; collections</div>
+        </div>
+        <span class="ml-arrow">›</span>
+      </a>
+      <a href="music.html" class="music-card music-card--link">
+        <span class="ml-icon">🔍</span>
+        <div class="ml-body">
+          <div class="ml-title">Discover Songs</div>
+          <div class="ml-sub">Search &amp; add to queue</div>
+        </div>
+        <span class="ml-arrow">›</span>
+      </a>
+      <a href="music.html" class="music-card music-card--link">
+        <span class="ml-icon">🕐</span>
+        <div class="ml-body">
+          <div class="ml-title">Play History</div>
+          <div class="ml-sub" id="homeMusicPlaysCount">Songs played together</div>
+        </div>
+        <span class="ml-arrow">›</span>
+      </a>
     </div>
   </section>
 
@@ -655,6 +699,15 @@
         const listEl = document.getElementById('recentSongsList');
         const sub    = document.getElementById('musicSubtitle');
         if (sub && total > 0) sub.textContent = total + ' song' + (total===1?'':'s') + ' played together';
+        // Update quick-access cards
+        const countEl = document.getElementById('homeMusicPlaysCount');
+        if (countEl && total > 0) countEl.textContent = total + ' song' + (total===1?'':'s') + ' played together';
+        if (plays.length) {
+          const npTitle  = document.getElementById('homeNpTitle');
+          const npArtist = document.getElementById('homeNpArtist');
+          if (npTitle)  npTitle.textContent  = plays[0].title;
+          if (npArtist) npArtist.textContent = plays[0].artist || 'Last played';
+        }
         if (!listEl) return;
         if (!plays.length) {
           listEl.innerHTML = '<a href="music.html" style="font-size:13px;color:var(--text-dim);text-decoration:none">No plays yet — search a song to start ›</a>';

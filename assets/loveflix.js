@@ -452,6 +452,8 @@
         `:root{--brand-accent:${hex}!important;--red:${hex}!important;}`,
         // Logo text — login, join, profile selector, waitlist, etc.
         `.nf-logo{color:${hex}!important;}`,
+        // Injected nav component (loveflix-nav.js uses .lf-nf-logo, not .nf-logo)
+        `.lf-nf-logo{color:${hex}!important;}`,
         // Sidebar active highlight (rgba hardcoded in every admin page)
         `.side-link.active{background:${rgba(0.08)}!important;border-left-color:${hex}!important;}`,
         `.side-link.active.bottom{border-left-color:${hex}!important;}`,
