@@ -84,7 +84,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 function corsHeaders(requestOrigin) {
-  const origin = ALLOWED_ORIGINS.has(requestOrigin) ? requestOrigin : [...ALLOWED_ORIGINS][0];
+  const origin = ALLOWED_ORIGINS.has(requestOrigin) ? requestOrigin : 'https://loveflix.so';
   return {
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
