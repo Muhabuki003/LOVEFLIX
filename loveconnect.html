@@ -707,6 +707,56 @@
     .flights-panel{padding:10px 16px 26px}
     .dir-toast{bottom:180px}
   }
+
+  /* ---------- revolve orbit badge ---------- */
+  .revolve-badge{
+    position:fixed; top:78px; left:50%; transform:translateX(-50%) translateY(-14px);
+    z-index:50;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(8,8,12,0.88); backdrop-filter:blur(20px);
+    border:1px solid rgba(229,9,20,0.45);
+    border-radius:40px; padding:10px 16px 10px 14px;
+    color:#fff; font-size:13px; font-weight:500;
+    box-shadow:0 8px 32px rgba(0,0,0,0.65), 0 0 24px rgba(229,9,20,0.12);
+    opacity:0; pointer-events:none;
+    transition:opacity .4s cubic-bezier(.2,.8,.2,1), transform .4s cubic-bezier(.2,.8,.2,1);
+    white-space:nowrap;
+  }
+  .revolve-badge.active{
+    opacity:1; pointer-events:auto;
+    transform:translateX(-50%) translateY(0);
+  }
+  .revolve-orbit-icon{
+    width:20px; height:20px; flex-shrink:0;
+    animation:revolveOrbit 2s linear infinite;
+    color:var(--red,#e50914);
+  }
+  @keyframes revolveOrbit{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+  }
+  .revolve-label{ font-size:13px; font-weight:500; color:rgba(255,255,255,0.85); }
+  .revolve-label strong{ color:#fff; font-weight:700; }
+  .revolve-exit{
+    background:rgba(229,9,20,0.18); border:1px solid rgba(229,9,20,0.45);
+    border-radius:20px; padding:4px 13px; color:var(--red,#e50914);
+    font-size:11px; font-weight:700; cursor:pointer; letter-spacing:.5px;
+    transition:background .2s; margin-left:4px;
+  }
+  .revolve-exit:hover{ background:rgba(229,9,20,0.35); }
+
+  /* clickable name hints in couple-card and markers */
+  .couple-row .n.revolve-trigger,
+  .m-couple-card .n.revolve-trigger{
+    cursor:pointer; transition:color .2s;
+  }
+  .couple-row .n.revolve-trigger:hover,
+  .m-couple-card .n.revolve-trigger:hover{ color:var(--red,#e50914); }
+  .lc-marker .label.revolve-trigger{ cursor:pointer; }
+  .lc-marker .label.revolve-trigger:hover{
+    background:rgba(229,9,20,0.18); border-color:rgba(229,9,20,0.4);
+    color:var(--red,#e50914);
+  }
 </style>
 <base target="_blank">
 </head>
@@ -765,6 +815,16 @@
     </div>
   </div>
 </aside>
+
+<!-- Revolve orbit badge -->
+<div class="revolve-badge" id="revolveBadge" role="status" aria-live="polite">
+  <svg class="revolve-orbit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/>
+    <circle cx="19.5" cy="9.5" r="1.5" fill="currentColor" stroke="none"/>
+  </svg>
+  <span class="revolve-label">Orbiting <strong class="revolve-name">—</strong></span>
+  <button class="revolve-exit" onclick="stopRevolve()">✕ Exit</button>
+</div>
 
 <!-- RIGHT DRAWER -->
 <aside class="drawer">
@@ -1190,8 +1250,10 @@ function initGoogleMaps() {
       <span class="ring r2"></span>
       <span class="ring r3"></span>
       <div class="avatar">${p.initial}</div>
-      <div class="label">${p.name}<span class="sub">${withLabelMeta}</span></div>
+      <div class="label revolve-trigger" title="Click to orbit">${p.name}<span class="sub">${withLabelMeta}</span></div>
     `;
+    el.querySelector('.label').addEventListener('click', e => { e.stopPropagation(); startRevolve(p); });
+    el.querySelector('.avatar').addEventListener('click', e => { e.stopPropagation(); startRevolve(p); });
     return el;
   }
 
@@ -1330,6 +1392,7 @@ function initGoogleMaps() {
   };
 
   function fitBoth(){
+    stopRevolve();
     const bounds = new maplibregl.LngLatBounds([HIM.lng,HIM.lat],[HIM.lng,HIM.lat]);
     bounds.extend([HER.lng,HER.lat]);
     const mobile = window.matchMedia('(max-width: 760px)').matches;
@@ -1338,6 +1401,75 @@ function initGoogleMaps() {
       : { top:140, bottom:200, left:360, right:380 };
     map.fitBounds(bounds, { padding:pad, duration:1500, maxZoom:5 });
   }
+
+  // ---------- REVOLVE (Google Earth-style orbit) ----------
+  const revolveState = {
+    active: false,
+    animId: null,
+    startTimer: null,
+    bearing: 0,
+    speed: 0.10  // degrees per frame ~6°/s → ~60s full orbit at 60fps
+  };
+
+  function startRevolve(person) {
+    stopRevolve(true);
+    revolveState.active = true;
+    revolveState.bearing = map.getBearing();
+
+    // Switch from globe to mercator so pitch/tilt looks cinematic
+    try { map.setProjection({ type: 'mercator' }); } catch(e) {}
+
+    // Camera swoops down and tilts — like Google Earth coming in
+    map.flyTo({
+      center: [person.lng, person.lat],
+      zoom: 9.5,
+      pitch: 60,
+      bearing: revolveState.bearing,
+      duration: 2400,
+      essential: true
+    });
+
+    // Show orbit badge
+    const badge = document.getElementById('revolveBadge');
+    if (badge) {
+      badge.querySelector('.revolve-name').textContent = person.name;
+      badge.classList.add('active');
+    }
+
+    // Begin continuous bearing rotation after the flyTo settles
+    revolveState.startTimer = setTimeout(() => {
+      if (!revolveState.active) return;
+      const loop = () => {
+        if (!revolveState.active) return;
+        revolveState.bearing = (revolveState.bearing + revolveState.speed + 360) % 360;
+        map.setBearing(revolveState.bearing);
+        revolveState.animId = requestAnimationFrame(loop);
+      };
+      revolveState.animId = requestAnimationFrame(loop);
+    }, 2500);
+  }
+
+  function stopRevolve(silent) {
+    if (!revolveState.active && !silent) return;
+    revolveState.active = false;
+    if (revolveState.startTimer) { clearTimeout(revolveState.startTimer); revolveState.startTimer = null; }
+    if (revolveState.animId) { cancelAnimationFrame(revolveState.animId); revolveState.animId = null; }
+
+    if (!silent) {
+      // Only restore if Google Maps nav is not active
+      const inNav = typeof nav !== 'undefined' && nav && nav.active;
+      if (!inNav) {
+        try { map.setProjection({ type: 'globe' }); } catch(e) {}
+        map.easeTo({ pitch: 0, bearing: 0, duration: 1400 });
+      }
+    }
+
+    const badge = document.getElementById('revolveBadge');
+    if (badge) badge.classList.remove('active');
+  }
+
+  // ESC exits revolve
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && revolveState.active) stopRevolve(); });
 
   // ---------- LIVE DATA (Supabase) ----------
   function formatLocalTime(lng) {
@@ -1748,7 +1880,12 @@ function initGoogleMaps() {
         : '<span class="status"></span>';
       if (av) av.innerHTML = HER.initial + herDot;
       const n = rows[0].querySelector('.n');
-      if (n) n.textContent = HER.name;
+      if (n) {
+        n.textContent = HER.name;
+        n.classList.add('revolve-trigger');
+        n.title = 'Click to orbit';
+        n.onclick = () => startRevolve(HER);
+      }
       const meta = rows[0].querySelector('.meta');
       const locationText = HER.place ? `${HER.place} · ` : '';
       const statusText = HER.online === false ? 'offline' : formatLocalTime(HER.lng);
@@ -1761,7 +1898,12 @@ function initGoogleMaps() {
         : '<span class="status"></span>';
       if (av) av.innerHTML = HIM.initial + himDot;
       const n = rows[1].querySelector('.n');
-      if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+      if (n) {
+        n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+        n.classList.add('revolve-trigger');
+        n.title = 'Click to orbit';
+        n.onclick = () => startRevolve(HIM);
+      }
       const meta = rows[1].querySelector('.meta');
       const himLocation = HIM.place ? `${HIM.place} · ` : '';
       const himStatus = HIM.online === false ? 'offline' : formatLocalTime(HIM.lng);
@@ -1785,7 +1927,12 @@ function initGoogleMaps() {
       const herDot = HER.online === false ? '<span class="status" style="background:#666"></span>' : '<span class="status"></span>';
       if (av) av.innerHTML = HER.initial + herDot;
       const n = mCards[0].querySelector('.n');
-      if (n) n.textContent = HER.name;
+      if (n) {
+        n.textContent = HER.name;
+        n.classList.add('revolve-trigger');
+        n.title = 'Tap to orbit';
+        n.onclick = () => startRevolve(HER);
+      }
       const meta = mCards[0].querySelector('.meta');
       if (meta) {
         const loc = HER.place ? `${HER.place} · ` : '';
@@ -1797,7 +1944,12 @@ function initGoogleMaps() {
       const himDot = HIM.online === false ? '<span class="status" style="background:#666"></span>' : '<span class="status"></span>';
       if (av) av.innerHTML = HIM.initial + himDot;
       const n = mCards[1].querySelector('.n');
-      if (n) n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+      if (n) {
+        n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+        n.classList.add('revolve-trigger');
+        n.title = 'Tap to orbit';
+        n.onclick = () => startRevolve(HIM);
+      }
       const meta = mCards[1].querySelector('.meta');
       if (meta) {
         const loc = HIM.place ? `${HIM.place} · ` : '';
