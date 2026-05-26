@@ -157,9 +157,27 @@
     + '#lf-vid-drag-dots{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;}'
     + '.lf-drag-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.35);}'
     + '#lf-vid-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.85);font-family:Inter,sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.8);}'
-    + '#lf-vid-min{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);'
+    + '#lf-vid-min,#lf-vid-fs{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);'
     +   'border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}'
-    + '#lf-vid-min:hover{background:rgba(255,255,255,.3);}'
+    + '#lf-vid-min:hover,#lf-vid-fs:hover{background:rgba(255,255,255,.3);}'
+    + '#lf-vid-resize{position:absolute;bottom:0;right:0;width:20px;height:20px;'
+    +   'cursor:nwse-resize;z-index:5;opacity:.45;transition:opacity .2s;}'
+    + '#lf-vid-resize:hover{opacity:.9;}'
+    + '#lf-share-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10002;background:#000;'
+    +   'display:none;flex-direction:column;}'
+    + '#lf-share-overlay.lf-visible{display:flex;}'
+    + '#lf-share-vid{flex:1;width:100%;object-fit:contain;background:#000;display:block;}'
+    + '#lf-share-bar{position:absolute;top:0;left:0;right:0;'
+    +   'background:linear-gradient(180deg,rgba(0,0,0,.85) 0%,transparent 100%);'
+    +   'padding:12px 16px;display:flex;align-items:center;gap:10px;}'
+    + '#lf-share-label{flex:1;font-size:13px;color:rgba(255,255,255,.8);font-family:Inter,sans-serif;}'
+    + '#lf-share-close{background:rgba(255,255,255,.18);border:none;border-radius:50%;'
+    +   'width:32px;height:32px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}'
+    + '#lf-share-close:hover{background:rgba(255,255,255,.3);}'
+    + '#lf-share-pip{position:absolute;bottom:20px;right:20px;width:160px;height:100px;'
+    +   'border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.3);background:#111;}'
+    + '#lf-share-pip video{width:100%;height:100%;object-fit:cover;}'
+    + '.lf-vbtn.lf-sharing{background:rgba(59,130,246,.55);}'
     + '#lf-my-video{'
     +   'position:absolute;bottom:60px;left:10px;z-index:2;'
     +   'width:84px;height:64px;border-radius:11px;overflow:hidden;'
@@ -226,6 +244,7 @@
     + '<div id="lf-vid-drag">'
     +   '<span id="lf-vid-label">On call</span>'
     +   '<div id="lf-vid-drag-dots"><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span></div>'
+    +   '<button id="lf-vid-fs" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>'
     +   '<button id="lf-vid-min" title="Minimize">&#8722;</button>'
     + '</div>'
     + '<div id="lf-my-video"><video id="lf-local-vid" autoplay playsinline muted></video></div>'
@@ -239,7 +258,21 @@
     +   '<button class="lf-vbtn" id="lf-vid-cam" title="Toggle camera">'
     +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
     +   '</button>'
+    +   '<button class="lf-vbtn" id="lf-vid-share" title="Share screen">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h3l-1 1v2h12v-2l-1-1h3c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H4V5h16v11z"/></svg>'
+    +   '</button>'
     + '</div>'
+    + '<div id="lf-vid-resize">'
+    +   '<svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,.6)"><path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM14 22H12V20H14V22ZM22 14H20V12H22V14Z"/></svg>'
+    + '</div>'
+    + '</div>'
+    + '<div id="lf-share-overlay">'
+    +   '<video id="lf-share-vid" autoplay playsinline></video>'
+    +   '<div id="lf-share-bar">'
+    +     '<span id="lf-share-label">&#128250; Sharing screen</span>'
+    +     '<button id="lf-share-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>'
+    +   '</div>'
+    +   '<div id="lf-share-pip"><video id="lf-share-pip-vid" autoplay playsinline></video></div>'
     + '</div>';
 
   var BAR_HTML = '<div id="lf-call-bar">'
@@ -423,12 +456,16 @@
     // ── Remote track handlers ────────────────────────────────────────────────
     _room.on(LK.RoomEvent.TrackSubscribed, function(track, pub, participant) {
       if (track.kind === LK.Track.Kind.Video) {
-        var rv = _el('lf-remote-vid');
-        if (rv) {
-          track.attach(rv);
-          _hasRemoteVideo = true;
-          _updateVideoPlaceholder();
-          _showVideo();
+        if (pub && pub.source === LK.Track.Source.ScreenShare) {
+          _showRemoteScreenShare(track);
+        } else {
+          var rv = _el('lf-remote-vid');
+          if (rv) {
+            track.attach(rv);
+            _hasRemoteVideo = true;
+            _updateVideoPlaceholder();
+            _showVideo();
+          }
         }
       } else if (track.kind === LK.Track.Kind.Audio) {
         var audioEl = track.attach();
@@ -438,11 +475,16 @@
       }
     });
 
-    _room.on(LK.RoomEvent.TrackUnsubscribed, function(track) {
+    _room.on(LK.RoomEvent.TrackUnsubscribed, function(track, pub) {
       if (track.kind === LK.Track.Kind.Video) {
-        track.detach();
-        _hasRemoteVideo = false;
-        _updateVideoPlaceholder();
+        if (pub && pub.source === LK.Track.Source.ScreenShare) {
+          track.detach();
+          _stopShareOverlay();
+        } else {
+          track.detach();
+          _hasRemoteVideo = false;
+          _updateVideoPlaceholder();
+        }
       } else if (track.kind === LK.Track.Kind.Audio) {
         track.detach();
       }
@@ -680,6 +722,8 @@
       try { room.disconnect(); } catch(_){}
     }
     _hasRemoteVideo = false;
+    _sharingScreen = false; _screenTrack = null;
+    _stopShareOverlay();
     _hideVideo();
     _isCaller = false; _callLogId = null; _outcomeLogged = false;
     if (!keepState) setCallState(null);
@@ -769,6 +813,154 @@
     var my = _el('lf-my-video'); if (my) my.style.opacity = _camOff ? '0' : '1';
   }
 
+  // ─── FULLSCREEN ───────────────────────────────────────────────────────────────
+  function _toggleFullscreen() {
+    var wrap = _el('lf-video-wrap');
+    if (!wrap) return;
+    var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl) {
+      var exitFs = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exitFs) exitFs.call(document);
+    } else {
+      var reqFs = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      if (reqFs) reqFs.call(wrap);
+    }
+  }
+
+  function _onFullscreenChange() {
+    var fsEl  = document.fullscreenElement || document.webkitFullscreenElement;
+    var btn   = _el('lf-vid-fs');
+    var wrap  = _el('lf-video-wrap');
+    if (!btn || !wrap) return;
+    if (fsEl === wrap) {
+      // In fullscreen — override fixed sizing so it fills the screen
+      wrap.style.width = '100%';
+      wrap.style.height = '100%';
+      wrap.style.top = '0';
+      wrap.style.left = '0';
+      wrap.style.right = '0';
+      wrap.style.bottom = '0';
+      wrap.style.borderRadius = '0';
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>';
+      btn.title = 'Exit fullscreen';
+    } else {
+      // Restore normal size
+      wrap.style.width = '';
+      wrap.style.height = '';
+      wrap.style.top = '';
+      wrap.style.left = '';
+      wrap.style.right = '16px';
+      wrap.style.bottom = '66px';
+      wrap.style.borderRadius = '';
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>';
+      btn.title = 'Fullscreen';
+    }
+  }
+
+  // ─── RESIZABLE VIDEO CARD ────────────────────────────────────────────────────
+  function _makeResizable(wrap, handle) {
+    var MIN_W = 200, MIN_H = 200;
+    handle.addEventListener('mousedown', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var startX  = e.clientX, startY  = e.clientY;
+      var startW  = wrap.offsetWidth,  startH  = wrap.offsetHeight;
+      function onMove(e) {
+        var w = Math.max(MIN_W, startW + (e.clientX - startX));
+        var h = Math.max(MIN_H, startH + (e.clientY - startY));
+        wrap.style.width  = w + 'px';
+        wrap.style.height = h + 'px';
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    handle.addEventListener('touchstart', function (e) {
+      var t = e.touches[0];
+      var startX = t.clientX, startY = t.clientY;
+      var startW = wrap.offsetWidth,  startH = wrap.offsetHeight;
+      function onMove(e) {
+        e.preventDefault();
+        var t = e.touches[0];
+        var w = Math.max(MIN_W, startW + (t.clientX - startX));
+        var h = Math.max(MIN_H, startH + (t.clientY - startY));
+        wrap.style.width  = w + 'px';
+        wrap.style.height = h + 'px';
+      }
+      function onUp() {
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+      }
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onUp);
+    }, { passive: true });
+  }
+
+  // ─── SCREEN SHARE ────────────────────────────────────────────────────────────
+  var _sharingScreen = false;
+  var _screenTrack   = null;
+
+  async function toggleScreenShare() {
+    if (!_room) return;
+    var LK = window.LivekitClient;
+    if (!LK) return;
+
+    if (_sharingScreen) {
+      _sharingScreen = false;
+      try { await _room.localParticipant.setScreenShareEnabled(false); } catch(_) {}
+      if (_screenTrack) { try { _screenTrack.stop(); } catch(_) {} _screenTrack = null; }
+      var btn = _el('lf-vid-share'); if (btn) btn.classList.remove('lf-sharing');
+    } else {
+      try {
+        await _room.localParticipant.setScreenShareEnabled(true);
+        _sharingScreen = true;
+        var btn = _el('lf-vid-share'); if (btn) btn.classList.add('lf-sharing');
+        // Mirror local screen into the share overlay for preview
+        var localScreenPub = _room.localParticipant.getTrackPublication(LK.Track.Source.ScreenShare);
+        if (localScreenPub && localScreenPub.track) {
+          var shareVid = _el('lf-share-vid');
+          if (shareVid) localScreenPub.track.attach(shareVid);
+          var pipVid = _el('lf-share-pip-vid');
+          var remoteVid = _el('lf-remote-vid');
+          if (pipVid && remoteVid) pipVid.srcObject = remoteVid.srcObject;
+          var overlay = _el('lf-share-overlay');
+          var lbl     = _el('lf-share-label');
+          if (overlay) overlay.classList.add('lf-visible');
+          if (lbl) lbl.textContent = '🖥 You are sharing your screen';
+          localScreenPub.track.on('ended', function () {
+            _stopShareOverlay();
+            _sharingScreen = false;
+            if (btn) btn.classList.remove('lf-sharing');
+          });
+        }
+      } catch(err) {
+        _sharingScreen = false;
+        console.error('[LoveCall] screen share failed', err);
+      }
+    }
+  }
+
+  function _stopShareOverlay() {
+    var overlay = _el('lf-share-overlay');
+    if (overlay) overlay.classList.remove('lf-visible');
+    var sv = _el('lf-share-vid');
+    if (sv) { sv.srcObject = null; }
+  }
+
+  function _showRemoteScreenShare(track) {
+    var shareVid = _el('lf-share-vid');
+    if (shareVid) track.attach(shareVid);
+    var pipVid  = _el('lf-share-pip-vid');
+    var remoteVid = _el('lf-remote-vid');
+    if (pipVid && remoteVid) pipVid.srcObject = remoteVid.srcObject;
+    var overlay = _el('lf-share-overlay');
+    var lbl     = _el('lf-share-label');
+    if (overlay) overlay.classList.add('lf-visible');
+    if (lbl) lbl.textContent = '📺 ' + _pName + ' is sharing their screen';
+  }
+
   // ─── DRAGGABLE VIDEO CARD (identical to original) ────────────────────────────
   function _makeDraggable(wrap, handle) {
     var startX, startY, origLeft, origTop;
@@ -851,15 +1043,32 @@
     var restoreBtn = _el('lf-cb-restore'); if (restoreBtn) restoreBtn.addEventListener('click', _showVideo);
 
     // In-video buttons
-    var vHang = _el('lf-vid-hang'); if (vHang) vHang.addEventListener('click', endCall);
-    var vMute = _el('lf-vid-mute'); if (vMute) vMute.addEventListener('click', toggleMute);
-    var vCam  = _el('lf-vid-cam');  if (vCam)  vCam.addEventListener('click',  toggleCamera);
-    var vMin  = _el('lf-vid-min');  if (vMin)  vMin.addEventListener('click',  _hideVideo);
+    var vHang  = _el('lf-vid-hang');   if (vHang)  vHang.addEventListener('click',  endCall);
+    var vMute  = _el('lf-vid-mute');   if (vMute)  vMute.addEventListener('click',  toggleMute);
+    var vCam   = _el('lf-vid-cam');    if (vCam)   vCam.addEventListener('click',   toggleCamera);
+    var vMin   = _el('lf-vid-min');    if (vMin)   vMin.addEventListener('click',   _hideVideo);
+    var vFs    = _el('lf-vid-fs');     if (vFs)    vFs.addEventListener('click',    _toggleFullscreen);
+    var vShare = _el('lf-vid-share');  if (vShare) vShare.addEventListener('click', toggleScreenShare);
+
+    // Share overlay close button
+    var shareClose = _el('lf-share-close');
+    if (shareClose) shareClose.addEventListener('click', function () {
+      _stopShareOverlay();
+      if (_sharingScreen) { toggleScreenShare(); }
+    });
+
+    // Fullscreen change listeners
+    document.addEventListener('fullscreenchange',       _onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', _onFullscreenChange);
 
     // Draggable
     var vWrap   = _el('lf-video-wrap');
     var vHandle = _el('lf-vid-drag');
     if (vWrap && vHandle) _makeDraggable(vWrap, vHandle);
+
+    // Resizable
+    var vResize = _el('lf-vid-resize');
+    if (vWrap && vResize) _makeResizable(vWrap, vResize);
 
     // Restore / listen for incoming
     var saved  = getCallState();
@@ -902,14 +1111,15 @@
   // ─── EXPORTS (identical API surface — nothing else in LoveFlix needs to change)
   global.LoveFlix      = global.LoveFlix || {};
   global.LoveFlix.Call = {
-    start:         startCall,
-    end:           endCall,
-    toggleMute:    toggleMute,
-    toggleCamera:  toggleCamera,
-    initVideoSync: initVideoSync,
-    vsyncPlay:     vsyncPlay,
-    vsyncPause:    vsyncPause,
-    vsyncSeek:     vsyncSeek
+    start:             startCall,
+    end:               endCall,
+    toggleMute:        toggleMute,
+    toggleCamera:      toggleCamera,
+    toggleScreenShare: toggleScreenShare,
+    initVideoSync:     initVideoSync,
+    vsyncPlay:         vsyncPlay,
+    vsyncPause:        vsyncPause,
+    vsyncSeek:         vsyncSeek
   };
 
 })(window);
