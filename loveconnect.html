@@ -1471,6 +1471,11 @@ function initGoogleMaps() {
   // ESC exits revolve
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && revolveState.active) stopRevolve(); });
 
+  // Wire exit button (inline onclick can't reach inside IIFE scope)
+  const _revolveBadgeBtn = document.querySelector('#revolveBadge .revolve-exit');
+  if (_revolveBadgeBtn) _revolveBadgeBtn.onclick = () => stopRevolve();
+  window.stopRevolve = stopRevolve;
+
   // ---------- LIVE DATA (Supabase) ----------
   function formatLocalTime(lng) {
     const offsetHours = Math.round(lng / 15);
