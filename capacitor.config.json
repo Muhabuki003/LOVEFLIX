@@ -4,6 +4,6 @@
   "webDir": "www",
   "server": {
     "url": "https://loveflix-test.pages.dev/home.html?unlock=mukstudio2026",
-    "cleartext": true
+    "cleartext": false
   }
 }
