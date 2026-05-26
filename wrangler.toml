@@ -22,6 +22,8 @@ R2_BUCKET_NAME = "loveflix-videos"
 # Public R2 URL — set this once you enable R2 public access or attach a custom domain.
 # Example: "https://pub-<hash>.r2.dev" or "https://media.yoursite.com"
 R2_PUBLIC_URL = "https://pub-41c1138b6caa46559a3d65cc2f95e4fb.r2.dev"
+# Replace with the actual tenant ID (TEXT primary key) from your D1 `tenants` table.
+# This value must NOT be the Cloudflare account ID above — update it once you have a real tenant row.
 DEFAULT_TENANT_ID = "a9c77b1cff6d48f28930ed068bbba95e"
 
 # ---- Stripe (public keys — safe to commit) ----

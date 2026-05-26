@@ -3,7 +3,7 @@
   "appName": "Loveflix",
   "webDir": "www",
   "server": {
-    "url": "https://loveflix-test.pages.dev/home.html?unlock=mukstudio2026",
+    "url": "https://loveflix-test.pages.dev/home.html?unlock=ba390bb56880cb12a0c1bd57a04b0554",
     "cleartext": false
   }
 }
