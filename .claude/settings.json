@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // \"\"'); [[ \"$FILE\" == *.sql ]] && grep -qi 'CREATE TABLE' \"$FILE\" 2>/dev/null && ! grep -qi 'ENABLE ROW LEVEL SECURITY' \"$FILE\" 2>/dev/null && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"WARNING: SQL file contains CREATE TABLE without ENABLE ROW LEVEL SECURITY. Per project rules, ALL new Supabase tables must have RLS enabled and appropriate policies added before the migration is complete.\"}}' || true",
+            "statusMessage": "Checking RLS on new tables..."
+          }
+        ]
+      }
+    ]
+  }
+}
