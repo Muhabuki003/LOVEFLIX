@@ -158,10 +158,10 @@
 
   /* ---------- rows ---------- */
   .rows-wrap { position: relative; z-index: 5; margin-top: -100px; padding-bottom: 80px; }
-  .row { padding: 28px 0 8px; }
+  .row { padding: 0; scroll-margin-top: 88px; }
   .row-head {
     display: flex; align-items: baseline; justify-content: space-between;
-    padding: 0 48px 14px;
+    padding: 0 48px 10px;
   }
   .row-title { font-size: 22px; font-weight: 600; letter-spacing: -0.2px; }
   .row-explore {
@@ -173,8 +173,8 @@
   .row:hover .row-explore { opacity: 1; transform: translateX(0); color: #fff; }
 
   .row-scroll {
-    display: flex; gap: 6px;
-    padding: 30px 48px 60px;
+    display: flex; gap: 10px;
+    padding: 22px 48px 26px;
     overflow-x: auto;
     scroll-behavior: smooth;
     scrollbar-width: none;
@@ -183,13 +183,10 @@
 
   .card {
     flex: 0 0 auto;
-    width: 280px; aspect-ratio: 16/9;
-    border-radius: 4px;
-    overflow: hidden;
+    width: 280px;
     position: relative;
     cursor: pointer;
-    background: #1f1f1f;
-    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s ease, z-index 0s 0.3s;
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), z-index 0s 0.3s;
     transform-origin: center center;
   }
   .card:first-child { transform-origin: left center; }
@@ -197,38 +194,56 @@
   .card:hover {
     transform: scale(1.18) translateY(-4px);
     z-index: 5;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.6);
-    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s ease, z-index 0s 0s;
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), z-index 0s 0s;
   }
+  .card:hover .card-thumb { box-shadow: 0 14px 28px rgba(0,0,0,0.6); }
   .row:hover .card:not(:hover) { opacity: 0.55; }
-  .row { } /* placeholder for cascade */
   .row .row-scroll:hover .card:not(:hover) { opacity: 0.55; }
 
   .card-thumb {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    width: 100%; aspect-ratio: 16/9;
+    border-radius: 4px;
+    overflow: hidden;
     background: var(--thumb, linear-gradient(135deg, #444, #222));
-    color: rgba(255,255,255,0.92);
+    background-size: cover; background-position: center;
+  }
+  /* bottom-left title label — readable pill/scrim over any thumbnail color */
+  .card-label {
+    position: absolute;
+    left: 10px; bottom: 10px;
+    max-width: calc(100% - 20px);
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px; letter-spacing: 2px;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-    text-align: center;
-    padding: 12px;
+    font-size: 19px; line-height: 1; letter-spacing: 1.5px;
+    color: #fff;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    padding: 6px 10px 5px;
+    border-radius: 5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.55);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    z-index: 2;
   }
-  .card-thumb-inner {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  /* caption below the thumbnail: meta row (category • duration) + muted date */
+  .card-caption { padding: 8px 4px 0; }
+  .card-meta {
+    display: flex; align-items: center; gap: 0;
+    font-size: 12.5px; font-weight: 500; color: var(--text-light);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .card-thumb .date {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px; font-weight: 500;
-    letter-spacing: 2px;
-    color: rgba(255,255,255,0.7);
-    text-transform: uppercase;
+  .card-meta .cap-cat { color: #fff; }
+  .card-date {
+    margin-top: 2px;
+    font-size: 11px; font-weight: 500; letter-spacing: 1px;
+    color: var(--text-dim); text-transform: uppercase;
   }
 
   .card-progress {
     position: absolute; bottom: 0; left: 0; right: 0;
     height: 3px; background: rgba(255,255,255,0.2);
+    z-index: 2;
   }
   .card-progress::after {
     content: ''; display: block; height: 100%; width: var(--p, 40%);
@@ -284,6 +299,15 @@
 
   /* arrows */
   .row-scroll-wrap { position: relative; }
+  /* right-edge fade so users know more cards exist off-screen */
+  .row-scroll-wrap::after {
+    content: '';
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 90px;
+    background: linear-gradient(to right, transparent, var(--bg) 85%);
+    pointer-events: none;
+    z-index: 4;
+  }
   .scroll-arrow {
     position: absolute; top: 30px; bottom: 60px;
     width: 48px;
@@ -314,32 +338,49 @@
     .hero { padding: 0 24px 100px; }
   }
   @media (max-width: 720px) {
-    .hero { padding: 0 16px 70px; min-height: 480px; height: auto; }
-    .hero-title { font-size: clamp(40px, 11vw, 64px); }
-    .hero-desc { font-size: 14px; margin-bottom: 20px; }
-    .hero-meta { flex-wrap: wrap; gap: 8px; font-size: 12px; }
-    .btn { padding: 10px 22px; font-size: 14px; }
+    .hero { padding: 0 16px 52px; min-height: 420px; height: auto; }
+    .hero-content { max-width: 100%; }
+    .hero-eyebrow { font-size: 10px; letter-spacing: 3px; margin-bottom: 12px; }
+    .hero-title { font-size: clamp(38px, 10vw, 56px); margin-bottom: 12px; }
+    .hero-desc {
+      font-size: 14px; line-height: 1.45; margin-bottom: 18px;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .hero-meta { flex-wrap: wrap; gap: 8px; font-size: 12px; margin-bottom: 14px; }
+    .btn { padding: 10px 20px; font-size: 14px; }
+    .rows-wrap { margin-top: -52px; }
+    .row { scroll-margin-top: 64px; }
+    .music-feature { scroll-margin-top: 64px; padding: 22px 16px; }
     .row-head, .rows-wrap .row-scroll { padding-left: 16px; padding-right: 16px; }
-    .row-scroll { padding-top: 16px; padding-bottom: 32px; }
-    .row-title { font-size: 18px; }
-    .card { width: 180px; }
+    .row-head { padding-bottom: 8px; }
+    .row-scroll { padding-top: 6px; padding-bottom: 14px; gap: 12px; }
+    .row-title { font-size: 17px; }
+    .card { width: 160px; }
     /* hover scaling steals tap area on touch — disable it */
-    .card:hover { transform: none; box-shadow: none; }
+    .card:hover { transform: none; }
+    .card:hover .card-thumb { box-shadow: none; }
     .row:hover .card:not(:hover) { opacity: 1; }
-    .card-overlay { transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); padding: 10px 10px 8px; }
-    .card-controls { display: none; }
-    .card-title { font-size: 12px; margin-bottom: 4px; }
+    /* on touch, rely on the bottom-left label + caption instead of the hover overlay */
+    .card-overlay { display: none; }
+    .card-label { font-size: 16px; left: 8px; bottom: 8px; padding: 5px 8px 4px; }
+    .card-caption { padding: 7px 2px 0; }
+    .card-meta { font-size: 11.5px; }
+    .card-date { font-size: 10px; letter-spacing: .8px; }
+    .row-scroll-wrap::after { width: 48px; }
     .scroll-arrow { display: none; }
     footer { padding: 30px 16px 40px; }
   }
   @media (max-width: 420px) {
-    .hero-title { font-size: 44px; }
-    .card { width: 150px; }
+    .hero { min-height: 380px; }
+    .hero-title { font-size: 40px; }
+    .card { width: 146px; }
+    .card-label { font-size: 15px; }
   }
 
   /* ---------- music feature section ---------- */
   .music-feature {
     padding: 28px 48px;
+    scroll-margin-top: 88px;
     background: linear-gradient(90deg, rgba(229,9,20,.06) 0%, transparent 60%);
     border-top: 1px solid rgba(255,255,255,.06);
     border-bottom: 1px solid rgba(255,255,255,.06);
@@ -419,8 +460,8 @@
 <!-- HERO -->
 <section class="hero" id="hero">
   <div class="hero-video-layer" id="heroVideoLayer">
-    <video id="heroVideoA" muted playsinline preload="auto"></video>
-    <video id="heroVideoB" muted playsinline preload="auto"></video>
+    <video id="heroVideoA" muted playsinline webkit-playsinline preload="auto" disablepictureinpicture></video>
+    <video id="heroVideoB" muted playsinline webkit-playsinline preload="auto" disablepictureinpicture></video>
   </div>
   <div class="hero-content">
     <div class="hero-eyebrow">LoveFlix Original · Featured</div>
@@ -458,61 +499,76 @@
       <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
       <div class="row-scroll">
         <div class="card t-rose">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>The Lisbon<br>Trip</span><span class="date">May 2025</span></div></div>
-          <div class="card-progress" style="--p: 64%"></div>
-          <div class="card-overlay">
-            <div class="card-controls">
-              <button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-              <button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+          <div class="card-thumb">
+            <div class="card-label">The Lisbon Trip</div>
+            <div class="card-progress" style="--p: 64%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">The Lisbon Trip · Day 3</div>
+              <div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>14 min left</span></div>
             </div>
-            <div class="card-title">The Lisbon Trip · Day 3</div>
-            <div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>14 min left</span></div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Trips</span><span class="card-dot"></span><span>14 min left</span></div><div class="card-date">May 2025</div></div>
         </div>
         <div class="card t-amber">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>Birthday<br>Surprise</span><span class="date">Aug 2024</span></div></div>
-          <div class="card-progress" style="--p: 28%"></div>
-          <div class="card-overlay">
-            <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
-            <div class="card-title">The Birthday Surprise</div>
-            <div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>22 min left</span></div>
+          <div class="card-thumb">
+            <div class="card-label">Birthday Surprise</div>
+            <div class="card-progress" style="--p: 28%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">The Birthday Surprise</div>
+              <div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>22 min left</span></div>
+            </div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Celebrations</span><span class="card-dot"></span><span>22 min left</span></div><div class="card-date">Aug 2024</div></div>
         </div>
         <div class="card t-emerald">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>Forest<br>Picnic</span><span class="date">Jun 2024</span></div></div>
-          <div class="card-progress" style="--p: 82%"></div>
-          <div class="card-overlay">
-            <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
-            <div class="card-title">Forest Picnic</div>
-            <div class="card-row"><span class="card-tag">94% Match</span><span class="card-dot"></span><span>4 min left</span></div>
+          <div class="card-thumb">
+            <div class="card-label">Forest Picnic</div>
+            <div class="card-progress" style="--p: 82%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">Forest Picnic</div>
+              <div class="card-row"><span class="card-tag">94% Match</span><span class="card-dot"></span><span>4 min left</span></div>
+            </div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Trips</span><span class="card-dot"></span><span>4 min left</span></div><div class="card-date">Jun 2024</div></div>
         </div>
         <div class="card t-coral">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>Beach Sunrise</span><span class="date">Apr 2024</span></div></div>
-          <div class="card-progress" style="--p: 12%"></div>
-          <div class="card-overlay">
-            <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
-            <div class="card-title">Beach Sunrise</div>
-            <div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>26 min left</span></div>
+          <div class="card-thumb">
+            <div class="card-label">Beach Sunrise</div>
+            <div class="card-progress" style="--p: 12%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">Beach Sunrise</div>
+              <div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>26 min left</span></div>
+            </div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>26 min left</span></div><div class="card-date">Apr 2024</div></div>
         </div>
         <div class="card t-violet">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>Rooftop<br>Anniversary</span><span class="date">Feb 2024</span></div></div>
-          <div class="card-progress" style="--p: 50%"></div>
-          <div class="card-overlay">
-            <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
-            <div class="card-title">Rooftop Anniversary</div>
-            <div class="card-row"><span class="card-tag">97% Match</span><span class="card-dot"></span><span>18 min left</span></div>
+          <div class="card-thumb">
+            <div class="card-label">Rooftop Anniversary</div>
+            <div class="card-progress" style="--p: 50%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">Rooftop Anniversary</div>
+              <div class="card-row"><span class="card-tag">97% Match</span><span class="card-dot"></span><span>18 min left</span></div>
+            </div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Anniversary</span><span class="card-dot"></span><span>18 min left</span></div><div class="card-date">Feb 2024</div></div>
         </div>
         <div class="card t-blue">
-          <div class="card-thumb"><div class="card-thumb-inner"><span>Snowy<br>Christmas</span><span class="date">Dec 2023</span></div></div>
-          <div class="card-progress" style="--p: 70%"></div>
-          <div class="card-overlay">
-            <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
-            <div class="card-title">Snowy Christmas</div>
-            <div class="card-row"><span class="card-tag">95% Match</span><span class="card-dot"></span><span>9 min left</span></div>
+          <div class="card-thumb">
+            <div class="card-label">Snowy Christmas</div>
+            <div class="card-progress" style="--p: 70%"></div>
+            <div class="card-overlay">
+              <div class="card-controls"><button class="card-ctrl play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><button class="card-ctrl"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button></div>
+              <div class="card-title">Snowy Christmas</div>
+              <div class="card-row"><span class="card-tag">95% Match</span><span class="card-dot"></span><span>9 min left</span></div>
+            </div>
           </div>
+          <div class="card-caption"><div class="card-meta"><span class="cap-cat">Holidays</span><span class="card-dot"></span><span>9 min left</span></div><div class="card-date">Dec 2023</div></div>
         </div>
       </div>
       <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
@@ -528,13 +584,13 @@
     <div class="row-scroll-wrap">
       <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
       <div class="row-scroll">
-        <div class="card t-rose-deep"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 01<br>The Coffee</span><span class="date">May 14, 2023</span></div></div><div class="card-overlay"><div class="card-title">Ep. 01 — The Coffee</div><div class="card-row"><span class="card-tag">New</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-twilight"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 02<br>First Walk</span><span class="date">Jun 02, 2023</span></div></div><div class="card-overlay"><div class="card-title">Ep. 02 — First Walk</div><div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-mauve"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 03<br>The Mixtape</span><span class="date">Jul 18, 2023</span></div></div><div class="card-overlay"><div class="card-title">Ep. 03 — The Mixtape</div><div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-sunset"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 04<br>I Love You</span><span class="date">Sep 09, 2023</span></div></div><div class="card-overlay"><div class="card-title">Ep. 04 — I Love You</div><div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-ocean"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 05<br>Moving In</span><span class="date">Nov 22, 2023</span></div></div><div class="card-overlay"><div class="card-title">Ep. 05 — Moving In</div><div class="card-row"><span class="card-tag">97% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-emerald"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 06<br>The Question</span><span class="date">Feb 14, 2024</span></div></div><div class="card-overlay"><div class="card-title">Ep. 06 — The Question</div><div class="card-row"><span class="card-tag">100% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
-        <div class="card t-coral"><div class="card-thumb"><div class="card-thumb-inner"><span>Episode 07<br>Yes</span><span class="date">Feb 14, 2024</span></div></div><div class="card-overlay"><div class="card-title">Ep. 07 — Yes</div><div class="card-row"><span class="card-tag">100% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div>
+        <div class="card t-rose-deep"><div class="card-thumb"><div class="card-label">The Coffee</div><div class="card-overlay"><div class="card-title">Ep. 01 — The Coffee</div><div class="card-row"><span class="card-tag">New</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 01</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">May 14, 2023</div></div></div>
+        <div class="card t-twilight"><div class="card-thumb"><div class="card-label">First Walk</div><div class="card-overlay"><div class="card-title">Ep. 02 — First Walk</div><div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 02</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Jun 02, 2023</div></div></div>
+        <div class="card t-mauve"><div class="card-thumb"><div class="card-label">The Mixtape</div><div class="card-overlay"><div class="card-title">Ep. 03 — The Mixtape</div><div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 03</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Jul 18, 2023</div></div></div>
+        <div class="card t-sunset"><div class="card-thumb"><div class="card-label">I Love You</div><div class="card-overlay"><div class="card-title">Ep. 04 — I Love You</div><div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 04</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Sep 09, 2023</div></div></div>
+        <div class="card t-ocean"><div class="card-thumb"><div class="card-label">Moving In</div><div class="card-overlay"><div class="card-title">Ep. 05 — Moving In</div><div class="card-row"><span class="card-tag">97% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 05</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Nov 22, 2023</div></div></div>
+        <div class="card t-emerald"><div class="card-thumb"><div class="card-label">The Question</div><div class="card-overlay"><div class="card-title">Ep. 06 — The Question</div><div class="card-row"><span class="card-tag">100% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 06</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Feb 14, 2024</div></div></div>
+        <div class="card t-coral"><div class="card-thumb"><div class="card-label">Yes</div><div class="card-overlay"><div class="card-title">Ep. 07 — Yes</div><div class="card-row"><span class="card-tag">100% Match</span><span class="card-dot"></span><span>HDR</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Ep. 07</span><span class="card-dot"></span><span>HDR</span></div><div class="card-date">Feb 14, 2024</div></div></div>
       </div>
       <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
     </div>
@@ -618,12 +674,12 @@
     <div class="row-scroll-wrap">
       <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
       <div class="row-scroll">
-        <div class="card t-amber"><div class="card-thumb"><div class="card-thumb-inner"><span>Surprise<br>Proposal</span><span class="date">Feb 14, 2024</span></div></div><div class="card-overlay"><div class="card-title">Surprise Proposal</div><div class="card-row"><span class="card-tag">Editor's Pick</span><span class="card-dot"></span><span>4 min</span></div></div></div>
-        <div class="card t-rose"><div class="card-thumb"><div class="card-thumb-inner"><span>One Year<br>Letter</span><span class="date">May 14, 2024</span></div></div><div class="card-overlay"><div class="card-title">One Year Letter</div><div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>2 min</span></div></div></div>
-        <div class="card t-violet"><div class="card-thumb"><div class="card-thumb-inner"><span>The Dance<br>In The Rain</span><span class="date">Jul 11, 2024</span></div></div><div class="card-overlay"><div class="card-title">Dance in the Rain</div><div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>3 min</span></div></div></div>
-        <div class="card t-blue-deep"><div class="card-thumb"><div class="card-thumb-inner"><span>Ocean<br>Vows</span><span class="date">Aug 28, 2024</span></div></div><div class="card-overlay"><div class="card-title">Ocean Vows</div><div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>5 min</span></div></div></div>
-        <div class="card t-night"><div class="card-thumb"><div class="card-thumb-inner"><span>Stars<br>In Joshua Tree</span><span class="date">Oct 03, 2024</span></div></div><div class="card-overlay"><div class="card-title">Stars in Joshua Tree</div><div class="card-row"><span class="card-tag">95% Match</span><span class="card-dot"></span><span>7 min</span></div></div></div>
-        <div class="card t-twilight"><div class="card-thumb"><div class="card-thumb-inner"><span>Sunset<br>Bike Ride</span><span class="date">Nov 12, 2024</span></div></div><div class="card-overlay"><div class="card-title">Sunset Bike Ride</div><div class="card-row"><span class="card-tag">93% Match</span><span class="card-dot"></span><span>3 min</span></div></div></div>
+        <div class="card t-amber"><div class="card-thumb"><div class="card-label">Surprise Proposal</div><div class="card-overlay"><div class="card-title">Surprise Proposal</div><div class="card-row"><span class="card-tag">Editor's Pick</span><span class="card-dot"></span><span>4 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>4 min</span></div><div class="card-date">Feb 14, 2024</div></div></div>
+        <div class="card t-rose"><div class="card-thumb"><div class="card-label">One Year Letter</div><div class="card-overlay"><div class="card-title">One Year Letter</div><div class="card-row"><span class="card-tag">98% Match</span><span class="card-dot"></span><span>2 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>2 min</span></div><div class="card-date">May 14, 2024</div></div></div>
+        <div class="card t-violet"><div class="card-thumb"><div class="card-label">Dance in the Rain</div><div class="card-overlay"><div class="card-title">Dance in the Rain</div><div class="card-row"><span class="card-tag">96% Match</span><span class="card-dot"></span><span>3 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>3 min</span></div><div class="card-date">Jul 11, 2024</div></div></div>
+        <div class="card t-blue-deep"><div class="card-thumb"><div class="card-label">Ocean Vows</div><div class="card-overlay"><div class="card-title">Ocean Vows</div><div class="card-row"><span class="card-tag">99% Match</span><span class="card-dot"></span><span>5 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>5 min</span></div><div class="card-date">Aug 28, 2024</div></div></div>
+        <div class="card t-night"><div class="card-thumb"><div class="card-label">Stars in Joshua Tree</div><div class="card-overlay"><div class="card-title">Stars in Joshua Tree</div><div class="card-row"><span class="card-tag">95% Match</span><span class="card-dot"></span><span>7 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>7 min</span></div><div class="card-date">Oct 03, 2024</div></div></div>
+        <div class="card t-twilight"><div class="card-thumb"><div class="card-label">Sunset Bike Ride</div><div class="card-overlay"><div class="card-title">Sunset Bike Ride</div><div class="card-row"><span class="card-tag">93% Match</span><span class="card-dot"></span><span>3 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>3 min</span></div><div class="card-date">Nov 12, 2024</div></div></div>
       </div>
       <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
     </div>
@@ -638,12 +694,12 @@
     <div class="row-scroll-wrap">
       <button class="scroll-arrow left" data-dir="-1" aria-label="Scroll left"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
       <div class="row-scroll">
-        <div class="card t-rose"><div class="card-thumb"><div class="card-thumb-inner"><span>The Lisbon<br>Trip</span><span class="date">May 2025</span></div></div><div class="card-overlay"><div class="card-title">The Lisbon Trip</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>26 min</span></div></div></div>
-        <div class="card t-twilight"><div class="card-thumb"><div class="card-thumb-inner"><span>Surprise<br>Proposal</span><span class="date">Feb 2024</span></div></div><div class="card-overlay"><div class="card-title">Surprise Proposal</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>4 min</span></div></div></div>
-        <div class="card t-coral"><div class="card-thumb"><div class="card-thumb-inner"><span>Sunset Picnic</span><span class="date">Jun 2024</span></div></div><div class="card-overlay"><div class="card-title">Sunset Picnic</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>9 min</span></div></div></div>
-        <div class="card t-emerald"><div class="card-thumb"><div class="card-thumb-inner"><span>Forest Cabin</span><span class="date">Mar 2024</span></div></div><div class="card-overlay"><div class="card-title">Forest Cabin</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>16 min</span></div></div></div>
-        <div class="card t-mauve"><div class="card-thumb"><div class="card-thumb-inner"><span>The Mixtape</span><span class="date">Jul 2023</span></div></div><div class="card-overlay"><div class="card-title">The Mixtape</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>3 min</span></div></div></div>
-        <div class="card t-blue"><div class="card-thumb"><div class="card-thumb-inner"><span>Snowy<br>Christmas</span><span class="date">Dec 2023</span></div></div><div class="card-overlay"><div class="card-title">Snowy Christmas</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>14 min</span></div></div></div>
+        <div class="card t-rose"><div class="card-thumb"><div class="card-label">The Lisbon Trip</div><div class="card-overlay"><div class="card-title">The Lisbon Trip</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>26 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Trips</span><span class="card-dot"></span><span>26 min</span></div><div class="card-date">May 2025</div></div></div>
+        <div class="card t-twilight"><div class="card-thumb"><div class="card-label">Surprise Proposal</div><div class="card-overlay"><div class="card-title">Surprise Proposal</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>4 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Moments</span><span class="card-dot"></span><span>4 min</span></div><div class="card-date">Feb 2024</div></div></div>
+        <div class="card t-coral"><div class="card-thumb"><div class="card-label">Sunset Picnic</div><div class="card-overlay"><div class="card-title">Sunset Picnic</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>9 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Trips</span><span class="card-dot"></span><span>9 min</span></div><div class="card-date">Jun 2024</div></div></div>
+        <div class="card t-emerald"><div class="card-thumb"><div class="card-label">Forest Cabin</div><div class="card-overlay"><div class="card-title">Forest Cabin</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>16 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Trips</span><span class="card-dot"></span><span>16 min</span></div><div class="card-date">Mar 2024</div></div></div>
+        <div class="card t-mauve"><div class="card-thumb"><div class="card-label">The Mixtape</div><div class="card-overlay"><div class="card-title">The Mixtape</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>3 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Music</span><span class="card-dot"></span><span>3 min</span></div><div class="card-date">Jul 2023</div></div></div>
+        <div class="card t-blue"><div class="card-thumb"><div class="card-label">Snowy Christmas</div><div class="card-overlay"><div class="card-title">Snowy Christmas</div><div class="card-row"><span class="card-tag">♥ Favorite</span><span class="card-dot"></span><span>14 min</span></div></div></div><div class="card-caption"><div class="card-meta"><span class="cap-cat">Holidays</span><span class="card-dot"></span><span>14 min</span></div><div class="card-date">Dec 2023</div></div></div>
       </div>
       <button class="scroll-arrow right" data-dir="1" aria-label="Scroll right"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
     </div>
@@ -786,25 +842,31 @@
       const pct = Math.min(100, Math.round((progressRow.progress_seconds / total) * 100));
       progressBar = `<div class="card-progress" style="--p:${pct}%"></div>`;
     }
+    const durLabel = total ? fmtMin(total) : 'New';
     card.innerHTML = `
       <div class="card-thumb" ${thumbStyle}>
-        <div class="card-thumb-inner">
-          <span>${headline}${sub ? '<br>' + sub : ''}</span>
-          <span class="date">${escapeHtml(v.date || '')}</span>
+        <div class="card-label">${headline}</div>
+        ${progressBar}
+        <div class="card-overlay">
+          <div class="card-controls">
+            <button class="card-ctrl play" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="card-ctrl" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+          </div>
+          <div class="card-title">${escapeHtml(v.title || 'Untitled')}</div>
+          <div class="card-row">
+            <span class="card-tag">${escapeHtml(v.category || 'Moment')}</span>
+            <span class="card-dot"></span>
+            <span>${durLabel}</span>
+          </div>
         </div>
       </div>
-      ${progressBar}
-      <div class="card-overlay">
-        <div class="card-controls">
-          <button class="card-ctrl play" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-          <button class="card-ctrl" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-        </div>
-        <div class="card-title">${escapeHtml(v.title || 'Untitled')}</div>
-        <div class="card-row">
-          <span class="card-tag">${escapeHtml(v.category || 'Moment')}</span>
+      <div class="card-caption">
+        <div class="card-meta">
+          <span class="cap-cat">${escapeHtml(v.category || sub || 'Moment')}</span>
           <span class="card-dot"></span>
-          <span>${total ? fmtMin(total) : 'New'}</span>
+          <span>${durLabel}</span>
         </div>
+        ${v.date ? `<div class="card-date">${escapeHtml(v.date)}</div>` : ''}
       </div>`;
     card.addEventListener('click', () => location.href = `player.html?id=${encodeURIComponent(v.id)}`);
     return card;
@@ -935,10 +997,19 @@
     const outgoing = heroCurrent === 'A' ? a : b;
 
     if (v && v.video_url) {
+      // iOS/Android require muted + inline for autoplay — enforce on the element itself.
+      incoming.muted = true;
+      incoming.defaultMuted = true;
+      incoming.playsInline = true;
+      incoming.setAttribute('muted', '');
+      incoming.setAttribute('playsinline', '');
+      incoming.setAttribute('webkit-playsinline', '');
       incoming.src = v.video_url;
       incoming.currentTime = 0;
-      const tryPlay = () => incoming.play().catch(() => {});
+      const tryPlay = () => { const p = incoming.play(); if (p && p.catch) p.catch(() => {}); };
       incoming.addEventListener('loadeddata', tryPlay, { once: true });
+      incoming.addEventListener('canplay', tryPlay, { once: true });
+      incoming.load();
       tryPlay();
       incoming.classList.add('active');
       hero.classList.add('has-video');
@@ -987,6 +1058,21 @@
       heroTimer = setTimeout(advanceHero, HERO_PREVIEW_MS);
     }
   });
+
+  // Some mobile browsers block muted autoplay until the first gesture — nudge it.
+  (function () {
+    function kick() {
+      const a = document.getElementById('heroVideoA');
+      const b = document.getElementById('heroVideoB');
+      [a, b].forEach(v => {
+        if (v && v.classList.contains('active') && v.paused) {
+          const p = v.play(); if (p && p.catch) p.catch(() => {});
+        }
+      });
+    }
+    ['touchstart', 'pointerdown', 'click'].forEach(evt =>
+      window.addEventListener(evt, kick, { once: true, passive: true }));
+  })();
 
   loadHome();
 </script>
