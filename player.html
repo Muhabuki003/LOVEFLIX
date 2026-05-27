@@ -889,7 +889,10 @@
   video.addEventListener('ended', async () => {
     await saveProgress(true);
     if (autoplayOn && nextVideo) {
-      location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}`;
+      // Pass noIntro=1 so the next page skips the intro animation and starts
+      // playing immediately — avoiding the autoplay-policy block that can occur
+      // after a 4-second delay on mobile.
+      location.href = `player.html?id=${encodeURIComponent(nextVideo.id)}&noIntro=1`;
     } else if (autoplayOn && !nextVideo) {
       location.href = `outro_credits.html?preview=1`;
     }
@@ -913,10 +916,71 @@
   video.addEventListener('volumechange', paintVol);
   paintVol();
 
-  // Fullscreen
+  // Fullscreen — mobile-aware: prefer video-element fullscreen (works on iOS) and
+  // lock to landscape via the Screen Orientation API where available.
+  let isFullscreen = false;
+
+  function updateFsIcon() {
+    fsBtn.querySelector('svg').innerHTML = isFullscreen
+      ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
+      : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+  }
+
+  async function enterFullscreen() {
+    try {
+      if (video.requestFullscreen) {
+        await video.requestFullscreen();
+      } else if (video.webkitEnterFullscreen) {
+        // iOS Safari native video fullscreen
+        video.webkitEnterFullscreen();
+        isFullscreen = true;
+        updateFsIcon();
+        if (typeof StatusBar !== 'undefined') StatusBar.hide();
+        return;
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+      try { await screen.orientation.lock('landscape'); } catch (_) {}
+      isFullscreen = true;
+      updateFsIcon();
+      if (typeof StatusBar !== 'undefined') StatusBar.hide();
+    } catch (_) {}
+  }
+
+  async function exitFullscreen() {
+    try {
+      if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+      try { screen.orientation.unlock(); } catch (_) {}
+      isFullscreen = false;
+      updateFsIcon();
+      if (typeof StatusBar !== 'undefined') StatusBar.show();
+    } catch (_) {}
+  }
+
   fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-    else document.exitFullscreen().catch(() => {});
+    if (!isFullscreen) enterFullscreen();
+    else exitFullscreen();
+  });
+
+  // Sync state when fullscreen exits via Escape / browser UI
+  document.addEventListener('fullscreenchange', () => {
+    isFullscreen = !!document.fullscreenElement;
+    if (!isFullscreen) { try { screen.orientation.unlock(); } catch (_) {} }
+    updateFsIcon();
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    updateFsIcon();
+  });
+  // iOS: fired when the native player is dismissed
+  video.addEventListener('webkitendfullscreen', () => {
+    isFullscreen = false;
+    try { screen.orientation.unlock(); } catch (_) {}
+    updateFsIcon();
   });
 
   // Keyboard
@@ -947,24 +1011,36 @@
   // Play the L intro animation, then start the video. The intro is ~4.2s
   // (0.5s delay + 3.5s zoom-in, with a small buffer so the zoom fully
   // fills the screen before fading out).
+  // Skipped when: user disabled it in Settings, or the page was opened by
+  // the autoplay engine (noIntro=1), both of which also avoid the mobile
+  // autoplay-policy block that happens after long delays.
+  const INTRO_ANIM_KEY = 'loveflix_intro_anim';
+  const showIntroAnim = localStorage.getItem(INTRO_ANIM_KEY) !== '0';
+  const noIntroParam  = params.get('noIntro') === '1';
+
   const lIntroOverlay = document.getElementById('lIntroOverlay');
-  const lIntroAudio = document.getElementById('lf-intro-audio');
+  const lIntroAudio   = document.getElementById('lf-intro-audio');
   const L_INTRO_DURATION = 4200;
 
-  if (lIntroAudio) {
-    lIntroAudio.currentTime = 0;
-    lIntroAudio.volume = 1;
-    var p = lIntroAudio.play();
-    if (p && p.catch) p.catch(function(){});
-  }
-
-  setTimeout(() => {
-    if (lIntroOverlay) {
-      lIntroOverlay.classList.add('fade-out');
-      setTimeout(() => lIntroOverlay.remove(), 400);
-    }
+  if (!showIntroAnim || noIntroParam) {
+    // Skip overlay entirely and start playback right away
+    if (lIntroOverlay) lIntroOverlay.remove();
     if (url) startPlayback();
-  }, L_INTRO_DURATION);
+  } else {
+    if (lIntroAudio) {
+      lIntroAudio.currentTime = 0;
+      lIntroAudio.volume = 1;
+      var p = lIntroAudio.play();
+      if (p && p.catch) p.catch(function(){});
+    }
+    setTimeout(() => {
+      if (lIntroOverlay) {
+        lIntroOverlay.classList.add('fade-out');
+        setTimeout(() => lIntroOverlay.remove(), 400);
+      }
+      if (url) startPlayback();
+    }, L_INTRO_DURATION);
+  }
 
   // Robust autoplay: browsers block unmuted autoplay after a navigation, so
   // fall back to muted playback if the first attempt is rejected. The user

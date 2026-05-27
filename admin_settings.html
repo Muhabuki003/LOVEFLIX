@@ -357,6 +357,18 @@
             </label>
           </div>
 
+          <div class="toggle-row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div>
+              <div class="toggle-label">Intro Animation</div>
+              <div class="toggle-sub">Play animation at the start of each video.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="introAnimToggle" checked>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+
           <div class="field" style="margin-top:16px">
             <label>Privacy Level</label>
             <select id="privacyLevel">
@@ -807,6 +819,14 @@
   document.getElementById('notificationsToggle').addEventListener('change', () => {
     clearTimeout(_autoSaveTimer);
     _autoSaveTimer = setTimeout(savePreferencesNow, 500);
+  });
+
+  // Intro animation toggle — stored in localStorage (per-device preference)
+  const INTRO_ANIM_KEY = 'loveflix_intro_anim';
+  document.getElementById('introAnimToggle').checked = localStorage.getItem(INTRO_ANIM_KEY) !== '0';
+  document.getElementById('introAnimToggle').addEventListener('change', e => {
+    localStorage.setItem(INTRO_ANIM_KEY, e.target.checked ? '1' : '0');
+    showToast('Preference saved');
   });
   document.getElementById('privacyLevel').addEventListener('change', () => {
     clearTimeout(_autoSaveTimer);
