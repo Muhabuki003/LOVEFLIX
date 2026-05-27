@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -339,6 +340,24 @@
     .loveconnect-btn { bottom: 20px; left: 20px; padding: 9px 16px 9px 11px; }
     .lc-sub { display: none; }
   }
+
+  /* ── orbiting globe background ── */
+  #globe-bg {
+    position: fixed; inset: 0; z-index: 0;
+    opacity: 0.13; pointer-events: none; background: #000;
+  }
+  #globe-bg .maplibregl-ctrl-bottom-left,
+  #globe-bg .maplibregl-ctrl-bottom-right,
+  #globe-bg .maplibregl-ctrl-top-left,
+  #globe-bg .maplibregl-ctrl-top-right,
+  #globe-bg .maplibregl-ctrl-attrib { display: none !important; }
+  #globe-vignette {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center,
+      transparent 0%,
+      rgba(0,0,0,0.55) 55%,
+      rgba(0,0,0,0.9) 100%);
+  }
 </style>
 </head>
 <body>
@@ -349,6 +368,9 @@
     <div class="bg-tile t6"></div><div class="bg-tile t7"></div><div class="bg-tile t8"></div><div class="bg-tile t9"></div><div class="bg-tile t10"></div>
     <div class="bg-tile t11"></div><div class="bg-tile t12"></div><div class="bg-tile t13"></div><div class="bg-tile t14"></div><div class="bg-tile t15"></div>
   </div>
+  <!-- orbiting globe background (partner's live location) — sits above collage tiles, below the dark overlay -->
+  <div id="globe-bg" aria-hidden="true"></div>
+  <div id="globe-vignette" aria-hidden="true"></div>
   <div class="bg-overlay"></div>
 
   <nav>
@@ -410,6 +432,105 @@
 
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
+<script async src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// ── Globe background: orbits around partner's last known location ─────────────
+(function() {
+  function parseWKB(hex) {
+    if (!hex || hex.length < 42) return null;
+    try {
+      const buf  = new Uint8Array(hex.match(/../g).map(b => parseInt(b, 16)));
+      const view = new DataView(buf.buffer);
+      const le   = buf[0] === 1;
+      const type = view.getUint32(1, le);
+      const off  = (type & 0x20000000) ? 9 : 5;
+      const lng  = view.getFloat64(off,     le);
+      const lat  = view.getFloat64(off + 8, le);
+      return (isFinite(lng) && isFinite(lat)) ? [lng, lat] : null;
+    } catch(_) { return null; }
+  }
+
+  async function fetchPartnerCoords(sbUrl, sbKey, token, coupleId, myUserId) {
+    try {
+      const res = await fetch(
+        `${sbUrl}/rest/v1/couple_locations?couple_id=eq.${coupleId}&select=user_id,location&order=updated_at.desc`,
+        { headers: { apikey: sbKey, Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) return null;
+      const rows = await res.json();
+      if (!Array.isArray(rows)) return null;
+      for (const row of rows) {
+        if (row.user_id !== myUserId) {
+          const c = parseWKB(row.location);
+          if (c) return c; // [lng, lat]
+        }
+      }
+    } catch(_) {}
+    return null;
+  }
+
+  function launchGlobe(center) {
+    const container = document.getElementById('globe-bg');
+    if (!container || typeof maplibregl === 'undefined') return;
+
+    const map = new maplibregl.Map({
+      container:         'globe-bg',
+      style:             'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      center:            center || [0, 20],
+      zoom:              9.5,
+      pitch:             60,
+      bearing:           0,
+      interactive:       false,
+      attributionControl: false
+    });
+
+    map.on('style.load', function() {
+      // Mercator gives the cinematic tilted-orbit look (same as loveconnect)
+      try { map.setProjection({ type: 'mercator' }); } catch(_) {}
+
+      if (center) {
+        map.flyTo({ center: center, zoom: 9.5, pitch: 60, bearing: 0,
+                    duration: 3200, essential: true });
+      }
+
+      // Start continuous bearing rotation ~2s after fly-in
+      var bearing = 0;
+      setTimeout(function() {
+        (function loop() {
+          bearing = (bearing + 0.09 + 360) % 360;
+          map.setBearing(bearing);
+          requestAnimationFrame(loop);
+        })();
+      }, center ? 3400 : 400);
+    });
+  }
+
+  // Poll for maplibregl (loaded async) then fetch + start
+  function tryStart() {
+    if (typeof maplibregl === 'undefined') { setTimeout(tryStart, 120); return; }
+
+    var lf        = typeof LoveFlix !== 'undefined' ? LoveFlix : null;
+    var sbUrl     = lf ? lf.SUPABASE_URL    : null;
+    var sbKey     = lf ? lf.SUPABASE_ANON_KEY : null;
+    var token     = lf ? lf.getToken()      : null;
+    var coupleId  = lf ? lf.getCoupleId()   : null;
+    var myUserId  = lf ? lf.getUserId()     : null;
+
+    if (sbUrl && token && coupleId && myUserId) {
+      fetchPartnerCoords(sbUrl, sbKey, token, coupleId, myUserId)
+        .then(function(coords) { launchGlobe(coords); });
+    } else {
+      launchGlobe(null); // no auth yet — default world view
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryStart);
+  } else {
+    setTimeout(tryStart, 0);
+  }
+})();
+</script>
 <script>
 (function() {
   'use strict';
