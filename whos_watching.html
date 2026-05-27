@@ -479,56 +479,56 @@
         container:          container,
         style:              'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
         center:             center || [0, 20],
-        zoom:               9.5,
+        zoom:               11,
         pitch:              60,
         bearing:            0,
         interactive:        false,
         attributionControl: false
       });
 
-      // Disable pointer events on the canvas, not the container
+      // Force canvas to fill container (critical on mobile) then disable touch passthrough
       map.on('load', function() {
+        map.resize();
         var canvas = map.getCanvas();
         if (canvas) canvas.style.pointerEvents = 'none';
       });
 
+      // Re-fit on orientation change / browser chrome resize
+      window.addEventListener('resize', function() { try { map.resize(); } catch(_) {} });
+
       map.on('style.load', function() {
         try { map.setProjection({ type: 'mercator' }); } catch(_) {}
 
-        if (center) {
-          map.flyTo({ center: center, zoom: 9.5, pitch: 60, bearing: 0,
-                      duration: 3200, essential: true });
-        }
-
         var bearing = 0;
-        setTimeout(function() {
-          (function loop() {
-            bearing = (bearing + 0.09 + 360) % 360;
-            map.setBearing(bearing);
-            requestAnimationFrame(loop);
-          })();
-        }, center ? 3400 : 400);
+        (function loop() {
+          bearing = (bearing + 0.09 + 360) % 360;
+          map.setBearing(bearing);
+          requestAnimationFrame(loop);
+        })();
       });
     } catch(e) {
       console.warn('[LoveFlix] globe-bg failed to initialize:', e);
     }
   }
 
-  // MapLibre is synchronously loaded above — no polling needed
-  var lf       = typeof LoveFlix !== 'undefined' ? LoveFlix : null;
-  var sbUrl    = lf ? lf.SUPABASE_URL     : null;
-  var sbKey    = lf ? lf.SUPABASE_ANON_KEY : null;
-  var token    = lf ? lf.getToken()       : null;
-  var coupleId = lf ? lf.getCoupleId()    : null;
-  var myUserId = lf ? lf.getUserId()      : null;
+  // Defer to requestAnimationFrame so the browser has completed first layout
+  // before MapLibre reads container dimensions — fixes mobile/iOS Safari blank map
+  requestAnimationFrame(function() {
+    var lf       = typeof LoveFlix !== 'undefined' ? LoveFlix : null;
+    var sbUrl    = lf ? lf.SUPABASE_URL      : null;
+    var sbKey    = lf ? lf.SUPABASE_ANON_KEY : null;
+    var token    = lf ? lf.getToken()        : null;
+    var coupleId = lf ? lf.getCoupleId()     : null;
+    var myUserId = lf ? lf.getUserId()       : null;
 
-  if (sbUrl && token && coupleId && myUserId) {
-    fetchPartnerCoords(sbUrl, sbKey, token, coupleId, myUserId)
-      .then(function(coords) { launchGlobe(coords); })
-      .catch(function() { launchGlobe(null); });
-  } else {
-    launchGlobe(null);
-  }
+    if (sbUrl && token && coupleId && myUserId) {
+      fetchPartnerCoords(sbUrl, sbKey, token, coupleId, myUserId)
+        .then(function(coords) { launchGlobe(coords); })
+        .catch(function() { launchGlobe(null); });
+    } else {
+      launchGlobe(null);
+    }
+  });
 })();
 </script>
 <script>
