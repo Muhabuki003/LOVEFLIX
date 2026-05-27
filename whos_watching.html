@@ -495,19 +495,12 @@
       map.on('style.load', function() {
         try { map.setProjection({ type: 'mercator' }); } catch(_) {}
 
-        if (center) {
-          map.flyTo({ center: center, zoom: 9.5, pitch: 60, bearing: 0,
-                      duration: 3200, essential: true });
-        }
-
         var bearing = 0;
-        setTimeout(function() {
-          (function loop() {
-            bearing = (bearing + 0.09 + 360) % 360;
-            map.setBearing(bearing);
-            requestAnimationFrame(loop);
-          })();
-        }, center ? 3400 : 400);
+        (function loop() {
+          bearing = (bearing + 0.09 + 360) % 360;
+          map.setBearing(bearing);
+          requestAnimationFrame(loop);
+        })();
       });
     } catch(e) {
       console.warn('[LoveFlix] globe-bg failed to initialize:', e);
