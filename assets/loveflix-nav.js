@@ -16,9 +16,9 @@
     var s = document.createElement('style');
     s.id = 'lf-nav-style';
     s.textContent = [
-      'nav.lf-topnav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,0.95);transition:background .25s ease}',
-      'nav.lf-topnav.lf-hero{background:linear-gradient(to bottom,rgba(0,0,0,0.85),transparent)}',
-      'nav.lf-topnav.lf-hero.lf-scrolled{background:rgba(10,10,10,0.95)}',
+      'nav.lf-topnav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,0.92);-webkit-backdrop-filter:saturate(140%) blur(16px);backdrop-filter:saturate(140%) blur(16px);transition:background .25s ease}',
+      'nav.lf-topnav.lf-hero{background:linear-gradient(to bottom,rgba(0,0,0,0.85),rgba(0,0,0,0.2) 70%,transparent)}',
+      'nav.lf-topnav.lf-hero.lf-scrolled{background:rgba(10,10,10,0.92)}',
       '.lf-nav-left{display:flex;align-items:center;gap:40px}',
       '.lf-nf-logo{font-family:"Bebas Neue",sans-serif;font-size:36px;color:var(--brand-accent,#e50914);letter-spacing:3px;line-height:1;text-decoration:none}',
       '.lf-nf-logo .lf-heart{color:#fff;font-size:24px;vertical-align:middle;transform:translateY(-2px);display:inline-block;margin:0 2px}',
