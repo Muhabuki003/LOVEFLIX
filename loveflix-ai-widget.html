@@ -292,10 +292,12 @@
       <video
         id="lfVideo"
         src="/loveflixcharacters.mp4"
+        type="video/mp4"
         muted
         playsinline
         autoplay
         loop
+        preload="auto"
       ></video>
     </div>
   </div>
@@ -347,10 +349,20 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
   let history = [];
   let welcomeHidden = false;
 
+  /* ensure video plays — autoplay can silently fail in iframes/embeds */
+  function tryPlay() {
+    video.play().catch(() => {});
+  }
+  video.addEventListener('canplay', tryPlay);
+  video.addEventListener('error', () => {
+    console.warn('LoveFlix video error', video.error?.code, video.error?.message);
+  });
+  tryPlay();
+
   /* replay video on input focus */
   input.addEventListener('focus', () => {
     video.currentTime = 0;
-    video.play();
+    video.play().catch(() => {});
   });
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
