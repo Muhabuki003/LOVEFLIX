@@ -49,7 +49,7 @@
 
   /* ── MESSAGES PADDING — bottom space reserved for characters ── */
   .lf-messages {
-    padding: 24px 20px 180px;
+    padding: 24px 20px 160px;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -166,21 +166,20 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 200px;
+    height: 150px;
     pointer-events: none;
     z-index: 10;
-    margin-top: -200px;
+    margin-top: -150px;
   }
 
   .lf-characters video {
     position: absolute;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 280px;
-    height: 280px;
+    right: 24px;
+    width: 170px;
+    height: 170px;
     object-fit: cover;
-    object-position: bottom;
+    object-position: bottom center;
   }
 
   /* fade text into characters at bottom */
@@ -190,8 +189,8 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 80px;
-    background: linear-gradient(to bottom, transparent, rgba(52,0,21,0.6));
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, rgba(52,0,21,0.5));
     pointer-events: none;
   }
 
@@ -291,13 +290,11 @@
     <div class="lf-characters">
       <video
         id="lfVideo"
-        src="/loveflixcharacters.mp4"
-        type="video/mp4"
+        src="loveflixcharacters.mp4"
         muted
         playsinline
         autoplay
         loop
-        preload="auto"
       ></video>
     </div>
   </div>
@@ -349,20 +346,10 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
   let history = [];
   let welcomeHidden = false;
 
-  /* ensure video plays — autoplay can silently fail in iframes/embeds */
-  function tryPlay() {
-    video.play().catch(() => {});
-  }
-  video.addEventListener('canplay', tryPlay);
-  video.addEventListener('error', () => {
-    console.warn('LoveFlix video error', video.error?.code, video.error?.message);
-  });
-  tryPlay();
-
   /* replay video on input focus */
   input.addEventListener('focus', () => {
     video.currentTime = 0;
-    video.play().catch(() => {});
+    video.play();
   });
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
