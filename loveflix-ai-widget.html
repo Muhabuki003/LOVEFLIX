@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoveFlix AI Widget</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@1&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── OUTER WIDGET ── */
+  .lf-widget {
+    position: relative;
+    width: 487px;
+    height: 560px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(52, 0, 21, 0.53);
+    border-radius: 24px;
+    border: 1px solid rgba(201, 169, 110, 0.18);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  /* ── SCROLL AREA (fills all space above input bar) ── */
+  .lf-scroll-area {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201,169,110,0.2) transparent;
+  }
+
+  .lf-scroll-area::-webkit-scrollbar { width: 4px; }
+  .lf-scroll-area::-webkit-scrollbar-thumb {
+    background: rgba(201,169,110,0.2);
+    border-radius: 2px;
+  }
+
+  /* ── MESSAGES PADDING — bottom space reserved for characters ── */
+  .lf-messages {
+    padding: 24px 20px 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 100%;
+  }
+
+  /* ── WELCOME STATE ── */
+  .lf-welcome {
+    text-align: center;
+    padding: 32px 16px 0;
+  }
+
+  .lf-welcome h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .lf-welcome p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  /* ── SUGGESTION CHIPS ── */
+  .lf-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .lf-chip {
+    background: transparent;
+    border: 1px solid rgba(201,169,110,0.3);
+    color: rgba(201,169,110,0.85);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .lf-chip:hover {
+    background: rgba(201,169,110,0.1);
+    border-color: #c9a96e;
+  }
+
+  /* ── MESSAGE BUBBLES ── */
+  .lf-bubble {
+    max-width: 88%;
+    padding: 10px 15px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .lf-bubble.user {
+    align-self: flex-end;
+    background: rgba(229, 9, 20, 0.75);
+    color: #fff;
+    border-bottom-right-radius: 3px;
+  }
+
+  .lf-bubble.ai {
+    align-self: flex-start;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(201,169,110,0.15);
+    color: rgba(255,255,255,0.88);
+    border-bottom-left-radius: 3px;
+  }
+
+  .lf-bubble .lf-sender {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #c9a96e;
+    margin-bottom: 4px;
+  }
+
+  /* ── TYPING DOTS ── */
+  .lf-typing {
+    align-self: flex-start;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(201,169,110,0.15);
+    border-radius: 14px;
+    border-bottom-left-radius: 3px;
+    padding: 10px 16px;
+    display: none;
+    gap: 5px;
+    align-items: center;
+  }
+  .lf-typing.active { display: flex; }
+  .lf-typing span {
+    width: 6px; height: 6px;
+    background: #c9a96e;
+    border-radius: 50%;
+    animation: lfbounce 1.2s infinite;
+  }
+  .lf-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .lf-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes lfbounce {
+    0%,80%,100% { transform: scale(0.7); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── CHARACTERS — sticky to bottom of scroll area ── */
+  .lf-characters {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    pointer-events: none;
+    z-index: 10;
+    margin-top: -200px;
+  }
+
+  .lf-characters video {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    height: 280px;
+    object-fit: cover;
+    object-position: bottom;
+  }
+
+  /* fade text into characters at bottom */
+  .lf-characters::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, rgba(52,0,21,0.6));
+    pointer-events: none;
+  }
+
+  /* ── INPUT BAR — fixed at bottom, outside scroll ── */
+  .lf-input-bar {
+    flex-shrink: 0;
+    padding: 12px 16px 16px;
+    background: rgba(30, 0, 12, 0.7);
+    border-top: 1px solid rgba(201,169,110,0.1);
+    backdrop-filter: blur(8px);
+  }
+
+  .lf-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .lf-input {
+    width: 100%;
+    height: 50px;
+    background: #955252;
+    border-radius: 24px;
+    border: none;
+    outline: none;
+    padding: 0 52px 0 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    font-size: 15px;
+    color: rgba(255,255,255,0.9);
+    transition: background 0.25s, box-shadow 0.25s;
+  }
+
+  .lf-input::placeholder { color: rgba(255,255,255,0.31); }
+
+  .lf-input:focus {
+    background: #7a3f3f;
+    box-shadow: 0 0 0 2px rgba(201,169,110,0.35);
+  }
+
+  .lf-send {
+    position: absolute;
+    right: 8px;
+    width: 36px; height: 36px;
+    background: #e50914;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .lf-send:hover { background: #c0070f; }
+  .lf-send:active { transform: scale(0.93); }
+  .lf-send svg { width: 15px; height: 15px; fill: white; }
+
+  .lf-brand {
+    text-align: center;
+    margin-top: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(201,169,110,0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="lf-widget">
+
+  <!-- SCROLLABLE AREA -->
+  <div class="lf-scroll-area" id="lfScrollArea">
+    <div class="lf-messages" id="lfMessages">
+
+      <!-- WELCOME -->
+      <div class="lf-welcome" id="lfWelcome">
+        <h2>LOVEFLIX AI</h2>
+        <p>Your private space for memories.<br>Ask me anything about LoveFlix.</p>
+        <div class="lf-chips">
+          <button class="lf-chip" onclick="askChip('How does LoveFlix work?')">How does it work?</button>
+          <button class="lf-chip" onclick="askChip('What does it cost?')">Pricing</button>
+          <button class="lf-chip" onclick="askChip('Is our content private?')">Is it private?</button>
+          <button class="lf-chip" onclick="askChip('What can we upload together?')">What can we share?</button>
+        </div>
+      </div>
+
+      <!-- TYPING INDICATOR -->
+      <div class="lf-typing" id="lfTyping">
+        <span></span><span></span><span></span>
+      </div>
+
+    </div>
+
+    <!-- CHARACTERS — sticky bottom of scroll -->
+    <div class="lf-characters">
+      <video
+        id="lfVideo"
+        src="loveflixcharacters.mp4"
+        muted
+        playsinline
+        autoplay
+        loop
+      ></video>
+    </div>
+  </div>
+
+  <!-- INPUT BAR — fixed outside scroll -->
+  <div class="lf-input-bar">
+    <div class="lf-input-wrap">
+      <input
+        class="lf-input"
+        id="lfInput"
+        type="text"
+        placeholder="Ask LoveflixAi anything..."
+        autocomplete="off"
+      />
+      <button class="lf-send" id="lfSend" aria-label="Send">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="lf-brand">LOVEFLIX AI · POWERED BY DEEPSEEK</div>
+  </div>
+
+</div>
+
+<script>
+  const SYSTEM_PROMPT = `You are LoveFlix AI, the warm and romantic assistant for LoveFlix (loveflix.us) — a private Netflix-style streaming platform built exclusively for couples.
+
+ABOUT LOVEFLIX:
+- Couples upload and stream their shared memories: videos, photos, voice notes — all inside a beautifully designed streaming interface inspired by Netflix.
+- Features: "Who's Watching?" profile selectors, Continue Watching rows, custom cinematic video player, Skip Intro button, PIN-protected accounts.
+- Designed as a gift or anniversary product — a private streaming platform filled with your relationship's story.
+- Pricing: ~$12/month per couple.
+- Active waitlist at loveflix.us — users can sign up for early access.
+- All content is private, only accessible by the couple. No ads, no public sharing.
+- Mobile-friendly, works on any device.
+- Currently in beta/waitlist phase.
+
+TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsure, direct them to loveflix.us.`;
+
+  const WORKER_URL = 'https://loveflix.us/api/ai';
+
+  const scrollArea = document.getElementById('lfScrollArea');
+  const messages   = document.getElementById('lfMessages');
+  const input      = document.getElementById('lfInput');
+  const sendBtn    = document.getElementById('lfSend');
+  const typing     = document.getElementById('lfTyping');
+  const video      = document.getElementById('lfVideo');
+  const welcome    = document.getElementById('lfWelcome');
+
+  let history = [];
+  let welcomeHidden = false;
+
+  /* replay video on input focus */
+  input.addEventListener('focus', () => {
+    video.currentTime = 0;
+    video.play();
+  });
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  sendBtn.addEventListener('click', sendMessage);
+
+  function askChip(text) {
+    input.value = text;
+    sendMessage();
+  }
+
+  function addBubble(role, text) {
+    /* hide welcome on first message */
+    if (!welcomeHidden) {
+      welcome.style.display = 'none';
+      welcomeHidden = true;
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `lf-bubble ${role}`;
+
+    if (role === 'ai') {
+      const sender = document.createElement('div');
+      sender.className = 'lf-sender';
+      sender.textContent = 'LOVEFLIX AI';
+      bubble.appendChild(sender);
+    }
+
+    const textNode = document.createElement('div');
+    bubble.appendChild(textNode);
+
+    /* insert before typing indicator */
+    messages.insertBefore(bubble, typing);
+    scrollToBottom();
+    return textNode;
+  }
+
+  function scrollToBottom() {
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const query = input.value.trim();
+    if (!query) return;
+
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    addBubble('user', query).textContent = query;
+    history.push({ role: 'user', content: query });
+
+    typing.classList.add('active');
+    scrollToBottom();
+
+    try {
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...history
+          ]
+        })
+      });
+
+      const data = await res.json();
+      typing.classList.remove('active');
+
+      const reply = data.choices?.[0]?.message?.content || 'Something went wrong — try again!';
+      history.push({ role: 'assistant', content: reply });
+      if (history.length > 16) history = history.slice(-16);
+
+      const textNode = addBubble('ai', reply);
+      typeWriter(reply, textNode);
+
+    } catch (err) {
+      typing.classList.remove('active');
+      addBubble('ai', '').textContent = 'Connection issue — try again in a moment.';
+    } finally {
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  function typeWriter(text, el) {
+    let i = 0;
+    el.textContent = '';
+    const interval = setInterval(() => {
+      el.textContent += text[i];
+      i++;
+      scrollToBottom();
+      if (i >= text.length) clearInterval(interval);
+    }, 16);
+  }
+</script>
+
+</body>
+</html>
