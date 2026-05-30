@@ -1549,6 +1549,45 @@ const VALID_ACCENT_COLORS = new Set([
   '#64748b', // Slate Gray
 ]);
 
+async function getCoupleStats(env, request, user) {
+  const tenantId = user.id;
+
+  const [videosRes, settingsRow, musicRes] = await Promise.all([
+    env.DB.prepare(
+      `SELECT COUNT(*) as total, MAX(created_at) as last_upload FROM videos WHERE tenant_id = ? AND is_published = 1`
+    ).bind(tenantId).first(),
+    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first(),
+    env.DB.prepare(
+      `SELECT soundcloud_track_id, COUNT(*) as plays FROM couple_music_plays WHERE couple_id = ? GROUP BY soundcloud_track_id ORDER BY plays DESC LIMIT 5`
+    ).bind(tenantId).all().catch(() => ({ results: [] })),
+  ]);
+
+  const totalVideos = videosRes?.total ?? 0;
+  const lastUploadedAt = videosRes?.last_upload ?? null;
+  const anniversaryDate = settingsRow?.anniversary_date ?? null;
+
+  let daysTogether = null;
+  if (anniversaryDate) {
+    const msPerDay = 86400000;
+    daysTogether = Math.floor((Date.now() - new Date(anniversaryDate).getTime()) / msPerDay);
+  }
+
+  let daysSinceLastUpload = null;
+  if (lastUploadedAt) {
+    daysSinceLastUpload = Math.floor((Date.now() - new Date(lastUploadedAt).getTime()) / 86400000);
+  }
+
+  return json({
+    totalVideos,
+    lastUploadedAt,
+    daysSinceLastUpload,
+    daysTogether,
+    partner1Name: settingsRow?.partner_1_name ?? null,
+    partner2Name: settingsRow?.partner_2_name ?? null,
+    topTrackIds: (musicRes.results || []).map(r => r.soundcloud_track_id),
+  });
+}
+
 async function getCoupleSettings(env, user) {
   const tenantId = user.id;
   const row = await env.DB.prepare(

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoveFlix AI Widget</title>
+<title>LoveFlix Concierge</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@1&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +31,7 @@
     overflow: hidden;
   }
 
-  /* ── SCROLL AREA (fills all space above input bar) ── */
+  /* ── SCROLL AREA ── */
   .lf-scroll-area {
     position: relative;
     flex: 1;
@@ -47,7 +47,7 @@
     border-radius: 2px;
   }
 
-  /* ── MESSAGES PADDING — bottom space reserved for characters ── */
+  /* ── MESSAGES ── */
   .lf-messages {
     padding: 24px 20px 160px;
     display: flex;
@@ -59,21 +59,68 @@
   /* ── WELCOME STATE ── */
   .lf-welcome {
     text-align: center;
-    padding: 32px 16px 0;
+    padding: 28px 16px 0;
   }
 
   .lf-welcome h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     letter-spacing: 3px;
     color: #fff;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+  }
+
+  .lf-welcome .lf-welcome-names {
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: #c9a96e;
+    margin-bottom: 6px;
   }
 
   .lf-welcome p {
-    font-size: 13px;
+    font-size: 12.5px;
     color: rgba(255,255,255,0.45);
     line-height: 1.6;
+  }
+
+  .lf-welcome .lf-milestone {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    color: rgba(201,169,110,0.7);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 20px;
+    padding: 3px 12px;
+    letter-spacing: 1px;
+  }
+
+  /* ── LOADING STATE ── */
+  .lf-loading {
+    text-align: center;
+    padding: 60px 16px;
+  }
+
+  .lf-loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .lf-loading-dots span {
+    width: 7px; height: 7px;
+    background: #c9a96e;
+    border-radius: 50%;
+    animation: lfbounce 1.2s infinite;
+  }
+  .lf-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .lf-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  .lf-loading p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1px;
   }
 
   /* ── SUGGESTION CHIPS ── */
@@ -82,7 +129,7 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    margin-top: 16px;
+    margin-top: 14px;
   }
 
   .lf-chip {
@@ -182,7 +229,6 @@
     object-position: bottom center;
   }
 
-  /* fade text into characters at bottom */
   .lf-characters::before {
     content: '';
     position: absolute;
@@ -194,7 +240,7 @@
     pointer-events: none;
   }
 
-  /* ── INPUT BAR — fixed at bottom, outside scroll ── */
+  /* ── INPUT BAR ── */
   .lf-input-bar {
     flex-shrink: 0;
     padding: 12px 16px 16px;
@@ -267,16 +313,21 @@
   <div class="lf-scroll-area" id="lfScrollArea">
     <div class="lf-messages" id="lfMessages">
 
-      <!-- WELCOME -->
-      <div class="lf-welcome" id="lfWelcome">
-        <h2>LOVEFLIX AI</h2>
-        <p>Your private space for memories.<br>Ask me anything about LoveFlix.</p>
-        <div class="lf-chips">
-          <button class="lf-chip" onclick="askChip('How does LoveFlix work?')">How does it work?</button>
-          <button class="lf-chip" onclick="askChip('What does it cost?')">Pricing</button>
-          <button class="lf-chip" onclick="askChip('Is our content private?')">Is it private?</button>
-          <button class="lf-chip" onclick="askChip('What can we upload together?')">What can we share?</button>
+      <!-- LOADING STATE (shown while fetching couple context) -->
+      <div class="lf-loading" id="lfLoading">
+        <div class="lf-loading-dots">
+          <span></span><span></span><span></span>
         </div>
+        <p>LOADING YOUR STORY...</p>
+      </div>
+
+      <!-- WELCOME (shown after context loads) -->
+      <div class="lf-welcome" id="lfWelcome" style="display:none;">
+        <h2>YOUR CONCIERGE</h2>
+        <div class="lf-welcome-names" id="lfWelcomeNames"></div>
+        <p id="lfWelcomeSubtitle">Ready to plan something unforgettable?</p>
+        <div id="lfMilestone" class="lf-milestone" style="display:none;"></div>
+        <div class="lf-chips" id="lfChips"></div>
       </div>
 
       <!-- TYPING INDICATOR -->
@@ -299,54 +350,190 @@
     </div>
   </div>
 
-  <!-- INPUT BAR — fixed outside scroll -->
+  <!-- INPUT BAR -->
   <div class="lf-input-bar">
     <div class="lf-input-wrap">
       <input
         class="lf-input"
         id="lfInput"
         type="text"
-        placeholder="Ask LoveflixAi anything..."
+        placeholder="Ask your concierge anything..."
         autocomplete="off"
       />
       <button class="lf-send" id="lfSend" aria-label="Send">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
       </button>
     </div>
-    <div class="lf-brand">LOVEFLIX AI · POWERED BY DEEPSEEK</div>
+    <div class="lf-brand">LOVEFLIX CONCIERGE · POWERED BY DEEPSEEK</div>
   </div>
 
 </div>
 
 <script>
-  const SYSTEM_PROMPT = `You are LoveFlix AI, the warm and romantic assistant for LoveFlix (loveflix.us) — a private Netflix-style streaming platform built exclusively for couples.
-
-ABOUT LOVEFLIX:
-- Couples upload and stream their shared memories: videos, photos, voice notes — all inside a beautifully designed streaming interface inspired by Netflix.
-- Features: "Who's Watching?" profile selectors, Continue Watching rows, custom cinematic video player, Skip Intro button, PIN-protected accounts.
-- Designed as a gift or anniversary product — a private streaming platform filled with your relationship's story.
-- Pricing: ~$12/month per couple.
-- Active waitlist at loveflix.us — users can sign up for early access.
-- All content is private, only accessible by the couple. No ads, no public sharing.
-- Mobile-friendly, works on any device.
-- Currently in beta/waitlist phase.
-
-TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsure, direct them to loveflix.us.`;
-
   const WORKER_URL = 'https://loveflix.us/api/ai';
+  const API_BASE   = 'https://loveflix.us/api';
 
-  const scrollArea = document.getElementById('lfScrollArea');
-  const messages   = document.getElementById('lfMessages');
-  const input      = document.getElementById('lfInput');
-  const sendBtn    = document.getElementById('lfSend');
-  const typing     = document.getElementById('lfTyping');
-  const video      = document.getElementById('lfVideo');
-  const welcome    = document.getElementById('lfWelcome');
+  const scrollArea  = document.getElementById('lfScrollArea');
+  const messages    = document.getElementById('lfMessages');
+  const input       = document.getElementById('lfInput');
+  const sendBtn     = document.getElementById('lfSend');
+  const typing      = document.getElementById('lfTyping');
+  const video       = document.getElementById('lfVideo');
+  const lfLoading   = document.getElementById('lfLoading');
+  const lfWelcome   = document.getElementById('lfWelcome');
 
+  let coupleCtx = {};
+  let systemPrompt = '';
   let history = [];
   let welcomeHidden = false;
 
-  /* replay video on input focus */
+  /* ── LOAD COUPLE CONTEXT ── */
+  async function loadCoupleContext() {
+    const token    = localStorage.getItem('loveflix_token');
+    const settings = JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
+
+    // Names from local settings (fastest path)
+    const name1 = settings.adminName   || settings.partner_1_name || 'Partner 1';
+    const name2 = settings.partnerName || settings.partner_2_name || 'Partner 2';
+
+    coupleCtx = {
+      coupleName:         `${name1} & ${name2}`,
+      name1,
+      name2,
+      daysTogether:       'unknown',
+      totalVideos:        '?',
+      lastVideoUploaded:  'recently',
+      musicGenres:        'your shared music',
+      city:               settings.city || 'your city',
+      nextFreeDay:        'soon',
+      recentDates:        'recent adventures',
+      avgBudgetSpent:     'your usual range',
+      daysSinceLastUpload: null,
+    };
+
+    // Fetch richer stats if authenticated
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/couple-stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.daysTogether !== null)       coupleCtx.daysTogether = data.daysTogether;
+          if (data.totalVideos  !== null)       coupleCtx.totalVideos  = data.totalVideos;
+          if (data.daysSinceLastUpload !== null) coupleCtx.daysSinceLastUpload = data.daysSinceLastUpload;
+          if (data.partner1Name) coupleCtx.name1 = data.partner1Name;
+          if (data.partner2Name) coupleCtx.name2 = data.partner2Name;
+          if (data.partner1Name || data.partner2Name) {
+            coupleCtx.coupleName = `${coupleCtx.name1} & ${coupleCtx.name2}`;
+          }
+          if (data.lastUploadedAt) {
+            const d = new Date(data.lastUploadedAt);
+            coupleCtx.lastVideoUploaded = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+          }
+        }
+      } catch (_) { /* non-fatal — use local data */ }
+    }
+
+    buildSystemPrompt();
+    renderWelcome();
+  }
+
+  function buildSystemPrompt() {
+    const uploadNudge = coupleCtx.daysSinceLastUpload !== null && coupleCtx.daysSinceLastUpload > 7
+      ? `It has been ${coupleCtx.daysSinceLastUpload} days since their last video upload — gently nudge them to capture a new memory together.`
+      : '';
+
+    systemPrompt = `You are the LoveFlix Relationship Concierge — a deeply personal AI built exclusively for ${coupleCtx.coupleName} on LoveFlix (loveflix.us), a private streaming platform where couples upload and share their memories.
+
+YOUR CORE PURPOSE:
+Help this couple plan dates, understand their relationship patterns, and create meaningful experiences together. You know their entire story through their videos, music, and time together on LoveFlix.
+
+COUPLE CONTEXT:
+- Names: ${coupleCtx.coupleName}
+- Days Together: ${coupleCtx.daysTogether}
+- Total Videos Uploaded: ${coupleCtx.totalVideos}
+- Last Video Uploaded: ${coupleCtx.lastVideoUploaded}
+- Their Favorite Genres: ${coupleCtx.musicGenres}
+- City: ${coupleCtx.city}
+- Upcoming Free Day: ${coupleCtx.nextFreeDay}
+- Recent Date Locations: ${coupleCtx.recentDates}
+- Average Date Budget: ${coupleCtx.avgBudgetSpent}
+${uploadNudge}
+
+YOUR CAPABILITIES:
+1. DATE PLANNING — suggest date ideas tailored to their actual interests, budget, and location.
+2. MEMORY INSIGHTS — reference their uploaded videos and nudge them when there's been a gap.
+3. MUSIC & MOOD — suggest date vibes matching the music they love together.
+4. BUDGET AWARENESS — suggest options within their typical spending range.
+5. SURPRISE PLANNING — help one partner secretly plan something special for the other.
+6. MILESTONES — celebrate anniversaries, days-together counts, and upload streaks.
+
+RESPONSE GUIDELINES:
+- Keep it SHORT: 2–3 sentences for simple questions, 4 sentences MAX for complex planning. NEVER exceed 200 words.
+- Be warm, romantic, and personal — you know them deeply.
+- Use their names (${coupleCtx.name1} and ${coupleCtx.name2}) when it feels natural.
+- Everything you suggest should feel tailored to THEIR story, not generic.
+- If asked something outside LoveFlix scope (politics, tech support, random trivia), gently redirect: "I'm built for your love story. Let's plan something special instead?"
+
+STRICT BOUNDARIES:
+- You ONLY help with date planning, memory insights, and relationship moments.
+- You do NOT give relationship therapy or deep counseling.
+- You do NOT have access to video content — only metadata (count, upload dates).
+- You do NOT store conversations after they end.
+
+TONE: Warm, witty, romantic, and genuinely invested in their happiness.`;
+  }
+
+  function renderWelcome() {
+    lfLoading.style.display = 'none';
+
+    const namesEl    = document.getElementById('lfWelcomeNames');
+    const subtitleEl = document.getElementById('lfWelcomeSubtitle');
+    const milestoneEl = document.getElementById('lfMilestone');
+    const chipsEl    = document.getElementById('lfChips');
+
+    namesEl.textContent = coupleCtx.coupleName;
+
+    if (typeof coupleCtx.daysTogether === 'number') {
+      subtitleEl.textContent = `${coupleCtx.daysTogether} days of memories. Let's add more.`;
+      milestoneEl.textContent = `✦ ${coupleCtx.totalVideos} VIDEOS UPLOADED`;
+      milestoneEl.style.display = 'inline-block';
+    } else {
+      subtitleEl.textContent = 'Ready to plan something unforgettable?';
+    }
+
+    // Dynamic chips based on context
+    const chips = [
+      { label: 'Plan a date night', msg: 'Plan a special date night for us this week.' },
+      { label: 'Surprise idea', msg: `Help me secretly plan something special for ${coupleCtx.name2}.` },
+    ];
+
+    if (coupleCtx.daysSinceLastUpload !== null && coupleCtx.daysSinceLastUpload > 5) {
+      chips.push({ label: 'Make new memories', msg: "We haven't uploaded in a while — what should we do together?" });
+    } else {
+      chips.push({ label: 'Our next adventure', msg: 'What should our next adventure together be?' });
+    }
+
+    if (typeof coupleCtx.daysTogether === 'number') {
+      chips.push({ label: 'Celebrate us', msg: `We've been together ${coupleCtx.daysTogether} days — how should we celebrate?` });
+    } else {
+      chips.push({ label: 'On a budget', msg: 'Suggest a romantic date that won\'t break the bank.' });
+    }
+
+    chipsEl.innerHTML = '';
+    chips.forEach(({ label, msg }) => {
+      const btn = document.createElement('button');
+      btn.className = 'lf-chip';
+      btn.textContent = label;
+      btn.onclick = () => askChip(msg);
+      chipsEl.appendChild(btn);
+    });
+
+    lfWelcome.style.display = 'block';
+  }
+
+  /* ── INPUT HANDLERS ── */
   input.addEventListener('focus', () => {
     video.currentTime = 0;
     video.play();
@@ -360,10 +547,10 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
     sendMessage();
   }
 
-  function addBubble(role, text) {
-    /* hide welcome on first message */
+  /* ── BUBBLE FACTORY ── */
+  function addBubble(role) {
     if (!welcomeHidden) {
-      welcome.style.display = 'none';
+      lfWelcome.style.display = 'none';
       welcomeHidden = true;
     }
 
@@ -373,14 +560,13 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
     if (role === 'ai') {
       const sender = document.createElement('div');
       sender.className = 'lf-sender';
-      sender.textContent = 'LOVEFLIX AI';
+      sender.textContent = 'YOUR CONCIERGE';
       bubble.appendChild(sender);
     }
 
     const textNode = document.createElement('div');
     bubble.appendChild(textNode);
 
-    /* insert before typing indicator */
     messages.insertBefore(bubble, typing);
     scrollToBottom();
     return textNode;
@@ -390,15 +576,16 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
     scrollArea.scrollTop = scrollArea.scrollHeight;
   }
 
+  /* ── SEND ── */
   async function sendMessage() {
     const query = input.value.trim();
-    if (!query) return;
+    if (!query || !systemPrompt) return;
 
     input.value = '';
     input.disabled = true;
     sendBtn.disabled = true;
 
-    addBubble('user', query).textContent = query;
+    addBubble('user').textContent = query;
     history.push({ role: 'user', content: query });
 
     typing.classList.add('active');
@@ -410,10 +597,10 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...history
-          ]
-        })
+            { role: 'system', content: systemPrompt },
+            ...history,
+          ],
+        }),
       });
 
       const data = await res.json();
@@ -423,12 +610,11 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
       history.push({ role: 'assistant', content: reply });
       if (history.length > 16) history = history.slice(-16);
 
-      const textNode = addBubble('ai', reply);
-      typeWriter(reply, textNode);
+      typeWriter(reply, addBubble('ai'));
 
-    } catch (err) {
+    } catch (_) {
       typing.classList.remove('active');
-      addBubble('ai', '').textContent = 'Connection issue — try again in a moment.';
+      addBubble('ai').textContent = 'Connection issue — try again in a moment.';
     } finally {
       input.disabled = false;
       sendBtn.disabled = false;
@@ -446,6 +632,9 @@ TONE: Warm, romantic, conversational. Keep answers to 2-3 sentences max. If unsu
       if (i >= text.length) clearInterval(interval);
     }, 16);
   }
+
+  /* ── BOOT ── */
+  loadCoupleContext();
 </script>
 
 </body>
