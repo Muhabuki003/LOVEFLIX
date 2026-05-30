@@ -34,6 +34,10 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/soundcloud/search',
   'GET /api/music/recent',
   'GET /api/music/yt-match',
+  // AI chat — public so both the unauthenticated landing widget and the
+  // authenticated concierge widget can reach it. Couple context is supplied
+  // by the client; the worker never fetches private data here.
+  'POST /api/ai',
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -235,6 +239,8 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/music/yt-match') return ytMatch(env, url);
 
     // Favorites (My List)
+    if (method === 'POST'   && path === '/api/ai') return handleAiChat(env, request);
+
     if (method === 'GET'    && path === '/api/favorites') return listFavorites(env, user);
     if (method === 'GET'    && path === '/api/couple-stats') return getCoupleStats(env, request, user);
     const favMatch = path.match(/^\/api\/favorites\/([^/]+)$/);
@@ -1548,6 +1554,204 @@ const VALID_ACCENT_COLORS = new Set([
   '#8b5cf6', // Lavender
   '#64748b', // Slate Gray
 ]);
+
+// ── /api/ai — dual-mode AI chat endpoint ─────────────────────────────────────
+// Reads `mode` from the request body:
+//   "landing"    — landing-page assistant, no couple context, product Q&A only
+//   "concierge"  — authenticated couple concierge, receives coupleContext object
+// Both modes proxy to DeepSeek and enforce a 200-word response cap via the prompt.
+// The client supplies all context; this handler never reads private DB data.
+
+// LoveFlix product knowledge injected into both system prompts.
+const LOVEFLIX_KNOWLEDGE = `
+WHAT IS LOVEFLIX:
+- LoveFlix (loveflix.us) is a private Netflix-style streaming platform built exclusively for couples.
+- Couples upload their own personal videos, photos, voice notes, and memories.
+- It is NOT a movie streaming service — there is no public content library.
+- Think of it as your relationship's own private Netflix, filled only with your story.
+- Designed as a gift, anniversary present, or ongoing relationship keepsake.
+
+FEATURES:
+- "Who's Watching?" profile selector for each partner.
+- Continue Watching row that tracks where you left off.
+- Custom cinematic video player with Skip Intro button.
+- PIN-protected accounts for privacy.
+- Love Connect — syncs both partners' locations and schedules.
+- Love Music — shared music listening history between partners.
+- Mobile friendly, works on any device.
+- All content is 100% private, only accessible by the couple.
+- No ads, no public sharing, no third-party access.
+
+PRICING TIERS:
+- Basic (Crush): $6/month — upload and stream memories, basic player.
+- Standard (Sweetheart): $12/month — full Netflix-style interface, Continue Watching, profiles.
+- Premium (Forever): $24/month — everything plus the personal AI Relationship Concierge, Love Connect, Love Music, calendar sync, date planning.
+- Family: $49/month — multiple couples under one account, ideal for families tracking shared memories.
+
+RELATIONSHIP CONCIERGE (Premium / Forever plan only):
+- Personal AI that knows the couple's entire LoveFlix history.
+- Suggests date spots based on their uploaded memories and music taste.
+- Calculates travel time from both partners' locations to suggested spots.
+- Syncs with Google Calendar and Apple Calendar.
+- Plans surprise dates, tracks anniversaries, nudges couples who haven't uploaded recently.
+- Suggests nearby theaters, restaurants, and activities based on their city.
+
+CURRENT STATUS:
+- Actively in beta with waitlist at loveflix.us.
+- Early access signups open now.
+- Built on Cloudflare Pages with a Supabase backend.
+
+BRAND TONE:
+- Warm, romantic, cinematic.
+- Inspired by Netflix UI but intimate and personal.
+- Colors: Crimson #e50914, Void Black #141414, Warm Gold #c9a96e.
+- Tagline energy: "Your love story, streaming forever."
+
+COMMON QUESTIONS:
+- Is it private? Yes, completely. Only you and your partner can access your content.
+- Can I cancel anytime? Yes.
+- What can I upload? Videos, photos, voice notes — anything that captures your memories together.
+- Is there a free trial? Direct them to loveflix.us to join the waitlist for early access.
+- How many videos can I upload? Depends on the tier — direct to loveflix.us for full details.
+- Does it work on phone? Yes, fully mobile responsive.
+- Is it like Netflix? Same beautiful interface, but your content only — no movies or shows.
+`.trim();
+
+function buildLandingSystemPrompt() {
+  return `You are LoveFlix AI, the friendly assistant on the LoveFlix landing page.
+
+EVERYTHING YOU KNOW ABOUT LOVEFLIX:
+${LOVEFLIX_KNOWLEDGE}
+
+YOUR ROLE:
+Answer questions from potential customers about what LoveFlix is, how it works, pricing, features, and how to sign up. You are warm, romantic, and genuinely excited about the product.
+
+RESPONSE RULES:
+- 2 sentences max for simple questions.
+- 4 sentences MAX for anything complex.
+- Never exceed 150 words.
+- Always end by directing them to loveflix.us if they want to sign up or learn more.
+- If asked something outside LoveFlix scope, gently redirect: "I'm here to tell you all about LoveFlix — what would you like to know?"`;
+}
+
+function buildConciergeSystemPrompt(ctx) {
+  // ctx is the coupleContext object sent by the concierge widget
+  const {
+    coupleName = 'the couple',
+    name1 = 'Partner 1',
+    name2 = 'Partner 2',
+    daysTogether = 'unknown',
+    totalVideos = '?',
+    lastVideoUploaded = 'recently',
+    musicGenres = 'your shared music',
+    city = 'your city',
+    nextFreeDay = 'soon',
+    recentDates = 'recent adventures',
+    avgBudgetSpent = 'your usual range',
+    daysSinceLastUpload = null,
+  } = ctx || {};
+
+  const uploadNudge = daysSinceLastUpload !== null && daysSinceLastUpload > 7
+    ? `It has been ${daysSinceLastUpload} days since their last video upload — gently nudge them to capture a new memory.`
+    : '';
+
+  return `You are the LoveFlix Relationship Concierge — a deeply personal AI built exclusively for ${coupleName} on LoveFlix (loveflix.us), a private streaming platform where couples upload and share their memories.
+
+EVERYTHING YOU KNOW ABOUT LOVEFLIX:
+${LOVEFLIX_KNOWLEDGE}
+
+YOUR CORE PURPOSE:
+Help this couple plan dates, understand their relationship patterns, and create meaningful experiences together.
+
+COUPLE CONTEXT:
+- Names: ${coupleName}
+- Days Together: ${daysTogether}
+- Total Videos Uploaded: ${totalVideos}
+- Last Video Uploaded: ${lastVideoUploaded}
+- Favorite Music Genres: ${musicGenres}
+- City: ${city}
+- Upcoming Free Day: ${nextFreeDay}
+- Recent Date Locations: ${recentDates}
+- Average Date Budget: ${avgBudgetSpent}
+${uploadNudge}
+
+YOUR CAPABILITIES:
+1. DATE PLANNING — suggest date ideas tailored to their actual interests, budget, and location.
+2. MEMORY INSIGHTS — reference their uploaded videos and nudge them when there's been a gap.
+3. MUSIC & MOOD — suggest date vibes matching the music they love together.
+4. BUDGET AWARENESS — suggest options within their typical spending range.
+5. SURPRISE PLANNING — help one partner secretly plan something special for the other.
+6. MILESTONES — celebrate anniversaries, days-together counts, and upload streaks.
+
+RESPONSE RULES:
+- Keep it SHORT: 2–3 sentences for simple questions, 4 sentences MAX for complex planning. Never exceed 200 words.
+- Be warm, romantic, and personal — you know them deeply.
+- Use their names (${name1} and ${name2}) when it feels natural.
+- Everything you suggest should feel tailored to THEIR story, not generic.
+- If asked something outside LoveFlix scope, gently redirect: "I'm built for your love story. Let's plan something special instead?"
+
+STRICT BOUNDARIES:
+- Only help with date planning, memory insights, and relationship moments.
+- Do NOT give relationship therapy or deep counseling.
+- Do NOT access video content — only metadata (count, upload dates).
+- Do NOT store conversations after they end.
+
+TONE: Warm, witty, romantic, and genuinely invested in their happiness.`;
+}
+
+async function handleAiChat(env, request) {
+  const body = await request.json().catch(() => ({}));
+
+  // Determine which mode the client requested
+  const mode = body.mode === 'concierge' ? 'concierge' : 'landing';
+
+  // Build the appropriate system prompt
+  const systemPrompt = mode === 'concierge'
+    ? buildConciergeSystemPrompt(body.coupleContext)
+    : buildLandingSystemPrompt();
+
+  // Sanitize and validate incoming conversation history (max 16 turns)
+  const rawMessages = Array.isArray(body.messages) ? body.messages : [];
+  const userMessages = rawMessages
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant'))
+    .slice(-16)
+    .map(m => ({
+      role: m.role,
+      // Sanitize user content; pass assistant content through unchanged
+      content: m.role === 'user'
+        ? sanitizeUserText(String(m.content || ''), 1000)
+        : String(m.content || '').slice(0, 4000),
+    }))
+    .filter(m => m.content.length > 0);
+
+  if (!env.DEEPSEEK_API_KEY) return json({ error: 'ai_not_configured' }, 503);
+
+  const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...userMessages,
+      ],
+      max_tokens: 300,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!dsRes.ok) {
+    const err = await dsRes.text().catch(() => '');
+    console.error('DeepSeek error', dsRes.status, err);
+    return json({ error: 'upstream_error' }, 502);
+  }
+
+  const data = await dsRes.json();
+  return json(data);
+}
 
 async function getCoupleStats(env, request, user) {
   const tenantId = user.id;
