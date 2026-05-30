@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LoveFlix Concierge AI</title>
+<title>LoveFlix AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@1&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,7 +40,6 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(201,169,110,0.2) transparent;
   }
-
   .lf-scroll-area::-webkit-scrollbar { width: 4px; }
   .lf-scroll-area::-webkit-scrollbar-thumb {
     background: rgba(201,169,110,0.2);
@@ -59,68 +58,19 @@
   /* ── WELCOME STATE ── */
   .lf-welcome {
     text-align: center;
-    padding: 28px 16px 0;
+    padding: 32px 16px 0;
   }
-
   .lf-welcome h2 {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
+    font-size: 28px;
     letter-spacing: 3px;
     color: #fff;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
-
-  .lf-welcome .lf-welcome-names {
-    font-family: 'DM Serif Display', serif;
-    font-style: italic;
-    font-size: 15px;
-    color: #c9a96e;
-    margin-bottom: 6px;
-  }
-
   .lf-welcome p {
-    font-size: 12.5px;
+    font-size: 13px;
     color: rgba(255,255,255,0.45);
     line-height: 1.6;
-  }
-
-  .lf-welcome .lf-milestone {
-    display: inline-block;
-    margin-top: 10px;
-    font-size: 11px;
-    color: rgba(201,169,110,0.7);
-    border: 1px solid rgba(201,169,110,0.2);
-    border-radius: 20px;
-    padding: 3px 12px;
-    letter-spacing: 1px;
-  }
-
-  /* ── LOADING STATE ── */
-  .lf-loading {
-    text-align: center;
-    padding: 60px 16px;
-  }
-
-  .lf-loading-dots {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-
-  .lf-loading-dots span {
-    width: 7px; height: 7px;
-    background: #c9a96e;
-    border-radius: 50%;
-    animation: lfbounce 1.2s infinite;
-  }
-  .lf-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .lf-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-  .lf-loading p {
-    font-size: 12px;
-    color: rgba(255,255,255,0.35);
-    letter-spacing: 1px;
   }
 
   /* ── SUGGESTION CHIPS ── */
@@ -129,9 +79,8 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    margin-top: 14px;
+    margin-top: 16px;
   }
-
   .lf-chip {
     background: transparent;
     border: 1px solid rgba(201,169,110,0.3);
@@ -143,7 +92,6 @@
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
   }
-
   .lf-chip:hover {
     background: rgba(201,169,110,0.1);
     border-color: #c9a96e;
@@ -157,14 +105,12 @@
     font-size: 13.5px;
     line-height: 1.6;
   }
-
   .lf-bubble.user {
     align-self: flex-end;
     background: rgba(229, 9, 20, 0.75);
     color: #fff;
     border-bottom-right-radius: 3px;
   }
-
   .lf-bubble.ai {
     align-self: flex-start;
     background: rgba(0,0,0,0.35);
@@ -172,7 +118,6 @@
     color: rgba(255,255,255,0.88);
     border-bottom-left-radius: 3px;
   }
-
   .lf-bubble .lf-sender {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 10px;
@@ -218,7 +163,6 @@
     z-index: 10;
     margin-top: -150px;
   }
-
   .lf-characters video {
     position: absolute;
     bottom: 0;
@@ -228,16 +172,12 @@
     object-fit: cover;
     object-position: bottom center;
   }
-
   .lf-characters::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 60px;
     background: linear-gradient(to bottom, transparent, rgba(52,0,21,0.5));
-    pointer-events: none;
   }
 
   /* ── INPUT BAR ── */
@@ -248,13 +188,11 @@
     border-top: 1px solid rgba(201,169,110,0.1);
     backdrop-filter: blur(8px);
   }
-
   .lf-input-wrap {
     position: relative;
     display: flex;
     align-items: center;
   }
-
   .lf-input {
     width: 100%;
     height: 50px;
@@ -269,14 +207,11 @@
     color: rgba(255,255,255,0.9);
     transition: background 0.25s, box-shadow 0.25s;
   }
-
   .lf-input::placeholder { color: rgba(255,255,255,0.31); }
-
   .lf-input:focus {
     background: #7a3f3f;
     box-shadow: 0 0 0 2px rgba(201,169,110,0.35);
   }
-
   .lf-send {
     position: absolute;
     right: 8px;
@@ -313,21 +248,16 @@
   <div class="lf-scroll-area" id="lfScrollArea">
     <div class="lf-messages" id="lfMessages">
 
-      <!-- LOADING STATE (shown while fetching couple context) -->
-      <div class="lf-loading" id="lfLoading">
-        <div class="lf-loading-dots">
-          <span></span><span></span><span></span>
+      <!-- WELCOME STATE -->
+      <div class="lf-welcome" id="lfWelcome">
+        <h2>LOVEFLIX AI</h2>
+        <p>Your private space for memories.<br>Ask me anything about LoveFlix.</p>
+        <div class="lf-chips">
+          <button class="lf-chip" onclick="askChip('How does LoveFlix work?')">How does it work?</button>
+          <button class="lf-chip" onclick="askChip('What does it cost?')">Pricing</button>
+          <button class="lf-chip" onclick="askChip('Is our content private?')">Is it private?</button>
+          <button class="lf-chip" onclick="askChip('What can we upload together?')">What can we share?</button>
         </div>
-        <p>LOADING YOUR STORY...</p>
-      </div>
-
-      <!-- WELCOME (shown after context loads) -->
-      <div class="lf-welcome" id="lfWelcome" style="display:none;">
-        <h2>YOUR CONCIERGE</h2>
-        <div class="lf-welcome-names" id="lfWelcomeNames"></div>
-        <p id="lfWelcomeSubtitle">Ready to plan something unforgettable?</p>
-        <div id="lfMilestone" class="lf-milestone" style="display:none;"></div>
-        <div class="lf-chips" id="lfChips"></div>
       </div>
 
       <!-- TYPING INDICATOR -->
@@ -357,145 +287,37 @@
         class="lf-input"
         id="lfInput"
         type="text"
-        placeholder="Ask your concierge anything..."
+        placeholder="Ask LoveFlix AI anything..."
         autocomplete="off"
       />
       <button class="lf-send" id="lfSend" aria-label="Send">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
       </button>
     </div>
-    <div class="lf-brand">LOVEFLIX CONCIERGE · POWERED BY DEEPSEEK</div>
+    <div class="lf-brand">LOVEFLIX AI · POWERED BY DEEPSEEK</div>
   </div>
 
 </div>
 
 <script>
   // ── Widget mode — tells the worker which system prompt to use ──────────────
-  const MODE = 'concierge';
+  const MODE = 'landing';
 
   const WORKER_URL = 'https://loveflix.us/api/ai';
-  const API_BASE   = 'https://loveflix.us/api';
 
-  const scrollArea  = document.getElementById('lfScrollArea');
-  const messages    = document.getElementById('lfMessages');
-  const input       = document.getElementById('lfInput');
-  const sendBtn     = document.getElementById('lfSend');
-  const typing      = document.getElementById('lfTyping');
-  const video       = document.getElementById('lfVideo');
-  const lfLoading   = document.getElementById('lfLoading');
-  const lfWelcome   = document.getElementById('lfWelcome');
+  const scrollArea = document.getElementById('lfScrollArea');
+  const messages   = document.getElementById('lfMessages');
+  const input      = document.getElementById('lfInput');
+  const sendBtn    = document.getElementById('lfSend');
+  const typing     = document.getElementById('lfTyping');
+  const video      = document.getElementById('lfVideo');
+  const welcome    = document.getElementById('lfWelcome');
 
-  let coupleCtx  = {};   // populated by loadCoupleContext(), sent to worker
-  let ctxReady   = false; // true once context is loaded and widget is usable
-  let history    = [];
+  let history      = [];
   let welcomeHidden = false;
 
-  /* ── LOAD COUPLE CONTEXT ── */
-  async function loadCoupleContext() {
-    const token    = localStorage.getItem('loveflix_token');
-    const settings = JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
-
-    // Names from local settings (fastest path)
-    const name1 = settings.adminName   || settings.partner_1_name || 'Partner 1';
-    const name2 = settings.partnerName || settings.partner_2_name || 'Partner 2';
-
-    coupleCtx = {
-      coupleName:         `${name1} & ${name2}`,
-      name1,
-      name2,
-      daysTogether:       'unknown',
-      totalVideos:        '?',
-      lastVideoUploaded:  'recently',
-      musicGenres:        'your shared music',
-      city:               settings.city || 'your city',
-      nextFreeDay:        'soon',
-      recentDates:        'recent adventures',
-      avgBudgetSpent:     'your usual range',
-      daysSinceLastUpload: null,
-    };
-
-    // Fetch richer stats if authenticated
-    if (token) {
-      try {
-        const res = await fetch(`${API_BASE}/couple-stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.daysTogether !== null)       coupleCtx.daysTogether = data.daysTogether;
-          if (data.totalVideos  !== null)       coupleCtx.totalVideos  = data.totalVideos;
-          if (data.daysSinceLastUpload !== null) coupleCtx.daysSinceLastUpload = data.daysSinceLastUpload;
-          if (data.partner1Name) coupleCtx.name1 = data.partner1Name;
-          if (data.partner2Name) coupleCtx.name2 = data.partner2Name;
-          if (data.partner1Name || data.partner2Name) {
-            coupleCtx.coupleName = `${coupleCtx.name1} & ${coupleCtx.name2}`;
-          }
-          if (data.lastUploadedAt) {
-            const d = new Date(data.lastUploadedAt);
-            coupleCtx.lastVideoUploaded = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-          }
-        }
-      } catch (_) { /* non-fatal — use local data */ }
-    }
-
-    ctxReady = true;
-    renderWelcome();
-  }
-
-  function renderWelcome() {
-    lfLoading.style.display = 'none';
-
-    const namesEl    = document.getElementById('lfWelcomeNames');
-    const subtitleEl = document.getElementById('lfWelcomeSubtitle');
-    const milestoneEl = document.getElementById('lfMilestone');
-    const chipsEl    = document.getElementById('lfChips');
-
-    namesEl.textContent = coupleCtx.coupleName;
-
-    if (typeof coupleCtx.daysTogether === 'number') {
-      subtitleEl.textContent = `${coupleCtx.daysTogether} days of memories. Let's add more.`;
-      milestoneEl.textContent = `✦ ${coupleCtx.totalVideos} VIDEOS UPLOADED`;
-      milestoneEl.style.display = 'inline-block';
-    } else {
-      subtitleEl.textContent = 'Ready to plan something unforgettable?';
-    }
-
-    // Dynamic chips based on context
-    const chips = [
-      { label: 'Plan a date night', msg: 'Plan a special date night for us this week.' },
-      { label: 'Surprise idea', msg: `Help me secretly plan something special for ${coupleCtx.name2}.` },
-    ];
-
-    if (coupleCtx.daysSinceLastUpload !== null && coupleCtx.daysSinceLastUpload > 5) {
-      chips.push({ label: 'Make new memories', msg: "We haven't uploaded in a while — what should we do together?" });
-    } else {
-      chips.push({ label: 'Our next adventure', msg: 'What should our next adventure together be?' });
-    }
-
-    if (typeof coupleCtx.daysTogether === 'number') {
-      chips.push({ label: 'Celebrate us', msg: `We've been together ${coupleCtx.daysTogether} days — how should we celebrate?` });
-    } else {
-      chips.push({ label: 'On a budget', msg: 'Suggest a romantic date that won\'t break the bank.' });
-    }
-
-    chipsEl.innerHTML = '';
-    chips.forEach(({ label, msg }) => {
-      const btn = document.createElement('button');
-      btn.className = 'lf-chip';
-      btn.textContent = label;
-      btn.onclick = () => askChip(msg);
-      chipsEl.appendChild(btn);
-    });
-
-    lfWelcome.style.display = 'block';
-  }
-
-  /* ── INPUT HANDLERS ── */
-  input.addEventListener('focus', () => {
-    video.currentTime = 0;
-    video.play();
-  });
-
+  /* Replay character video on input focus */
+  input.addEventListener('focus', () => { video.currentTime = 0; video.play(); });
   input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
   sendBtn.addEventListener('click', sendMessage);
 
@@ -504,10 +326,10 @@
     sendMessage();
   }
 
-  /* ── BUBBLE FACTORY ── */
+  /* Create a message bubble and return its text node */
   function addBubble(role) {
     if (!welcomeHidden) {
-      lfWelcome.style.display = 'none';
+      welcome.style.display = 'none';
       welcomeHidden = true;
     }
 
@@ -517,13 +339,12 @@
     if (role === 'ai') {
       const sender = document.createElement('div');
       sender.className = 'lf-sender';
-      sender.textContent = 'YOUR CONCIERGE';
+      sender.textContent = 'LOVEFLIX AI';
       bubble.appendChild(sender);
     }
 
     const textNode = document.createElement('div');
     bubble.appendChild(textNode);
-
     messages.insertBefore(bubble, typing);
     scrollToBottom();
     return textNode;
@@ -533,10 +354,9 @@
     scrollArea.scrollTop = scrollArea.scrollHeight;
   }
 
-  /* ── SEND ── */
   async function sendMessage() {
     const query = input.value.trim();
-    if (!query || !ctxReady) return;
+    if (!query) return;
 
     input.value = '';
     input.disabled = true;
@@ -553,8 +373,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: MODE,                // "concierge" — tells worker which prompt to build
-          coupleContext: coupleCtx,  // real couple data injected into the system prompt
+          mode: MODE,       // "landing" — worker uses landing system prompt, no couple context
           messages: history,
         }),
       });
@@ -582,15 +401,11 @@
     let i = 0;
     el.textContent = '';
     const interval = setInterval(() => {
-      el.textContent += text[i];
-      i++;
+      el.textContent += text[i++];
       scrollToBottom();
       if (i >= text.length) clearInterval(interval);
     }, 16);
   }
-
-  /* ── BOOT ── */
-  loadCoupleContext();
 </script>
 
 </body>
