@@ -451,6 +451,61 @@
   @media (max-width: 420px) {
     .music-grid { grid-template-columns: 1fr; }
   }
+
+  /* ---------- quick-access dashboard ---------- */
+  .qdash {
+    padding: 120px 48px 32px;
+  }
+  .qdash-stats {
+    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .qdash-stat {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 16px 22px;
+    min-width: 120px; flex: 1;
+  }
+  .qdash-stat-val {
+    font-size: 28px; font-weight: 700; line-height: 1; color: #fff;
+  }
+  .qdash-stat-val.accent { color: var(--brand-accent, var(--red)); }
+  .qdash-stat-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-dim); margin-top: 5px;
+  }
+  .qdash-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .qdash-tile {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px; padding: 18px 14px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; text-decoration: none; color: #fff;
+    transition: background .18s, transform .18s, border-color .18s;
+    text-align: center;
+  }
+  .qdash-tile:hover {
+    background: rgba(255,255,255,.09);
+    border-color: rgba(255,255,255,.18);
+    transform: translateY(-2px);
+  }
+  .qdash-tile-icon { font-size: 22px; }
+  .qdash-tile-label { font-size: 12px; font-weight: 500; color: var(--text-light); }
+  .qdash-tile.hot {
+    background: linear-gradient(135deg, rgba(229,9,20,.18), rgba(229,9,20,.06));
+    border-color: rgba(229,9,20,.28);
+  }
+  @media (max-width: 960px) {
+    .qdash { padding: 80px 16px 24px; }
+    .qdash-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .qdash-grid { grid-template-columns: repeat(3, 1fr); }
+    .qdash-stat-val { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
@@ -922,6 +977,46 @@
       rowsWrap.appendChild(emptyRow("Couldn't load your library: " + e.message));
       return;
     }
+
+    // ── Quick-access dashboard (always injected first) ──────────────────
+    const settings = (() => { try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}'); } catch { return {}; } })();
+    const daysNum = (() => {
+      const ann = settings.anniversary || settings.anniversaryDate;
+      if (!ann) return null;
+      const diff = Date.now() - new Date(ann).getTime();
+      return diff > 0 ? Math.floor(diff / 86400000) : null;
+    })();
+    const dash = document.createElement('div');
+    dash.className = 'qdash';
+    dash.innerHTML = `
+      <div class="qdash-stats">
+        <div class="qdash-stat">
+          <div class="qdash-stat-val accent" id="qdVideoCount">${videos.length}</div>
+          <div class="qdash-stat-label">Videos</div>
+        </div>
+        ${daysNum !== null ? `<div class="qdash-stat">
+          <div class="qdash-stat-val">${daysNum.toLocaleString()}</div>
+          <div class="qdash-stat-label">Days together</div>
+        </div>` : ''}
+        <div class="qdash-stat">
+          <div class="qdash-stat-val" id="qdInProgress">—</div>
+          <div class="qdash-stat-label">In progress</div>
+        </div>
+      </div>
+      <div class="qdash-grid">
+        <a href="/browse.html"        class="qdash-tile hot"><span class="qdash-tile-icon">🎬</span><span class="qdash-tile-label">Browse</span></a>
+        <a href="/chat.html"          class="qdash-tile">    <span class="qdash-tile-icon">💬</span><span class="qdash-tile-label">Messages</span></a>
+        <a href="/music.html"         class="qdash-tile">    <span class="qdash-tile-icon">🎵</span><span class="qdash-tile-label">Music</span></a>
+        <a href="/loveconnect.html"   class="qdash-tile">    <span class="qdash-tile-icon">📍</span><span class="qdash-tile-label">Connect</span></a>
+        <a href="/our-story.html"     class="qdash-tile">    <span class="qdash-tile-icon">📖</span><span class="qdash-tile-label">Our Story</span></a>
+        <a href="/admin_upload.html"  class="qdash-tile">    <span class="qdash-tile-icon">＋</span><span class="qdash-tile-label">Upload</span></a>
+      </div>`;
+    rowsWrap.appendChild(dash);
+
+    // Fill in-progress count once we have the data
+    const inProgressCount = videos.filter(v => { const p = progressById[v.id]; return p && !p.completed && p.progress_seconds > 5; }).length;
+    const qdEl = dash.querySelector('#qdInProgress');
+    if (qdEl) qdEl.textContent = inProgressCount;
 
     if (!videos.length) {
       rowsWrap.appendChild(emptyRow('No videos yet. Head to the Creator Studio and upload your first memory 💕'));
