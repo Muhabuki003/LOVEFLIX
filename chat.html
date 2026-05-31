@@ -440,9 +440,9 @@
 // ── CONFIG ─────────────────────────────────────────────────────────────────
 // After deploying the chat Worker, paste its URL here.
 // Example: "https://loveflix-chat.muhabuki003.workers.dev"
-const CHAT_API = (function () {
+const CHAT_ = (function () {
   // Allow runtime override via localStorage for dev/testing
-  return localStorage.getItem("lf_chat_api") || "https://loveflix-chat.YOUR-SUBDOMAIN.workers.dev";
+  return localStorage.getItem("lf_chat_") || "https://loveflix-chat.adrienmuhabukibusiness.workers.dev";
 }());
 
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -498,10 +498,10 @@ async function getValidToken() {
 }
 
 // ── FETCH WRAPPER ──────────────────────────────────────────────────────────
-async function apiFetch(path, opts = {}) {
+async function Fetch(path, opts = {}) {
   const token = await getValidToken();
   if (!token) { redirectLogin(); return null; }
-  return fetch(CHAT_API + path, {
+  return fetch(CHAT_ + path, {
     ...opts,
     headers: {
       "Content-Type": "application/json",
@@ -521,7 +521,7 @@ async function init() {
   if (!token) { redirectLogin(); return; }
 
   // Fetch couple + partner info from the chat Worker
-  const res = await apiFetch("/api/me");
+  const res = await Fetch("/api/me");
   if (!res) return;
 
   if (res.status === 401) { redirectLogin(); return; }
