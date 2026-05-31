@@ -1205,7 +1205,7 @@
         </div>
       </a>
 
-      <a href="/music.html" class="bt bt-music">
+      <div class="bt bt-music">
         <div class="bt-music-inner">
           <div class="bt-music-top">
             <div class="bt-music-art" id="bt-music-art">&#9834;</div>
@@ -1227,7 +1227,7 @@
             <a href="/music.html" class="bt-music-btn">History</a>
           </div>
         </div>
-      </a>
+      </div>
 
       <a href="/loveconnect.html" class="bt bt-call">
         <div class="bt-call-inner">
@@ -1292,8 +1292,14 @@
         interactive:        false,
         attributionControl: false,
       });
-      map.on('load', () => { map.resize(); map.getCanvas().style.pointerEvents = 'none'; });
+      map.on('load', () => {
+        map.resize();
+        const canvas = map.getCanvas();
+        if (canvas) canvas.style.pointerEvents = 'none';
+      });
+      window.addEventListener('resize', () => { try { map.resize(); } catch (_) {} });
       map.on('style.load', () => {
+        try { map.setProjection({ type: 'mercator' }); } catch (_) {}
         let bearing = 0;
         (function loop() {
           bearing = (bearing + 0.09 + 360) % 360;
@@ -1323,7 +1329,7 @@
     if (!bentoEl) return;
     const token    = LoveFlix.getToken();
     const coupleId = LoveFlix.getCoupleId();
-    const userId   = (() => { try { return JSON.parse(localStorage.getItem('loveflix_user') || '{}').id; } catch { return null; } })();
+    const userId   = LoveFlix.getUserId();
     const SUPA_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
     const supa = path => fetch(`${SUPA_URL}/rest/v1/${path}`, {
@@ -1333,7 +1339,7 @@
     // Orbit map: load MapLibre, fetch partner WKB location, launch rotating map
     const mapContainer = bentoEl.querySelector('#bt-orbit-map');
     if (mapContainer) {
-      loadMapLibreThen(() => {
+      loadMapLibreThen(() => requestAnimationFrame(() => {
         if (coupleId && userId) {
           supa(`couple_locations?couple_id=eq.${coupleId}&select=user_id,location,city,updated_at&order=updated_at.desc`)
             .then(r => r.ok ? r.json() : [])
@@ -1360,7 +1366,7 @@
         } else {
           launchOrbitMap(mapContainer, [0, 20]);
         }
-      });
+      }));
     }
 
     // Partner location text (status/loc elements updated above in map block)
