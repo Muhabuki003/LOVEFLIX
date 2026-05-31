@@ -35,28 +35,43 @@ async function authUser(request, env) {
   return { userId: user.id, email: user.email, _token: t };
 }
 
-// Fetch this user's couple membership. Uses the user's own bearer token so
-// Supabase RLS ensures they can only read their own row.
+// Fetch this user's couple membership + partner in one call.
+//
+// Names are resolved by the SECURITY DEFINER RPC `get_couple_roster`, which
+// prefers couple_members.display_name, then auth metadata, then the email
+// local-part. couple_members.display_name alone is frequently null (e.g. the
+// admin/billing-owner rows), which is why a plain column select left names
+// blank. The RPC is scoped to the caller's couple via auth.uid().
 async function getMembership(userId, token, env) {
-  const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id,display_name,role&limit=1`,
-    { headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY } }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  const row = rows?.[0];
-  return row ? { coupleId: row.couple_id, displayName: row.display_name, role: row.role } : null;
-}
+  let roster = null;
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/get_couple_roster`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: env.SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (res.ok) roster = await res.json();
+  } catch (_) {
+    roster = null;
+  }
+  if (!Array.isArray(roster) || roster.length === 0) return null;
 
-// Fetch the other member of the couple (the partner).
-async function getPartner(coupleId, myUserId, token, env) {
-  const res = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&user_id=neq.${myUserId}&select=user_id,display_name,role&limit=1`,
-    { headers: { Authorization: `Bearer ${token}`, apikey: env.SUPABASE_ANON_KEY } }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  return rows?.[0] || null;
+  const me = roster.find(r => r.is_self) || roster.find(r => r.user_id === userId);
+  if (!me) return null;
+  const partnerRow = roster.find(r => r.user_id !== userId) || null;
+
+  return {
+    coupleId: me.couple_id,
+    displayName: me.display_name,
+    role: me.role,
+    partner: partnerRow
+      ? { user_id: partnerRow.user_id, display_name: partnerRow.display_name, role: partnerRow.role }
+      : null,
+  };
 }
 
 // ---------- Worker entrypoint ----------
@@ -81,7 +96,7 @@ export default {
 
       // GET /api/me — current user + partner info for the UI header
       if (path === "/api/me" && request.method === "GET") {
-        const partner = await getPartner(coupleId, me.userId, me._token, env);
+        const partner = membership.partner;
         return json({
           me: { id: me.userId, displayName: myName, coupleId },
           partner: partner
