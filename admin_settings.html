@@ -245,12 +245,11 @@
             </div>
           </div>
 
-          <div id="lockNowWrap" style="display:none;margin-top:4px">
+          <div id="lockNowWrap" style="margin-top:4px">
             <button class="btn btn-primary" id="lockNowBtn" style="font-size:12px;padding:8px 16px">
-              <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-              Save &amp; Lock Couple Data
+              Save Couple Details
             </button>
-            <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Once saved, names cannot be changed. Anniversary date can be updated anytime.</p>
+            <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Names and anniversary date can be changed and saved anytime.</p>
           </div>
         </div>
 
@@ -502,37 +501,20 @@
   // ── Lock state helpers ────────────────────────────────────────────────────
 
   function applyLockState(isLocked) {
-    _isLocked = isLocked;
-    ['name1', 'name2'].forEach(id => {
+    // Lock concept removed — names and anniversary are always editable & saveable.
+    _isLocked = false;
+    ['name1', 'name2', 'anniversary'].forEach(id => {
       const input = document.getElementById(id);
       const badge = document.getElementById(id + '-lock-badge');
       const icon  = document.getElementById(id + '-lock-icon');
-      if (!input) return;
-      if (isLocked) {
-        input.readOnly = true;
-        input.setAttribute('tabindex', '-1');
-        if (badge) badge.style.display = '';
-        if (icon)  icon.style.display  = '';
-      } else {
-        input.readOnly = false;
-        input.removeAttribute('tabindex');
-        if (badge) badge.style.display = 'none';
-        if (icon)  icon.style.display  = 'none';
-      }
+      if (input) { input.readOnly = false; input.removeAttribute('tabindex'); }
+      if (badge) badge.style.display = 'none';
+      if (icon)  icon.style.display  = 'none';
     });
-    // Anniversary is always editable — hide its lock badge/icon regardless
-    ['anniversary-lock-badge', 'anniversary-lock-icon'].forEach(bid => {
-      const el = document.getElementById(bid);
-      if (el) el.style.display = 'none';
-    });
-    const annInput = document.getElementById('anniversary');
-    if (annInput) { annInput.readOnly = false; annInput.removeAttribute('tabindex'); }
     const lockWrap = document.getElementById('lockNowWrap');
-    if (lockWrap) lockWrap.style.display = isLocked ? 'none' : '';
+    if (lockWrap) lockWrap.style.display = '';
     const desc = document.getElementById('coupleIdentityDesc');
-    if (desc) desc.textContent = isLocked
-      ? 'Partner names were set during signup and are permanently locked. Anniversary date can be updated anytime.'
-      : 'Set your names and anniversary date.';
+    if (desc) desc.textContent = 'Set your names and anniversary date — editable anytime.';
   }
 
   // ── Settings population ───────────────────────────────────────────────────
@@ -819,14 +801,12 @@
     scheduleAutoSave();
   });
   document.getElementById('name1').addEventListener('input', e => {
-    if (_isLocked) return;
     previewName1.textContent = e.target.value;
     document.getElementById('av1').textContent = (e.target.value[0] || 'M').toUpperCase();
     document.getElementById('av1Name').textContent = e.target.value;
     autoSlug();
   });
   document.getElementById('name2').addEventListener('input', e => {
-    if (_isLocked) return;
     previewName2.textContent = e.target.value;
     document.getElementById('av2').textContent = (e.target.value[0] || 'Y').toUpperCase();
     document.getElementById('av2Name').textContent = e.target.value;
@@ -879,7 +859,7 @@
     const ann = document.getElementById('anniversary').value;
     if (!n1 || !n2) { showToast('Enter both names first', 'error'); return; }
     btn.disabled = true;
-    btn.textContent = 'Locking…';
+    btn.textContent = 'Saving…';
     try {
       await LoveFlix.api('/api/couple/settings', {
         method: 'PATCH',
@@ -887,13 +867,12 @@
       });
       // Also mirror into general settings
       await LoveFlix.saveSettings({ partnerName: n1, adminName: n2, anniversaryDate: ann }, { flush: true });
-      applyLockState(true);
-      showToast('Couple data locked');
+      showToast('Couple details saved');
     } catch (_) {
       showToast('Save failed', 'error');
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg> Save &amp; Lock Couple Data';
+      btn.textContent = 'Save Couple Details';
     }
   });
 

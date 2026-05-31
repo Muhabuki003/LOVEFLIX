@@ -1837,17 +1837,12 @@ async function patchCoupleSettings(env, request, user) {
   const isLocked = existing ? !!existing.is_locked : false;
   const updates = {};
 
-  // Identity fields — only writable before lock
-  if (!isLocked) {
-    if (typeof body.partner_1_name === 'string') updates.partner_1_name = sanitizeUserText(body.partner_1_name, 100);
-    if (typeof body.partner_2_name === 'string') updates.partner_2_name = sanitizeUserText(body.partner_2_name, 100);
-    if (typeof body.anniversary_date === 'string') {
-      // Accept YYYY-MM-DD or empty string
-      updates.anniversary_date = /^\d{4}-\d{2}-\d{2}$/.test(body.anniversary_date) ? body.anniversary_date : '';
-    }
-    // Lock on first identity save (when at least one name or date is provided)
-    const hasIdentity = updates.partner_1_name || updates.partner_2_name || updates.anniversary_date;
-    if (hasIdentity) updates.is_locked = 1;
+  // Identity fields — always editable (names + anniversary can be changed anytime)
+  if (typeof body.partner_1_name === 'string') updates.partner_1_name = sanitizeUserText(body.partner_1_name, 100);
+  if (typeof body.partner_2_name === 'string') updates.partner_2_name = sanitizeUserText(body.partner_2_name, 100);
+  if (typeof body.anniversary_date === 'string') {
+    // Accept YYYY-MM-DD or empty string
+    updates.anniversary_date = /^\d{4}-\d{2}-\d{2}$/.test(body.anniversary_date) ? body.anniversary_date : '';
   }
 
   // Always editable
