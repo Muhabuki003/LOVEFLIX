@@ -452,60 +452,193 @@
     .music-grid { grid-template-columns: 1fr; }
   }
 
-  /* ---------- quick-access dashboard ---------- */
-  .qdash {
-    padding: 120px 48px 32px;
-  }
-  .qdash-stats {
-    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
-  }
-  .qdash-stat {
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 12px; padding: 16px 22px;
-    min-width: 120px; flex: 1;
-  }
-  .qdash-stat-val {
-    font-size: 28px; font-weight: 700; line-height: 1; color: #fff;
-  }
-  .qdash-stat-val.accent { color: var(--brand-accent, var(--red)); }
-  .qdash-stat-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--text-dim); margin-top: 5px;
-  }
-  .qdash-grid {
+  /* ── bento dashboard ──────────────────────────────── */
+  .bento {
+    padding: 28px 48px 8px;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 200px 170px 110px;
+    gap: 13px;
   }
-  .qdash-tile {
+  @media (max-width: 1100px) { .bento { grid-template-rows: 180px 160px 110px; padding: 24px 24px 4px; } }
+  @media (max-width: 800px) {
+    .bento {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      padding: 20px 16px 4px;
+    }
+    .bt-orbit  { grid-column: span 2; grid-row: auto; height: 200px; }
+    .bt-stat   { grid-column: span 1; grid-row: auto; }
+    .bt-music  { grid-column: span 2; grid-row: auto; }
+    .bt-call,.bt-msg { grid-column: span 1; }
+    .bt-links  { grid-column: span 2; }
+  }
+  @media (max-width: 480px) { .bento { grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+  .bt {
+    border-radius: 16px; overflow: hidden; position: relative;
+    text-decoration: none; color: #fff;
     background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 12px; padding: 18px 14px;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px; text-decoration: none; color: #fff;
-    transition: background .18s, transform .18s, border-color .18s;
-    text-align: center;
+    border: 1px solid rgba(255,255,255,.07);
+    transition: border-color .2s, background .2s, transform .18s;
+    display: flex; flex-direction: column;
   }
-  .qdash-tile:hover {
-    background: rgba(255,255,255,.09);
-    border-color: rgba(255,255,255,.18);
+  .bt[href]:hover {
+    border-color: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.07);
     transform: translateY(-2px);
   }
-  .qdash-tile-icon { font-size: 22px; }
-  .qdash-tile-label { font-size: 12px; font-weight: 500; color: var(--text-light); }
-  .qdash-tile.hot {
-    background: linear-gradient(135deg, rgba(229,9,20,.18), rgba(229,9,20,.06));
-    border-color: rgba(229,9,20,.28);
+
+  /* grid placement */
+  .bt-orbit { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+  .bt-days  { grid-column: 3; grid-row: 1; }
+  .bt-vids  { grid-column: 4; grid-row: 1; }
+  .bt-music { grid-column: 3 / span 2; grid-row: 2; }
+  .bt-call  { grid-column: 1; grid-row: 3; }
+  .bt-msg   { grid-column: 2; grid-row: 3; }
+  .bt-links { grid-column: 3 / span 2; grid-row: 3; }
+
+  /* ── orbit tile ── */
+  .bt-orbit { cursor: pointer; }
+  .orbit-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 60% 30%, rgba(30,80,180,.22) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(229,9,20,.12) 0%, transparent 50%),
+                #080c14;
   }
-  @media (max-width: 960px) {
-    .qdash { padding: 80px 16px 24px; }
-    .qdash-grid { grid-template-columns: repeat(3, 1fr); }
+  .orbit-grid-lines {
+    position: absolute; inset: 0; opacity: .06;
+    background-image:
+      linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
-  @media (max-width: 480px) {
-    .qdash-grid { grid-template-columns: repeat(3, 1fr); }
-    .qdash-stat-val { font-size: 22px; }
+  .orbit-scene {
+    position: absolute; top: 50%; left: 38%;
+    transform: translate(-50%, -50%);
+    width: 160px; height: 160px;
+    perspective: 400px;
   }
+  .orbit-globe {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 38%, #1a5aaa 0%, #07132a 70%);
+    box-shadow: inset -5px -3px 0 rgba(0,0,0,.45), 0 0 24px rgba(30,100,220,.45);
+    z-index: 2;
+  }
+  .orbit-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.22);
+    transform: rotateX(68deg) rotateZ(0deg);
+    transform-style: preserve-3d;
+    animation: orbit-spin 7s linear infinite;
+  }
+  .orbit-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--brand-accent, var(--red));
+    box-shadow: 0 0 12px var(--brand-accent, var(--red));
+    position: absolute; top: -5.5px; left: calc(50% - 5.5px);
+  }
+  @keyframes orbit-spin {
+    from { transform: rotateX(68deg) rotateZ(0deg); }
+    to   { transform: rotateX(68deg) rotateZ(360deg); }
+  }
+  .orbit-ring-2 {
+    position: absolute; inset: 14px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.09);
+    transform: rotateX(68deg) rotateZ(45deg);
+    transform-style: preserve-3d;
+    animation: orbit-spin 14s linear infinite reverse;
+  }
+  .orbit-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 20px 22px;
+    background: linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 100%);
+    z-index: 3;
+  }
+  .orbit-eyebrow {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--brand-accent, var(--red)); font-weight: 700; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .orbit-live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #4ade80; box-shadow: 0 0 6px #4ade80;
+    animation: live-pulse 1.8s ease infinite;
+  }
+  @keyframes live-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+  .orbit-name { font-size: 20px; font-weight: 700; line-height: 1.15; margin-bottom: 3px; }
+  .orbit-loc  { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
+
+  /* ── stat tiles ── */
+  .bt-stat-inner { padding: 22px 20px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+  .bt-stat-num { font-size: 38px; font-weight: 800; line-height: 1; color: #fff; }
+  .bt-stat-num.accent { color: var(--brand-accent, var(--red)); }
+  .bt-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); font-weight: 500; }
+  .bt-stat-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .bt-stat-icon { font-size: 22px; margin-bottom: auto; }
+
+  /* ── music tile ── */
+  .bt-music-inner { padding: 18px 20px; display: flex; flex-direction: column; height: 100%; gap: 12px; }
+  .bt-music-top { display: flex; align-items: center; gap: 14px; }
+  .bt-music-art {
+    width: 52px; height: 52px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, #7a1632, #1a0510);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: rgba(255,255,255,.6);
+    position: relative; overflow: hidden;
+  }
+  .bt-music-art::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.05), transparent);
+  }
+  .bt-music-info { flex: 1; min-width: 0; }
+  .bt-music-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bt-music-artist { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .bt-music-bar {
+    height: 3px; border-radius: 2px; background: rgba(255,255,255,.1);
+    position: relative; overflow: hidden;
+  }
+  .bt-music-bar::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%; background: var(--brand-accent, var(--red));
+    border-radius: 2px; animation: music-sweep 22s linear infinite;
+  }
+  @keyframes music-sweep { from{width:0%} to{width:100%} }
+  .bt-music-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bt-music-btn {
+    font-size: 12px; font-weight: 500; padding: 6px 14px;
+    border-radius: 20px; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06); color: #fff; text-decoration: none;
+    transition: background .15s;
+    cursor: pointer; font-family: inherit;
+  }
+  .bt-music-btn:hover { background: rgba(255,255,255,.12); }
+  .bt-music-btn.primary {
+    background: var(--brand-accent, var(--red)); border-color: transparent;
+  }
+  .bt-music-btn.primary:hover { filter: brightness(1.1); }
+
+  /* ── call tile ── */
+  .bt-call-inner, .bt-msg-inner { padding: 18px 18px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+  .bt-pill-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 600; margin-bottom: 8px; }
+  .bt-call-dur { font-size: 20px; font-weight: 700; line-height: 1; }
+  .bt-call-when { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .bt-go { font-size: 11px; color: var(--brand-accent, var(--red)); font-weight: 600; letter-spacing: .5px; }
+
+  /* ── links tile ── */
+  .bt-links-inner { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 100%; }
+  .bt-link {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; padding: 8px 4px; border-radius: 10px;
+    text-decoration: none; color: #fff; font-size: 11px; font-weight: 500;
+    color: var(--text-light); transition: background .15s;
+    height: 100%; min-height: 0;
+  }
+  .bt-link:hover { background: rgba(255,255,255,.08); }
+  .bt-link span:first-child { font-size: 19px; }
+  .bt-link.hot span:last-child { color: var(--brand-accent, var(--red)); }
 </style>
 </head>
 <body>
@@ -978,56 +1111,12 @@
       return;
     }
 
-    // ── Quick-access dashboard (always injected first) ──────────────────
     const settings = (() => { try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}'); } catch { return {}; } })();
-    const daysNum = (() => {
-      const ann = settings.anniversary || settings.anniversaryDate;
-      if (!ann) return null;
-      const diff = Date.now() - new Date(ann).getTime();
-      return diff > 0 ? Math.floor(diff / 86400000) : null;
-    })();
-    const dash = document.createElement('div');
-    dash.className = 'qdash';
-    dash.innerHTML = `
-      <div class="qdash-stats">
-        <div class="qdash-stat">
-          <div class="qdash-stat-val accent" id="qdVideoCount">${videos.length}</div>
-          <div class="qdash-stat-label">Videos</div>
-        </div>
-        ${daysNum !== null ? `<div class="qdash-stat">
-          <div class="qdash-stat-val">${daysNum.toLocaleString()}</div>
-          <div class="qdash-stat-label">Days together</div>
-        </div>` : ''}
-        <div class="qdash-stat">
-          <div class="qdash-stat-val" id="qdInProgress">—</div>
-          <div class="qdash-stat-label">In progress</div>
-        </div>
-      </div>
-      <div class="qdash-grid">
-        <a href="/browse.html"        class="qdash-tile hot"><span class="qdash-tile-icon">🎬</span><span class="qdash-tile-label">Browse</span></a>
-        <a href="/chat.html"          class="qdash-tile">    <span class="qdash-tile-icon">💬</span><span class="qdash-tile-label">Messages</span></a>
-        <a href="/music.html"         class="qdash-tile">    <span class="qdash-tile-icon">🎵</span><span class="qdash-tile-label">Music</span></a>
-        <a href="/loveconnect.html"   class="qdash-tile">    <span class="qdash-tile-icon">📍</span><span class="qdash-tile-label">Connect</span></a>
-        <a href="/our-story.html"     class="qdash-tile">    <span class="qdash-tile-icon">📖</span><span class="qdash-tile-label">Our Story</span></a>
-        <a href="/admin_upload.html"  class="qdash-tile">    <span class="qdash-tile-icon">＋</span><span class="qdash-tile-label">Upload</span></a>
-      </div>`;
-    rowsWrap.appendChild(dash);
 
-    // Fill in-progress count once we have the data
-    const inProgressCount = videos.filter(v => { const p = progressById[v.id]; return p && !p.completed && p.progress_seconds > 5; }).length;
-    const qdEl = dash.querySelector('#qdInProgress');
-    if (qdEl) qdEl.textContent = inProgressCount;
+    // Hero cycle
+    if (videos.length) startHeroCycle(videos.filter(v => v && (v.video_url || v.title)));
 
-    if (!videos.length) {
-      rowsWrap.appendChild(emptyRow('No videos yet. Head to the Creator Studio and upload your first memory 💕'));
-      return;
-    }
-
-    // Hero — cycle through every video, 15s preview each, crossfading both
-    // the background footage and the text content.
-    startHeroCycle(videos.filter(v => v && (v.video_url || v.title)));
-
-    // Continue Watching: anything with progress, not completed.
+    // Continue Watching — RIGHT under the hero (first row)
     const inProgress = videos.filter(v => {
       const p = progressById[v.id];
       return p && !p.completed && p.progress_seconds > 5;
@@ -1037,18 +1126,226 @@
       rowsWrap.appendChild(buildRow('Continue Watching', inProgress, progressById));
     }
 
-    // Group by category
+    // Group all videos by category
     const byCat = new Map();
     videos.forEach(v => {
       const k = v.category || 'Moments';
       if (!byCat.has(k)) byCat.set(k, []);
       byCat.get(k).push(v);
     });
-    for (const [cat, list] of byCat) {
-      rowsWrap.appendChild(buildRow(cat, list, progressById));
+    const catEntries = [...byCat.entries()];
+
+    // If no "continue watching", show first category row right under hero
+    if (!inProgress.length && catEntries.length) {
+      rowsWrap.appendChild(buildRow(catEntries[0][0], catEntries[0][1], progressById));
     }
 
+    // ── BENTO DASHBOARD — after first video row ──────────────────────────
+    const bento = buildBentoSection(videos, settings);
+    rowsWrap.appendChild(bento);
+    loadBentoLiveData(bento); // fills live data async without blocking
+
+    // No videos message (inside bento context)
+    if (!videos.length) {
+      rowsWrap.appendChild(emptyRow('No videos yet — head to Creator Studio to upload your first memory 💕'));
+    }
+
+    // Remaining category rows
+    catEntries.forEach(([cat, list], i) => {
+      if (!inProgress.length && i === 0) return; // already rendered above
+      rowsWrap.appendChild(buildRow(cat, list, progressById));
+    });
+
     bindArrows(rowsWrap);
+  }
+
+  // ── Build the bento dashboard ─────────────────────────────────────────
+  function buildBentoSection(videos, settings) {
+    const daysNum = (() => {
+      const ann = settings.anniversary || settings.anniversaryDate;
+      if (!ann) return null;
+      const ms = Date.now() - new Date(ann).getTime();
+      return ms > 0 ? Math.floor(ms / 86400000) : null;
+    })();
+    const annStr = (() => {
+      const ann = settings.anniversary || settings.anniversaryDate;
+      if (!ann) return '';
+      return new Date(ann).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    })();
+    const partnerName = settings.partnerName || settings.partner_name || 'Your Person';
+
+    const el = document.createElement('div');
+    el.className = 'bento';
+    el.innerHTML = `
+      <a href="/loveconnect.html" class="bt bt-orbit">
+        <div class="orbit-bg"></div>
+        <div class="orbit-grid-lines"></div>
+        <div class="orbit-scene">
+          <div class="orbit-globe"></div>
+          <div class="orbit-ring"><div class="orbit-dot"></div></div>
+          <div class="orbit-ring-2"></div>
+        </div>
+        <div class="orbit-content">
+          <div class="orbit-eyebrow">
+            <div class="orbit-live-dot"></div>
+            <span id="bt-orbit-status">Locating&hellip;</span>
+          </div>
+          <div class="orbit-name">${escapeHtml(partnerName)}</div>
+          <div class="orbit-loc">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span id="bt-orbit-loc">Open LoveConnect &rarr;</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="bt bt-days bt-stat">
+        <div class="bt-stat-inner">
+          <div class="bt-stat-icon">♥</div>
+          <div>
+            <div class="bt-stat-num accent">${daysNum !== null ? daysNum.toLocaleString() : '—'}</div>
+            <div class="bt-stat-label">Days together</div>
+            <div class="bt-stat-sub">${annStr ? 'Since ' + escapeHtml(annStr) : 'Set anniversary in settings'}</div>
+          </div>
+        </div>
+      </div>
+
+      <a href="/browse.html" class="bt bt-vids bt-stat">
+        <div class="bt-stat-inner">
+          <div class="bt-stat-icon">🎬</div>
+          <div>
+            <div class="bt-stat-num">${videos.length}</div>
+            <div class="bt-stat-label">Memories</div>
+            <div class="bt-stat-sub">Browse all &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="/music.html" class="bt bt-music">
+        <div class="bt-music-inner">
+          <div class="bt-music-top">
+            <div class="bt-music-art" id="bt-music-art">&#9834;</div>
+            <div class="bt-music-info">
+              <div class="bt-music-title" id="bt-music-title">Our Music</div>
+              <div class="bt-music-artist" id="bt-music-artist">Loading recent plays&hellip;</div>
+            </div>
+          </div>
+          <div class="bt-music-bar"></div>
+          <div class="bt-music-actions">
+            <a href="/music.html" class="bt-music-btn primary">Open Player</a>
+            <a href="/music.html?tab=playlists" class="bt-music-btn">Playlists</a>
+          </div>
+        </div>
+      </a>
+
+      <a href="/loveconnect.html" class="bt bt-call">
+        <div class="bt-call-inner">
+          <div>
+            <div class="bt-pill-label">Last call</div>
+            <div class="bt-call-dur" id="bt-call-dur">&mdash;</div>
+            <div class="bt-call-when" id="bt-call-when">No calls yet</div>
+          </div>
+          <div class="bt-go">Call now &rarr;</div>
+        </div>
+      </a>
+
+      <a href="/chat.html" class="bt bt-msg">
+        <div class="bt-msg-inner">
+          <div>
+            <div class="bt-pill-label">Messages</div>
+            <div style="font-size:26px;margin:6px 0">&#128172;</div>
+            <div style="font-size:12px;color:var(--text-dim)">Chat with ${escapeHtml(partnerName)}</div>
+          </div>
+          <div class="bt-go">Open chat &rarr;</div>
+        </div>
+      </a>
+
+      <div class="bt bt-links">
+        <div class="bt-links-inner">
+          <a href="/browse.html"        class="bt-link hot"><span>&#127909;</span><span>Browse</span></a>
+          <a href="/our-story.html"     class="bt-link"><span>&#128214;</span><span>Our Story</span></a>
+          <a href="/our-story-map.html" class="bt-link"><span>&#128506;&#65039;</span><span>Map</span></a>
+          <a href="/admin_upload.html"  class="bt-link"><span>&#43;</span><span>Upload</span></a>
+          <a href="/admin.html"         class="bt-link"><span>&#9881;&#65039;</span><span>Studio</span></a>
+        </div>
+      </div>
+    `;
+    return el;
+  }
+
+  // ── Fill bento with live data (async, non-blocking) ───────────────────
+  async function loadBentoLiveData(bentoEl) {
+    if (!bentoEl) return;
+    const token    = LoveFlix.getToken();
+    const coupleId = LoveFlix.getCoupleId();
+    const userId   = (() => { try { return JSON.parse(localStorage.getItem('loveflix_user') || '{}').id; } catch { return null; } })();
+    const SUPA_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
+    const supa = path => fetch(`${SUPA_URL}/rest/v1/${path}`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: SUPA_KEY }
+    });
+
+    // Partner location from couple_locations
+    if (coupleId && userId) {
+      supa(`couple_locations?couple_id=eq.${coupleId}&user_id=neq.${userId}&select=city,lat,lng,updated_at&limit=1`)
+        .then(r => r.ok ? r.json() : [])
+        .then(rows => {
+          const loc = rows?.[0];
+          const statusEl = bentoEl.querySelector('#bt-orbit-status');
+          const locEl    = bentoEl.querySelector('#bt-orbit-loc');
+          if (!loc) { if (statusEl) statusEl.textContent = 'Offline'; return; }
+          if (statusEl) statusEl.textContent = loc.updated_at ? 'Active ' + timeAgo(loc.updated_at) : 'Active now';
+          if (locEl) locEl.textContent = loc.city || `${(+loc.lat||0).toFixed(2)}°, ${(+loc.lng||0).toFixed(2)}°`;
+        }).catch(() => {});
+    }
+
+    // Last call from call_logs
+    if (coupleId) {
+      supa(`call_logs?couple_id=eq.${coupleId}&select=started_at,duration_seconds&order=started_at.desc&limit=1`)
+        .then(r => r.ok ? r.json() : [])
+        .then(rows => {
+          const call = rows?.[0];
+          if (!call) return;
+          const durEl  = bentoEl.querySelector('#bt-call-dur');
+          const whenEl = bentoEl.querySelector('#bt-call-when');
+          if (durEl && call.duration_seconds) {
+            const m = Math.floor(call.duration_seconds / 60);
+            const s = call.duration_seconds % 60;
+            durEl.textContent = m ? m + 'm ' + s + 's' : s + 's';
+          }
+          if (whenEl && call.started_at) whenEl.textContent = timeAgo(call.started_at);
+        }).catch(() => {});
+    }
+
+    // Recent music plays
+    if (coupleId) {
+      fetch('/api/music/recent?couple_id=' + encodeURIComponent(coupleId), {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+        .then(r => r.ok ? r.json() : {})
+        .then(d => {
+          const plays = d.plays || [];
+          const titleEl  = bentoEl.querySelector('#bt-music-title');
+          const artistEl = bentoEl.querySelector('#bt-music-artist');
+          const artEl    = bentoEl.querySelector('#bt-music-art');
+          if (!plays.length) {
+            if (artistEl) artistEl.textContent = 'No plays yet — start listening';
+            return;
+          }
+          const p = plays[0];
+          if (titleEl)  titleEl.textContent  = p.title || 'Now playing';
+          if (artistEl) artistEl.textContent = (p.artist || '') + (d.total ? ' · ' + d.total + ' plays' : '');
+          if (artEl)    artEl.textContent    = ((p.title || '♪')[0]).toUpperCase();
+        }).catch(() => {});
+    }
+  }
+
+  function timeAgo(isoOrMs) {
+    const ms   = typeof isoOrMs === 'number' ? isoOrMs : new Date(isoOrMs).getTime();
+    const diff = Date.now() - ms;
+    if (diff < 60000)    return 'just now';
+    if (diff < 3600000)  return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    return Math.floor(diff / 86400000) + 'd ago';
   }
 
   // ===== Hero cycling preview =====
