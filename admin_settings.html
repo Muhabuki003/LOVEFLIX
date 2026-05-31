@@ -704,14 +704,31 @@
   async function autoSave() {
     const name1  = document.getElementById('name1').value.trim();
     const name2  = document.getElementById('name2').value.trim();
+    const ann    = document.getElementById('anniversary').value;
     const slug   = document.getElementById('urlSlug').value.trim();
     const note   = document.getElementById('loveNote').value.trim();
     const attr   = document.getElementById('attr').value.trim();
     const accent = (colorsEl.querySelector('.color-swatch.selected') || {}).dataset?.c || '#e50914';
 
-    // Save general settings (love note, tagline, slug, photos) via existing API
+    // Save names + anniversary to couple_settings (D1 identity fields)
+    if (name1 && name2) {
+      try {
+        await LoveFlix.api('/api/couple/settings', {
+          method: 'PATCH',
+          body: { partner_1_name: name1, partner_2_name: name2, ...(ann ? { anniversary_date: ann } : {}) },
+        });
+      } catch (_) {
+        setStatus('error', 'Sync failed');
+        return;
+      }
+    }
+
+    // Save general settings blob (slug, note, tagline, photos, names mirrored)
     try {
       await LoveFlix.saveSettings({
+        partnerName:  name1,
+        adminName:    name2,
+        anniversaryDate: ann || undefined,
         urlSlug:      slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
         accentColor:  accent,
         loveNote:     note,
@@ -761,20 +778,9 @@
   }
 
   async function saveAnniversaryNow() {
-    const ann = document.getElementById('anniversary').value;
-    if (!ann) return;
     setStatus('saving', 'Saving…');
-    try {
-      await LoveFlix.api('/api/couple/settings', {
-        method: 'PATCH',
-        body: { anniversary_date: ann },
-      });
-      LoveFlix.saveSettings({ anniversaryDate: ann }, { flush: true });
-      setStatus('saved', 'Saved');
-      showToast('Anniversary date saved');
-    } catch (_) {
-      setStatus('error', 'Sync failed');
-    }
+    clearTimeout(_autoSaveTimer);
+    await autoSave();
   }
 
   // ── Color swatch click ────────────────────────────────────────────────────
@@ -856,17 +862,12 @@
     const btn = document.getElementById('lockNowBtn');
     const n1  = document.getElementById('name1').value.trim();
     const n2  = document.getElementById('name2').value.trim();
-    const ann = document.getElementById('anniversary').value;
     if (!n1 || !n2) { showToast('Enter both names first', 'error'); return; }
     btn.disabled = true;
     btn.textContent = 'Saving…';
+    clearTimeout(_autoSaveTimer);
     try {
-      await LoveFlix.api('/api/couple/settings', {
-        method: 'PATCH',
-        body: { partner_1_name: n1, partner_2_name: n2, anniversary_date: ann },
-      });
-      // Also mirror into general settings
-      await LoveFlix.saveSettings({ partnerName: n1, adminName: n2, anniversaryDate: ann }, { flush: true });
+      await autoSave();
       showToast('Couple details saved');
     } catch (_) {
       showToast('Save failed', 'error');
