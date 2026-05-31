@@ -4,13 +4,13 @@ compatibility_date = "2025-05-01"
 
 # D1 database — create with:
 #   wrangler d1 create loveflix-chat
-# then paste the returned database_id below.
+# then paste the returned database_id below (replace REPLACE_WITH_YOUR_D1_ID).
 [[d1_databases]]
 binding = "DB"
 database_name = "loveflix-chat"
 database_id = "REPLACE_WITH_YOUR_D1_ID"
 
-# Durable Object: one per couple room
+# Durable Object: one instance per couple room
 [[durable_objects.bindings]]
 name = "CHAT_ROOM"
 class_name = "ChatRoom"
@@ -23,6 +23,3 @@ new_sqlite_classes = ["ChatRoom"]
 [vars]
 SUPABASE_URL      = "https://jeblgjjutyzzdursjqnn.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko"
-
-# No additional secrets needed — the Worker validates users via the same
-# Supabase JWT they already have from the main LoveFlix session.
