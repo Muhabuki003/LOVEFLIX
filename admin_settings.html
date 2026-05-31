@@ -250,7 +250,7 @@
               <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
               Save &amp; Lock Couple Data
             </button>
-            <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Once saved, names and anniversary date cannot be changed.</p>
+            <p style="font-size:11px;color:var(--text-dim);margin-top:6px">Once saved, names cannot be changed. Anniversary date can be updated anytime.</p>
           </div>
         </div>
 
@@ -503,7 +503,7 @@
 
   function applyLockState(isLocked) {
     _isLocked = isLocked;
-    ['name1', 'name2', 'anniversary'].forEach(id => {
+    ['name1', 'name2'].forEach(id => {
       const input = document.getElementById(id);
       const badge = document.getElementById(id + '-lock-badge');
       const icon  = document.getElementById(id + '-lock-icon');
@@ -520,12 +520,19 @@
         if (icon)  icon.style.display  = 'none';
       }
     });
+    // Anniversary is always editable — hide its lock badge/icon regardless
+    ['anniversary-lock-badge', 'anniversary-lock-icon'].forEach(bid => {
+      const el = document.getElementById(bid);
+      if (el) el.style.display = 'none';
+    });
+    const annInput = document.getElementById('anniversary');
+    if (annInput) { annInput.readOnly = false; annInput.removeAttribute('tabindex'); }
     const lockWrap = document.getElementById('lockNowWrap');
     if (lockWrap) lockWrap.style.display = isLocked ? 'none' : '';
     const desc = document.getElementById('coupleIdentityDesc');
     if (desc) desc.textContent = isLocked
-      ? 'These were set during signup and are permanently locked.'
-      : 'Set your names and anniversary. These will be locked once saved.';
+      ? 'Partner names were set during signup and are permanently locked. Anniversary date can be updated anytime.'
+      : 'Set your names and anniversary date.';
   }
 
   // ── Settings population ───────────────────────────────────────────────────
@@ -771,6 +778,23 @@
     }
   }
 
+  async function saveAnniversaryNow() {
+    const ann = document.getElementById('anniversary').value;
+    if (!ann) return;
+    setStatus('saving', 'Saving…');
+    try {
+      await LoveFlix.api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { anniversary_date: ann },
+      });
+      LoveFlix.saveSettings({ anniversaryDate: ann }, { flush: true });
+      setStatus('saved', 'Saved');
+      showToast('Anniversary date saved');
+    } catch (_) {
+      setStatus('error', 'Sync failed');
+    }
+  }
+
   // ── Color swatch click ────────────────────────────────────────────────────
 
   colorsEl.addEventListener('click', e => {
@@ -811,6 +835,8 @@
     applySidebarAvatar(letter, adminPhoto);
     autoSlug();
   });
+  document.getElementById('anniversary').addEventListener('change', saveAnniversaryNow);
+
   document.getElementById('urlSlug').addEventListener('input', e => {
     document.getElementById('sideUrl').textContent = 'loveflix.us/' + (e.target.value || 'yourname');
     scheduleAutoSave();
