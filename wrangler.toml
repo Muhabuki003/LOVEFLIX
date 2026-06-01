@@ -13,6 +13,13 @@ database_id = "daba2b39-0ff8-4ef0-b28a-e586bb1fd6a6"
 binding = "VIDEOS"
 bucket_name = "loveflix-videos"
 
+# ---- KV (rate limiting counters) ----
+# Create with: wrangler kv:namespace create RATE_LIMIT_KV
+# Then replace the placeholder id below with the one printed by that command.
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
 # ---- Public env (safe to expose) ----
 [vars]
 SUPABASE_URL = "https://jeblgjjutyzzdursjqnn.supabase.co"

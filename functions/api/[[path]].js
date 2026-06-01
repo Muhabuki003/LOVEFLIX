@@ -34,10 +34,9 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/soundcloud/search',
   'GET /api/music/recent',
   'GET /api/music/yt-match',
-  // AI chat — public so both the unauthenticated landing widget and the
-  // authenticated concierge widget can reach it. Couple context is supplied
-  // by the client; the worker never fetches private data here.
-  'POST /api/ai',
+  // AI chat is intentionally NOT in PUBLIC_ROUTES — it calls DeepSeek at cost.
+  // Unauthenticated landing-page users are allowed through by the auth block
+  // below (user will be null) but are subject to IP rate limiting.
 ]);
 
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
@@ -98,6 +97,27 @@ function corsHeaders(requestOrigin) {
   };
 }
 
+// ── Rate limiting via Cloudflare KV ─────────────────────────────────────────
+// Returns a 429 Response when the caller exceeds `maxRequests` within
+// `windowSeconds`. Returns null when the request is within limits.
+// Keyed by: rl:<bucket>:<identifier>:<window-epoch>
+async function checkRateLimit(env, identifier, bucket, maxRequests, windowSeconds) {
+  if (!env.RATE_LIMIT_KV) return null; // fail open until KV namespace is provisioned
+  const window = Math.floor(Date.now() / (windowSeconds * 1000));
+  const key = `rl:${bucket}:${identifier}:${window}`;
+  const current = parseInt((await env.RATE_LIMIT_KV.get(key)) || '0') + 1;
+  // TTL is double the window so keys always expire even if clock skews
+  await env.RATE_LIMIT_KV.put(key, String(current), { expirationTtl: windowSeconds * 2 });
+  if (current > maxRequests) {
+    return json(
+      { error: 'rate_limit_exceeded', retry_after: windowSeconds },
+      429,
+      { 'retry-after': String(windowSeconds) }
+    );
+  }
+  return null;
+}
+
 // ── NeMo Guardrails: Input Rail — prompt-injection patterns ──────────────────
 // Blocks payloads that attempt to hijack any LLM that later reads this data.
 const INJECTION_PATTERNS = [
@@ -148,7 +168,9 @@ export async function onRequest(context) {
     const routeKey = `${method} ${path}`;
     // SoundCloud stream has a dynamic segment so it can't be in PUBLIC_ROUTES set.
     const isSoundCloudRoute = method === 'GET' && path.startsWith('/api/soundcloud/');
-    const isPublic = PUBLIC_ROUTES.has(routeKey) || isSoundCloudRoute;
+    // /api/ai is NOT in PUBLIC_ROUTES but we allow null-user callers (landing widget).
+    const isAiRoute = method === 'POST' && path === '/api/ai';
+    const isPublic = PUBLIC_ROUTES.has(routeKey) || isSoundCloudRoute || isAiRoute;
 
     let user = null;
     if (!isPublic) {
@@ -157,6 +179,49 @@ export async function onRequest(context) {
     } else {
       user = await authenticate(request, env).catch(() => null);
     }
+
+    // Structured request log — every call, every endpoint.
+    const clientIP = request.headers.get('cf-connecting-ip') || 'unknown';
+    console.log(JSON.stringify({
+      ts: Date.now(), method, path,
+      uid: user?.id ?? null,
+      ip: clientIP,
+    }));
+
+    // ── Rate limiting ────────────────────────────────────────────────────────
+    // AI endpoint: 20 req/min per IP (abuse guard), 50 req/day per identity.
+    if (isAiRoute) {
+      const ipLimited = await checkRateLimit(env, clientIP, 'ai_ip', 20, 60);
+      if (ipLimited) return ipLimited;
+      const identity = user?.id || clientIP;
+      const dayLimited = await checkRateLimit(env, identity, 'ai_day', 50, 86400);
+      if (dayLimited) return dayLimited;
+    }
+
+    // Invite redemption: 5 attempts/hour per IP — prevents invite-code brute-force.
+    if (method === 'POST' && path === '/api/join-partner') {
+      const limited = await checkRateLimit(env, clientIP, 'join', 5, 3600);
+      if (limited) return limited;
+    }
+
+    // SoundCloud proxy: 60 req/min per IP.
+    if (isSoundCloudRoute) {
+      const limited = await checkRateLimit(env, clientIP, 'sc', 60, 60);
+      if (limited) return limited;
+    }
+
+    // Google Directions proxy: 30 req/min per IP.
+    if (method === 'GET' && path === '/api/directions') {
+      const limited = await checkRateLimit(env, clientIP, 'dir', 30, 60);
+      if (limited) return limited;
+    }
+
+    // YouTube match proxy: 20 req/min per IP.
+    if (method === 'GET' && path === '/api/music/yt-match') {
+      const limited = await checkRateLimit(env, clientIP, 'yt', 20, 60);
+      if (limited) return limited;
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     if (method === 'GET' && path === '/api/health') return json({ ok: true });
 
@@ -201,7 +266,11 @@ export async function onRequest(context) {
 
     // Hands the Google Maps JS API key to the LoveConnect page so it can inject
     // the Maps script without the key ever being hardcoded in static HTML.
+    // Only serve the key to requests originating from our own domains.
     if (method === 'GET' && path === '/api/maps-config') {
+      if (!ALLOWED_ORIGINS.has(_reqOrigin)) {
+        return json({ error: 'forbidden' }, 403);
+      }
       return json({ key: env.GOOGLE_MAPS_API_KEY || '' });
     }
 
@@ -1700,6 +1769,10 @@ TONE: Warm, witty, romantic, and genuinely invested in their happiness.`;
 }
 
 async function handleAiChat(env, request) {
+  // Reject oversized payloads before parsing JSON (32 KB is ample for 16 turns × 1000 chars).
+  const contentLength = parseInt(request.headers.get('content-length') || '0');
+  if (contentLength > 32768) return json({ error: 'payload_too_large' }, 413);
+
   const body = await request.json().catch(() => ({}));
 
   // Determine which mode the client requested
@@ -1726,22 +1799,33 @@ async function handleAiChat(env, request) {
 
   if (!env.DEEPSEEK_API_KEY) return json({ error: 'ai_not_configured' }, 503);
 
-  const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...userMessages,
-      ],
-      max_tokens: 300,
-      temperature: 0.8,
-    }),
-  });
+  const abort = new AbortController();
+  const timeoutId = setTimeout(() => abort.abort(), 10_000); // 10 s hard ceiling
+  let dsRes;
+  try {
+    dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      signal: abort.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...userMessages,
+        ],
+        max_tokens: 300,
+        temperature: 0.8,
+      }),
+    });
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') return json({ error: 'upstream_timeout' }, 504);
+    throw e;
+  }
+  clearTimeout(timeoutId);
 
   if (!dsRes.ok) {
     const err = await dsRes.text().catch(() => '');
