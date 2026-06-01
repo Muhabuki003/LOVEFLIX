@@ -1,0 +1,12 @@
+name               = "loveflix-flights"
+main               = "worker.py"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["python_workers"]
+account_id         = "a9c77b1cff6d48f28930ed068bbba95e"
+
+kv_namespaces = [
+  { binding = "FLIGHT_CACHE", id = "161b78e622f94de78708889560653b78", preview_id = "161b78e622f94de78708889560653b78" }
+]
+
+[vars]
+ALLOWED_ORIGIN = "https://loveflix.us"
