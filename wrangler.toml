@@ -18,7 +18,7 @@ bucket_name = "loveflix-videos"
 # Then replace the placeholder id below with the one printed by that command.
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "d3e5072b03204704a88193f22412b061"
 
 # ---- Public env (safe to expose) ----
 [vars]
