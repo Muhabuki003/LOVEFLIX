@@ -40,6 +40,12 @@
         capture_pageview: true,
         capture_pageleave: true,
         disable_session_recording: false,
+        loaded: function (ph) {
+          // Force the recorder to start regardless of the /decide response.
+          // Needed because /decide may not include sessionRecording config
+          // when the SDK is initialised with a relative api_host (/ingest).
+          try { ph.startSessionRecording(); } catch (_) {}
+        },
       });
       INITIALIZED = true;
       // Replay anything queued before init resolved.
