@@ -342,6 +342,79 @@
     .lc-sub { display: none; }
   }
 
+  /* ── new message notification toast ── */
+  #msg-toast {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    z-index: 50;
+    max-width: 320px;
+    background: rgba(14, 8, 12, 0.94);
+    border: 1px solid rgba(255, 95, 143, 0.38);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,95,143,0.08);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    animation: toast-in 0.35s cubic-bezier(0.34,1.3,0.64,1) both;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  #msg-toast.show { display: flex; }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .toast-row {
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .toast-icon {
+    width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #ff5f8f, #c9184a);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .toast-body { flex: 1; min-width: 0; }
+  .toast-title {
+    font-size: 13px; font-weight: 600; color: #fff;
+    margin-bottom: 3px;
+  }
+  .toast-msg {
+    font-size: 12px; color: rgba(255,255,255,0.6);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast-time { font-size: 10.5px; color: rgba(255,255,255,0.35); }
+  .toast-close {
+    background: none; border: none; color: rgba(255,255,255,0.4);
+    font-size: 18px; cursor: pointer; padding: 0; line-height: 1;
+    flex-shrink: 0; align-self: flex-start;
+    transition: color 0.15s;
+  }
+  .toast-close:hover { color: #fff; }
+  .toast-actions { display: flex; gap: 8px; }
+  .toast-btn {
+    flex: 1; padding: 8px 12px; border-radius: 8px; border: none;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    text-decoration: none; text-align: center;
+    font-family: inherit; transition: filter 0.15s;
+  }
+  .toast-btn.primary {
+    background: linear-gradient(135deg, #ff5f8f, #c9184a);
+    color: #fff;
+  }
+  .toast-btn.primary:hover { filter: brightness(1.12); }
+  .toast-btn.secondary {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .toast-btn.secondary:hover { background: rgba(255,255,255,0.14); }
+  @media (max-width: 560px) {
+    #msg-toast { right: 16px; left: 16px; max-width: none; bottom: 80px; }
+  }
+
   /* ── orbiting globe background ── */
   #globe-bg {
     position: fixed; inset: 0; z-index: 0;
@@ -415,6 +488,23 @@
     </div>
   </main>
 
+  <!-- New message notification toast -->
+  <div id="msg-toast" role="alert" aria-live="polite">
+    <div class="toast-row">
+      <div class="toast-icon">💬</div>
+      <div class="toast-body">
+        <div class="toast-title" id="toast-title">New message</div>
+        <div class="toast-msg" id="toast-msg"></div>
+        <div class="toast-time" id="toast-time"></div>
+      </div>
+      <button class="toast-close" id="toast-close" aria-label="Dismiss">×</button>
+    </div>
+    <div class="toast-actions">
+      <a href="chat.html" class="toast-btn primary">Open Messages</a>
+      <button class="toast-btn secondary" id="toast-dismiss">Dismiss</button>
+    </div>
+  </div>
+
   <!-- LoveConnect entry -->
   <a href="loveconnect.html" class="loveconnect-btn" aria-label="Open LoveConnect">
     <span class="lc-icon">
@@ -434,6 +524,103 @@
 
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
+<script>
+// ── New message notification on sign-in ────────────────────────────────
+(function () {
+  const CHAT_API = localStorage.getItem('lf_chat_api') || 'https://loveflix-chat.adrienmuhabukibusiness.workers.dev';
+
+  function escHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+    );
+  }
+
+  function timeAgoShort(ms) {
+    const s = Math.round((Date.now() - ms) / 1000);
+    if (s < 60)  return 'Just now';
+    if (s < 3600) return Math.floor(s / 60) + 'm ago';
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+    return Math.floor(s / 86400) + 'd ago';
+  }
+
+  function showToast(senderName, count, latestText, latestTs) {
+    const toast   = document.getElementById('msg-toast');
+    const title   = document.getElementById('toast-title');
+    const msg     = document.getElementById('toast-msg');
+    const time    = document.getElementById('toast-time');
+    const closeBtn  = document.getElementById('toast-close');
+    const dismissBtn = document.getElementById('toast-dismiss');
+    if (!toast) return;
+
+    title.textContent = count > 1
+      ? senderName + ' left you ' + count + ' messages'
+      : senderName + ' left you a message';
+    msg.textContent = latestText;
+    time.textContent = timeAgoShort(latestTs);
+
+    toast.classList.add('show');
+
+    function dismiss() {
+      toast.classList.remove('show');
+      // Update last-checked so it doesn't show again on next page load
+      try { localStorage.setItem('lf_chat_last_checked', String(latestTs)); } catch (_) {}
+    }
+    closeBtn.addEventListener('click', dismiss, { once: true });
+    dismissBtn.addEventListener('click', dismiss, { once: true });
+
+    // Auto-hide after 12s
+    setTimeout(dismiss, 12000);
+  }
+
+  async function checkForNewMessages() {
+    const token = LoveFlix.getToken ? LoveFlix.getToken() : localStorage.getItem('loveflix_token');
+    if (!token) return;
+
+    const lastChecked = parseInt(localStorage.getItem('lf_chat_last_checked') || '0', 10);
+    // First visit ever — don't spam; just record current time and skip toast
+    if (!lastChecked) {
+      try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+      return;
+    }
+
+    try {
+      const res = await fetch(CHAT_API + '/api/history?limit=50', {
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const messages = data.messages || [];
+
+      const userId = LoveFlix.getUserId ? LoveFlix.getUserId() : null;
+      // Messages from partner that arrived after our last check
+      const unread = messages.filter(m =>
+        Number(m.created_at) > lastChecked && m.sender_id !== userId
+      );
+
+      if (unread.length > 0) {
+        const latest = unread[unread.length - 1];
+        showToast(
+          escHtml(latest.sender_name || 'Your Person'),
+          unread.length,
+          latest.text || '',
+          Number(latest.created_at)
+        );
+      }
+    } catch (_) {}
+  }
+
+  // Run after settings are ready so getUserId/getToken are populated
+  if (LoveFlix.ensureSettingsReady) {
+    LoveFlix.ensureSettingsReady().then(checkForNewMessages).catch(function () {
+      // Fallback: run directly if ensureSettingsReady fails
+      checkForNewMessages();
+    });
+  } else {
+    // Small delay to let auth initialise
+    setTimeout(checkForNewMessages, 800);
+  }
+})();
+</script>
 <!-- MapLibre loaded synchronously so it is guaranteed available before the globe init below -->
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
