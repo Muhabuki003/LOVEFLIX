@@ -36,10 +36,16 @@
         // Matches the /ingest/* proxy in functions/ingest/[[path]].js.
         api_host: '/ingest',
         ui_host: (host || 'https://us.i.posthog.com').replace('.i.posthog.com', '.posthog.com'),
-        defaults: '2026-01-30',
         person_profiles: 'identified_only',
         capture_pageview: true,
         capture_pageleave: true,
+        disable_session_recording: false,
+        loaded: function (ph) {
+          // Force the recorder to start regardless of the /decide response.
+          // Needed because /decide may not include sessionRecording config
+          // when the SDK is initialised with a relative api_host (/ingest).
+          try { ph.startSessionRecording(); } catch (_) {}
+        },
       });
       INITIALIZED = true;
       // Replay anything queued before init resolved.
