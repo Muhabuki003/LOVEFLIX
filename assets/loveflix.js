@@ -351,7 +351,41 @@
       location.replace('loveflix_login_screen.html');
       return false;
     }
+    startPresence();
     return true;
+  }
+
+  // Broadcast presence so partner sees us as online on any page.
+  // Upserts couple_presence every 60 s and on tab focus.
+  let _presenceTimer = null;
+  function startPresence() {
+    if (_presenceTimer) return; // already running
+    async function beat() {
+      const token    = getToken();
+      const coupleId = getCoupleId();
+      const userId   = getUserId();
+      if (!token || !coupleId || !userId) return;
+      try {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/couple_presence`,
+          {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Prefer: 'resolution=merge-duplicates,return=minimal',
+            },
+            body: JSON.stringify({ user_id: userId, couple_id: coupleId, last_seen: new Date().toISOString() }),
+          }
+        );
+      } catch (_) {}
+    }
+    beat();
+    _presenceTimer = setInterval(beat, 60000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') beat();
+    });
   }
 
   async function api(path, opts = {}) {
@@ -711,6 +745,7 @@
     signUp,
     signOut,
     requireAuth,
+    startPresence,
     api,
     putWithProgress,
     getActiveProfile,
