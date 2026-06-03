@@ -31,6 +31,14 @@ R2_BUCKET_NAME = "loveflix-videos"
 R2_PUBLIC_URL = "https://pub-41c1138b6caa46559a3d65cc2f95e4fb.r2.dev"
 DEFAULT_TENANT_ID = "a9c77b1cff6d48f28930ed068bbba95e"
 
+# ---- PostHog (project key is public — safe to commit) ----
+# Paste the phc_… project API key here (or set via `wrangler pages secret put
+# POSTHOG_PROJECT_API_KEY` if you'd rather keep it out of the repo). The
+# client SDK loads this via GET /api/posthog-config; when unset, analytics
+# silently no-op so staging/local dev stays clean.
+POSTHOG_PROJECT_API_KEY = ""
+POSTHOG_HOST = "https://us.i.posthog.com"
+
 # ---- Stripe (public keys — safe to commit) ----
 # Replace with your live publishable key after rotating:
 STRIPE_PUBLISHABLE_KEY = "pk_live_51TY6EgA20Y7L8XqMtsRAdXT7cxSPIEvCZAFpFC4VmC5C4rBsxASOuDmuXmjgpSoBpQrJcwBRBk5GvEZ2axDboO8G003rSYi9a9"

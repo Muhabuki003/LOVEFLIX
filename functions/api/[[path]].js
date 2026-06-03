@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = new Set([
   'POST /api/activate-subscription',
   'GET /api/billing/subscription',
   'GET /api/stripe-config',
+  'GET /api/posthog-config',
   'POST /api/stripe-webhook',
   'POST /api/join-partner',
   // Google Maps JS API key for the LoveConnect navigation map. The page fetches
@@ -260,6 +261,15 @@ export async function onRequest(context) {
     if (method === 'GET'  && path === '/api/billing/subscription') return getBillingSubscription(env, request);
     if (method === 'GET'  && path === '/api/stripe-config') {
       return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '' });
+    }
+
+    // PostHog project key is public (phc_…) — safe to hand out to any caller.
+    // Returning '' when unset lets the client silently disable analytics.
+    if (method === 'GET' && path === '/api/posthog-config') {
+      return json({
+        key: env.POSTHOG_PROJECT_API_KEY || '',
+        host: env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      });
     }
 
     if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
