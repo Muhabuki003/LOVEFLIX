@@ -328,6 +328,15 @@
   }
 
   bootstrap().catch(err => showError(err.message || 'Could not load payment form.'));
+
+  try {
+    var _ckParams = new URLSearchParams(location.search);
+    window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture('paywall_seen', {
+      trigger: 'checkout_page',
+      plan: _ckParams.get('plan') || null,
+      interval: _ckParams.get('interval') || null,
+    });
+  } catch (_) {}
 </script>
 </body>
 </html>

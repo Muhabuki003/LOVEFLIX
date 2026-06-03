@@ -301,6 +301,19 @@
     ensureSettingsReady().then(apply).catch(() => {});
   }
 
+  function track(event, props) {
+    try { window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture(event, props); } catch (_) {}
+  }
+  function identify(user) {
+    if (!user || !user.id) return;
+    try {
+      window.LoveFlixAnalytics && window.LoveFlixAnalytics.identify(user.id, {
+        email: user.email,
+        created_at: user.created_at,
+      });
+    } catch (_) {}
+  }
+
   async function signIn(email, password) {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
@@ -313,6 +326,8 @@
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign-in failed');
     setSession(data);
+    identify(data.user);
+    track('user_signed_in', { method: 'email' });
     // Pull/merge settings before redirecting so the next page sees real names.
     resetSettingsReady();
     try { await pullSettings(); } catch (_) {}
@@ -333,14 +348,22 @@
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Sign-up failed');
     if (data.access_token) {
       setSession(data);
+      identify(data.user);
       // Flush anything entered before signup completed.
       try { await flushPendingIfAny(); } catch (_) {}
       cacheCoupleId().catch(() => {});
     }
+    track('user_signed_up', {
+      method: 'email',
+      // Supabase email-confirm flows return no access_token until confirmed.
+      confirmed: !!data.access_token,
+    });
     return data;
   }
 
   function signOut() {
+    track('user_signed_out');
+    try { window.LoveFlixAnalytics && window.LoveFlixAnalytics.reset(); } catch (_) {}
     clearSession();
     location.href = 'loveflix_login_screen.html';
   }
@@ -635,6 +658,16 @@
       if (row.role) localStorage.setItem('loveflix_role', row.role);
       if (typeof row.is_billing_owner === 'boolean') {
         localStorage.setItem('loveflix_is_billing_owner', row.is_billing_owner ? '1' : '0');
+      }
+      // Group the signed-in user into their couple so PostHog can do
+      // couple-level funnels (active couples > DAU for this product).
+      if (row.couple_id) {
+        try {
+          window.LoveFlixAnalytics && window.LoveFlixAnalytics.group('couple', row.couple_id, {
+            is_billing_owner: !!row.is_billing_owner,
+            role: row.role || null,
+          });
+        } catch (_) {}
       }
       // Cache the creator's (admin's) user_id so every API call targets the
       // shared couple tenant regardless of which partner is signed in.

@@ -237,6 +237,12 @@
   document.querySelectorAll('.faq-item').forEach(item => {
     item.addEventListener('click', () => item.classList.toggle('open'));
   });
+
+  try {
+    window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture('paywall_seen', {
+      trigger: 'pricing_page',
+    });
+  } catch (_) {}
 </script>
 </body>
 </html>

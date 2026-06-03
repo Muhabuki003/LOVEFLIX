@@ -520,6 +520,11 @@
       if (error) throw error;
       form.reset();
       showModal();
+      try {
+        window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture('waitlist_joined', {
+          referrer: document.referrer || null,
+        });
+      } catch (_) {}
       document.dispatchEvent(new CustomEvent('waitlist:joined'));
     } catch (ex) {
       const msg = (ex && ex.message) ? ex.message : 'Something went wrong. Please try again.';
