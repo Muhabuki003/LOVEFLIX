@@ -36,10 +36,10 @@
         // Matches the /ingest/* proxy in functions/ingest/[[path]].js.
         api_host: '/ingest',
         ui_host: (host || 'https://us.i.posthog.com').replace('.i.posthog.com', '.posthog.com'),
-        defaults: '2026-01-30',
         person_profiles: 'identified_only',
         capture_pageview: true,
         capture_pageleave: true,
+        disable_session_recording: false,
       });
       INITIALIZED = true;
       // Replay anything queued before init resolved.
