@@ -5,6 +5,7 @@
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);}}catch(e){}})();</script>
 
 <meta charset="UTF-8">
+<script src="/assets/posthog.js" defer></script>
 <title>LoveFlix — Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -847,7 +848,19 @@
     togglePlay();
   });
 
-  video.addEventListener('play', () => setPlayingUI(true));
+  let _playbackStartedFired = false;
+  video.addEventListener('play', () => {
+    setPlayingUI(true);
+    if (!_playbackStartedFired) {
+      _playbackStartedFired = true;
+      try {
+        window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture('video_playback_started', {
+          video_id: id,
+          duration_seconds: Number.isFinite(video.duration) ? Math.round(video.duration) : null,
+        });
+      } catch (_) {}
+    }
+  });
   video.addEventListener('pause', () => setPlayingUI(false));
   video.addEventListener('error', () => stage.classList.add('fallback'));
 

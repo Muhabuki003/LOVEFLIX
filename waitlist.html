@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="/assets/posthog.js" defer></script>
 <title>LoveFlix — Join the Waitlist</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="A streaming service of two. Join the LoveFlix waitlist.">
@@ -519,6 +520,11 @@
       if (error) throw error;
       form.reset();
       showModal();
+      try {
+        window.LoveFlixAnalytics && window.LoveFlixAnalytics.capture('waitlist_joined', {
+          referrer: document.referrer || null,
+        });
+      } catch (_) {}
       document.dispatchEvent(new CustomEvent('waitlist:joined'));
     } catch (ex) {
       const msg = (ex && ex.message) ? ex.message : 'Something went wrong. Please try again.';

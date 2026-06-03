@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = new Set([
   'POST /api/activate-subscription',
   'GET /api/billing/subscription',
   'GET /api/stripe-config',
+  'GET /api/posthog-config',
   'POST /api/stripe-webhook',
   'POST /api/join-partner',
   // Google Maps JS API key for the LoveConnect navigation map. The page fetches
@@ -48,6 +49,30 @@ const LOVEFLIX_PLANS = {
 
 // json() picks up the per-request origin stored at the top of onRequest.
 let _reqOrigin = '';
+// Stashed at the top of onRequest so phCapture() can hand off to the
+// runtime without each handler having to thread `ctx` through its signature.
+let _waitUntil = null;
+
+// Fire-and-forget PostHog capture from a Cloudflare Worker. Uses the
+// public /i/v0/e/ batch endpoint. No-ops when POSTHOG_PROJECT_API_KEY is
+// unset so staging/local dev stays clean.
+async function phCapture(env, { distinctId, event, properties }) {
+  const key = env.POSTHOG_PROJECT_API_KEY;
+  if (!key || !distinctId || !event) return;
+  const host = (env.POSTHOG_HOST || 'https://us.i.posthog.com').replace(/\/+$/, '');
+  const fire = fetch(host + '/i/v0/e/', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      api_key: key,
+      distinct_id: distinctId,
+      event,
+      properties: properties || {},
+      timestamp: new Date().toISOString(),
+    }),
+  }).catch(() => {});
+  if (_waitUntil) _waitUntil(fire); else await fire;
+}
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
     status,
@@ -158,6 +183,7 @@ async function verifyTenantAccess(env, user, requestedTenantId) {
 export async function onRequest(context) {
   const { request, env } = context;
   _reqOrigin = request.headers.get('origin') || '';
+  _waitUntil = typeof context.waitUntil === 'function' ? context.waitUntil.bind(context) : null;
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
   const path = url.pathname.replace(/\/+$/, '') || url.pathname;
@@ -262,6 +288,15 @@ export async function onRequest(context) {
       return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '' });
     }
 
+    // PostHog project key is public (phc_…) — safe to hand out to any caller.
+    // Returning '' when unset lets the client silently disable analytics.
+    if (method === 'GET' && path === '/api/posthog-config') {
+      return json({
+        key: env.POSTHOG_PROJECT_API_KEY || '',
+        host: env.POSTHOG_HOST || 'https://us.i.posthog.com',
+      });
+    }
+
     if (method === 'POST' && path === '/api/livekit-token') return livekitToken(env, request, user);
 
     // Hands the Google Maps JS API key to the LoveConnect page so it can inject
@@ -308,7 +343,7 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/music/yt-match') return ytMatch(env, url);
 
     // Favorites (My List)
-    if (method === 'POST'   && path === '/api/ai') return handleAiChat(env, request);
+    if (method === 'POST'   && path === '/api/ai') return handleAiChat(env, request, user);
 
     if (method === 'GET'    && path === '/api/favorites') return listFavorites(env, user);
     if (method === 'GET'    && path === '/api/couple-stats') return getCoupleStats(env, request, user);
@@ -602,6 +637,17 @@ async function saveProgress(env, request, user) {
        last_watched_at  = excluded.last_watched_at`
   ).bind(id, user.id, videoId, seconds, completed).run();
 
+  // Fire only on completion — the per-tick saves would spam PostHog. A
+  // `video_playback_started` event is captured client-side in player.html,
+  // so started→completed forms a clean funnel without per-tick noise.
+  if (completed) {
+    await phCapture(env, {
+      distinctId: user.id,
+      event: 'video_playback_completed',
+      properties: { video_id: videoId, watched_seconds: seconds },
+    });
+  }
+
   return json({ ok: true });
 }
 
@@ -843,6 +889,17 @@ async function createCheckoutSession(env, request, url) {
   const session = await stripeRequest(secretKey, '/checkout/sessions', params);
   if (session.error) return json({ error: session.error.message }, 500);
 
+  await phCapture(env, {
+    distinctId: body.email ? `email_${body.email.toString().toLowerCase()}` : 'anonymous_checkout',
+    event: 'checkout_started',
+    properties: {
+      plan: planId,
+      interval: billing,
+      price_id: priceId,
+      stripe_session_id: session.id,
+    },
+  });
+
   return json({ url: session.url, sessionId: session.id });
 }
 
@@ -1013,6 +1070,20 @@ async function handleStripeWebhook(env, request) {
           session.metadata?.billing || 'monthly',
         ).run().catch(() => null); // table may not exist yet — non-fatal
       }
+      // Stripe sends customer id, not user id. Until a customer→user mapping
+      // exists we prefix the customer id per the skill's anonymous-org rule
+      // so it doesn't collide with Supabase user uuids.
+      await phCapture(env, {
+        distinctId: session.customer ? `customer_${session.customer}` : 'unknown_customer',
+        event: 'subscription_activated',
+        properties: {
+          plan: session.metadata?.plan_id || 'sweetheart',
+          interval: session.metadata?.billing || 'monthly',
+          amount_cents: session.amount_total ?? null,
+          currency: session.currency || 'usd',
+          stripe_subscription_id: session.subscription || null,
+        },
+      });
       break;
     }
     case 'customer.subscription.deleted': {
@@ -1022,6 +1093,30 @@ async function handleStripeWebhook(env, request) {
           `UPDATE subscriptions SET status = 'canceled' WHERE customer_id = ?`
         ).bind(sub.customer).run().catch(() => null);
       }
+      await phCapture(env, {
+        distinctId: sub.customer ? `customer_${sub.customer}` : 'unknown_customer',
+        event: 'subscription_canceled',
+        properties: {
+          plan: sub.metadata?.plan_id || null,
+          stripe_subscription_id: sub.id || null,
+        },
+      });
+      break;
+    }
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object;
+      await phCapture(env, {
+        distinctId: invoice.customer ? `customer_${invoice.customer}` : 'unknown_customer',
+        event: 'subscription_payment_failed',
+        properties: {
+          amount_cents: invoice.amount_due ?? null,
+          currency: invoice.currency || 'usd',
+          attempt_count: invoice.attempt_count ?? null,
+          next_retry_at: invoice.next_payment_attempt
+            ? new Date(invoice.next_payment_attempt * 1000).toISOString()
+            : null,
+        },
+      });
       break;
     }
   }
@@ -1100,6 +1195,13 @@ async function sendInvite(env, request, user) {
     const err = await res.json().catch(() => ({}));
     return json({ error: 'resend_error', detail: err }, 500);
   }
+
+  await phCapture(env, {
+    distinctId: user?.id || 'anonymous',
+    event: 'partner_invite_sent',
+    properties: { delivery: 'email' },
+  });
+
   return json({ ok: true });
 }
 
@@ -1191,6 +1293,19 @@ async function joinPartner(env, request) {
       Prefer: 'return=minimal',
     },
     body: JSON.stringify({ used: true, accepted_by: newUserId }),
+  });
+
+  // Track redemption + couple pairing. Both go on the new user since they're
+  // the one who took the action; couple_id is on the properties for grouping.
+  await phCapture(env, {
+    distinctId: newUserId,
+    event: 'partner_invite_redeemed',
+    properties: { couple_id: invite.couple_id },
+  });
+  await phCapture(env, {
+    distinctId: newUserId,
+    event: 'couple_paired_completed',
+    properties: { couple_id: invite.couple_id },
   });
 
   // 5. Issue a session for the new user. /token?grant_type=password trades
@@ -1414,6 +1529,16 @@ async function saveMusicPlay(env, request, user) {
       INSERT INTO couple_music_plays (id, couple_id, soundcloud_track_id, title, artist, played_by_user_id, played_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(id, couple_id, soundcloud_track_id, title, artist || null, user.id, timestamp).run();
+
+    await phCapture(env, {
+      distinctId: user.id,
+      event: 'music_track_played',
+      properties: {
+        source: soundcloud_track_id ? 'soundcloud' : 'unknown',
+        track_id: soundcloud_track_id || null,
+        couple_id,
+      },
+    });
 
     return json({ ok: true, id });
   } catch (err) {
@@ -1768,7 +1893,7 @@ STRICT BOUNDARIES:
 TONE: Warm, witty, romantic, and genuinely invested in their happiness.`;
 }
 
-async function handleAiChat(env, request) {
+async function handleAiChat(env, request, user) {
   // Reject oversized payloads before parsing JSON (32 KB is ample for 16 turns × 1000 chars).
   const contentLength = parseInt(request.headers.get('content-length') || '0');
   if (contentLength > 32768) return json({ error: 'payload_too_large' }, 413);
@@ -1834,6 +1959,20 @@ async function handleAiChat(env, request) {
   }
 
   const data = await dsRes.json();
+
+  await phCapture(env, {
+    // Landing-page users have no auth; fall back to the CF-provided IP so
+    // we can still count unique anon AI users without tying them to PII.
+    distinctId: user?.id || `ip_${request.headers.get('cf-connecting-ip') || 'unknown'}`,
+    event: 'ai_message_sent',
+    properties: {
+      surface: mode,
+      message_count: userMessages.length,
+      tokens_in: data?.usage?.prompt_tokens ?? null,
+      tokens_out: data?.usage?.completion_tokens ?? null,
+    },
+  });
+
   return json(data);
 }
 
