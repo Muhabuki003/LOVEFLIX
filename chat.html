@@ -539,12 +539,21 @@ async function init() {
 
   const data = await res.json();
   meId = data.me?.id;
-  const myName = data.me?.displayName;
+
+  // Settings are the authoritative source for display names — couple_members.display_name
+  // is only set at signup and may be stale if the user later renamed themselves in settings.
+  const settings = (LoveFlix.getSettings ? LoveFlix.getSettings() : {}) || {};
+  const profile  = (LoveFlix.getActiveProfile ? LoveFlix.getActiveProfile() : null);
+  const isAdmin  = profile ? (profile.dbRole !== 'partner') : true;
+  const myNameFromSettings      = isAdmin ? (settings.adminName || '') : (settings.partnerName || '');
+  const partnerNameFromSettings = isAdmin ? (settings.partnerName || '') : (settings.adminName || '');
+
+  const myName = myNameFromSettings || data.me?.displayName || '';
   const partner = data.partner;
 
   if (partner) {
     partnerId = partner.id;
-    partnerName = partner.displayName || "Your Person";
+    partnerName = partnerNameFromSettings || partner.displayName || "Your Person";
     $("partnerName").textContent = partnerName;
     $("partnerAvatar").textContent = partnerName[0].toUpperCase();
     $("noPartnerBanner").style.display = "none";
@@ -585,6 +594,12 @@ async function loadHistory() {
     const nextSame = !isLast && messages[i + 1].sender_id === m.sender_id;
     renderMsg(m, { skipScroll: !isLast, nextSame });
   });
+
+  // Mark all currently visible messages as seen
+  if (messages.length > 0) {
+    const latest = messages[messages.length - 1];
+    try { localStorage.setItem('lf_chat_last_checked', String(latest.created_at)); } catch (_) {}
+  }
 
   scrollBottom(true);
 }
@@ -694,6 +709,8 @@ function connectWS(token) {
         // Cancel typing indicator
         clearTypingIndicator();
         renderMsg(data);
+        // Mark as seen immediately since the user is in the chat
+        try { localStorage.setItem('lf_chat_last_checked', String(data.created_at || Date.now())); } catch (_) {}
       }
 
       if (data.type === "typing" && data.sender_id !== meId) {
@@ -724,8 +741,13 @@ async function sendMessage() {
   sendBtn.classList.remove("ready");
   sendBtn.disabled = true;
 
-  // Optimistic render
-  renderMsg({ sender_id: meId, sender_name: "Me", text, created_at: Date.now() });
+  // Optimistic render — use real name so it matches what the server stores
+  const settings = (LoveFlix.getSettings ? LoveFlix.getSettings() : {}) || {};
+  const prof = (LoveFlix.getActiveProfile ? LoveFlix.getActiveProfile() : null);
+  const senderLabel = prof?.dbRole !== 'partner'
+    ? (settings.adminName || 'Me')
+    : (settings.partnerName || 'Me');
+  renderMsg({ sender_id: meId, sender_name: senderLabel, text, created_at: Date.now() });
 
   const res = await apiFetch("/api/send", {
     method: "POST",
