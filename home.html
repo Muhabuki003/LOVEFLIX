@@ -10,9 +10,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- MapLibre preloaded so the orbit map canvas sizes correctly on first paint -->
+<!-- MapLibre: download in parallel, fire queue when ready — no defer/blocking -->
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
+<script>
+(function(){
+  window._mlQueue = []; window._mlReady = false;
+  window.onMapLibreReady = function(cb){
+    if(window._mlReady){ cb(); return; }
+    window._mlQueue.push(cb);
+  };
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+  s.onload = function(){
+    window._mlReady = true;
+    window._mlQueue.forEach(function(cb){ try{ cb(); }catch(_){} });
+    window._mlQueue = [];
+  };
+  document.head.appendChild(s);
+})();
+</script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -512,6 +528,10 @@
     position: absolute; inset: 0;
     opacity: 1;
   }
+  /* Guarantee canvas always fills the tile even before MapLibre CSS loads */
+  .bt-orbit-map .maplibregl-map,
+  .bt-orbit-map .maplibregl-canvas-container { width: 100% !important; height: 100% !important; }
+  .bt-orbit-map .maplibregl-canvas { display: block; width: 100% !important; height: 100% !important; }
   .bt-orbit-map .maplibregl-ctrl-bottom-left,
   .bt-orbit-map .maplibregl-ctrl-bottom-right,
   .bt-orbit-map .maplibregl-ctrl-top-left,
@@ -1388,15 +1408,9 @@
       let orbitMap = null;
       let mounted  = false;
 
-      // Wait for the deferred MapLibre script to finish executing, then run cb.
-      function whenMapLibreReady(cb) {
-        if (typeof maplibregl !== 'undefined') { cb(); return; }
-        let tries = 0;
-        const t = setInterval(() => {
-          if (typeof maplibregl !== 'undefined') { clearInterval(t); cb(); }
-          else if (++tries > 50) { clearInterval(t); }   // give up after ~5s
-        }, 100);
-      }
+      // Delegate to the head-injected queue — fires the instant MapLibre loads,
+      // no polling, no timeout. If MapLibre is already ready, calls cb() now.
+      function whenMapLibreReady(cb) { window.onMapLibreReady(cb); }
 
       // Mount the map exactly once. If it's already mounted and real coords
       // arrive later, recenter the existing instance instead of remounting.
