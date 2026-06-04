@@ -10,6 +10,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- MapLibre preloaded so the orbit map canvas sizes correctly on first paint -->
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -468,13 +471,17 @@
       grid-template-rows: auto;
       padding: 20px 16px 4px;
     }
-    .bt-orbit  { grid-column: span 2; grid-row: auto; height: 200px; }
-    .bt-stat   { grid-column: span 1; grid-row: auto; }
-    .bt-music  { grid-column: span 2; grid-row: auto; }
-    .bt-call,.bt-msg { grid-column: span 1; grid-row: auto; min-height: 100px; }
-    .bt-links  { grid-column: span 2; grid-row: auto; }
+    /* Use .bento .bt-X (two-class specificity) so these override the single-class
+       explicit desktop placements that appear later in the source. */
+    .bento .bt-orbit         { grid-column: span 2; grid-row: auto; height: 200px; }
+    .bento .bt-days,
+    .bento .bt-vids          { grid-column: span 1; grid-row: auto; }
+    .bento .bt-music         { grid-column: span 2; grid-row: auto; }
+    .bento .bt-call,
+    .bento .bt-msg           { grid-column: span 1; grid-row: auto; min-height: 100px; }
+    .bento .bt-links         { grid-column: span 2; grid-row: auto; }
   }
-  @media (max-width: 480px) { .bento { grid-template-columns: 1fr 1fr; gap: 10px; } }
+  @media (max-width: 480px) { .bento { gap: 10px; } }
 
   .bt {
     border-radius: 16px; overflow: hidden; position: relative;
@@ -1292,20 +1299,25 @@
         bearing:            0,
         interactive:        false,
         attributionControl: false,
+        fadeDuration:       0,
       });
-      // Resize immediately, on style load, on full load, and after a short
-      // delay — MapLibre reads container dims at init; the tile may not have
-      // its final layout dimensions yet if the bento was just painted.
+      // Resize at multiple checkpoints — MapLibre reads container dims at init
+      // and the orbit tile may still be flowing into its final grid position.
       const doResize = () => { try { map.resize(); } catch (_) {} };
       doResize();
-      setTimeout(doResize, 100);
-      setTimeout(doResize, 400);
+      [50, 150, 350, 700, 1500].forEach(ms => setTimeout(doResize, ms));
       map.on('load', () => {
         doResize();
         const canvas = map.getCanvas();
-        if (canvas) canvas.style.pointerEvents = 'none';
+        if (canvas) {
+          canvas.style.pointerEvents = 'none';
+          // Ensure canvas explicitly fills its parent so it's never 0×0
+          canvas.style.width  = '100%';
+          canvas.style.height = '100%';
+        }
+        doResize();
       });
-      window.addEventListener('resize', doResize);
+      window.addEventListener('resize', doResize, { passive: true });
       map.on('style.load', () => {
         doResize();
         try { map.setProjection({ type: 'mercator' }); } catch (_) {}
@@ -1372,36 +1384,53 @@
         }).catch(() => {});
     }
 
-    // 2. Location: partner's last known city from couple_locations (for the subline)
-    if (coupleId && userId) {
-      supa(`couple_locations?couple_id=eq.${coupleId}&select=user_id,location,city,updated_at&order=updated_at.desc`)
-        .then(r => r.ok ? r.json() : [])
-        .then(rows => {
-          let coords = null, city = null;
-          if (Array.isArray(rows)) {
-            for (const row of rows) {
-              if (row.user_id !== userId) {
-                coords = parseWKB(row.location);
-                city   = row.city || null;
-                break;
+    // 2. Orbit map — always launch immediately so it's never blank.
+    //    Kick it off before the location fetch so the map renders right away,
+    //    then re-center once we have partner coords (or keep default if none).
+    if (mapContainer) {
+      // MapLibre is pre-loaded via <script defer> in <head>; wait for it then
+      // a frame so the orbit tile has its final layout dimensions.
+      function mountOrbitMap(coords) {
+        const doMount = () => {
+          if (typeof maplibregl !== 'undefined') {
+            launchOrbitMap(mapContainer, coords || [0, 20]);
+          } else {
+            // Fallback: script deferred but not yet executed
+            setTimeout(() => { if (typeof maplibregl !== 'undefined') launchOrbitMap(mapContainer, coords || [0, 20]); }, 500);
+          }
+        };
+        requestAnimationFrame(() => requestAnimationFrame(doMount));
+      }
+
+      // Start map with default coords immediately
+      mountOrbitMap(null);
+
+      // Then try to refine with partner's last known location
+      if (coupleId && userId) {
+        supa(`couple_locations?couple_id=eq.${coupleId}&select=user_id,location,city,updated_at&order=updated_at.desc`)
+          .then(r => r.ok ? r.json() : [])
+          .then(rows => {
+            let coords = null, city = null;
+            if (Array.isArray(rows)) {
+              for (const row of rows) {
+                if (row.user_id !== userId) {
+                  coords = parseWKB(row.location);
+                  city   = row.city || null;
+                  break;
+                }
               }
             }
-          }
-          if (locEl && (city || coords)) {
-            locEl.textContent = city || (coords ? `${coords[1].toFixed(2)}°, ${coords[0].toFixed(2)}°` : 'Open LoveConnect →');
-          }
-          // 3. Rotating map — launch regardless of whether partner has a location
-          if (mapContainer) {
-            loadMapLibreThen(() => requestAnimationFrame(() => {
-              launchOrbitMap(mapContainer, coords || [0, 20]);
-            }));
-          }
-        }).catch(() => {
-          if (mapContainer) loadMapLibreThen(() => requestAnimationFrame(() => launchOrbitMap(mapContainer, [0, 20])));
-        });
-    } else if (mapContainer) {
-      // No auth yet but still show the rotating map with default coords
-      loadMapLibreThen(() => requestAnimationFrame(() => launchOrbitMap(mapContainer, [0, 20])));
+            if (locEl) {
+              locEl.textContent = city || (coords ? `${coords[1].toFixed(2)}°, ${coords[0].toFixed(2)}°` : 'Open LoveConnect →');
+            }
+            // If partner has a location, relaunch map centered there.
+            // The old map instance in mapContainer will be replaced.
+            if (coords) {
+              mapContainer.innerHTML = '';
+              launchOrbitMap(mapContainer, coords);
+            }
+          }).catch(() => {});
+      }
     }
 
     // Last call from call_logs
