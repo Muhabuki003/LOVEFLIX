@@ -510,7 +510,7 @@
   .bt-orbit { cursor: pointer; }
   .bt-orbit-map {
     position: absolute; inset: 0;
-    opacity: 0.7;
+    opacity: 1;
   }
   .bt-orbit-map .maplibregl-ctrl-bottom-left,
   .bt-orbit-map .maplibregl-ctrl-bottom-right,
@@ -1288,9 +1288,10 @@
   }
 
   function launchOrbitMap(container, center) {
-    if (!container || typeof maplibregl === 'undefined') return;
+    if (!container || typeof maplibregl === 'undefined') return null;
+    let map;
     try {
-      const map = new maplibregl.Map({
+      map = new maplibregl.Map({
         container,
         style:              'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
         center:             center || [0, 20],
@@ -1301,48 +1302,42 @@
         attributionControl: false,
         fadeDuration:       0,
       });
-      // Resize at multiple checkpoints — MapLibre reads container dims at init
-      // and the orbit tile may still be flowing into its final grid position.
-      const doResize = () => { try { map.resize(); } catch (_) {} };
-      doResize();
-      [50, 150, 350, 700, 1500].forEach(ms => setTimeout(doResize, ms));
-      map.on('load', () => {
-        doResize();
-        const canvas = map.getCanvas();
-        if (canvas) {
-          canvas.style.pointerEvents = 'none';
-          // Ensure canvas explicitly fills its parent so it's never 0×0
-          canvas.style.width  = '100%';
-          canvas.style.height = '100%';
-        }
-        doResize();
-      });
-      window.addEventListener('resize', doResize, { passive: true });
-      map.on('style.load', () => {
-        doResize();
-        try { map.setProjection({ type: 'mercator' }); } catch (_) {}
-        let bearing = 0;
-        (function loop() {
-          bearing = (bearing + 0.09 + 360) % 360;
-          map.setBearing(bearing);
-          requestAnimationFrame(loop);
-        })();
-      });
-    } catch (_) {}
-  }
+    } catch (_) { return null; }
 
-  function loadMapLibreThen(cb) {
-    if (typeof maplibregl !== 'undefined') { cb(); return; }
-    // CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
-    document.head.appendChild(link);
-    // JS
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
-    script.onload = cb;
-    document.head.appendChild(script);
+    const doResize = () => { try { map.resize(); } catch (_) {} };
+    doResize();
+    [50, 150, 350, 700, 1500].forEach(ms => setTimeout(doResize, ms));
+
+    // ResizeObserver is the bulletproof fix: it fires the instant the orbit
+    // tile gains (or changes) real dimensions, so the canvas is never stuck
+    // at 0×0 even if MapLibre initialised before the grid finished laying out.
+    if (typeof ResizeObserver !== 'undefined') {
+      try { new ResizeObserver(doResize).observe(container); } catch (_) {}
+    }
+    window.addEventListener('resize', doResize, { passive: true });
+
+    map.on('load', () => {
+      doResize();
+      const canvas = map.getCanvas();
+      if (canvas) {
+        canvas.style.pointerEvents = 'none';
+        // Ensure canvas explicitly fills its parent so it's never 0×0
+        canvas.style.width  = '100%';
+        canvas.style.height = '100%';
+      }
+      doResize();
+    });
+    map.on('style.load', () => {
+      doResize();
+      try { map.setProjection({ type: 'mercator' }); } catch (_) {}
+      let bearing = 0;
+      (function loop() {
+        bearing = (bearing + 0.09 + 360) % 360;
+        try { map.setBearing(bearing); } catch (_) {}
+        requestAnimationFrame(loop);
+      })();
+    });
+    return map;
   }
 
   // ── Fill bento with live data (async, non-blocking) ───────────────────
@@ -1384,28 +1379,46 @@
         }).catch(() => {});
     }
 
-    // 2. Orbit map — always launch immediately so it's never blank.
-    //    Kick it off before the location fetch so the map renders right away,
-    //    then re-center once we have partner coords (or keep default if none).
+    // 2. Orbit map — the exact rotating close-up used behind the whos_watching
+    //    screen. Fetch the partner's LAST known location first, then mount a
+    //    single map centered on them and orbit. This works even when the
+    //    partner is offline, because couple_locations stores their last shared
+    //    location independently of presence.
     if (mapContainer) {
-      // MapLibre is pre-loaded via <script defer> in <head>; wait for it then
-      // a frame so the orbit tile has its final layout dimensions.
-      function mountOrbitMap(coords) {
-        const doMount = () => {
-          if (typeof maplibregl !== 'undefined') {
-            launchOrbitMap(mapContainer, coords || [0, 20]);
-          } else {
-            // Fallback: script deferred but not yet executed
-            setTimeout(() => { if (typeof maplibregl !== 'undefined') launchOrbitMap(mapContainer, coords || [0, 20]); }, 500);
-          }
-        };
-        requestAnimationFrame(() => requestAnimationFrame(doMount));
+      let orbitMap = null;
+      let mounted  = false;
+
+      // Wait for the deferred MapLibre script to finish executing, then run cb.
+      function whenMapLibreReady(cb) {
+        if (typeof maplibregl !== 'undefined') { cb(); return; }
+        let tries = 0;
+        const t = setInterval(() => {
+          if (typeof maplibregl !== 'undefined') { clearInterval(t); cb(); }
+          else if (++tries > 50) { clearInterval(t); }   // give up after ~5s
+        }, 100);
       }
 
-      // Start map with default coords immediately
-      mountOrbitMap(null);
+      // Mount the map exactly once. If it's already mounted and real coords
+      // arrive later, recenter the existing instance instead of remounting.
+      function mountOrbit(coords) {
+        if (mounted) {
+          if (coords && orbitMap) { try { orbitMap.jumpTo({ center: coords, zoom: 11 }); } catch (_) {} }
+          return;
+        }
+        mounted = true;
+        whenMapLibreReady(() => {
+          // double rAF: let the tile finish layout before MapLibre reads dims
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            orbitMap = launchOrbitMap(mapContainer, coords || [0, 20]);
+          }));
+        });
+      }
 
-      // Then try to refine with partner's last known location
+      // Safety net: if the location fetch stalls, still show the rotating map
+      // so the tile is never a dead dark box. On normal networks the fetch
+      // resolves first and this never fires.
+      const fallbackTimer = setTimeout(() => mountOrbit(null), 2500);
+
       if (coupleId && userId) {
         supa(`couple_locations?couple_id=eq.${coupleId}&select=user_id,location,city,updated_at&order=updated_at.desc`)
           .then(r => r.ok ? r.json() : [])
@@ -1420,16 +1433,16 @@
                 }
               }
             }
+            clearTimeout(fallbackTimer);
             if (locEl) {
               locEl.textContent = city || (coords ? `${coords[1].toFixed(2)}°, ${coords[0].toFixed(2)}°` : 'Open LoveConnect →');
             }
-            // If partner has a location, relaunch map centered there.
-            // The old map instance in mapContainer will be replaced.
-            if (coords) {
-              mapContainer.innerHTML = '';
-              launchOrbitMap(mapContainer, coords);
-            }
-          }).catch(() => {});
+            mountOrbit(coords);   // coords may be null → default view, still rotates
+          })
+          .catch(() => { clearTimeout(fallbackTimer); mountOrbit(null); });
+      } else {
+        clearTimeout(fallbackTimer);
+        mountOrbit(null);
       }
     }
 
