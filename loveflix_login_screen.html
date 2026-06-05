@@ -132,6 +132,23 @@
   .or-line { flex: 1; height: 1px; background: #555; }
   .or-text { color: #888; font-size: 13px; }
 
+  .btn-social {
+    width: 100%; height: 50px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 4px; cursor: pointer;
+    font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif;
+    letter-spacing: 0.2px; border: 1px solid transparent;
+    margin-bottom: 12px;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .btn-social:active { transform: scale(0.99); }
+  .btn-social:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-social svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .btn-google { background: #fff; color: #1f1f1f; }
+  .btn-google:hover { background: #f0f0f0; }
+  .btn-apple { background: #000; color: #fff; border-color: #444; }
+  .btn-apple:hover { background: #161616; }
+
   .btn-code {
     width: 100%; height: 50px;
     background: transparent; color: #fff;
@@ -223,6 +240,23 @@
       <div class="or-line"></div>
     </div>
 
+    <button class="btn-social btn-google" id="googleBtn" type="button">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+    <button class="btn-social btn-apple" id="appleBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M17.05 12.04c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.78 1.3 10.33.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.29-1.27 3.14-2.53.99-1.45 1.4-2.85 1.42-2.93-.03-.01-2.73-1.05-2.76-4.16zM14.54 4.4c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-3 1.54-.66.76-1.24 1.97-1.08 3.14 1.14.09 2.31-.58 3.02-1.43z"/>
+      </svg>
+      Sign in with Apple
+    </button>
+
     <button class="btn-code">Use a sign-in code</button>
 
     <div class="remember-row">
@@ -250,14 +284,31 @@
 
 <script src="assets/loveflix.js"></script>
 <script>
-  // If already signed in, skip the login screen. Anyone who's part of a
-  // couple (admin or partner) goes to the profile selector; brand-new users
-  // with no couple_members row yet go through onboarding.
-  if (LoveFlix.getToken()) {
-    LoveFlix.getUserRole().then(role => {
-      location.replace(role ? 'whos_watching.html' : 'intro.html');
-    });
+  // Send the user to the right place after a successful sign-in. Anyone who's
+  // part of a couple (admin or partner) goes to the profile selector;
+  // brand-new users with no couple_members row yet go through onboarding.
+  async function routeAfterAuth() {
+    const role = await LoveFlix.getUserRole();
+    location.replace(role ? 'whos_watching.html' : 'intro.html');
   }
+
+  (async function initLogin() {
+    // First, handle returning from a Google/Apple OAuth redirect. Supabase
+    // sends the session tokens back in the URL hash.
+    try {
+      const oauth = await LoveFlix.handleOAuthRedirect();
+      if (oauth) {
+        showErr('💕 Welcome back. Loading your memories...', 'ok');
+        await routeAfterAuth();
+        return;
+      }
+    } catch (e) {
+      showErr(e.message || "Couldn't complete sign-in. Please try again.");
+    }
+
+    // Already signed in? Skip the login screen.
+    if (LoveFlix.getToken()) routeAfterAuth();
+  })();
 
   function togglePw() {
     const input = document.getElementById('pwInput');
@@ -308,6 +359,20 @@
 
   document.getElementById('signinBtn').addEventListener('click', handleSignin);
   document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignin(); });
+
+  // Social sign-in — redirects out to the provider via Supabase.
+  function startOAuth(provider, btn) {
+    document.getElementById('errorMsg').classList.remove('show');
+    btn.disabled = true;
+    try {
+      LoveFlix.signInWithOAuth(provider);
+    } catch (e) {
+      btn.disabled = false;
+      showErr("Couldn't start sign-in. Please try again.");
+    }
+  }
+  document.getElementById('googleBtn').addEventListener('click', e => startOAuth('google', e.currentTarget));
+  document.getElementById('appleBtn').addEventListener('click', e => startOAuth('apple', e.currentTarget));
 </script>
 </body>
 </html>

@@ -361,6 +361,62 @@
     return data;
   }
 
+  // Redirect the browser to Supabase's OAuth authorize endpoint for a social
+  // provider ('google', 'apple', ...). Supabase runs the provider handshake and
+  // redirects back to redirectTo with the session tokens in the URL hash, which
+  // handleOAuthRedirect() picks up on the next page load. This is the implicit
+  // (client-only) flow — no server callback route needed.
+  function signInWithOAuth(provider, options) {
+    const opts = options || {};
+    // Default back to the page that initiated the sign-in (the login screen).
+    const redirectTo = opts.redirectTo || (location.origin + location.pathname);
+    const params = new URLSearchParams({ provider, redirect_to: redirectTo });
+    track('user_oauth_started', { provider });
+    location.href = `${SUPABASE_URL}/auth/v1/authorize?${params.toString()}`;
+  }
+
+  // Detect and consume the OAuth tokens Supabase appends to the URL hash after a
+  // social sign-in redirect (#access_token=...&refresh_token=...). On success,
+  // stores the session and returns { access_token, refresh_token, user }.
+  // Returns null when there's no OAuth payload in the URL. Throws if the
+  // provider returned an error (e.g. the user cancelled).
+  async function handleOAuthRedirect() {
+    const hash = location.hash || '';
+    if (!hash || (hash.indexOf('access_token') === -1 && hash.indexOf('error') === -1)) {
+      return null;
+    }
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const err = params.get('error_description') || params.get('error');
+    // Strip the hash immediately so tokens never linger in the URL or history.
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+    if (err) throw new Error(decodeURIComponent(err.replace(/\+/g, ' ')));
+
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    if (!access_token) return null;
+
+    setSession({ access_token, refresh_token });
+
+    // The implicit flow returns tokens but not the user object — fetch it so
+    // identify() and couple caching have the real profile to work with.
+    let user = null;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${access_token}` },
+      });
+      if (res.ok) { user = await res.json(); setSession({ user }); }
+    } catch (_) {}
+
+    identify(user);
+    track('user_signed_in', { method: 'oauth' });
+    // Pull/merge settings before redirecting so the next page sees real names.
+    resetSettingsReady();
+    try { await flushPendingIfAny(); } catch (_) {}
+    try { await pullSettings(); } catch (_) {}
+    cacheCoupleId().catch(() => {});
+    return { access_token, refresh_token, user };
+  }
+
   function signOut() {
     track('user_signed_out');
     try { window.LoveFlixAnalytics && window.LoveFlixAnalytics.reset(); } catch (_) {}
@@ -776,6 +832,8 @@
     applyBrandColor,
     signIn,
     signUp,
+    signInWithOAuth,
+    handleOAuthRedirect,
     signOut,
     requireAuth,
     startPresence,
