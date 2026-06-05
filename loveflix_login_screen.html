@@ -146,8 +146,6 @@
   .btn-social svg { width: 20px; height: 20px; flex-shrink: 0; }
   .btn-google { background: #fff; color: #1f1f1f; }
   .btn-google:hover { background: #f0f0f0; }
-  .btn-apple { background: #000; color: #fff; border-color: #444; }
-  .btn-apple:hover { background: #161616; }
 
   .btn-code {
     width: 100%; height: 50px;
@@ -250,13 +248,6 @@
       Sign in with Google
     </button>
 
-    <button class="btn-social btn-apple" id="appleBtn" type="button">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M17.05 12.04c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.78 1.3 10.33.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.39.81 1.4-.02 2.29-1.27 3.14-2.53.99-1.45 1.4-2.85 1.42-2.93-.03-.01-2.73-1.05-2.76-4.16zM14.54 4.4c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-3 1.54-.66.76-1.24 1.97-1.08 3.14 1.14.09 2.31-.58 3.02-1.43z"/>
-      </svg>
-      Sign in with Apple
-    </button>
-
     <button class="btn-code">Use a sign-in code</button>
 
     <div class="remember-row">
@@ -282,7 +273,7 @@
   </div>
 </footer>
 
-<script src="assets/loveflix.js"></script>
+<script src="assets/loveflix.js?v=oauth1"></script>
 <script>
   // Send the user to the right place after a successful sign-in. Anyone who's
   // part of a couple (admin or partner) goes to the profile selector;
@@ -293,7 +284,7 @@
   }
 
   (async function initLogin() {
-    // First, handle returning from a Google/Apple OAuth redirect. Supabase
+    // First, handle returning from a Google OAuth redirect. Supabase
     // sends the session tokens back in the URL hash.
     try {
       const oauth = await LoveFlix.handleOAuthRedirect();
@@ -372,7 +363,6 @@
     }
   }
   document.getElementById('googleBtn').addEventListener('click', e => startOAuth('google', e.currentTarget));
-  document.getElementById('appleBtn').addEventListener('click', e => startOAuth('apple', e.currentTarget));
 </script>
 </body>
 </html>
