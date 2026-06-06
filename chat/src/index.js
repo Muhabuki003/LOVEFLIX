@@ -116,7 +116,7 @@ export default {
           id: uid(),
           room_id: coupleId,
           sender_id: me.userId,
-          sender_name: myName || me.email,
+          sender_name: body.sender_name || myName || me.email,
           text,
           created_at: now(),
         };
