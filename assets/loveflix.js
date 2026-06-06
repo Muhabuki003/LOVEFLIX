@@ -432,6 +432,7 @@
       return false;
     }
     startPresence();
+    startMsgNotifications();
     return true;
   }
 
@@ -851,6 +852,131 @@
       const rows = await res.json();
       return (rows && rows[0] && rows[0].role) || null;
     } catch { return null; }
+  }
+
+  // ── Live message notification toast (iMessage-style) ────────────────────
+  // Opens a background WebSocket to the chat Worker on every page so the user
+  // gets a real-time popup when their partner sends a message. Singleton.
+  let _notifWS = null;
+  let _notifReconnectTimer = null;
+  let _notifToastEl = null;
+
+  function _ensureNotifStyles() {
+    if (document.getElementById('lf-notif-style')) return;
+    const s = document.createElement('style');
+    s.id = 'lf-notif-style';
+    s.textContent = [
+      '#lf-msg-toast{position:fixed;bottom:28px;right:28px;z-index:9999;max-width:340px;background:rgba(14,8,12,0.96);border:1px solid rgba(255,95,143,0.35);border-radius:16px;padding:14px 16px;box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 0 1px rgba(255,95,143,0.06);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);display:none;cursor:pointer;animation:lf-toast-in .35s cubic-bezier(.34,1.3,.64,1) both;font-family:\'Inter\',system-ui,sans-serif}',
+      '#lf-msg-toast.lf-show{display:block}',
+      '@keyframes lf-toast-in{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}',
+      '#lf-msg-toast .lf-toast-row{display:flex;align-items:flex-start;gap:10px}',
+      '#lf-msg-toast .lf-toast-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#ff5f8f,#c9184a);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;font-family:\'Fraunces\',serif}',
+      '#lf-msg-toast .lf-toast-body{flex:1;min-width:0}',
+      '#lf-msg-toast .lf-toast-sender{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}',
+      '#lf-msg-toast .lf-toast-text{font-size:12.5px;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '#lf-msg-toast .lf-toast-close{background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;align-self:flex-start;transition:color .15s}',
+      '#lf-msg-toast .lf-toast-close:hover{color:#fff}',
+      '@media(max-width:560px){#lf-msg-toast{right:16px;left:16px;max-width:none;bottom:16px}}',
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  function _ensureNotifToast() {
+    if (_notifToastEl) return _notifToastEl;
+    _ensureNotifStyles();
+    const el = document.createElement('div');
+    el.id = 'lf-msg-toast';
+    el.innerHTML =
+      '<div class="lf-toast-row">' +
+        '<div class="lf-toast-avatar">♥</div>' +
+        '<div class="lf-toast-body">' +
+          '<div class="lf-toast-sender" id="lf-toast-sender"></div>' +
+          '<div class="lf-toast-text" id="lf-toast-text"></div>' +
+        '</div>' +
+        '<button class="lf-toast-close" id="lf-toast-close-btn">×</button>' +
+      '</div>';
+    document.body.appendChild(el);
+
+    // Click anywhere on the toast (except close button) → open chat
+    el.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.lf-toast-close')) return;
+      location.href = '/chat.html';
+    });
+
+    // Close button
+    el.querySelector('#lf-toast-close-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      el.classList.remove('lf-show');
+    });
+
+    _notifToastEl = el;
+    return el;
+  }
+
+  function _showMsgToast(senderName, text) {
+    const el = _ensureNotifToast();
+    document.getElementById('lf-toast-sender').textContent = senderName || 'Your Person';
+    document.getElementById('lf-toast-text').textContent = text || '';
+    el.classList.add('lf-show');
+
+    // Auto-hide after 6 seconds
+    clearTimeout(el._lfToastTimer);
+    el._lfToastTimer = setTimeout(function () {
+      el.classList.remove('lf-show');
+    }, 6000);
+
+    // Also update last-checked so the whos_watching polling toast doesn't also fire
+    try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+  }
+
+  function startMsgNotifications() {
+    // Already connected or connecting
+    if (_notifWS && (_notifWS.readyState === WebSocket.OPEN || _notifWS.readyState === WebSocket.CONNECTING)) return;
+
+    // Skip on the chat page itself — messages are shown inline there
+    const page = (location.pathname.split('/').pop() || '').replace(/\?.*$/, '');
+    if (page === 'chat.html') return;
+
+    const token = getToken();
+    if (!token) return;
+
+    const chatApi = localStorage.getItem('lf_chat_api') || 'https://loveflix-chat.adrienmuhabukibusiness.workers.dev';
+    const wsUrl = chatApi.replace(/^http/, 'ws') + '/api/connect?token=' + encodeURIComponent(token);
+
+    clearTimeout(_notifReconnectTimer);
+
+    try {
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = function () {
+        // connected — no action needed, just listening
+      };
+
+      ws.onmessage = function (e) {
+        try {
+          const data = JSON.parse(e.data);
+          // Only show toasts for partner messages, and respect the notification toggle
+          if (data.type === 'message' && data.sender_id !== getUserId()) {
+            const settings = getSettings();
+            const notifEnabled = settings.notifications_enabled !== false; // default to on
+            if (notifEnabled) {
+              _showMsgToast(data.sender_name, data.text);
+            }
+          }
+        } catch (_) {}
+      };
+
+      ws.onclose = function () {
+        _notifWS = null;
+        _notifReconnectTimer = setTimeout(startMsgNotifications, 5000);
+      };
+
+      ws.onerror = function () { ws.close(); };
+
+      _notifWS = ws;
+    } catch (_) {
+      _notifReconnectTimer = setTimeout(startMsgNotifications, 5000);
+    }
   }
 
   global.LoveFlix = {
