@@ -647,6 +647,14 @@
     const run = () => {
       // Apply cached color immediately (synchronous) to eliminate flash.
       applyBrandColor(getSettings());
+      // Start live message notifications on every page — don't rely on
+      // individual pages calling requireAuth(). This auto-starts the WS
+      // wherever loveflix.js is loaded (music, loveconnect, editor, etc.)
+      // and handles missing token / chat.html skips internally.
+      startMsgNotifications();
+      // Track fullscreen state so notifications queue during video playback
+      // and flush the moment the user exits fullscreen.
+      _initNotifFullscreen();
       if (getToken()) {
         pullSettings().then(s => { applyBrandColor(s); }).catch(() => {});
       } else {
@@ -860,6 +868,8 @@
   let _notifWS = null;
   let _notifReconnectTimer = null;
   let _notifToastEl = null;
+  let _notifQueue = [];
+  let _notifFullscreen = false;
 
   function _ensureNotifStyles() {
     if (document.getElementById('lf-notif-style')) return;
@@ -914,6 +924,16 @@
   }
 
   function _showMsgToast(senderName, text) {
+    // During fullscreen: queue for later instead of showing invisibly
+    if (_notifFullscreen) {
+      _notifQueue.push({ senderName: senderName || 'Your Person', text: text || '' });
+      // Keep only the most recent 3 to avoid unbounded growth
+      if (_notifQueue.length > 3) _notifQueue = _notifQueue.slice(-3);
+      // Mark as seen so polling doesn't also fire
+      try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+      return;
+    }
+
     const el = _ensureNotifToast();
     document.getElementById('lf-toast-sender').textContent = senderName || 'Your Person';
     document.getElementById('lf-toast-text').textContent = text || '';
@@ -927,6 +947,40 @@
 
     // Also update last-checked so the whos_watching polling toast doesn't also fire
     try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+  }
+
+  // When fullscreen exits, flush any queued notifications
+  function _flushNotifQueue() {
+    if (_notifQueue.length === 0) return;
+    const latest = _notifQueue[_notifQueue.length - 1];
+    const count = _notifQueue.length;
+    const label = count > 1
+      ? latest.senderName + ' (' + count + ' messages)'
+      : latest.senderName;
+    const el = _ensureNotifToast();
+    document.getElementById('lf-toast-sender').textContent = label;
+    document.getElementById('lf-toast-text').textContent = latest.text;
+    el.classList.add('lf-show');
+    clearTimeout(el._lfToastTimer);
+    el._lfToastTimer = setTimeout(function () { el.classList.remove('lf-show'); }, 8000);
+    _notifQueue = [];
+    try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+  }
+
+  // Set up fullscreen listeners once
+  function _initNotifFullscreen() {
+    if (_notifFullscreen !== false) return; // already a boolean (already inited)
+    _notifFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    function onChange() {
+      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!fs && _notifFullscreen) {
+        // Exited fullscreen — flush queued messages
+        _flushNotifQueue();
+      }
+      _notifFullscreen = fs;
+    }
+    document.addEventListener('fullscreenchange', onChange);
+    document.addEventListener('webkitfullscreenchange', onChange);
   }
 
   function startMsgNotifications() {
