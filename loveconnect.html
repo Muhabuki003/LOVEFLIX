@@ -1242,6 +1242,7 @@ function initGoogleMaps() {
     HIM.initial = (HIM.name[0] || 'Y').toUpperCase();
     updateCoupleCard();
     renderRecentCalls(_cachedCallRows);
+    renderDaysTogether();
   }
   window.addEventListener('loveflix:settings-changed', refreshNames);
 

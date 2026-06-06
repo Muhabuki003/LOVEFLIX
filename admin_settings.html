@@ -770,16 +770,20 @@
     if (!ann) return;
     setStatus('saving', 'Saving…');
     try {
-      await LoveFlix.api('/api/couple/settings', {
-        method: 'PATCH',
-        body: { anniversary_date: ann },
-      });
-      LoveFlix.saveSettings({ anniversaryDate: ann }, { flush: true });
+      // loveflix_settings is the store the dashboard + home read from, so persist
+      // there first and treat that as the source of truth for the UI.
+      await LoveFlix.saveSettings({ anniversaryDate: ann }, { flush: true });
       setStatus('saved', 'Saved');
       showToast('Anniversary date saved');
     } catch (_) {
       setStatus('error', 'Sync failed');
+      return;
     }
+    // Mirror into couple_settings too (best-effort — the UI does not depend on it).
+    LoveFlix.api('/api/couple/settings', {
+      method: 'PATCH',
+      body: { anniversary_date: ann },
+    }).catch(() => {});
   }
 
   // ── Color swatch click ────────────────────────────────────────────────────
@@ -866,13 +870,17 @@
     btn.disabled = true;
     btn.textContent = 'Saving…';
     try {
-      await LoveFlix.api('/api/couple/settings', {
-        method: 'PATCH',
-        body: { partner_1_name: n1, partner_2_name: n2, anniversary_date: ann },
-      });
-      // Also mirror into general settings
+      // Persist to loveflix_settings first — this is what the dashboard + home
+      // read, and it is the store that reliably round-trips.
       await LoveFlix.saveSettings({ partnerName: n1, adminName: n2, anniversaryDate: ann }, { flush: true });
       showToast('Couple details saved');
+      // Mirror into the locked couple_settings + Supabase display names
+      // (best-effort — the UI does not block on these).
+      LoveFlix.api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { partner_1_name: n1, partner_2_name: n2, anniversary_date: ann },
+      }).catch(() => {});
+      LoveFlix.syncDisplayNames(n2, n1).catch(() => {});
     } catch (_) {
       showToast('Save failed', 'error');
     } finally {
