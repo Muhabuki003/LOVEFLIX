@@ -362,10 +362,17 @@
     return Math.max(0, Math.floor((Date.now() - t) / 86400000));
   }
 
+  function paintDaysTogether() {
+    const days = daysSince(LoveFlix.getSettings().anniversaryDate);
+    const el = document.getElementById('statDays');
+    if (el) el.textContent = days ? days.toLocaleString() : '—';
+  }
+  // Live-update the "Days together" stat when the anniversary changes
+  // (e.g. saved in Settings, or synced from the server in another tab).
+  window.addEventListener('loveflix:settings-changed', paintDaysTogether);
+
   async function loadDashboard() {
-    const settings = LoveFlix.getSettings();
-    const days = daysSince(settings.anniversaryDate);
-    document.getElementById('statDays').textContent = days ? days.toLocaleString() : '—';
+    paintDaysTogether();
 
     let videos = [];
     try {

@@ -981,6 +981,28 @@
 
   window.addEventListener('loveflix:settings-changed', paintContinueWatchingTitle);
 
+  // Live-update the bento "Days together" card + partner name when the
+  // anniversary or names change (e.g. saved in Settings in another tab).
+  function refreshBentoFromSettings() {
+    const s = LoveFlix.getSettings();
+    const ann = s.anniversary || s.anniversaryDate;
+    let daysNum = null;
+    if (ann) {
+      const ms = Date.now() - new Date(ann).getTime();
+      daysNum = ms > 0 ? Math.floor(ms / 86400000) : null;
+    }
+    const annStr = ann
+      ? new Date(ann).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })
+      : '';
+    const numEl = document.querySelector('.bt-days .bt-stat-num');
+    if (numEl) numEl.textContent = daysNum !== null ? daysNum.toLocaleString() : '—';
+    const subEl = document.querySelector('.bt-days .bt-stat-sub');
+    if (subEl) subEl.textContent = annStr ? 'Since ' + annStr : 'Set anniversary in settings';
+    const nameEl = document.querySelector('.orbit-name');
+    if (nameEl) nameEl.textContent = (s.partnerName || s.partner_name || 'Your Person');
+  }
+  window.addEventListener('loveflix:settings-changed', refreshBentoFromSettings);
+
   function bindArrows(root) {
     (root || document).querySelectorAll('.scroll-arrow').forEach(btn => {
       if (btn.dataset.bound) return;
