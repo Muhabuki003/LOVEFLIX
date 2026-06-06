@@ -870,6 +870,7 @@
   let _notifToastEl = null;
   let _notifQueue = [];
   let _notifFullscreen = false;
+  let _notifPollTimer = null;
 
   function _ensureNotifStyles() {
     if (document.getElementById('lf-notif-style')) return;
@@ -1031,6 +1032,45 @@
     } catch (_) {
       _notifReconnectTimer = setTimeout(startMsgNotifications, 5000);
     }
+
+    // ── Polling fallback ──────────────────────────────────────────────────
+    // Every 15 seconds, poll /api/history for unread messages. This ensures
+    // notifications work even if the WebSocket silently fails on certain pages
+    // (e.g. loveconnect). The WS path updates lf_chat_last_checked on every
+    // incoming message, so the poll is a no-op when WS is healthy.
+    clearInterval(_notifPollTimer);
+    _notifPollTimer = setInterval(_pollUnreadMessages, 15000);
+    // Run once immediately too so there's no 15s delay after page load
+    _pollUnreadMessages();
+  }
+
+  // Poll the chat API for any unread messages since our last check
+  async function _pollUnreadMessages() {
+    if (_notifFullscreen) return; // don't poll-show during fullscreen — queue handles it
+    const token = getToken();
+    if (!token) return;
+    const lastChecked = parseInt(localStorage.getItem('lf_chat_last_checked') || '0', 10);
+    if (!lastChecked) {
+      try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
+      return;
+    }
+    try {
+      const chatApi = localStorage.getItem('lf_chat_api') || 'https://loveflix-chat.adrienmuhabukibusiness.workers.dev';
+      const res = await fetch(chatApi + '/api/history?limit=50', {
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const messages = data.messages || [];
+      const userId = getUserId();
+      const unread = messages.filter(function (m) {
+        return Number(m.created_at) > lastChecked && m.sender_id !== userId;
+      });
+      if (unread.length > 0) {
+        const latest = unread[unread.length - 1];
+        _showMsgToast(latest.sender_name || 'Your Person', latest.text || '');
+      }
+    } catch (_) {}
   }
 
   global.LoveFlix = {
