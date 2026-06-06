@@ -301,6 +301,10 @@
       };
       if (anniversaryDate) onboardingSettings.anniversaryDate = anniversaryDate;
       await LoveFlix.saveSettings(onboardingSettings, { flush: !!LoveFlix.getToken() });
+      if (LoveFlix.getToken()) {
+        LoveFlix.syncLockedNames(adminName || 'You', partnerName).catch(() => {});
+        LoveFlix.syncDisplayNames(adminName || 'You', partnerName).catch(() => {});
+      }
     } catch (_) {}
     try { localStorage.setItem('loveflix.selectedPlan', selectedPlan); } catch (_) {}
     location.href = '/checkout?plan=' + encodeURIComponent(selectedPlan);
@@ -343,6 +347,10 @@
       if (anniversaryDate) step5Settings.anniversaryDate = anniversaryDate;
       const saving = LoveFlix.saveSettings(step5Settings, { flush: !!LoveFlix.getToken() });
       try { await saving; } catch (_) {}
+      if (LoveFlix.getToken()) {
+        LoveFlix.syncLockedNames(adminName || 'You', partnerName).catch(() => {});
+        LoveFlix.syncDisplayNames(adminName || 'You', partnerName).catch(() => {});
+      }
       document.getElementById('successUrl').textContent = 'loveflix.us/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
       const cta = document.getElementById('primaryCta');

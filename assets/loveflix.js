@@ -299,6 +299,7 @@
     };
     apply();
     ensureSettingsReady().then(apply).catch(() => {});
+    window.addEventListener('loveflix:settings-changed', apply);
   }
 
   function track(event, props) {
@@ -785,6 +786,53 @@
     } catch { return []; }
   }
 
+  // Push the current display names into Supabase couple_members so the chat
+  // worker (which reads display_name when storing/broadcasting messages) and
+  // any other Supabase-backed surface stay in sync with settings. Either
+  // partner may update both rows — see the couple_members UPDATE policy in
+  // supabase_rls_policies.sql (column-restricted to display_name).
+  async function syncDisplayNames(adminName, partnerName) {
+    const token = getToken();
+    const coupleId = getCoupleId();
+    if (!token || !coupleId) return;
+    try {
+      const members = await fetchCoupleMembers();
+      for (const m of members) {
+        const desired = m.role === 'admin' ? (adminName || m.display_name) : (partnerName || m.display_name);
+        if (!desired || desired === m.display_name) continue;
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&user_id=eq.${m.user_id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal',
+            },
+            body: JSON.stringify({ display_name: desired }),
+          }
+        );
+        if (!res.ok) console.warn('syncDisplayNames failed for', m.user_id, res.status);
+      }
+    } catch (e) {
+      console.warn('syncDisplayNames error', e && e.message);
+    }
+  }
+
+  // Mirror the names into the D1 couple_settings "locked" record so the
+  // public-facing site and admin settings stay consistent.
+  async function syncLockedNames(adminName, partnerName) {
+    try {
+      await api('/api/couple/settings', {
+        method: 'PATCH',
+        body: { partner_1_name: partnerName, partner_2_name: adminName },
+      });
+    } catch (e) {
+      console.warn('syncLockedNames failed', e && e.message);
+    }
+  }
+
   async function getUserRole() {
     const userId = getUserId();
     const token = getToken();
@@ -819,6 +867,8 @@
     isBillingOwnerCached,
     fetchIsBillingOwner,
     fetchCoupleMembers,
+    syncDisplayNames,
+    syncLockedNames,
     getUser,
     setSession,
     clearSession,

@@ -640,7 +640,9 @@ function renderMsg(m, { skipScroll = false, nextSame = false } = {}) {
   if (!sameGroup && !mine) {
     const label = document.createElement("div");
     label.className = "sender-label";
-    label.textContent = m.sender_name;
+    // Settings are authoritative — show the partner's current name, not the
+    // possibly-stale sender_name persisted with the message.
+    label.textContent = (m.sender_id === partnerId) ? (partnerName || m.sender_name) : m.sender_name;
     wrap.appendChild(label);
   }
 
@@ -784,6 +786,18 @@ sendBtn.addEventListener("click", () => {
 });
 
 // ── BOOT ─────────────────────────────────────────────────────────────────
+// Keep the header name/avatar in sync when names change (e.g. renamed in
+// Settings in another tab).
+window.addEventListener('loveflix:settings-changed', () => {
+  const s = (LoveFlix.getSettings ? LoveFlix.getSettings() : {}) || {};
+  const profile = (LoveFlix.getActiveProfile ? LoveFlix.getActiveProfile() : null);
+  const isAdmin = profile ? (profile.dbRole !== 'partner') : true;
+  partnerName = isAdmin ? (s.partnerName || partnerName) : (s.adminName || partnerName);
+  const el = $("partnerName");
+  if (el) el.textContent = partnerName;
+  const av = $("partnerAvatar");
+  if (av) av.textContent = (partnerName || "?")[0].toUpperCase();
+});
 init();
 </script>
 </body>

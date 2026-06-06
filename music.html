@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="/assets/posthog.js" defer></script>
+<script src="/assets/loveflix.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LoveFlix Music</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -797,8 +798,15 @@ let ytPlayer = null;
 let ytReady = false;
 let playerUpdateInterval = null;
 let syncMode = 'following';
-let partnerName = 'Adrien';
+let partnerName = 'My Love';
 let myName = 'You';
+function refreshMusicNames() {
+  const s = (typeof LoveFlix !== 'undefined' && LoveFlix.getSettings) ? LoveFlix.getSettings() : {};
+  partnerName = s.partnerName || 'My Love';
+  myName = s.adminName || 'You';
+}
+refreshMusicNames();
+window.addEventListener('loveflix:settings-changed', refreshMusicNames);
 let isMuted = false;
 let lastVolume = 0.72;
 let shuffleOn = false;

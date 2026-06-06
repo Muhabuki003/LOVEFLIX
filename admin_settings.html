@@ -709,9 +709,11 @@
     const attr   = document.getElementById('attr').value.trim();
     const accent = (colorsEl.querySelector('.color-swatch.selected') || {}).dataset?.c || '#e50914';
 
-    // Save general settings (love note, tagline, slug, photos) via existing API
+    // Save general settings (names, love note, tagline, slug, photos) via existing API
     try {
       await LoveFlix.saveSettings({
+        adminName:    name2,
+        partnerName:  name1,
         urlSlug:      slug || (slugify(name2 || 'you') + '-and-' + slugify(name1 || 'love')),
         accentColor:  accent,
         loveNote:     note,
@@ -719,6 +721,9 @@
         partnerPhoto: partnerPhoto || '',
         adminPhoto:   adminPhoto   || '',
       }, { flush: true });
+      // Propagate to locked couple settings and Supabase display names
+      LoveFlix.syncLockedNames(name2, name1).catch(() => {});
+      LoveFlix.syncDisplayNames(name2, name1).catch(() => {});
       setStatus('saved', 'Saved');
     } catch (_) {
       setStatus('error', 'Sync failed');
