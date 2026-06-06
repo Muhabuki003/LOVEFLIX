@@ -394,7 +394,7 @@
   /* ── LOAD COUPLE CONTEXT ── */
   async function loadCoupleContext() {
     const token    = localStorage.getItem('loveflix_token');
-    const settings = JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
+    const settings = (typeof LoveFlix !== 'undefined' && LoveFlix.getSettings) ? LoveFlix.getSettings() : JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
 
     // Names from local settings (fastest path)
     const name1 = settings.adminName   || settings.partner_1_name || 'Partner 1';
@@ -591,6 +591,10 @@
   }
 
   /* ── BOOT ── */
+  // Reload couple context live if names change in another tab.
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'loveflix_settings') loadCoupleContext();
+  });
   loadCoupleContext();
 </script>
 

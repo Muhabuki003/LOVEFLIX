@@ -243,17 +243,31 @@
     // Refresh the Supabase token if it has expired
     await ensureFreshToken();
     // Check couple_members for this user
-    const res = await fetch(`${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id&limit=1`, { headers: sbHeaders() });
+    const res = await fetch(`${SB_URL}/rest/v1/couple_members?user_id=eq.${userId}&select=couple_id,display_name&limit=1`, { headers: sbHeaders() });
     if (res.ok) {
       const rows = await res.json();
-      if (rows && rows[0]) { coupleId = rows[0].couple_id; localStorage.setItem('loveflix_couple_id', coupleId); return coupleId; }
+      if (rows && rows[0]) {
+        coupleId = rows[0].couple_id;
+        localStorage.setItem('loveflix_couple_id', coupleId);
+        // Backfill display_name if the row predates name syncing.
+        if (!rows[0].display_name) {
+          const adminName = (LoveFlix.getSettings && LoveFlix.getSettings().adminName) || 'You';
+          fetch(`${SB_URL}/rest/v1/couple_members?couple_id=eq.${coupleId}&user_id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: sbHeaders({ Prefer: 'return=minimal' }),
+            body: JSON.stringify({ display_name: adminName }),
+          }).catch(() => {});
+        }
+        return coupleId;
+      }
     }
     // No row yet — create one with a fresh couple_id
     const newCoupleId = crypto.randomUUID();
+    const adminName = (LoveFlix.getSettings && LoveFlix.getSettings().adminName) || 'You';
     const ins = await fetch(`${SB_URL}/rest/v1/couple_members`, {
       method: 'POST',
       headers: sbHeaders({ Prefer: 'return=representation' }),
-      body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin', is_billing_owner: true }),
+      body: JSON.stringify({ couple_id: newCoupleId, user_id: userId, role: 'admin', is_billing_owner: true, display_name: adminName }),
     });
     if (!ins.ok) {
       const errBody = await ins.json().catch(() => ({}));

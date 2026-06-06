@@ -1203,6 +1203,8 @@ function initGoogleMaps() {
     lng: -74.006, lat: 40.7128, kind: 'him'
   };
 
+  let _cachedCallRows = [];
+
   // ---------- WKB PARSER (PostGIS geography(POINT) hex → [lng, lat]) ----------
   function parseWKB(hex) {
     if (!hex || hex.length < 42) return null;
@@ -1227,6 +1229,21 @@ function initGoogleMaps() {
 
   // Paint names + call button immediately from cached settings — before live data arrives.
   updateCoupleCard();
+
+  // Live-update names everywhere on this page when settings change (e.g. the
+  // admin renames a partner in Settings in another tab).
+  function refreshNames() {
+    const s = (typeof LoveFlix !== 'undefined' && LoveFlix.getSettings) ? LoveFlix.getSettings() : {};
+    const role = (function(){ try { return localStorage.getItem('loveflix_role') || 'admin'; } catch(_){ return 'admin'; } })();
+    const iAmAdmin = role !== 'partner';
+    HER.name = iAmAdmin ? (s.partnerName || HER.name) : (s.adminName || HER.name);
+    HER.initial = (HER.name[0] || 'M').toUpperCase();
+    HIM.name = iAmAdmin ? (s.adminName || HIM.name) : (s.partnerName || HIM.name);
+    HIM.initial = (HIM.name[0] || 'Y').toUpperCase();
+    updateCoupleCard();
+    renderRecentCalls(_cachedCallRows);
+  }
+  window.addEventListener('loveflix:settings-changed', refreshNames);
 
   // Refresh anniversary-derived stats once settings finish syncing from the server.
   if (typeof LoveFlix !== 'undefined' && LoveFlix.ensureSettingsReady) {
@@ -1809,6 +1826,7 @@ function initGoogleMaps() {
       if (res.ok) rows = await res.json();
     } catch (_) {}
     if (!Array.isArray(rows)) rows = [];
+    _cachedCallRows = rows;
     renderRecentCalls(rows);
     renderCallStats(rows);
     renderHistogram(rows);
