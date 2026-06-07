@@ -448,6 +448,7 @@ const CHAT_API = (function () {
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let meId = null;
+let meName = null; // display name from settings (authoritative)
 let partnerId = null;
 let partnerName = null;
 let ws = null;
@@ -549,6 +550,7 @@ async function init() {
   const partnerNameFromSettings = isAdmin ? (settings.partnerName || '') : (settings.adminName || '');
 
   const myName = myNameFromSettings || data.me?.displayName || '';
+  meName = myName; // store globally for renderMsg
   const partner = data.partner;
 
   if (partner) {
@@ -640,9 +642,10 @@ function renderMsg(m, { skipScroll = false, nextSame = false } = {}) {
   if (!sameGroup && !mine) {
     const label = document.createElement("div");
     label.className = "sender-label";
-    // Settings are authoritative — show the partner's current name, not the
-    // possibly-stale sender_name persisted with the message.
-    label.textContent = (m.sender_id === partnerId) ? (partnerName || m.sender_name) : m.sender_name;
+    // Settings are authoritative — show the current display name, not the
+    // possibly-stale sender_name persisted with the message (which may be the email).
+    const displayName = (m.sender_id === partnerId) ? partnerName : meName;
+    label.textContent = displayName || m.sender_name;
     wrap.appendChild(label);
   }
 
