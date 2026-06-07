@@ -1368,10 +1368,8 @@
     const token    = LoveFlix.getToken();
     const coupleId = LoveFlix.getCoupleId();
     const userId   = LoveFlix.getUserId();
-    const SUPA_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
-    const supa = path => fetch(`${SUPA_URL}/rest/v1/${path}`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: SUPA_KEY }
+    const supa = path => fetch(`${LoveFlix.SUPABASE_URL}/rest/v1/${path}`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: LoveFlix.SUPABASE_ANON_KEY }
     });
 
     // Orbit tile: presence (online/offline) + location city + rotating map

@@ -119,7 +119,7 @@
         <label for="pwInput">Create a password</label>
       </div>
       <button class="btn-join" id="joinBtn" type="button">Join LoveFlix →</button>
-      <p class="terms-note">By joining you agree to our <a href="#" style="color:#777">Terms</a> and <a href="#" style="color:#777">Privacy Policy</a>.</p>
+      <p class="terms-note">By joining you agree to our <a href="javascript:void(0)" style="color:#777">Terms</a> and <a href="javascript:void(0)" style="color:#777">Privacy Policy</a>.</p>
     </div>
 
     <!-- Success state -->
@@ -138,11 +138,9 @@
 
 <script>
 (async function() {
-  const SB_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYmxnamp1dHl6emR1cnNqcW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzY0NjgsImV4cCI6MjA5MzcxMjQ2OH0.X9YVrfLJ4JSIBdXVkpYegeZ5kEqJzkmzQ1P0d3tFoko';
 
   function sbHeaders(extra) {
-    return Object.assign({ apikey: SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+    return Object.assign({ apikey: LoveFlix.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, extra || {});
   }
 
   function show(id) {
@@ -169,7 +167,7 @@
   let invite = null;
   try {
     const res = await fetch(
-      `${SB_URL}/rest/v1/couple_invites?token=eq.${token}&used=eq.false&select=*&limit=1`,
+      `${LoveFlix.SUPABASE_URL}/rest/v1/couple_invites?token=eq.${token}&used=eq.false&select=*&limit=1`,
       { headers: sbHeaders() }
     );
     if (!res.ok) throw new Error('Network error');
