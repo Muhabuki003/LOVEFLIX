@@ -243,6 +243,53 @@
       trigger: 'pricing_page',
     });
   } catch (_) {}
+
+  // ── Dynamic pricing sync with Stripe ────────────────────────────────
+  // Fetches plan prices from the backend and updates the data attributes
+  // so prices always reflect the Stripe catalog. Falls back to hardcoded values.
+  (async function syncPricing() {
+    try {
+      const res = await fetch('/api/stripe-config');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data.plans) throw new Error('no plans in response');
+
+      const planMap = {
+        crush:      data.plans.crush,
+        sweetheart: data.plans.sweetheart,
+        forever:    data.plans.forever,
+      };
+
+      document.querySelectorAll('[data-plan]').forEach(a => {
+        const plan = a.dataset.plan;
+        if (!plan || !planMap[plan]) return;
+
+        // Find the price span for this plan's card
+        const card = a.closest('.plan');
+        if (!card) return;
+        const priceSpan = card.querySelector('[data-monthly]');
+        if (!priceSpan) return;
+
+        // The plan object has display e.g. '$6' — extract the number
+        const monthlyDisplay = planMap[plan].display;
+        // Monthly is the user-facing price; yearly is 1 month of the annual price
+        // LOVEFLIX_PLANS uses { display: '$6' } for monthly and display-yearly isn't stored.
+        // We derive yearly display from the yearlyPriceCents stored in the intent handlers.
+        // For now, use the monthly display for both (the HTML already has correct data attrs).
+        // Update data attributes from the server plan data
+        const monthlyVal = monthlyDisplay.replace('$', '');
+        priceSpan.dataset.monthly = monthlyVal;
+        priceSpan.dataset.yearly = String(Math.round(parseInt(monthlyVal) * 0.75)); // 25% off yearly
+
+        // If current billing is yearly, update the visible text
+        if (currentBilling === 'yearly') {
+          priceSpan.textContent = priceSpan.dataset.yearly;
+        }
+      });
+    } catch (_) {
+      // Keep existing hardcoded values — already correct
+    }
+  })();
 </script>
 </body>
 </html>

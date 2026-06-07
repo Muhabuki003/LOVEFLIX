@@ -30,9 +30,9 @@ const PUBLIC_ROUTES = new Set([
   // anyway — so it is intentionally public here. Lock it down with an HTTP
   // referrer restriction in the Google Cloud console.
   'GET /api/maps-config',
-  // SoundCloud proxy — search is public so the music page can search before
-  // the auth token is fully checked. Stream uses a dynamic path matched below.
-  'GET /api/soundcloud/search',
+  // YouTube search — public so the music page can search before
+  // the auth token is fully checked.
+  'GET /api/youtube/search',
   'GET /api/music/recent',
   'GET /api/music/yt-match',
   // AI chat is intentionally NOT in PUBLIC_ROUTES — it calls DeepSeek at cost.
@@ -192,11 +192,11 @@ export async function onRequest(context) {
 
   try {
     const routeKey = `${method} ${path}`;
-    // SoundCloud stream has a dynamic segment so it can't be in PUBLIC_ROUTES set.
-    const isSoundCloudRoute = method === 'GET' && path.startsWith('/api/soundcloud/');
+    // YouTube search has a dynamic segment so it can't be in PUBLIC_ROUTES set.
+    const isYouTubeRoute = method === 'GET' && path.startsWith('/api/youtube/');
     // /api/ai is NOT in PUBLIC_ROUTES but we allow null-user callers (landing widget).
     const isAiRoute = method === 'POST' && path === '/api/ai';
-    const isPublic = PUBLIC_ROUTES.has(routeKey) || isSoundCloudRoute || isAiRoute;
+    const isPublic = PUBLIC_ROUTES.has(routeKey) || isYouTubeRoute || isAiRoute;
 
     let user = null;
     if (!isPublic) {
@@ -230,9 +230,9 @@ export async function onRequest(context) {
       if (limited) return limited;
     }
 
-    // SoundCloud proxy: 60 req/min per IP.
-    if (isSoundCloudRoute) {
-      const limited = await checkRateLimit(env, clientIP, 'sc', 60, 60);
+    // YouTube search: 60 req/min per IP.
+    if (isYouTubeRoute) {
+      const limited = await checkRateLimit(env, clientIP, 'yt', 60, 60);
       if (limited) return limited;
     }
 
@@ -285,7 +285,10 @@ export async function onRequest(context) {
     if (method === 'POST' && path === '/api/stripe-webhook') return handleStripeWebhook(env, request);
     if (method === 'GET'  && path === '/api/billing/subscription') return getBillingSubscription(env, request);
     if (method === 'GET'  && path === '/api/stripe-config') {
-      return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY || '' });
+      return json({
+        publishableKey: env.STRIPE_PUBLISHABLE_KEY || '',
+        plans: LOVEFLIX_PLANS,
+      });
     }
 
     // PostHog project key is public (phc_…) — safe to hand out to any caller.
@@ -311,9 +314,8 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/directions') return getDirections(env, url, user);
 
-    if (method === 'GET' && path === '/api/soundcloud/search') return soundcloudSearch(env, url);
-    const scStreamMatch = path.match(/^\/api\/soundcloud\/stream\/([^/]+)$/);
-    if (scStreamMatch && method === 'GET') return soundcloudStream(env, scStreamMatch[1]);
+    // YouTube search
+    if (method === 'GET' && path === '/api/youtube/search') return youtubeSearch(env, url);
 
     // Music tracking endpoints
     if (method === 'POST' && path === '/api/music/plays') return saveMusicPlay(env, request, user);
@@ -1516,7 +1518,7 @@ async function saveMusicPlay(env, request, user) {
 
   try {
     const body = await request.json();
-    const { couple_id, soundcloud_track_id, title, artist } = body;
+    const { couple_id, youtube_id, title, artist } = body;
 
     if (!couple_id || !title) {
       return json({ error: 'missing_fields' }, 400);
@@ -1526,16 +1528,16 @@ async function saveMusicPlay(env, request, user) {
     const timestamp = Math.floor(Date.now() / 1000);
 
     await env.DB.prepare(`
-      INSERT INTO couple_music_plays (id, couple_id, soundcloud_track_id, title, artist, played_by_user_id, played_at)
+      INSERT INTO couple_music_plays (id, couple_id, youtube_id, title, artist, played_by_user_id, played_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, couple_id, soundcloud_track_id, title, artist || null, user.id, timestamp).run();
+    `).bind(id, couple_id, youtube_id, title, artist || null, user.id, timestamp).run();
 
     await phCapture(env, {
       distinctId: user.id,
       event: 'music_track_played',
       properties: {
-        source: soundcloud_track_id ? 'soundcloud' : 'unknown',
-        track_id: soundcloud_track_id || null,
+        source: youtube_id ? 'youtube' : 'unknown',
+        track_id: youtube_id || null,
         couple_id,
       },
     });
@@ -1552,7 +1554,7 @@ async function getMusicPlays(env, coupleId, user) {
 
   try {
     const rows = await env.DB.prepare(`
-      SELECT id, soundcloud_track_id, title, artist, played_by_user_id, played_at
+      SELECT id, youtube_id, title, artist, played_by_user_id, played_at
       FROM couple_music_plays
       WHERE couple_id = ?
       ORDER BY played_at DESC
@@ -1632,8 +1634,8 @@ async function addToPlaylist(env, playlistId, request, user) {
   const id = genId();
   const now = Math.floor(Date.now() / 1000);
   await env.DB.prepare(
-    'INSERT INTO couple_playlist_songs (id, playlist_id, soundcloud_track_id, title, artist, artwork_url, stream_url, youtube_id, duration, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
-  ).bind(id, playlistId, 0, title, artist || '', artwork_url || '', stream_url || null, youtube_id || null, duration || 30, user?.sub || '', now).run();
+    'INSERT INTO couple_playlist_songs (id, playlist_id, youtube_id, title, artist, artwork_url, stream_url, duration, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?,?,?)'
+  ).bind(id, playlistId, youtube_id || null, title, artist || '', artwork_url || '', stream_url || null, duration || 30, user?.sub || '', now).run();
   await env.DB.prepare('UPDATE couple_playlists SET updated_at = ? WHERE id = ?').bind(now, playlistId).run();
   return json({ id });
 }
@@ -1698,45 +1700,62 @@ async function ytMatch(env, url) {
   } catch(e) { return json({ videoId: null }); }
 }
 
-// ── iTunes / music search ──────────────────────────────────────────────────────
+// ── YouTube search (placeholder) ────────────────────────────────────────────
+// Uses the iTunes Search API as fallback until a YouTube Data API key is configured.
+//
+// async function youtubeSearch(env, url) {
+//   const q = (url.searchParams.get('q') || '').trim();
+//   if (!q) return json({ tracks: [] });
+//   // TODO: When YOUTUBE_API_KEY is configured in env, use:
+//   //   const res = await fetch(
+//   //     `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=25&q=${encodeURIComponent(q)}&key=${env.YOUTUBE_API_KEY}`
+//   //   );
+//   // For now, return mock data with a hint.
+//   return json({
+//     tracks: [],
+//     _note: 'YouTube Data API key not configured. Set YOUTUBE_API_KEY env var to enable search.',
+//   });
+// }
+//
+// ── iTunes / music search (legacy) ─────────────────────────────────────────
 // Music search — uses iTunes Search API (free, no key required).
 // Returns 30-second preview MP3s playable directly in the browser.
 // stream_url is embedded in each track so no second round-trip is needed.
 
-async function soundcloudSearch(env, url) {
-  const q = (url.searchParams.get('q') || '').trim();
-  if (!q) return json({ tracks: [] });
-
-  try {
-    const res = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25`,
-      { headers: { Accept: 'application/json' } }
-    );
-    if (!res.ok) return json({ tracks: [], _debug: `iTunes HTTP ${res.status}` });
-
-    const data = await res.json();
-    const tracks = (data.results || [])
-      .filter(t => t.previewUrl)
-      .map(t => ({
-        id:          t.trackId,
-        title:       t.trackName   || 'Unknown',
-        artist:      t.artistName  || 'Unknown',
-        artwork_url: (t.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
-        duration:    t.trackTimeMillis || 0,   // milliseconds — frontend divides by 1000
-        stream_url:  t.previewUrl,             // direct 30s preview MP3
-      }));
-
-    return json({ tracks });
-  } catch (e) {
-    return json({ tracks: [], _debug: String(e) });
-  }
-}
-
-async function soundcloudStream(env, rawId) {
-  // Legacy endpoint kept for compatibility — not needed when stream_url is in search results.
-  return json({ error: 'use_stream_url_from_search' }, 400);
-}
-
+// async function soundcloudSearch(env, url) {
+//   const q = (url.searchParams.get('q') || '').trim();
+//   if (!q) return json({ tracks: [] });
+//
+//   try {
+//     const res = await fetch(
+//       `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25`,
+//       { headers: { Accept: 'application/json' } }
+//     );
+//     if (!res.ok) return json({ tracks: [], _debug: `iTunes HTTP ${res.status}` });
+//
+//     const data = await res.json();
+//     const tracks = (data.results || [])
+//       .filter(t => t.previewUrl)
+//       .map(t => ({
+//         id:          t.trackId,
+//         title:       t.trackName   || 'Unknown',
+//         artist:      t.artistName  || 'Unknown',
+//         artwork_url: (t.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+//         duration:    t.trackTimeMillis || 0,   // milliseconds — frontend divides by 1000
+//         stream_url:  t.previewUrl,             // direct 30s preview MP3
+//       }));
+//
+//     return json({ tracks });
+//   } catch (e) {
+//     return json({ tracks: [], _debug: String(e) });
+//   }
+// }
+//
+// async function soundcloudStream(env, rawId) {
+//   // Legacy endpoint kept for compatibility — not needed when stream_url is in search results.
+//   return json({ error: 'use_stream_url_from_search' }, 400);
+// }
+//
 // ---------- Couple Settings (locked identity + editable preferences) ----------
 
 const VALID_ACCENT_COLORS = new Set([
@@ -1985,7 +2004,7 @@ async function getCoupleStats(env, request, user) {
     ).bind(tenantId).first(),
     env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first(),
     env.DB.prepare(
-      `SELECT soundcloud_track_id, COUNT(*) as plays FROM couple_music_plays WHERE couple_id = ? GROUP BY soundcloud_track_id ORDER BY plays DESC LIMIT 5`
+      `SELECT youtube_id, COUNT(*) as plays FROM couple_music_plays WHERE couple_id = ? GROUP BY youtube_id ORDER BY plays DESC LIMIT 5`
     ).bind(tenantId).all().catch(() => ({ results: [] })),
   ]);
 
@@ -2011,7 +2030,7 @@ async function getCoupleStats(env, request, user) {
     daysTogether,
     partner1Name: settingsRow?.partner_1_name ?? null,
     partner2Name: settingsRow?.partner_2_name ?? null,
-    topTrackIds: (musicRes.results || []).map(r => r.soundcloud_track_id),
+    topTrackIds: (musicRes.results || []).map(r => r.youtube_id),
   });
 }
 
