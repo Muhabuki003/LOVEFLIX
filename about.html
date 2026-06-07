@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoveFlix — About | Made for Two 💕</title>
+  <meta name="description" content="LoveFlix is a private Netflix-style platform exclusively for couples. Netflix meets BeReal meets Google Maps — for two people only.">
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #141414;
+      color: #e5e5e5;
+      line-height: 1.6;
+    }
+
+    /* ── Navigation ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 68px;
+      background: linear-gradient(180deg, rgba(20,20,20,0.95) 0%, rgba(20,20,20,0.8) 100%);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    nav .logo {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #e50914;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+    nav .logo span { color: #fff; }
+    nav .nav-links { display: flex; gap: 28px; align-items: center; }
+    nav .nav-links a {
+      color: #b3b3b3;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav .nav-links a:hover,
+    nav .nav-links a.active { color: #fff; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 30%, rgba(229,9,20,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 60%, rgba(255, 105, 180, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 105, 180, 0.06) 0%, transparent 60%),
+        #141414;
+    }
+    .hero .heart-icon {
+      font-size: 3.5rem;
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 7vw, 4.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .hero h1 .highlight { color: #e50914; }
+    .hero .tagline {
+      font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+      color: #b3b3b3;
+      max-width: 680px;
+      margin: 0 auto 32px;
+      font-style: italic;
+    }
+    .hero .subtitle {
+      font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+      color: #808080;
+      max-width: 540px;
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+    .hero .cta {
+      display: inline-block;
+      padding: 14px 40px;
+      background: #e50914;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.25s, transform 0.2s;
+    }
+    .hero .cta:hover {
+      background: #f40612;
+      transform: scale(1.03);
+    }
+
+    /* ── Section common ── */
+    section { padding: 80px 24px; }
+    .section-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .section-title .accent { color: #e50914; }
+    .section-subtitle {
+      text-align: center;
+      color: #808080;
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto 48px;
+    }
+
+    /* ── Story ── */
+    #story {
+      background: linear-gradient(180deg, #141414 0%, #1a1a1a 100%);
+    }
+    #story p {
+      font-size: 1.1rem;
+      color: #c0c0c0;
+      margin-bottom: 20px;
+      max-width: 780px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #story .quote {
+      font-size: 1.3rem;
+      color: #e50914;
+      font-weight: 600;
+      text-align: center;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 24px;
+      border-left: 3px solid #e50914;
+      background: rgba(229,9,20,0.06);
+      border-radius: 0 8px 8px 0;
+      line-height: 1.5;
+    }
+
+    /* ── Features ── */
+    #features {
+      background: #1a1a1a;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+    .feature-card {
+      background: #222;
+      border-radius: 10px;
+      padding: 32px 24px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(229,9,20,0.3);
+      box-shadow: 0 8px 30px rgba(229,9,20,0.08);
+    }
+    .feature-card .icon {
+      font-size: 2.4rem;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    /* ── Tech ── */
+    #tech {
+      background: #141414;
+      text-align: center;
+    }
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px 24px;
+      margin: 32px 0 20px;
+    }
+    .tech-stack span {
+      background: #222;
+      color: #ccc;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    #tech p {
+      color: #999;
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+    }
+
+    /* ── Creator Note ── */
+    #creator {
+      background: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+    }
+    .creator-card {
+      max-width: 680px;
+      margin: 0 auto;
+      background: #222;
+      border-radius: 12px;
+      padding: 48px 36px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .creator-card .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e50914, #ff6b81);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin: 0 auto 20px;
+      color: #fff;
+    }
+    .creator-card blockquote {
+      font-size: 1.05rem;
+      color: #d0d0d0;
+      line-height: 1.7;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    .creator-card .signature {
+      font-weight: 700;
+      color: #fff;
+      font-style: normal;
+    }
+    .creator-card .signature span { color: #e50914; }
+
+    /* ── Footer ── */
+    footer {
+      background: #0d0d0d;
+      padding: 40px 24px 28px;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    footer .footer-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    footer .footer-links a {
+      color: #808080;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    footer .footer-links a:hover { color: #fff; }
+    footer .copy {
+      color: #555;
+      font-size: 0.8rem;
+    }
+    footer .copy .heart { color: #e50914; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      nav { padding: 0 20px; }
+      nav .nav-links { gap: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .creator-card { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════ Navigation ════════════ -->
+  <nav>
+    <a href="index.html" class="logo">LoveFlix<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html" class="active">About</a>
+      <a href="faq.html">Blog</a>
+      <a href="help.html">Support</a>
+    </div>
+  </nav>
+
+  <!-- ════════════ Hero ════════════ -->
+  <section class="hero" id="top">
+    <div class="heart-icon">💕</div>
+    <h1>LoveFlix — <span class="highlight">Made for Two</span></h1>
+    <p class="tagline">"Netflix meets BeReal meets Google Maps — for two people only."</p>
+    <p class="subtitle">
+      A private, ad-free streaming platform built exclusively for couples.
+      Share movies, music, locations, moments — all in one place, just for you and your person.
+    </p>
+    <a href="onboarding.html" class="cta">Start Your Story</a>
+  </section>
+
+  <!-- ════════════ The Story ════════════ -->
+  <section id="story">
+    <div class="section-inner">
+      <h2 class="section-title">The <span class="accent">Story</span></h2>
+      <p class="section-subtitle">How LoveFlix came to be — a love letter to shared experiences.</p>
+      <p>
+        LoveFlix was born from a simple realization: couples don't have a place of their own on the internet.
+        Most platforms are built for one user, or for the whole world — but what about the space <em>between</em> two people?
+      </p>
+      <p>
+        The idea came during a late-night video call. A couple miles apart wanted to watch a movie together,
+        share a Spotify playlist, drop a pin of their favourite coffee shop, and send a quick selfie — all without
+        juggling five different apps. Every existing service was either public (social media), solo (Netflix),
+        or cluttered with noise from everyone else.
+      </p>
+      <p>
+        So we built it. A private Netflix-style platform — intimate, beautiful, and <strong>just for two</strong>.
+        No ads. No algorithms feeding you content from strangers. No friends-of-friends. No noise.
+        Just the two of you, your media, your memories, and your world.
+      </p>
+      <div class="quote">
+        "LoveFlix isn't another social network. It's a private sanctuary for the most important connection in your life."
+      </div>
+      <p>
+        Every feature — from video streaming to the shared story timeline — was designed with one question in mind:
+        <em>"Does this bring couples closer together?"</em> If the answer wasn't a resounding yes, it didn't make the cut.
+      </p>
+    </div>
+  </section>
+
+  <!-- ════════════ Features ════════════ -->
+  <section id="features">
+    <div class="section-inner">
+      <h2 class="section-title">Everything for <span class="accent">Two</span></h2>
+      <p class="section-subtitle">Every tool designed to make sharing feel effortless and intimate.</p>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="icon">🎬</div>
+          <h3>Video Streaming</h3>
+          <p>Watch movies, shows, and your own videos together in real-time. Sync playback, chat while you watch, and build a shared queue.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">💬</div>
+          <h3>Private Chat</h3>
+          <p>End-to-end encrypted messaging built right in. Text, voice notes, photos — everything stays between the two of you.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">📍</div>
+          <h3>Location Sharing</h3>
+          <p>Drop pins at your favourite spots, see each other's real-time location, and keep a map of places that matter to your story.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🎵</div>
+          <h3>Shared Music</h3>
+          <p>Create collaborative playlists, share songs in the moment, and listen together. Music is the soundtrack of your relationship.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">📖</div>
+          <h3>Story Timeline</h3>
+          <p>Like a private Instagram for two — photos, memories, milestones, and moments arranged in a beautiful chronological timeline.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h3>Privacy First</h3>
+          <p>Everything is private by default. No data sold, no ads, no prying eyes. Your love story is yours alone.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ Built With ════════════ -->
+  <section id="tech">
+    <div class="section-inner">
+      <h2 class="section-title">Built with <span class="accent">❤</span></h2>
+      <p class="section-subtitle">Simple, powerful, and made to last.</p>
+      <div class="tech-stack">
+        <span>Vanilla JavaScript</span>
+        <span>Cloudflare Workers</span>
+        <span>Cloudflare D1</span>
+        <span>Cloudflare R2</span>
+        <span>WebRTC</span>
+        <span>WebSockets</span>
+      </div>
+      <p>
+        No bloated frameworks. No unnecessary dependencies. LoveFlix is built with vanilla JS and powered by
+        Cloudflare's global edge network — fast, scalable, and resilient. Your data stays secure across Cloudflare's
+        infrastructure with D1 for storage, R2 for media, and Workers for every API endpoint.
+      </p>
+    </div>
+  </section>
+
+  <!-- ════════════ Note from the Creator ════════════ -->
+  <section id="creator">
+    <div class="section-inner">
+      <h2 class="section-title">A Note from the <span class="accent">Creator</span></h2>
+      <p class="section-subtitle">Why I built this, and what it means.</p>
+      <div class="creator-card">
+        <div class="avatar">💕</div>
+        <blockquote>
+          "I built LoveFlix because I wanted a space that belonged to two people — a tiny corner of the internet
+          that felt like home. Most apps treat relationships as a feature. I wanted to build something where
+          the relationship <em>is</em> the whole product. Every line of code was written thinking about shared moments,
+          inside jokes, late-night movies, and the beautiful intimacy of having a place that's just yours.
+          LoveFlix is for every couple that deserves their own private world."
+        </blockquote>
+        <p class="signature">— <span>Adrien</span>, creator of LoveFlix</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ Footer ════════════ -->
+  <footer>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <p class="copy">
+      Made with <span class="heart">❤</span> for two &middot; &copy; 2026 LoveFlix
+    </p>
+  </footer>
+
+</body>
+</html>

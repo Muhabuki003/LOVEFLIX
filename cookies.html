@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cookie Preferences — LoveFlix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  /* Nav */
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+
+  /* Page header */
+  .page-header{padding:80px 24px 20px;text-align:center}
+  .page-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,64px);letter-spacing:1px;margin-bottom:12px}
+  .page-header p{font-size:15px;color:var(--text-light);max-width:600px;margin:0 auto;line-height:1.6}
+
+  /* Cookie pref panel */
+  .cookie-panel{max-width:720px;margin:0 auto;padding:0 24px 100px}
+  .cookie-section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin-bottom:16px;transition:border-color .2s}
+  .cookie-section:hover{border-color:rgba(229,9,20,0.25)}
+  .cookie-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .cookie-info{flex:1}
+  .cookie-info h3{font-size:17px;font-weight:700;margin-bottom:4px}
+  .cookie-info .badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:999px;margin-bottom:6px}
+  .badge-essential{background:rgba(229,9,20,0.15);color:var(--red)}
+  .badge-analytics{background:rgba(59,130,246,0.15);color:#60a5fa}
+  .badge-functional{background:rgba(16,185,129,0.15);color:#34d399}
+  .badge-advertising{background:rgba(163,163,163,0.15);color:var(--text-dim)}
+  .cookie-info p{font-size:13px;color:var(--text-dim);line-height:1.55;margin-top:6px}
+  .cookie-info .always-on{font-size:12px;color:var(--red);font-weight:600;margin-top:4px;display:inline-block}
+
+  /* Toggle switch */
+  .toggle-wrap{flex-shrink:0;padding-top:2px}
+  .toggle{position:relative;display:inline-block;width:44px;height:24px}
+  .toggle input{opacity:0;width:0;height:0}
+  .toggle .slider{position:absolute;cursor:pointer;inset:0;background:#333;border-radius:24px;transition:background .2s}
+  .toggle .slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s}
+  .toggle input:checked+.slider{background:var(--red)}
+  .toggle input:checked+.slider::before{transform:translateX(20px)}
+  .toggle input:disabled+.slider{opacity:0.5;cursor:not-allowed}
+
+  /* Save section */
+  .save-wrap{text-align:center;margin-top:32px}
+  .save-wrap .btn{padding:14px 48px;font-size:15px}
+
+  /* Toast */
+  .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 28px;font-size:14px;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,0.6);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;z-index:999;pointer-events:none}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+  /* Footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  /* Descriptions for each cookie category */
+  .cookie-detail{font-size:12px;color:var(--text-dim);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5}
+
+  @media (max-width: 900px){
+    nav{padding:32px 20px 16px}
+    .nav-links{display:none}
+    .ft-grid{grid-template-columns:1fr 1fr}
+    .cookie-section{padding:20px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="landing.html#how">How It Works</a>
+    <a href="landing.html#features">Features</a>
+    <a href="landing.html#loveconnect">LoveConnect</a>
+    <a href="pricing.html">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <a href="loveflix_login_screen.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Cookie Preferences</h1>
+  <p>LoveFlix uses cookies and similar technologies to keep your account secure, improve your experience, and understand how you interact with the service. Choose which categories you'd like to allow.</p>
+</div>
+
+<div class="cookie-panel">
+
+  <!-- Essential -->
+  <div class="cookie-section">
+    <div class="cookie-header">
+      <div class="cookie-info">
+        <span class="badge badge-essential">Essential</span>
+        <h3>Strictly Necessary</h3>
+        <p>These cookies are required for the service to function. They handle authentication tokens, session management, and security features. The service cannot work without them.</p>
+        <span class="always-on">✓ Always active</span>
+        <div class="cookie-detail">
+          <strong>Cookies used:</strong> <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_session</code>, <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_auth_token</code>, <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_csrf</code> &nbsp;·&nbsp; <strong>Expiry:</strong> Session / 30 days
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" checked disabled>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics -->
+  <div class="cookie-section">
+    <div class="cookie-header">
+      <div class="cookie-info">
+        <span class="badge badge-analytics">Analytics</span>
+        <h3>Analytics &amp; Product Insights</h3>
+        <p>We use <strong>PostHog</strong> (self-hosted) to collect anonymous usage data — page views, feature clicks, session replays, and error tracking. This helps us understand how couples use LoveFlix and where we can improve.</p>
+        <div class="cookie-detail">
+          <strong>Cookies used:</strong> <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">ph_*</code> (PostHog), <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_visitor_id</code> &nbsp;·&nbsp; <strong>Expiry:</strong> 1 year &nbsp;·&nbsp; No data shared with third parties
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-analytics" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Functional -->
+  <div class="cookie-section">
+    <div class="cookie-header">
+      <div class="cookie-info">
+        <span class="badge badge-functional">Functional</span>
+        <h3>Preferences &amp; Personalisation</h3>
+        <p>These cookies remember your preferences — theme selection, language, content row layout, and which profiles you've used. They make the service feel like yours without re-entering choices each visit.</p>
+        <div class="cookie-detail">
+          <strong>Cookies used:</strong> <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_theme</code>, <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_last_profile</code>, <code style="color:var(--text-light);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:3px;font-size:11px">lf_ui_state</code> &nbsp;·&nbsp; <strong>Expiry:</strong> 1 year
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-functional" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advertising -->
+  <div class="cookie-section">
+    <div class="cookie-header">
+      <div class="cookie-info">
+        <span class="badge badge-advertising">Advertising</span>
+        <h3>Advertising &amp; Targeting</h3>
+        <p>LoveFlix does <strong>not</strong> currently serve ads or use advertising/tracking cookies. This toggle is a placeholder for future use — if we ever introduce marketing-related cookies, you'll be able to control them here.</p>
+        <div class="cookie-detail">
+          <strong>Status:</strong> No advertising cookies are set. &nbsp;·&nbsp; No data shared with ad networks or social platforms.
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-advertising">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save -->
+  <div class="save-wrap">
+    <button class="btn btn-primary" id="saveBtn">Save Preferences</button>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Your cookie preferences have been saved.</div>
+
+<footer>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="landing.html#how">How it works</a>
+      <a href="landing.html#features">Features</a>
+      <a href="landing.html#loveconnect">LoveConnect</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="home.html">See a demo</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="loveflix_login_screen.html">Sign in</a>
+      <a href="onboarding.html">Sign up</a>
+      <a href="creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="cookies.html">Cookie Preferences</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>© 2026 LoveFlix · made with ♥</span>
+    <span>loveflix.us</span>
+  </div>
+</footer>
+
+<script>
+  // Toggle interactivity — doesn't persist
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    const toggles = {};
+    document.querySelectorAll('.cookie-section .toggle input:not([disabled])').forEach(cb => {
+      const label = cb.closest('.cookie-section').querySelector('.badge').textContent.trim();
+      toggles[label] = cb.checked;
+    });
+
+    // Show toast
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  });
+</script>
+
+</body>
+</html>

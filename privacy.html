@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script src="/assets/posthog.js" defer></script>
+<title>Privacy Policy — LoveFlix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LoveFlix Privacy Policy — how we collect, use, and protect your personal data.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#141414;--panel:#1a1a1a;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+  .btn-lg{padding:14px 28px;font-size:15px}
+
+  /* Privacy page */
+  .privacy-header{padding:100px 24px 40px;text-align:center;position:relative;overflow:hidden}
+  .privacy-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.2),transparent 60%);pointer-events:none}
+  .privacy-header > *{position:relative;z-index:1}
+  .privacy-header .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px}
+  .privacy-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,72px);letter-spacing:1px;line-height:1;margin-bottom:16px}
+  .privacy-header p{font-size:15px;color:var(--text-light);max-width:600px;margin:0 auto;line-height:1.5}
+  .privacy-header .last-updated{font-size:13px;color:var(--text-dim);margin-top:12px}
+
+  .privacy-content{max-width:800px;margin:0 auto;padding:0 24px 80px}
+  .privacy-section{margin-bottom:48px}
+  .privacy-section:last-child{margin-bottom:0}
+  .privacy-section h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.5px;color:#fff;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .privacy-section h3{font-size:17px;font-weight:600;color:#fff;margin-bottom:10px;margin-top:28px}
+  .privacy-section p,.privacy-section li{font-size:15px;color:var(--text-light);line-height:1.7;margin-bottom:14px}
+  .privacy-section ul,.privacy-section ol{padding-left:22px;margin-bottom:16px}
+  .privacy-section li{margin-bottom:8px}
+  .privacy-section li strong{color:#fff}
+  .privacy-section a{color:var(--red)}
+  .privacy-section a:hover{text-decoration:underline}
+  .privacy-section .highlight-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:20px 0}
+  .privacy-section .highlight-box p:last-child{margin-bottom:0}
+
+  /* footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px}
+  .ft-questions{text-align:center;padding:24px 0 32px;border-bottom:1px solid var(--border);margin-bottom:32px}
+  .ft-questions a{color:#fff;font-size:15px;font-weight:500}
+  .ft-questions a:hover{text-decoration:underline}
+  .ft-questions p{color:var(--text-dim);font-size:13px;margin-top:6px}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  @media (max-width: 900px){
+    nav{padding:32px 20px 16px}
+    .nav-links{display:none}
+    .privacy-header{padding:70px 20px 30px}
+    .privacy-content{padding:0 20px 60px}
+    .ft-grid{grid-template-columns:1fr 1fr}
+    footer{padding:32px 20px 40px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/home.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="/landing.html#how">How It Works</a>
+    <a href="/landing.html#features">Features</a>
+    <a href="/landing.html#loveconnect">LoveConnect</a>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/landing.html#testimonials">Stories</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/loveflix_login_screen.html" class="btn btn-ghost">Sign In</a>
+    <a href="/onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<header class="privacy-header">
+  <div class="eyebrow">♥ Privacy &amp; Trust</div>
+  <h1>Privacy Policy</h1>
+  <p>How LoveFlix handles your data — what we collect, why we collect it, and your rights over it.</p>
+  <div class="last-updated">Last updated: June 6, 2026</div>
+</header>
+
+<div class="privacy-content">
+
+  <div class="privacy-section">
+    <h2>1. Introduction</h2>
+    <p>LoveFlix ("we," "our," "us") is a private streaming service designed for couples. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website (loveflix.us) and use our service.</p>
+    <p>By using LoveFlix, you agree to the collection and use of information in accordance with this policy. If you do not agree with any part of this policy, please discontinue use of our service immediately.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>2. Information We Collect</h2>
+
+    <h3>2.1 Information You Provide</h3>
+    <p>When you create an account, build a LoveFlix site, or contact us, we collect:</p>
+    <ul>
+      <li><strong>Account information</strong> — your name, email address, and password (stored as a salted hash).</li>
+      <li><strong>Profile information</strong> — names, photos, avatars, anniversary dates, and any other details you add to your LoveFlix site.</li>
+      <li><strong>Content you upload</strong> — videos, photos, voice notes, music files, and text you upload to your private site.</li>
+      <li><strong>Partner information</strong> — the name, email, and profile details of your partner, as provided by you. You represent that you have their consent to share this data with us.</li>
+      <li><strong>Communications</strong> — any messages, support tickets, or feedback you send us.</li>
+    </ul>
+
+    <h3>2.2 Information Collected Automatically</h3>
+    <p>When you visit LoveFlix, we automatically collect:</p>
+    <ul>
+      <li><strong>Usage data</strong> — pages viewed, time spent, features used, content played, and interactions with the interface.</li>
+      <li><strong>Device information</strong> — browser type, operating system, device type, screen resolution, and language preference.</li>
+      <li><strong>Log data</strong> — IP address, date and time stamps, referring/exit pages, and clickstream data.</li>
+      <li><strong>Location data</strong> — approximate geolocation derived from your IP address. If you use LoveConnect, precise location data is collected with explicit consent for real-time map features.</li>
+    </ul>
+
+    <h3>2.3 Cookies &amp; Tracking Technologies</h3>
+    <p>We use cookies and similar tracking technologies to improve your experience, analyze usage, and process payments. Specifically:</p>
+
+    <div class="highlight-box">
+      <p><strong>PostHog</strong> — We use PostHog (self-hosted or cloud) for product analytics and feature usage tracking. PostHog captures page views, button clicks, session recordings (anonymized), and feature interactions. This data helps us understand how couples use LoveFlix and identify areas for improvement. PostHog cookies are <em>analytics cookies</em> and are set only after you consent via our cookie banner (where required). You can opt out at any time.</p>
+    </div>
+
+    <div class="highlight-box">
+      <p><strong>Stripe</strong> — We use Stripe to process payments for subscriptions. Stripe sets its own cookies on checkout pages to manage the payment session, prevent fraud, and remember your preferred payment method. These are <em>strictly necessary cookies</em> and cannot be disabled while using the checkout flow. Stripe's use of your payment data is governed by their own privacy policy.</p>
+    </div>
+
+    <p>You can control cookie preferences through your browser settings. Disabling certain cookies may affect the functionality of LoveFlix.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>3. How We Use Your Information</h2>
+    <p>We use the information we collect for the following purposes:</p>
+    <ul>
+      <li><strong>To provide and maintain the service</strong> — operate your private LoveFlix site, serve your uploaded content, manage user profiles, and deliver the LoveConnect feature.</li>
+      <li><strong>To process payments</strong> — handle subscriptions, billing, and account management via Stripe.</li>
+      <li><strong>To improve our service</strong> — analyze usage patterns with PostHog to refine features, fix bugs, and optimize performance.</li>
+      <li><strong>To communicate with you</strong> — send service-related emails (password resets, billing notifications, feature updates) and respond to support requests.</li>
+      <li><strong>To ensure security</strong> — detect and prevent abuse, unauthorized access, or violations of our Terms of Service.</li>
+      <li><strong>To comply with legal obligations</strong> — respond to lawful requests from regulators, courts, or law enforcement.</li>
+    </ul>
+  </div>
+
+  <div class="privacy-section">
+    <h2>4. Third-Party Services</h2>
+    <p>LoveFlix integrates with the following third-party services to operate effectively. Each service processes your data under its own privacy policy:</p>
+    <ul>
+      <li><strong>Stripe</strong> (payment processing) — collects billing information, payment method details, and transaction data. <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe Privacy Policy</a></li>
+      <li><strong>PostHog</strong> (product analytics) — collects anonymized usage data, session recordings, and feature interaction events. <a href="https://posthog.com/privacy" target="_blank" rel="noopener">PostHog Privacy Policy</a></li>
+      <li><strong>Supabase</strong> (database &amp; authentication) — stores account credentials, user profiles, content metadata, and application data. Supabase acts as our data processor. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase Privacy Policy</a></li>
+      <li><strong>Cloudflare</strong> (CDN &amp; DNS) — caches static assets, routes traffic, and provides DDoS protection. <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a></li>
+      <li><strong>Google Fonts</strong> (typography) — serves web fonts. When you load a page, your browser requests fonts from Google's servers, which may log your IP address. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+    </ul>
+    <p>We do not sell your personal information to any third party. We do not share your uploaded content (videos, photos, voice notes) with any third party except to the extent necessary to store and deliver that content (e.g., Supabase for database storage).</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>5. Data Storage &amp; Retention</h2>
+
+    <h3>5.1 Where Your Data Is Stored</h3>
+    <p>Your data is stored on servers located in the United States and the European Union (depending on your region). We use industry-standard physical and technical safeguards to protect your data:</p>
+    <ul>
+      <li>Encryption at rest (AES-256) and in transit (TLS 1.3).</li>
+      <li>Access controls — only authorized personnel with a legitimate business need can access production data.</li>
+      <li>Regular security audits and penetration testing.</li>
+    </ul>
+
+    <h3>5.2 Retention Periods</h3>
+    <p>We retain your data only as long as necessary for the purposes described in this policy:</p>
+    <ul>
+      <li><strong>Account data &amp; uploaded content</strong> — retained for the duration of your active subscription. Upon cancellation, your data is retained for 30 days (grace period to reactivate or export), after which it is permanently deleted within 90 days.</li>
+      <li><strong>Usage analytics (PostHog)</strong> — retained in aggregate form for up to 24 months. Individual session recordings are retained for 90 days.</li>
+      <li><strong>Payment records (Stripe)</strong> — retained for as long as required by applicable tax and financial regulations (typically 7 years). Stripe is our payment processor and stores this data on their infrastructure.</li>
+      <li><strong>Communication records</strong> — support ticket data retained for 3 years after resolution.</li>
+    </ul>
+    <p>When you delete your account or request deletion, we will securely erase or anonymize your personal data, except where retention is required by law.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>6. Your Rights (GDPR &amp; CCPA)</h2>
+
+    <h3>6.1 Your Rights Under GDPR (European Economic Area Users)</h3>
+    <p>If you are located in the European Economic Area (EEA) or the United Kingdom, you have the following rights under the General Data Protection Regulation (GDPR):</p>
+    <ul>
+      <li><strong>Right to access</strong> — request a copy of the personal data we hold about you.</li>
+      <li><strong>Right to rectification</strong> — request correction of inaccurate or incomplete data.</li>
+      <li><strong>Right to erasure ("Right to be forgotten")</strong> — request deletion of your personal data, subject to legal retention requirements.</li>
+      <li><strong>Right to restrict processing</strong> — request that we limit how we use your data.</li>
+      <li><strong>Right to data portability</strong> — request your data in a structured, machine-readable format (JSON).</li>
+      <li><strong>Right to object</strong> — object to our processing of your data for analytics or marketing purposes.</li>
+      <li><strong>Right to withdraw consent</strong> — at any time, without affecting the lawfulness of processing based on consent before its withdrawal.</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <strong>privacy@loveflix.us</strong>. We will respond within 30 days as required by law. You also have the right to lodge a complaint with your local data protection authority.</p>
+
+    <h3>6.2 Your Rights Under CCPA (California Residents)</h3>
+    <p>If you are a resident of California, the California Consumer Privacy Act (CCPA) grants you the following rights:</p>
+    <ul>
+      <li><strong>Right to know</strong> — request disclosure of the categories and specific pieces of personal information we have collected about you.</li>
+      <li><strong>Right to delete</strong> — request deletion of personal information we have collected, subject to certain exceptions.</li>
+      <li><strong>Right to opt out of sale</strong> — LoveFlix does <strong>not</strong> sell your personal information. We have no knowledge of selling personal information of minors under 16.</li>
+      <li><strong>Right to non-discrimination</strong> — we will not discriminate against you for exercising any of your CCPA rights.</li>
+    </ul>
+    <p>To exercise your CCPA rights, contact us at <strong>privacy@loveflix.us</strong>. We will verify your identity before fulfilling your request.</p>
+
+    <div class="highlight-box">
+      <p><strong>Data Protection Officer:</strong> LoveFlix has appointed a Data Protection Officer (DPO) who can be reached at <strong>dpo@loveflix.us</strong> for all data protection inquiries.</p>
+    </div>
+  </div>
+
+  <div class="privacy-section">
+    <h2>7. Children's Privacy</h2>
+    <p>LoveFlix is not intended for or directed at children under the age of 13 (or 16 in the EEA). We do not knowingly collect personal information from children. If you believe that a child has provided us with personal data without parental consent, please contact us immediately at <strong>privacy@loveflix.us</strong> and we will take steps to delete such information promptly.</p>
+    <p>By using LoveFlix, you confirm that you are at least 18 years old or have obtained parental/guardian consent to use the service.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>8. Data Security</h2>
+    <p>We implement a variety of security measures to protect your personal information:</p>
+    <ul>
+      <li>All data transmitted between your browser and our servers is encrypted using TLS 1.3 (HTTPS).</li>
+      <li>Passwords are hashed using bcrypt — we never store plain-text passwords.</li>
+      <li>Uploaded content (videos, photos, voice notes) is stored in private, access-controlled storage buckets with server-side encryption.</li>
+      <li>Access to production systems is restricted to essential personnel and logged for audit.</li>
+      <li>We conduct regular vulnerability assessments and dependency audits.</li>
+    </ul>
+    <p>While no method of transmission over the Internet is 100% secure, we strive to use commercially acceptable means to protect your data. Security is central to the LoveFlix experience — your private moments deserve nothing less.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>9. International Data Transfers</h2>
+    <p>Your information may be transferred to and processed in countries other than your own (including the United States). When we transfer data from the EEA or UK to other jurisdictions, we rely on:</p>
+    <ul>
+      <li>Standard Contractual Clauses (SCCs) approved by the European Commission.</li>
+      <li>Adequacy decisions where applicable.</li>
+    </ul>
+    <p>Our sub-processors (Supabase, Cloudflare, Stripe) also maintain GDPR-compliant data processing agreements and Standard Contractual Clauses for international transfers.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>10. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of any material changes by:</p>
+    <ul>
+      <li>Posting the updated policy on this page with a revised "Last updated" date.</li>
+      <li>Sending an email notification to the address associated with your account (for significant changes).</li>
+    </ul>
+    <p>We encourage you to review this Privacy Policy periodically. Your continued use of LoveFlix after changes become effective constitutes your acceptance of the revised policy.</p>
+  </div>
+
+  <div class="privacy-section">
+    <h2>11. Contact Us</h2>
+    <p>If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please contact us:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:privacy@loveflix.us">privacy@loveflix.us</a></li>
+      <li><strong>Data Protection Officer:</strong> <a href="mailto:dpo@loveflix.us">dpo@loveflix.us</a></li>
+      <li><strong>Support:</strong> <a href="mailto:support@loveflix.us">support@loveflix.us</a></li>
+    </ul>
+    <div class="highlight-box">
+      <p><strong>LoveFlix Inc.</strong><br>
+      Privacy Team<br>
+      loveflix.us<br>
+      We aim to respond to all privacy inquiries within 48 hours.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="ft-questions">
+    <a href="mailto:support@loveflix.us">Questions? Contact our support team →</a>
+    <p>We're here to help — reach out anytime.</p>
+  </div>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="/landing.html#how">How it works</a>
+      <a href="/landing.html#features">Features</a>
+      <a href="/landing.html#loveconnect">LoveConnect</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="/home.html">See a demo</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="/loveflix_login_screen.html">Sign in</a>
+      <a href="/onboarding.html">Sign up</a>
+      <a href="/creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="about.html">About</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:support@loveflix.us">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>&copy; 2026 LoveFlix &middot; made with &hearts;</span>
+    <span>loveflix.us</span>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Get in Touch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#141414;--panel:#1a1a1a;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}input,textarea,select{font:inherit}
+
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+
+  .hero{padding:80px 24px 50px;text-align:center}
+  .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,80px);letter-spacing:1px;line-height:.95;margin-bottom:16px}
+  .hero p.sub{font-size:16px;color:var(--text-dim);max-width:540px;margin:0 auto;line-height:1.5}
+
+  main{flex:1;max-width:720px;margin:0 auto;padding:0 24px 80px;width:100%}
+
+  .contact-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:48px 40px}
+
+  .form-group{margin-bottom:24px}
+  .form-group label{display:block;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:8px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:#0f0f0f;border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-size:15px;color:#fff;transition:border-color .2s}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--red)}
+  .form-group textarea{resize:vertical;min-height:140px}
+  .form-group select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23a3a3a3'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:44px;cursor:pointer}
+  .form-group select option{background:#141414;color:#fff}
+
+  .submit-row{text-align:center;margin-top:8px}
+  .btn-submit{background:var(--red);color:#fff;padding:14px 48px;border-radius:6px;font-size:15px;font-weight:600;border:none;letter-spacing:.5px;cursor:pointer;transition:background .15s,transform .1s}
+  .btn-submit:hover{background:#f6121d}
+  .btn-submit:active{transform:scale(.97)}
+
+  .success-msg{display:none;background:rgba(16,185,129,0.1);border:1px solid #10b981;border-radius:10px;padding:24px;text-align:center;margin-top:28px}
+  .success-msg.show{display:block}
+  .success-msg svg{width:40px;height:40px;fill:#10b981;margin-bottom:10px}
+  .success-msg p{font-size:15px;color:#10b981;font-weight:500;line-height:1.5}
+
+  .alt-methods{margin-top:48px;text-align:center}
+  .alt-methods h3{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:24px;color:#fff}
+  .methods-grid{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
+  .method-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px 28px;min-width:180px;text-align:center;transition:border-color .2s}
+  .method-card:hover{border-color:var(--red)}
+  .method-card .icon{font-size:28px;margin-bottom:10px}
+  .method-card .label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px}
+  .method-card .value{font-size:14px;color:var(--text-light);font-weight:500}
+
+  /* footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px;margin-top:auto}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  @media (max-width:900px){
+    nav{padding:32px 20px 16px}
+    .ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}
+    .hero{padding:50px 20px 30px}
+    main{padding:0 20px 60px}
+    .contact-card{padding:32px 24px}
+    .methods-grid{flex-direction:column;align-items:center}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/home.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="/home.html">Home</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="our-story.html">Our Story</a>
+    <a href="loveflix_login_screen.html">Sign In</a>
+  </div>
+  <div class="nav-cta">
+    <a href="loveflix_login_screen.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Get in Touch 💬</h1>
+  <p class="sub">We'd love to hear from you — questions, ideas, or just to say hi.</p>
+</div>
+
+<main>
+  <div class="contact-card">
+    <form id="contactForm">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Your name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <select id="subject" name="subject" required>
+          <option value="" disabled selected>Select a topic</option>
+          <option value="General">General</option>
+          <option value="Billing">Billing</option>
+          <option value="Technical">Technical</option>
+          <option value="Partnership">Partnership</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required></textarea>
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="btn-submit">Send Message →</button>
+      </div>
+    </form>
+
+    <div class="success-msg" id="successMsg">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      <p>Thanks! We'll get back to you within 24 hours 💕</p>
+    </div>
+
+    <div class="alt-methods">
+      <h3>Other ways to reach us</h3>
+      <div class="methods-grid">
+        <div class="method-card">
+          <div class="icon">✉️</div>
+          <div class="label">Email</div>
+          <div class="value">support@loveflix.app</div>
+        </div>
+        <div class="method-card">
+          <div class="icon">📸</div>
+          <div class="label">Instagram</div>
+          <div class="value">@loveflix</div>
+        </div>
+        <div class="method-card">
+          <div class="icon">🕊️</div>
+          <div class="label">Carrier Pigeon</div>
+          <div class="value">Fastest delivery 🏆</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="landing.html#how">How it works</a>
+      <a href="landing.html#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="home.html">See a demo</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="loveflix_login_screen.html">Sign in</a>
+      <a href="onboarding.html">Sign up</a>
+      <a href="creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="our-story.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>&copy; 2026 LoveFlix &middot; made with &hearts;</span>
+    <span>loveflix.us</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    const form = document.getElementById('contactForm');
+    const success = document.getElementById('successMsg');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      success.classList.add('show');
+      form.reset();
+      // Scroll to show success message
+      setTimeout(function() {
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    });
+  })();
+</script>
+
+</body>
+</html>
