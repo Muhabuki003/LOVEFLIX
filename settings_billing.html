@@ -446,7 +446,7 @@
       if (!pk) {
         try { pk = (await (await fetch('/api/stripe-config')).json()).publishableKey || ''; } catch (_) {}
       }
-      newCardStripe = window.Stripe(pk || 'pk_test_loveflix_placeholder');
+      newCardStripe = window.Stripe(pk);
       const elements = newCardStripe.elements({
         appearance: { theme: 'night', variables: {
           colorPrimary: '#e50914', colorBackground: '#1f1f1f', colorText: '#fff',
