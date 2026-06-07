@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Centre - LoveFlix</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>">
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #141414;
+            color: #e5e5e5;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Netflix Dark Nav ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 4%;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .navbar-brand .logo {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #e50914;
+            letter-spacing: -0.5px;
+        }
+        .navbar-brand .logo-sub {
+            font-size: 0.75rem;
+            color: #999;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            border-left: 1px solid #444;
+            padding-left: 10px;
+        }
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+        .navbar-links a {
+            color: #b3b3b3;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .navbar-links a:hover { color: #e5e5e5; }
+        .navbar-links a.active { color: #fff; font-weight: 600; }
+        .nav-spacer { height: 68px; }
+
+        /* ── Hero Header ── */
+        .help-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+            padding: 60px 4% 50px;
+            text-align: center;
+            border-bottom: 1px solid rgba(229, 9, 20, 0.15);
+        }
+        .help-hero h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .help-hero h1 span { color: #e50914; }
+        .help-hero p {
+            color: #aaa;
+            font-size: 1.05rem;
+            margin-bottom: 28px;
+        }
+
+        /* ── Search Bar ── */
+        .search-wrap {
+            max-width: 640px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-wrap svg {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #888;
+            pointer-events: none;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            font-size: 1rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #222;
+            color: #e5e5e5;
+            outline: none;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .search-wrap input:focus {
+            border-color: #e50914;
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+        }
+        .search-wrap input::placeholder { color: #777; }
+        .search-hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* ── Main Content ── */
+        .help-content {
+            flex: 1;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 4% 60px;
+            width: 100%;
+        }
+
+        /* ── Section Headers ── */
+        .help-section {
+            margin-bottom: 32px;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .help-section.hidden {
+            display: none !important;
+        }
+        .help-section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e50914;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .help-section-title .icon {
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        /* ── Accordion ── */
+        .accordion-item {
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            overflow: hidden;
+            background: #1e1e1e;
+            transition: border-color 0.2s;
+        }
+        .accordion-item:hover { border-color: #3a3a3a; }
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            color: #e5e5e5;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+        .accordion-header:hover { background: #262626; }
+        .accordion-header .chevron {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            color: #888;
+            transition: transform 0.3s;
+            margin-left: 12px;
+        }
+        .accordion-item.active .accordion-header .chevron {
+            transform: rotate(180deg);
+        }
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+        }
+        .accordion-item.active .accordion-body {
+            max-height: 600px;
+        }
+        .accordion-body-inner {
+            padding: 0 20px 18px;
+            color: #bbb;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+        .accordion-body-inner p { margin-bottom: 10px; }
+        .accordion-body-inner ul {
+            list-style: none;
+            padding: 0;
+        }
+        .accordion-body-inner ul li {
+            padding: 4px 0 4px 20px;
+            position: relative;
+        }
+        .accordion-body-inner ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #e50914;
+        }
+        .accordion-body-inner code {
+            background: #2a2a2a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #e50914;
+        }
+
+        /* ── No Results ── */
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            display: none;
+            color: #888;
+        }
+        .no-results.visible { display: block; }
+        .no-results .big-icon { font-size: 3rem; margin-bottom: 16px; }
+        .no-results h3 { color: #fff; margin-bottom: 8px; }
+
+        /* ── Footer ── */
+        .help-footer {
+            background: #0d0d0d;
+            border-top: 1px solid #222;
+            padding: 40px 4% 30px;
+            color: #666;
+            font-size: 0.82rem;
+        }
+        .help-footer-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 30px;
+        }
+        .help-footer-col h4 {
+            color: #999;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .help-footer-col a {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+        }
+        .help-footer-col a:hover { color: #e5e5e5; }
+        .help-footer-bottom {
+            max-width: 860px;
+            margin: 30px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .help-footer-bottom .logo-small {
+            color: #e50914;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .help-footer-bottom p { color: #555; font-size: 0.78rem; }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .navbar { height: 58px; padding: 0 5%; }
+            .navbar-brand .logo { font-size: 1.5rem; }
+            .navbar-brand .logo-sub { display: none; }
+            .navbar-links { gap: 14px; }
+            .navbar-links a { font-size: 0.78rem; }
+            .nav-spacer { height: 58px; }
+            .help-hero { padding: 40px 5% 36px; }
+            .help-hero h1 { font-size: 1.8rem; }
+            .help-hero p { font-size: 0.92rem; }
+            .search-wrap input { padding: 14px 16px 14px 44px; font-size: 0.92rem; }
+            .search-wrap svg { left: 13px; width: 18px; height: 18px; }
+            .help-content { padding: 28px 5% 40px; }
+            .help-section-title { font-size: 1.1rem; }
+            .accordion-header { padding: 13px 16px; font-size: 0.88rem; }
+            .accordion-body-inner { padding: 0 16px 14px; font-size: 0.85rem; }
+            .help-footer-inner { flex-direction: column; gap: 20px; }
+            .help-footer-bottom { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar">
+    <a href="home.html" class="navbar-brand">
+        <span class="logo">LoveFlix</span>
+        <span class="logo-sub">Help Centre</span>
+    </a>
+    <ul class="navbar-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="help.html" class="active">Help Centre</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+    </ul>
+</nav>
+<div class="nav-spacer"></div>
+
+<!-- ══════════ HERO + SEARCH ══════════ -->
+<section class="help-hero">
+    <h1>How can <span>we help</span> you?</h1>
+    <p>Find answers, tips, and guides for everything LoveFlix.</p>
+    <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="helpSearch" placeholder="Search for help..." autocomplete="off">
+        <div class="search-hint">Type to filter topics — e.g. "sign up", "password", "buffering"</div>
+    </div>
+</section>
+
+<!-- ══════════ MAIN CONTENT ══════════ -->
+<main class="help-content" id="helpContent">
+
+    <!-- no results placeholder -->
+    <div class="no-results" id="noResults">
+        <div class="big-icon">🔍</div>
+        <h3>No results found</h3>
+        <p>Try different keywords like "sign up", "billing", or "video".</p>
+    </div>
+
+    <!-- ───── Section: Getting Started ───── -->
+    <section class="help-section" data-section="getting-started">
+        <h2 class="help-section-title"><span class="icon">🚀</span> Getting Started</h2>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I sign up for LoveFlix?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Signing up is quick and free. Here's how:</p>
+                    <ul>
+                        <li>Visit <strong>loveflix.com/signup</strong> or tap <strong>"Create Account"</strong> in the app.</li>
+                        <li>Enter your email address and create a strong password.</li>
+                        <li>Choose your subscription plan (monthly or yearly).</li>
+                        <li>Add a profile photo and tell us a little about yourself.</li>
+                        <li>Confirm your email via the magic link we send you.</li>
+                    </ul>
+                    <p>You'll be ready to explore LoveFlix in under 2 minutes! 🎉</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I invite my partner?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>LoveFlix is built for two. After signing up, invite your partner:</p>
+                    <ul>
+                        <li>Go to <strong>Settings &gt; Invite Partner</strong>.</li>
+                        <li>Tap <strong>"Send Invite"</strong> — we'll generate a unique link.</li>
+                        <li>Share it via text, email, or your favourite messaging app.</li>
+                        <li>Once your partner accepts, you'll be connected as a couple.</li>
+                        <li>You can also scan their QR code in person for instant pairing.</li>
+                    </ul>
+                    <p>💡 <em>Tip:</em> You can change your pairing later in Settings if needed.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                First login — what should I do?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Welcome! Here's a quick checklist for your first LoveFlix session:</p>
+                    <ul>
+                        <li><strong>Set up your profile</strong> — add a photo, display name, and your favourite genres.</li>
+                        <li><strong>Invite your partner</strong> to link your accounts (see the article above).</li>
+                        <li><strong>Create a shared playlist</strong> — find the "Couple Playlist" in your library.</li>
+                        <li><strong>Explore LoveConnect</strong> — enable location sharing to see each other on the map.</li>
+                        <li><strong>Upload your first video</strong> — a memory, a message, or a favourite clip.</li>
+                    </ul>
+                    <p>Everything you need is a tap away. Have fun! 💕</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ───── Section: Account & Billing ───── -->
+    <section class="help-section" data-section="account-billing">
+        <h2 class="help-section-title"><span class="icon">⚙️</span> Account &amp; Billing</h2>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I reset my password?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Forgot your password? No worries — here's how to reset it:</p>
+                    <ul>
+                        <li>On the login screen, tap <strong>"Forgot Password?"</strong>.</li>
+                        <li>Enter the email address associated with your LoveFlix account.</li>
+                        <li>Check your inbox for a password reset link (it arrives within a few minutes).</li>
+                        <li>Click the link and choose a new password (minimum 8 characters).</li>
+                        <li>Log in with your new credentials.</li>
+                    </ul>
+                    <p>🔒 <em>Security note:</em> Never share your password. LoveFlix will never ask for it via email or text.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I manage my subscription?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>You can view, upgrade, or downgrade your plan any time:</p>
+                    <ul>
+                        <li>Go to <strong>Settings &gt; Subscription</strong>.</li>
+                        <li>See your current plan, renewal date, and price.</li>
+                        <li>Tap <strong>"Change Plan"</strong> to switch between Monthly and Yearly.</li>
+                        <li>Upgrading takes effect immediately; downgrading applies at the next billing cycle.</li>
+                        <li>You can also view your payment history here.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I cancel my subscription?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>We'll be sad to see you go, but cancelling is straightforward:</p>
+                    <ul>
+                        <li>Navigate to <strong>Settings &gt; Subscription &gt; Cancel Subscription</strong>.</li>
+                        <li>Follow the on-screen prompts — we'll ask for feedback (optional).</li>
+                        <li>Your account remains active until the end of the current billing period.</li>
+                        <li>After cancellation, you'll lose access to couple features and shared content.</li>
+                        <li>You can <strong>reactivate</strong> any time before the billing period ends.</li>
+                    </ul>
+                    <p>💔 <em>Note:</em> Cancelling does not delete your account — just the subscription. To delete your account entirely, contact support.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I update my payment method?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>To change your card or payment details:</p>
+                    <ul>
+                        <li>Open <strong>Settings &gt; Subscription &gt; Payment Method</strong>.</li>
+                        <li>Tap <strong>"Update"</strong> next to your current payment method.</li>
+                        <li>Enter your new card details or choose a different payment option.</li>
+                        <li>We support Visa, Mastercard, PayPal, and Apple Pay.</li>
+                        <li>Your new method will be used for the next billing cycle.</li>
+                    </ul>
+                    <p>All payment data is encrypted and processed through a PCI-compliant gateway.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ───── Section: Content & Playback ───── -->
+    <section class="help-section" data-section="content-playback">
+        <h2 class="help-section-title"><span class="icon">🎬</span> Content &amp; Playback</h2>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I upload a video?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Upload your favourite moments in a few taps:</p>
+                    <ul>
+                        <li>Tap the <strong>"+"</strong> button in the bottom navigation bar.</li>
+                        <li>Select <strong>"Upload Video"</strong> from the menu.</li>
+                        <li>Choose a video from your device's gallery (max 500 MB, up to 10 minutes).</li>
+                        <li>Add a caption, tags, and choose who can see it (just you, your partner, or both).</li>
+                        <li>Hit <strong>"Upload"</strong> — your video will be processed and shared instantly.</li>
+                    </ul>
+                    <p>Supported formats: MP4, MOV, WEBM.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How does "Watch Together" work?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Watch Together lets you and your partner enjoy content in real time, even when apart:</p>
+                    <ul>
+                        <li>Open any video and tap the <strong>"Watch Together"</strong> icon (two people).</li>
+                        <li>Your partner will receive a notification to join.</li>
+                        <li>Once connected, playback is perfectly synced — pause, rewind, or skip together.</li>
+                        <li>Use the built-in voice or video call to react in real time.</li>
+                        <li>You can also use the shared emoji reactions bar during playback.</li>
+                    </ul>
+                    <p>📡 A stable internet connection (5+ Mbps) is recommended for the best experience.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How do I manage "My List"?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Your personal list keeps everything organised:</p>
+                    <ul>
+                        <li>Tap the <strong>bookmark icon</strong> on any video to add it to "My List".</li>
+                        <li>Access your list from the <strong>Library &gt; My List</strong> tab.</li>
+                        <li>Swipe left on an item to remove it, or tap <strong>"Edit"</strong> to reorder.</li>
+                        <li>You can create <strong>custom folders</strong> like "Date Night" or "Favourites".</li>
+                        <li>Your partner can also add items to a shared "Couple List" — find it under Library.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ───── Section: Couple Features ───── -->
+    <section class="help-section" data-section="couple-features">
+        <h2 class="help-section-title"><span class="icon">💑</span> Couple Features</h2>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How does the Chat work?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>LoveFlix Chat is your private space to talk, share, and connect:</p>
+                    <ul>
+                        <li>Tap the <strong>Chat</strong> icon in the bottom nav to open your conversation.</li>
+                        <li>Send text messages, photos, videos, voice notes, and stickers.</li>
+                        <li>Messages are end-to-end encrypted and visible only to you and your partner.</li>
+                        <li>Use <strong>Reactions</strong> (❤️ 😂 😮 😢 😡) to respond without typing.</li>
+                        <li>Pin important messages to the top of the chat for quick access.</li>
+                    </ul>
+                    <p>💌 <em>Extra:</em> Schedule a "love note" to be delivered at a specific time.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                What is LoveConnect location sharing?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>LoveConnect lets you see your partner's location on a private map — perfect for keeping close:</p>
+                    <ul>
+                        <li>Go to <strong>LoveConnect</strong> from the navigation menu.</li>
+                        <li>Enable location sharing for your device (iOS/Android settings).</li>
+                        <li>Your partner appears as a cute custom avatar on the map.</li>
+                        <li>You can set <strong>geofence alerts</strong> — get notified when they arrive home or leave work.</li>
+                        <li>Location history is private and only stored for 24 hours.</li>
+                    </ul>
+                    <p>🔇 <em>Privacy:</em> You can pause sharing at any time. Your partner will see "Location paused".</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                How does Music Sync work?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Music Sync lets you and your partner listen together in real time:</p>
+                    <ul>
+                        <li>Open the <strong>Music</strong> tab and tap the <strong>Music Sync</strong> button.</li>
+                        <li>Choose a song from the LoveFlix library or search for one.</li>
+                        <li>Invite your partner — they'll hear exactly what you're hearing.</li>
+                        <li>Create a <strong>Couple Playlist</strong> where both of you can add tracks.</li>
+                        <li>Use the "Mood Match" feature to find songs you both love.</li>
+                    </ul>
+                    <p>🎧 Works with Bluetooth headphones and background playback.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                What is the Story Timeline?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>The Story Timeline is your shared digital scrapbook of memories:</p>
+                    <ul>
+                        <li>Upload photos and videos — they're automatically added to a chronological timeline.</li>
+                        <li>Add milestone markers like "First Date", "Anniversary", or custom events.</li>
+                        <li>Both you and your partner can contribute to the timeline.</li>
+                        <li>Browse by month or year using the interactive calendar view.</li>
+                        <li>Create <strong>chapters</strong> — themed collections like "Our Summer Trip" or "Pandemic Puzzles".</li>
+                    </ul>
+                    <p>📅 Your timeline is private by default. You can choose to share it with friends as a slideshow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ───── Section: Troubleshooting ───── -->
+    <section class="help-section" data-section="troubleshooting">
+        <h2 class="help-section-title"><span class="icon">🔧</span> Troubleshooting</h2>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                Video keeps buffering — what can I do?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>If your video is buffering or stuttering, try these steps:</p>
+                    <ul>
+                        <li>Check your internet connection — run a speed test (minimum 5 Mbps recommended).</li>
+                        <li>Close other apps or devices that may be using bandwidth.</li>
+                        <li>Lower the video quality in playback settings (from 1080p to 720p or 480p).</li>
+                        <li>Restart the LoveFlix app or refresh the webpage.</li>
+                        <li>If on Wi-Fi, try switching to mobile data (or vice versa).</li>
+                    </ul>
+                    <p>Still buffering? Try clearing the app cache: <strong>Settings &gt; Storage &gt; Clear Cache</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                The app keeps crashing — how to fix?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>If LoveFlix crashes frequently, try these fixes:</p>
+                    <ul>
+                        <li><strong>Update the app</strong> — make sure you're on the latest version from your app store.</li>
+                        <li><strong>Restart your device</strong> — this clears temporary glitches.</li>
+                        <li><strong>Reinstall LoveFlix</strong> — uninstall and install fresh from the store.</li>
+                        <li><strong>Clear app data</strong> — <code>Settings &gt; Apps &gt; LoveFlix &gt; Clear Data</code>.</li>
+                        <li><strong>Check device compatibility</strong> — LoveFlix requires iOS 14+ / Android 11+.</li>
+                    </ul>
+                    <p>If crashes persist, please <strong>report a bug</strong> via Settings &gt; Help &gt; Report Issue.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                I can't sign in — what's wrong?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>Having trouble signing in? Let's get you back in:</p>
+                    <ul>
+                        <li>Double-check your email address and password for typos.</li>
+                        <li>Use the <strong>"Forgot Password?"</strong> option to reset your credentials.</li>
+                        <li>Ensure your internet connection is stable.</li>
+                        <li>If you use <strong>SSO</strong> (Google/Apple sign-in), make sure the same account is linked.</li>
+                        <li>Clear your browser cookies / app cache and try again.</li>
+                    </ul>
+                    <p>Still locked out? Contact our support team directly — we're here to help.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <button class="accordion-header">
+                My partner can't see my content — why?
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+                <div class="accordion-body-inner">
+                    <p>If your partner can't see what you've shared, check these things:</p>
+                    <ul>
+                        <li><strong>Are you paired?</strong> Go to Settings and confirm you're connected.</li>
+                        <li><strong>Privacy settings</strong> — when uploading, make sure visibility is set to "Both" or "Partner".</li>
+                        <li><strong>App version</strong> — both of you should be on the latest LoveFlix version.</li>
+                        <li><strong>Syncing</strong> — pull to refresh in the shared area to force a sync.</li>
+                        <li><strong>Blocked</strong> — check that neither of you has accidentally blocked the other.</li>
+                    </ul>
+                    <p>If everything looks correct and it's still not showing, try unlinking and re-pairing in Settings.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="help-footer">
+    <div class="help-footer-inner">
+        <div class="help-footer-col">
+            <h4>LoveFlix</h4>
+            <a href="about.html">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Press</a>
+            <a href="#">Blog</a>
+        </div>
+        <div class="help-footer-col">
+            <h4>Support</h4>
+            <a href="help.html">Help Centre</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="#">Community</a>
+            <a href="#">Status</a>
+        </div>
+        <div class="help-footer-col">
+            <h4>Legal</h4>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+            <a href="cookies.html">Cookie Policy</a>
+            <a href="#">Accessibility</a>
+        </div>
+        <div class="help-footer-col">
+            <h4>Connect</h4>
+            <a href="#">Instagram</a>
+            <a href="#">TikTok</a>
+            <a href="#">Twitter / X</a>
+            <a href="#">Discord</a>
+        </div>
+    </div>
+    <div class="help-footer-bottom">
+        <span class="logo-small">LoveFlix</span>
+        <p>&copy; 2026 LoveFlix, Inc. Made with 💕 for couples everywhere.</p>
+    </div>
+</footer>
+
+<!-- ══════════ JAVASCRIPT ══════════ -->
+<script>
+    (function() {
+        'use strict';
+
+        const searchInput = document.getElementById('helpSearch');
+        const sections = document.querySelectorAll('.help-section');
+        const noResults = document.getElementById('noResults');
+        const accordionItems = document.querySelectorAll('.accordion-item');
+
+        // ── Accordion toggle ──
+        accordionItems.forEach(function(item) {
+            const header = item.querySelector('.accordion-header');
+            header.addEventListener('click', function() {
+                // Close siblings in the same section
+                const section = item.closest('.help-section');
+                if (section) {
+                    section.querySelectorAll('.accordion-item.active').forEach(function(sibling) {
+                        if (sibling !== item) {
+                            sibling.classList.remove('active');
+                        }
+                    });
+                }
+                item.classList.toggle('active');
+            });
+        });
+
+        // ── Search / filter ──
+        function filterHelp() {
+            const query = searchInput.value.trim().toLowerCase();
+            let anyVisible = false;
+
+            sections.forEach(function(section) {
+                const items = section.querySelectorAll('.accordion-item');
+                let sectionHasMatch = false;
+
+                items.forEach(function(item) {
+                    const headerText = item.querySelector('.accordion-header').textContent.toLowerCase();
+                    const bodyText = item.querySelector('.accordion-body-inner')
+                        ? item.querySelector('.accordion-body-inner').textContent.toLowerCase()
+                        : '';
+                    const matches = query === '' || headerText.includes(query) || bodyText.includes(query);
+
+                    if (matches) {
+                        item.style.display = '';
+                        sectionHasMatch = true;
+                        // Auto-open items that match on non-empty search
+                        if (query !== '') {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    } else {
+                        item.style.display = 'none';
+                        item.classList.remove('active');
+                    }
+                });
+
+                if (sectionHasMatch) {
+                    section.classList.remove('hidden');
+                    anyVisible = true;
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+
+            noResults.classList.toggle('visible', !anyVisible && query !== '');
+        }
+
+        searchInput.addEventListener('input', filterHelp);
+
+        // ── Optional: close all on page load (start clean) ──
+        window.addEventListener('DOMContentLoaded', function() {
+            accordionItems.forEach(function(item) {
+                item.classList.remove('active');
+            });
+        });
+
+    })();
+</script>
+
+</body>
+</html>

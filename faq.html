@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FAQ — LoveFlix Help Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+
+  /* FAQ Hero */
+  .faq-hero{padding:80px 24px 60px;text-align:center;position:relative;overflow:hidden}
+  .faq-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.25),transparent 60%);pointer-events:none}
+  .faq-hero-content{position:relative;z-index:2;max-width:720px;margin:0 auto}
+  .faq-hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7vw,80px);letter-spacing:1px;line-height:.95;margin-bottom:16px}
+  .faq-hero h1 .accent{background:linear-gradient(135deg,#ff5f8f,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .faq-hero p{font-size:17px;color:var(--text-light);max-width:560px;margin:0 auto;line-height:1.5}
+
+  /* FAQ Section */
+  .faq-section{padding:60px 24px 100px;max-width:800px;margin:0 auto}
+
+  .faq-category{margin-bottom:48px}
+  .faq-category:last-child{margin-bottom:0}
+  .faq-cat-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  .faq-cat-icon{width:32px;height:32px;border-radius:6px;background:rgba(229,9,20,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .faq-cat-icon svg{width:16px;height:16px;fill:var(--red)}
+  .faq-cat-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700}
+
+  /* Accordion */
+  .faq-item{border-bottom:1px solid var(--border)}
+  .faq-item:last-child{border-bottom:none}
+  .faq-q{padding:18px 16px 18px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;transition:color .15s;position:relative}
+  .faq-q:hover{color:#fff}
+  .faq-q h3{font-size:15px;font-weight:500;color:var(--text-light);line-height:1.45;padding-right:36px;transition:color .15s}
+  .faq-q:hover h3{color:#fff}
+  .faq-q.active h3{color:#fff}
+  .faq-toggle{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .25s ease;color:var(--text-dim);font-size:18px;font-weight:300;position:absolute;right:0;top:18px}
+  .faq-q.active .faq-toggle{transform:rotate(45deg);color:var(--red)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;padding:0 0 0 0}
+  .faq-a.open{max-height:500px;padding:0 0 20px 0}
+  .faq-a-inner{font-size:14px;color:var(--text-dim);line-height:1.65;padding-right:24px}
+  .faq-a-inner a{color:var(--red);text-decoration:underline}
+  .faq-a-inner a:hover{color:#ff3b3b}
+
+  /* Still need help */
+  .help-blurb{margin-top:60px;padding:36px 32px;background:var(--panel);border:1px solid var(--border);border-radius:12px;text-align:center}
+  .help-blurb h3{font-size:18px;margin-bottom:10px}
+  .help-blurb p{font-size:14px;color:var(--text-dim);margin-bottom:20px}
+  .help-blurb .btn{margin:0 4px}
+
+  /* footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  @media (max-width: 900px){
+    nav{padding:32px 20px 16px}
+    .ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}
+    .faq-hero{padding:50px 20px 40px}
+    .faq-section{padding:40px 20px 70px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="landing.html#how">How It Works</a>
+    <a href="landing.html#features">Features</a>
+    <a href="landing.html#loveconnect">LoveConnect</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="landing.html#testimonials">Stories</a>
+  </div>
+  <div class="nav-cta">
+    <a href="loveflix_login_screen.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<header class="faq-hero">
+  <div class="faq-hero-content">
+    <h1>Everything you need<br><span class="accent">to know.</span></h1>
+    <p>Answers to the most common questions about LoveFlix — from signing up to troubleshooting.</p>
+  </div>
+</header>
+
+<section class="faq-section">
+
+  <!-- Category 1: Account & Setup -->
+  <div class="faq-category">
+    <div class="faq-cat-header">
+      <div class="faq-cat-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <span class="faq-cat-label">Account &amp; Setup</span>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How do I sign up for LoveFlix?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Click "Get Started" on the homepage, choose your subscription plan, and create your site. You'll pick a LoveFlix URL, upload a profile photo, and set your anniversary date. Your 14-day free trial begins immediately — no credit card required.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How do I invite my partner to join?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">After creating your LoveFlix, go to your Creator Dashboard and click "Invite Partner." Enter their email and they'll receive an invite link. Once they accept, they get their own profile on the "Who's Watching?" screen — complete with their name and a custom avatar gradient.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Can I have multiple profiles?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Yes! LoveFlix comes with two profiles by default — one for you and one for your partner. You also get a hidden Creator profile protected by a 4-digit PIN, where you can manage uploads, settings, and analytics. Additional profiles can be added from the dashboard.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Can I change my LoveFlix URL after signing up?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Yes, you can change your URL once every 30 days from the Creator Dashboard under "Site Settings." Your old URL will redirect to the new one for 7 days so your partner doesn't lose access.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category 2: Subscription & Billing -->
+  <div class="faq-category">
+    <div class="faq-cat-header">
+      <div class="faq-cat-icon">
+        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+      </div>
+      <span class="faq-cat-label">Subscription &amp; Billing</span>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How much does LoveFlix cost?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">LoveFlix starts at <strong>$12/month</strong> for the Standard plan, which includes 50GB of storage, HD streaming, and full access to all features. The <strong>Premium plan ($19/month)</strong> bumps storage to 200GB with 4K HDR streaming, unlimited uploads, and priority support. All plans include a 14-day free trial.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>What payment methods do you accept?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">We accept all major credit and debit cards (Visa, Mastercard, American Express, Discover), as well as PayPal. Payment is processed securely through Stripe. We never store your full card details on our servers.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Can I cancel my subscription?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Yes, anytime from the Creator Dashboard under "Billing." When you cancel, you'll retain access until the end of your current billing period. After that, your site will be paused but not deleted — you can resubscribe and pick up where you left off within 90 days.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>What is your refund policy?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">We offer a full refund within the first 7 days of any paid subscription — no questions asked. After 7 days, refunds are handled on a case-by-case basis. Contact us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> and we'll make it right.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category 3: Content & Features -->
+  <div class="faq-category">
+    <div class="faq-cat-header">
+      <div class="faq-cat-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8h2v8H9zm4 0h2v8h-2z"/></svg>
+      </div>
+      <span class="faq-cat-label">Content &amp; Features</span>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How do I upload videos and photos?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">From the Creator Dashboard, click "Upload" and drag your files into the upload zone. You can tag content by category (Trip, Anniversary, Birthday, Everyday, etc.) and add titles and descriptions. Supported formats include MP4, MOV, AVI, JPEG, PNG, and HEIC. Files are transcoded automatically for smooth streaming.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Can we watch together from different locations?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Yes! LoveFlix includes a built-in Sync Watch feature. Start a video and click the "Watch Together" button to generate a shareable link. Both of you can watch in perfect sync with real-time play/pause/seek coordination — like Netflix Party, but for your private content.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>What is the Chat feature?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">The LoveFlix Chat is a private, encrypted messaging inbox built right into your streaming site. Leave each other voice notes, send reaction emojis, or drop a text while browsing your content together. It's accessible from any page via the floating chat icon in the corner.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>What is LoveConnect?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">LoveConnect is a live interactive world map that shows both partners' locations as glowing pins in real time. See the distance between you, the timezone difference, and start a one-tap encrypted video call — all from the LoveConnect screen. Think of it as "distance is just a number," visualized.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Can I add music or voice notes?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Absolutely! You can upload voice notes (MP3, M4A, WAV) and they'll appear in their own row — "Voice Notes from [Name]." You can also set a site-wide soundtrack that plays when your partner opens LoveFlix. It's the little things that hit hardest.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category 4: Privacy & Security -->
+  <div class="faq-category">
+    <div class="faq-cat-header">
+      <div class="faq-cat-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      </div>
+      <span class="faq-cat-label">Privacy &amp; Security</span>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Is my content private?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Yes. Every LoveFlix site is fully private. Only you and your invited partner can sign in and view the content. Your site is served over HTTPS, all media is stored with AES-256 encryption at rest, and we never share or sell your data. Even we can't browse your videos.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How do I reset my password?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">On the sign-in screen, click "Forgot Password." Enter your email address and we'll send a password reset link. If you're the creator and have forgotten your PIN too, contact us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> with your account email and we'll verify your identity.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How does the Gate Access work?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Your LoveFlix site is protected behind a custom Gate Access page. Before anyone sees the "Who's Watching?" screen, they must enter a secret unlock code — set by you in the dashboard. You can change it anytime, and each partner can have their own code. It's your private sanctuary.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category 5: Troubleshooting -->
+  <div class="faq-category">
+    <div class="faq-cat-header">
+      <div class="faq-cat-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <span class="faq-cat-label">Troubleshooting</span>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>Why won't my video play?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">First, check that your file format is supported (MP4 with H.264 is recommended). If the video shows a black screen, try refreshing the page or clearing your browser cache. Still stuck? Your video may still be transcoding — larger files can take 2-5 minutes to process after upload. Contact us if the issue persists.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>LoveFlix isn't loading on my phone — what do I do?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">Make sure you're using the latest version of Chrome, Safari, or Firefox. If the page loads but looks broken, try switching from Wi-Fi to mobile data (or vice versa). For the best experience on iOS, add LoveFlix to your Home Screen — Safari will prompt you when you visit your site.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>How do I contact support?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">We're here to help! Email us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> and we'll respond within 24 hours (usually much faster). Premium plan members get priority support with a guaranteed 4-hour response time. You can also reach out via the in-app chat from your Creator Dashboard.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <h3>My partner's invite link expired — what now?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">
+        <div class="faq-a-inner">No worries! Invite links expire after 48 hours for security. Simply go to your Creator Dashboard, click "Invite Partner" again, and a fresh link will be generated. You can also copy the invite link manually and send it however you like — just don't post it publicly.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Still need help -->
+  <div class="help-blurb">
+    <h3>Still have questions?</h3>
+    <p>We're standing by. Reach out and we'll get back to you within 24 hours.</p>
+    <a href="mailto:support@loveflix.com" class="btn btn-primary">Email Support</a>
+    <a href="landing.html" class="btn btn-ghost">Back to Home</a>
+  </div>
+
+</section>
+
+<footer>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="landing.html#how">How it works</a>
+      <a href="landing.html#features">Features</a>
+      <a href="landing.html#loveconnect">LoveConnect</a>
+      <a href="pricing.html">Pricing</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="loveflix_login_screen.html">Sign in</a>
+      <a href="onboarding.html">Sign up</a>
+      <a href="creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="faq.html">FAQ</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>&copy; 2026 LoveFlix &middot; made with &hearts;</span>
+    <span>loveflix.us</span>
+  </div>
+</footer>
+
+<script>
+function toggleFaq(el) {
+  // Toggle active class on the clicked question
+  el.classList.toggle('active');
+
+  // Find the answer div (next sibling)
+  var answer = el.nextElementSibling;
+  if (!answer) return;
+
+  // Check if it has the 'open' class
+  var isOpen = answer.classList.contains('open');
+
+  // Close all other open answers (single-accordion behavior)
+  var allAnswers = document.querySelectorAll('.faq-a.open');
+  for (var i = 0; i < allAnswers.length; i++) {
+    if (allAnswers[i] !== answer) {
+      allAnswers[i].classList.remove('open');
+      // Also remove active class from its preceding question
+      var prevQ = allAnswers[i].previousElementSibling;
+      if (prevQ) prevQ.classList.remove('active');
+    }
+  }
+
+  // Toggle this answer
+  if (isOpen) {
+    answer.classList.remove('open');
+  } else {
+    answer.classList.add('open');
+  }
+}
+</script>
+
+</body>
+</html>

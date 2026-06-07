@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){if(k==='mukstudio2026'){try{localStorage.setItem('lf_access','1');}catch(e){}u.searchParams.delete('unlock');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash);}else{location.replace('/waitlist.html');return;}}var ok=false;try{ok=localStorage.getItem('lf_access')==='1';}catch(e){}if(!ok){location.replace('/waitlist.html');}}catch(e){location.replace('/waitlist.html');}})();</script><!-- LF_GATE_END -->
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);}}catch(e){}})();</script>
+<meta charset="UTF-8">
+<script src="/assets/posthog.js" defer></script>
+<title>LoveFlix — Schedule a Call</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #141414;
+    --red: #e50914;
+    --brand-accent: #e50914;
+    --text-dim: #a3a3a3;
+    --text-light: #d4d4d4;
+    --rose: #ff5f8f;
+    --rose-soft: rgba(255,95,143,0.15);
+    --panel: rgba(20,20,20,0.85);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.16);
+    --green: #10b981;
+  }
+  html { scroll-behavior: smooth; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: #fff;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+
+  /* ---------- top nav ---------- */
+  nav.topnav {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 18px 48px; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+    transition: background 0.25s ease;
+  }
+  nav.topnav.scrolled { background: rgba(10,10,10,0.95); }
+  .nav-left { display: flex; align-items: center; gap: 40px; }
+  .nf-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; color: var(--brand-accent, var(--red));
+    letter-spacing: 3px; line-height: 1;
+  }
+  .nf-logo .heart { color: #fff; font-size: 24px; vertical-align: middle; transform: translateY(-2px); display: inline-block; margin: 0 2px; }
+  .nav-links { display: flex; gap: 22px; }
+  .nav-links a { font-size: 14px; color: var(--text-light); transition: color 0.18s ease; }
+  .nav-links a:hover { color: #fff; }
+  .nav-links a.active { color: #fff; font-weight: 600; }
+  .nav-right { display: flex; align-items: center; gap: 18px; }
+  .nav-avatar {
+    width: 32px; height: 32px; border-radius: 4px;
+    background: radial-gradient(circle at 30% 25%, #ffb3c7 0%, transparent 55%), linear-gradient(135deg, #ff5f8f 0%, #d6336c 55%, #8f1d4a 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 120px 24px 80px;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 25%, #c2185b 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 70%, #5d0a1f 0%, transparent 45%),
+      linear-gradient(135deg, #1a0712 0%, #0a0a0f 50%, #141414 100%);
+    z-index: 1;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 40%);
+    z-index: 2;
+  }
+  .hero-content {
+    position: relative; z-index: 3;
+    width: 100%;
+    max-width: 620px;
+    text-align: center;
+    animation: fadeUp 0.7s cubic-bezier(.2,.8,.2,1) both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 7vw, 72px);
+    line-height: 0.95;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .hero h1 .heart {
+    color: var(--red);
+    display: inline-block;
+    animation: heartBeat 1.4s ease-in-out infinite;
+  }
+  @keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.25); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.25); }
+  }
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+    line-height: 1.5;
+  }
+
+  /* ---------- schedule card ---------- */
+  .schedule-card {
+    background: var(--panel);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    text-align: left;
+  }
+  .form-group {
+    margin-bottom: 24px;
+  }
+  .form-group:last-of-type {
+    margin-bottom: 28px;
+  }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .form-label .icon {
+    margin-right: 6px;
+  }
+
+  /* date picker */
+  input[type="date"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+  input[type="date"]:focus {
+    border-color: var(--red);
+    background: rgba(255,255,255,0.07);
+  }
+  input[type="date"]::placeholder { color: var(--text-dim); }
+
+  /* time slot chips */
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .slot-chip {
+    padding: 14px 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border-strong);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .slot-chip:hover {
+    border-color: var(--rose);
+    background: var(--rose-soft);
+    color: #fff;
+  }
+  .slot-chip.selected {
+    border-color: var(--red);
+    background: rgba(229,9,20,0.15);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(229,9,20,0.15);
+  }
+  .slot-chip .slot-emoji {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .slot-chip .slot-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: block;
+    margin-top: 3px;
+  }
+
+  /* partner button */
+  .partner-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(255,95,143,0.06);
+    border: 1px dashed rgba(255,95,143,0.25);
+  }
+  .partner-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, var(--rose) 0%, #d6336c 100%);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 20px rgba(255,95,143,0.25);
+  }
+  .partner-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(255,95,143,0.4);
+  }
+  .partner-btn:active {
+    transform: translateY(0);
+  }
+  .partner-note {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .partner-note .highlight {
+    color: var(--rose);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* livekit badge */
+  .livekit-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .livekit-note svg {
+    opacity: 0.5;
+  }
+
+  /* submit button */
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+    border: none;
+    background: var(--red);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 20px rgba(229,9,20,0.3);
+  }
+  .btn-submit:hover {
+    background: #f50d19;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(229,9,20,0.45);
+  }
+  .btn-submit:active {
+    transform: translateY(0);
+  }
+  .btn-submit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ---------- toast ---------- */
+  .toast-container {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(16,185,129,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #fff;
+    padding: 16px 28px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(16,185,129,0.3);
+    opacity: 0;
+    transform: translateY(-16px) scale(0.92);
+    transition: all 0.35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .toast .toast-icon {
+    font-size: 20px;
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    padding: 40px 48px 60px;
+    color: var(--text-dim);
+    font-size: 12px;
+    border-top: 1px solid #2a2a2a;
+    text-align: center;
+  }
+  footer .ft-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--red);
+    font-size: 22px;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+  footer .ft-logo .heart {
+    color: #fff;
+    font-size: 16px;
+    vertical-align: middle;
+  }
+  footer a { color: #888; text-decoration: underline; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 640px) {
+    nav.topnav { padding: 14px 20px; }
+    .nav-left { gap: 20px; }
+    .nav-links { gap: 14px; }
+    .nav-links a { font-size: 12px; }
+    .nf-logo { font-size: 28px; }
+    .schedule-card { padding: 24px 18px; }
+    .slot-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .slot-chip { padding: 12px 6px; font-size: 12px; }
+    .hero { padding: 100px 16px 60px; }
+    footer { padding: 30px 20px 40px; }
+  }
+  @media (max-width: 380px) {
+    .slot-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- top nav -->
+<nav class="topnav" id="topnav">
+  <div class="nav-left">
+    <a href="home.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+    <div class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="browse.html">Browse</a>
+      <a href="loveconnect.html" class="active">LoveConnect</a>
+      <a href="my-list.html">My List</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <a href="loveflix_profile_selector.html" class="nav-avatar" title="Switch profile">LF</a>
+  </div>
+</nav>
+
+<!-- toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- hero + schedule form -->
+<section class="hero">
+  <div class="hero-content">
+    <span class="hero-icon">💕</span>
+    <h1>Schedule a Call</h1>
+    <p class="hero-sub">Pick a time that works for both of you and let LoveConnect do the rest.</p>
+
+    <form class="schedule-card" id="scheduleForm" novalidate>
+      <!-- date picker -->
+      <div class="form-group">
+        <label class="form-label" for="callDate"><span class="icon">📅</span>Pick a Date</label>
+        <input type="date" id="callDate" required
+               min="">
+      </div>
+
+      <!-- time slots -->
+      <div class="form-group">
+        <label class="form-label"><span class="icon">⏰</span>Time of Day</label>
+        <div class="slot-grid" id="slotGrid">
+          <div class="slot-chip" data-slot="morning">
+            <span class="slot-emoji">🌅</span>
+            Morning
+            <span class="slot-time">8:00 – 11:59</span>
+          </div>
+          <div class="slot-chip" data-slot="afternoon">
+            <span class="slot-emoji">☀️</span>
+            Afternoon
+            <span class="slot-time">12:00 – 16:59</span>
+          </div>
+          <div class="slot-chip" data-slot="evening">
+            <span class="slot-emoji">🌙</span>
+            Evening
+            <span class="slot-time">17:00 – 21:59</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- partner selection -->
+      <div class="form-group">
+        <label class="form-label"><span class="icon">💑</span>Your Partner</label>
+        <div class="partner-area">
+          <button type="button" class="partner-btn" id="partnerBtn">
+            💕 Call your partner
+          </button>
+          <p class="partner-note">
+            They'll get a notification the moment you schedule.
+            <span class="highlight">Romance is just a call away.</span> ✨
+          </p>
+        </div>
+      </div>
+
+      <!-- LiveKit credit -->
+      <div class="livekit-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Video calling powered by LiveKit
+      </div>
+
+      <!-- submit -->
+      <button type="submit" class="btn-submit" id="submitBtn">
+        📞 Schedule Call
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- footer -->
+<footer>
+  <div class="ft-logo">LOVE<span class="heart">♥</span>FLIX</div>
+  <div>A private streaming service of two. Made with way too much love.</div>
+  <div style="margin-top: 8px;">© 2026 · <a href="loveconnect.html">LoveConnect</a> · <a href="whos_watching.html">Switch profile</a></div>
+</footer>
+
+<script>
+(function(){
+  // --- set min date to today ---
+  const dateInput = document.getElementById('callDate');
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  dateInput.min = `${yyyy}-${mm}-${dd}`;
+  dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+  // --- slot selection ---
+  const slots = document.querySelectorAll('.slot-chip');
+  let selectedSlot = null;
+
+  slots.forEach(chip => {
+    chip.addEventListener('click', () => {
+      slots.forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedSlot = chip.dataset.slot;
+    });
+  });
+
+  // --- partner button fun ---
+  const partnerBtn = document.getElementById('partnerBtn');
+  const partnerNotes = [
+    'They already miss you. 💕',
+    'Schedule it — they\'ll be thrilled! ✨',
+    'Distance means so little when someone means so much. 💫',
+    'Your person is waiting. 🌹',
+    'Go ahead, make their day. 🥰',
+    'Love is in the air (and in the call). 💞',
+  ];
+  partnerBtn.addEventListener('click', () => {
+    const note = document.querySelector('.partner-note .highlight');
+    const randomNote = partnerNotes[Math.floor(Math.random() * partnerNotes.length)];
+    if (note) note.textContent = randomNote;
+    // gentle pulse
+    partnerBtn.style.transform = 'scale(0.96)';
+    setTimeout(() => { partnerBtn.style.transform = ''; }, 200);
+  });
+
+  // --- form submit ---
+  const form = document.getElementById('scheduleForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const toastContainer = document.getElementById('toastContainer');
+
+  function showToast(message, icon) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span class="toast-icon">${icon || '✅'}</span> ${message}`;
+    toastContainer.appendChild(toast);
+    // force reflow
+    void toast.offsetWidth;
+    toast.classList.add('visible');
+
+    setTimeout(() => {
+      toast.classList.remove('visible');
+      setTimeout(() => toast.remove(), 400);
+    }, 3500);
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    if (!selectedSlot) {
+      // highlight the slot grid gently
+      document.getElementById('slotGrid').style.animation = 'shake 0.4s ease';
+      setTimeout(() => {
+        document.getElementById('slotGrid').style.animation = '';
+      }, 500);
+      showToast('Please pick a time of day 🌅', '⏰');
+      return;
+    }
+
+    // show success
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Scheduling…';
+
+    setTimeout(() => {
+      showToast('Call scheduled! Your partner will be notified 💕', '💕');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '📞 Schedule Call';
+      // reset after toast
+      setTimeout(() => {
+        slots.forEach(c => c.classList.remove('selected'));
+        selectedSlot = null;
+        dateInput.value = dateInput.min;
+      }, 1500);
+    }, 800);
+  });
+
+  // --- shake keyframes (injected) ---
+  const shakeStyle = document.createElement('style');
+  shakeStyle.textContent = `
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+  `;
+  document.head.appendChild(shakeStyle);
+
+  // --- nav scroll effect ---
+  const nav = document.getElementById('topnav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>

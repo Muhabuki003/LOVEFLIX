@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LoveFlix — Terms of Service</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#141414;--panel:#1a1a1a;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+
+  nav{position:sticky;top:0;padding:40px 48px 20px;z-index:50;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom, var(--bg) 70%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .nf-logo{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--red);letter-spacing:3px;line-height:1}
+  .nf-logo .heart{color:#fff;font-size:22px;vertical-align:middle;margin:0 2px;display:inline-block;transform:translateY(-2px)}
+  .nav-links{display:flex;gap:28px}
+  .nav-links a{font-size:14px;color:var(--text-light)}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+
+  .btn{padding:11px 22px;border-radius:4px;font-size:14px;font-weight:600;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:#f6121d}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.3)}.btn-ghost:hover{border-color:#fff}
+
+  .tos-hero{padding:80px 24px 60px;text-align:center}
+  .tos-hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,80px);letter-spacing:1px;line-height:.95;margin-bottom:16px}
+  .tos-hero p.sub{font-size:16px;color:var(--text-dim);max-width:540px;margin:0 auto;line-height:1.5}
+  .last-updated{font-size:12px;color:var(--text-dim);margin-top:12px;letter-spacing:1px;text-transform:uppercase}
+
+  .tos-body{max-width:800px;margin:0 auto;padding:0 24px 80px}
+  .tos-section{margin-bottom:48px}
+  .tos-section h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--red);margin-bottom:16px;line-height:1.1}
+  .tos-section h3{font-size:16px;font-weight:600;color:#fff;margin-bottom:10px;margin-top:20px}
+  .tos-section p{font-size:15px;color:var(--text-light);line-height:1.7;margin-bottom:14px}
+  .tos-section ul{list-style:none;margin-bottom:14px;padding-left:4px}
+  .tos-section ul li{font-size:15px;color:var(--text-light);line-height:1.7;padding-left:20px;position:relative;margin-bottom:6px}
+  .tos-section ul li::before{content:'♥';color:var(--red);position:absolute;left:0;top:0;font-size:10px}
+  .tos-section .highlight{background:rgba(229,9,20,0.08);border-left:3px solid var(--red);padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:16px}
+  .tos-section .highlight p{font-size:14px;margin-bottom:0}
+
+  hr.tos-divider{border:none;border-top:1px solid var(--border);margin:48px 0}
+
+  /* footer */
+  footer{padding:48px 48px 60px;border-top:1px solid var(--border);color:var(--text-dim);font-size:13px}
+  .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto 40px}
+  .ft-grid h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:14px}
+  .ft-grid a{display:block;color:var(--text-dim);padding:4px 0;transition:color .15s}
+  .ft-grid a:hover{color:#fff}
+  .ft-bot{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:12px}
+
+  @media (max-width: 900px){
+    nav{padding:32px 20px 16px}
+    .ft-grid{grid-template-columns:1fr 1fr}.nav-links{display:none}
+    .tos-hero{padding:40px 20px 30px}
+    .tos-body{padding:0 20px 60px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/home.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <div class="nav-links">
+    <a href="/home.html">Home</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="our-story.html">Our Story</a>
+    <a href="loveflix_login_screen.html">Sign In</a>
+  </div>
+  <div class="nav-cta">
+    <a href="loveflix_login_screen.html" class="btn btn-ghost">Sign In</a>
+    <a href="onboarding.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<div class="tos-hero">
+  <h1>Terms of Service</h1>
+  <p class="sub">The fine print that keeps LoveFlix yours — and ours — in good order.</p>
+  <div class="last-updated">Last Updated · June 1, 2026</div>
+</div>
+
+<div class="tos-body">
+
+  <div class="tos-section">
+    <h2>1. Acceptance of Terms</h2>
+    <p>By accessing or using LoveFlix ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you may not access or use the Service. LoveFlix is operated by LoveFlix Inc. ("we," "us," or "our").</p>
+    <div class="highlight">
+      <p><strong>♥ Please read these Terms carefully.</strong> They contain important information about your rights and obligations, including limitations of liability and dispute resolution provisions.</p>
+    </div>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>2. Account Registration</h2>
+    <p>To use the Service, you must create an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.</p>
+    <p>You are responsible for safeguarding the password and for all activities that occur under your account. You agree not to disclose your password to any third party and to notify us immediately of any unauthorized use of your account. You must be at least 18 years of age to create an account and use the Service.</p>
+    <p>We reserve the right to refuse service, terminate accounts, remove or edit content, or cancel subscriptions in our sole discretion.</p>
+    <h3>Profile PIN Protection</h3>
+    <p>LoveFlix allows account holders to set a PIN-protected creator/admin profile. It is your sole responsibility to keep this PIN confidential. We are not liable for any unauthorized access to your admin settings resulting from a compromised PIN.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>3. Subscriptions &amp; Billing</h2>
+    <p>LoveFlix offers subscription plans on a monthly and yearly basis. By selecting a subscription plan, you agree to pay the recurring subscription fees at the then-current rate. All fees are non-refundable except as expressly set forth in these Terms.</p>
+
+    <h3>3.1 Monthly Subscriptions</h3>
+    <p>Monthly subscriptions are billed every thirty (30) days from the date your paid subscription begins. Your subscription will automatically renew each month unless you cancel before the renewal date. Monthly fees are currently $11.99/month (or as otherwise displayed at the time of purchase).</p>
+
+    <h3>3.2 Yearly Subscriptions</h3>
+    <p>Yearly subscriptions are billed once every twelve (12) months. Yearly subscriptions offer a discounted rate compared to monthly billing. The yearly fee is currently $99.99/year (or as otherwise displayed at the time of purchase). Yearly subscriptions also automatically renew unless cancelled before the renewal date.</p>
+
+    <h3>3.3 Auto-Renewal &amp; Cancellation</h3>
+    <p>All subscriptions automatically renew at the end of each billing period. You may cancel your subscription at any time from your account settings. Cancellation takes effect at the end of the current billing period. You will continue to have access to the Service through the end of your paid billing period. No partial refunds are provided for unused portions of a subscription.</p>
+
+    <h3>3.4 Price Changes</h3>
+    <p>We reserve the right to adjust pricing for our subscription plans at any time. Any price changes will take effect at the start of your next billing period following the change. We will provide at least 30 days' notice of any price increase via the email address associated with your account.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>4. Free Trial</h2>
+    <p>LoveFlix offers a 14-day free trial to new users. During the free trial period, you may access all features of the Service at no charge. At the end of the 14-day trial period, your subscription will automatically convert to a paid monthly subscription unless you cancel before the trial ends.</p>
+    <p>You are limited to one free trial per individual. We reserve the right to determine free trial eligibility and to withdraw or modify the free trial offer at any time without notice. No credit card is required to start the free trial.</p>
+    <div class="highlight">
+      <p><strong>♥ Reminder:</strong> Cancel anytime before your 14th day and you will not be charged. You can cancel from your account settings with one click.</p>
+    </div>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>5. Content Ownership &amp; User Uploads</h2>
+    <p>LoveFlix is a platform that enables you to upload, store, and stream your own content, including but not limited to videos, photos, audio recordings, and text ("User Content").</p>
+
+    <h3>5.1 Your Ownership</h3>
+    <p>You retain all ownership and intellectual property rights to the User Content you upload to LoveFlix. We do not claim any ownership over your User Content. Nothing in these Terms transfers ownership of your User Content from you to us.</p>
+
+    <h3>5.2 License to Us</h3>
+    <p>By uploading User Content to the Service, you grant LoveFlix a non-exclusive, worldwide, royalty-free, sublicensable license to use, reproduce, store, modify (for formatting and display purposes only), distribute, and display your User Content solely for the purpose of operating, providing, and improving the Service. This license lasts only as long as your User Content remains on the Service.</p>
+
+    <h3>5.3 Your Warranties</h3>
+    <p>You represent and warrant that: (a) you own all rights to your User Content or have all necessary licenses, rights, consents, and permissions to upload and use it on LoveFlix; (b) your User Content does not infringe the copyright, trademark, patent, trade secret, moral right, privacy right, right of publicity, or any other intellectual property or proprietary right of any third party; and (c) your User Content does not violate any applicable law or regulation.</p>
+
+    <h3>5.4 No Obligation to Back Up</h3>
+    <p>We encourage you to maintain your own backup copies of all User Content. LoveFlix is not responsible for any loss of User Content and does not guarantee that your User Content will be preserved or available at all times.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>6. Prohibited Conduct</h2>
+    <p>You agree not to engage in any of the following prohibited activities:</p>
+    <ul>
+      <li>Using the Service for any unlawful purpose or in violation of any local, state, national, or international law</li>
+      <li>Uploading content that is sexually explicit, violent, harassing, hateful, or otherwise objectionable</li>
+      <li>Uploading content that infringes any third party's intellectual property rights</li>
+      <li>Attempting to interfere with, compromise the system integrity or security of, or decipher any transmissions to or from the servers running the Service</li>
+      <li>Taking any action that imposes, or may impose, an unreasonable or disproportionately large load on our infrastructure</li>
+      <li>Uploading viruses, malware, or any other malicious code</li>
+      <li>Using any robot, spider, scraper, or other automated means to access the Service for any purpose</li>
+      <li>Impersonating any person or entity, or falsely stating or otherwise misrepresenting your affiliation with a person or entity</li>
+      <li>Sharing your account credentials with any third party or allowing any third party to access your account</li>
+      <li>Interfering with or disrupting the Service, servers, or networks connected to the Service</li>
+    </ul>
+    <p>We reserve the right to investigate and take appropriate legal action against anyone who, in our sole discretion, violates this section, including suspending or terminating your account and reporting you to law enforcement authorities.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>7. Termination</h2>
+    <p>We may terminate or suspend your account and bar access to the Service immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever, including without limitation a breach of these Terms.</p>
+    <p>Upon termination, your right to use the Service will immediately cease. If you wish to terminate your account, you may simply discontinue using the Service or cancel your subscription through your account settings. We are not obligated to retain or provide you with copies of your User Content after termination, except as required by applicable law.</p>
+    <p>We suggest downloading or exporting your User Content before terminating your account. Provisions of these Terms that by their nature should survive termination shall survive, including but not limited to ownership provisions, warranty disclaimers, indemnity, and limitations of liability.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>8. Intellectual Property</h2>
+    <p>The LoveFlix service, including its original content, features, and functionality, is owned by LoveFlix Inc. and is protected by United States and international copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.</p>
+    <p>The LoveFlix name, the LoveFlix logo, the "LOVE♥FLIX" wordmark, and all related names, logos, product and service names, designs, and slogans are trademarks of LoveFlix Inc. You may not use such marks without our prior written permission. All other names, logos, product and service names, designs, and slogans on the Service are the trademarks of their respective owners.</p>
+    <p>You may not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store, or transmit any of the material on our Service, except as necessary to use the Service for its intended purpose.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>9. Disclaimer of Warranties</h2>
+    <p>YOUR USE OF THE SERVICE IS AT YOUR SOLE RISK. THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. LOVEFLIX INC. EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND COURSE OF PERFORMANCE.</p>
+    <p>LOVEFLIX INC. MAKES NO WARRANTY THAT (A) THE SERVICE WILL MEET YOUR REQUIREMENTS, (B) THE SERVICE WILL BE UNINTERRUPTED, TIMELY, SECURE, OR ERROR-FREE, (C) THE RESULTS THAT MAY BE OBTAINED FROM THE USE OF THE SERVICE WILL BE ACCURATE OR RELIABLE, OR (D) THE QUALITY OF ANY PRODUCTS, SERVICES, INFORMATION, OR OTHER MATERIAL PURCHASED OR OBTAINED BY YOU THROUGH THE SERVICE WILL MEET YOUR EXPECTATIONS.</p>
+    <div class="highlight">
+      <p><strong>♥</strong> No advice or information, whether oral or written, obtained by you from LoveFlix or through the Service shall create any warranty not expressly stated in these Terms.</p>
+    </div>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>10. Limitation of Liability</h2>
+    <p>TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL LOVEFLIX INC., ITS OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (I) YOUR USE OR INABILITY TO USE THE SERVICE; (II) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE SERVICE; (III) ANY CONTENT OBTAINED FROM THE SERVICE; OR (IV) UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT, WHETHER BASED ON WARRANTY, CONTRACT, TORT (INCLUDING NEGLIGENCE), OR ANY OTHER LEGAL THEORY, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+    <p>OUR TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATING TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU HAVE PAID TO LOVEFLIX INC. IN THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM, OR (B) ONE HUNDRED DOLLARS ($100.00).</p>
+    <p>THE FOREGOING LIMITATIONS SHALL APPLY NOTWITHSTANDING THE FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF CERTAIN WARRANTIES OR THE LIMITATION OR EXCLUSION OF LIABILITY FOR INCIDENTAL OR CONSEQUENTIAL DAMAGES. ACCORDINGLY, SOME OF THE ABOVE LIMITATIONS MAY NOT APPLY TO YOU.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>11. Indemnification</h2>
+    <p>You agree to defend, indemnify, and hold harmless LoveFlix Inc., its affiliates, and their respective officers, directors, employees, and agents from and against any and all claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including but not limited to attorney's fees) arising from: (i) your use of and access to the Service; (ii) your violation of any term of these Terms; (iii) your violation of any third-party right, including without limitation any copyright, property, or privacy right; or (iv) any claim that your User Content caused damage to a third party.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>12. Governing Law</h2>
+    <p>These Terms shall be governed and construed in accordance with the laws of the United States of America and the State of Delaware, without regard to its conflict of law provisions. Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights.</p>
+    <p>If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service and supersede and replace any prior agreements we might have had between us regarding the Service.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>13. Dispute Resolution</h2>
+    <p>Any dispute arising out of or relating to these Terms or the Service shall be resolved through binding arbitration in accordance with the American Arbitration Association's commercial arbitration rules, rather than in court. The arbitration shall be conducted in the English language in New Castle County, Delaware.</p>
+    <p>Notwithstanding the foregoing, either party may bring a lawsuit solely for injunctive relief to stop unauthorized use or abuse of the Service or infringement of intellectual property rights. Any claim or cause of action arising out of or related to these Terms or the Service must be filed within one (1) year after such claim or cause of action arose, or be forever barred.</p>
+    <h3>Class Action Waiver</h3>
+    <p>YOU AND LOVEFLIX INC. AGREE THAT EACH MAY BRING CLAIMS AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Unless both you and we agree, no arbitrator or judge may consolidate more than one person's claims or otherwise preside over any form of a representative or class proceeding.</p>
+  </div>
+
+  <hr class="tos-divider">
+
+  <div class="tos-section">
+    <h2>14. Contact Information</h2>
+    <p>If you have any questions about these Terms, please contact us:</p>
+    <ul>
+      <li><strong>Email:</strong> support@loveflix.app</li>
+      <li><strong>Address:</strong> LoveFlix Inc., 1000 N West Street, Suite 1200, Wilmington, DE 19801, United States</li>
+    </ul>
+    <p>For customer support, billing inquiries, or account assistance, emailing support@loveflix.app is the fastest way to reach us. We aim to respond to all inquiries within 24 hours during business days.</p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="ft-grid">
+    <div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="landing.html#how">How it works</a>
+      <a href="landing.html#features">Features</a>
+      <a href="landing.html#loveconnect">LoveConnect</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="home.html">See a demo</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="loveflix_login_screen.html">Sign in</a>
+      <a href="onboarding.html">Sign up</a>
+      <a href="creator.html">Creator dashboard</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="our-story.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:support@loveflix.app">Contact</a>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <span>&copy; 2026 LoveFlix &middot; made with &hearts;</span>
+    <span>loveflix.us</span>
+  </div>
+</footer>
+</body>
+</html>
