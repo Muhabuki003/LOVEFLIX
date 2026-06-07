@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility — LoveFlix</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .page-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 24px 40px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: #e50914;
+    text-decoration: none;
+    letter-spacing: 2px;
+    display: inline-block;
+    margin-bottom: 40px;
+  }
+  .logo:hover { color: #ff1a1a; }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    color: #b3b3b3;
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #e50914;
+    margin-top: 40px;
+    margin-bottom: 14px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 10px;
+  }
+
+  p, li {
+    font-size: 14px;
+    color: #b3b3b3;
+    margin-bottom: 12px;
+  }
+
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+
+  a { color: #e50914; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Keyboard shortcuts table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 8px;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid #222;
+  }
+  th {
+    background: #111;
+    color: #b3b3b3;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td { color: #fff; }
+  kbd {
+    display: inline-block;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #fff;
+    margin: 0 2px;
+  }
+
+  .contact-box {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .contact-box p { margin-bottom: 4px; }
+  .contact-box p:last-child { margin-bottom: 0; }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 48px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    .page-wrap { padding: 32px 16px 24px; }
+    h1 { font-size: 26px; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="loveflix_login_screen.html" class="logo">LOVEFLIX</a>
+
+  <h1>Accessibility</h1>
+  <p class="subtitle">LoveFlix is committed to making our platform accessible to everyone, regardless of ability.</p>
+
+  <h2>Our Commitment</h2>
+  <p>We continuously work to improve the accessibility of our service in line with the Web Content Accessibility Guidelines (WCAG) 2.2 at Level AA. Our goal is to ensure that all users — including those who rely on screen readers, keyboard navigation, voice control, or assistive technologies — can enjoy LoveFlix together with their partner.</p>
+
+  <h2>ARIA Support</h2>
+  <p>LoveFlix uses Accessible Rich Internet Applications (ARIA) attributes throughout the platform to improve compatibility with screen readers and other assistive technologies:</p>
+  <ul>
+    <li><strong>aria-label</strong> — Applied to icon-only buttons and controls so their purpose is announced by screen readers</li>
+    <li><strong>aria-hidden</strong> — Used on decorative elements and background visuals to reduce noise for assistive technology users</li>
+    <li><strong>role</strong> attributes — Navigation, banner, main, and complementary landmarks are explicitly declared for efficient page navigation</li>
+    <li><strong>aria-live</strong> — Dynamic content regions (notifications, streaming status) announce changes without disrupting the user</li>
+    <li><strong>aria-expanded</strong> — Expandable sections and menus communicate their open/closed state</li>
+  </ul>
+
+  <h2>Keyboard Shortcuts</h2>
+  <p>The following keyboard shortcuts are available across LoveFlix:</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Shortcut</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+        <td>Navigate forward / backward through interactive elements</td>
+      </tr>
+      <tr>
+        <td><kbd>Enter</kbd> or <kbd>Space</kbd></td>
+        <td>Activate the focused button or link</td>
+      </tr>
+      <tr>
+        <td><kbd>Escape</kbd></td>
+        <td>Close modals, dropdowns, and overlays</td>
+      </tr>
+      <tr>
+        <td><kbd>Arrow Keys</kbd></td>
+        <td>Navigate carousels, list items, and video suggestions</td>
+      </tr>
+      <tr>
+        <td><kbd>F</kbd></td>
+        <td>Toggle full-screen mode during video playback</td>
+      </tr>
+      <tr>
+        <td><kbd>M</kbd></td>
+        <td>Mute / unmute audio during video playback</td>
+      </tr>
+      <tr>
+        <td><kbd>Space</kbd></td>
+        <td>Play / pause video</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Screen Reader &amp; Assistive Technology</h2>
+  <ul>
+    <li>All form inputs have associated <code>&lt;label&gt;</code> elements</li>
+    <li>Images include descriptive <code>alt</code> text or are marked as decorative with <code>alt=""</code></li>
+    <li>Video content supports closed captions and subtitles where available</li>
+    <li>Text can be resized up to 200% without loss of content or functionality</li>
+    <li>Colour contrast ratios meet or exceed WCAG AA requirements</li>
+    <li>Interactive elements are focusable and display visible focus indicators</li>
+  </ul>
+
+  <h2>Report an Accessibility Issue</h2>
+  <div class="contact-box">
+    <p>If you encounter an accessibility barrier or have suggestions for improvement, please reach out to us:</p>
+    <p><strong>Email:</strong> <a href="mailto:accessibility@loveflix.app">accessibility@loveflix.app</a></p>
+    <p><strong>Response time:</strong> We aim to respond within 2 business days</p>
+    <p><strong>Feedback:</strong> Include <em>Accessibility</em> in the subject line and describe the issue, the browser/device you are using, and any assistive technology involved.</p>
+  </div>
+
+  <p class="back-link"><a href="loveflix_login_screen.html">← Back to LoveFlix</a></p>
+</div>
+
+</body>
+</html>
