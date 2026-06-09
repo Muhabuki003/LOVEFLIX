@@ -440,9 +440,10 @@
 </script>
 <script>
 (function(){
-  // ===== CONFIG: fill these in =====
-  const SUPABASE_URL = 'https://jeblgjjutyzzdursjqnn.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_oLseysACN0GgA3v5wGrJdg_y3ZGH0gZ';
+  // ===== CONFIG: fetched from server-side endpoint — keys never in HTML source =====
+  let SUPABASE_URL = '';
+  let SUPABASE_ANON_KEY = '';
+  (function(){fetch('/api/waitlist-config').then(r=>r.json()).then(c=>{SUPABASE_URL=c.supabaseUrl;SUPABASE_ANON_KEY=c.supabaseAnonKey}).catch(()=>{})})();
   // =================================
 
   // Attach the submit guard IMMEDIATELY so the form can never do a default GET reload,
