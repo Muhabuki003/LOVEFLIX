@@ -1266,7 +1266,7 @@ document.querySelectorAll('.side-item[data-nav]').forEach(item => {
     item.classList.add('active');
     const nav = item.dataset.nav;
     if (nav === 'listen') { searchView.classList.add('hidden'); defaultView.classList.remove('hidden'); }
-    if (nav === 'radio') { showToast('Radio stations coming soon!'); }
+    if (nav === 'radio') { showToast('Radio stations loading...'); }
     if (nav === 'recent') { showToast('Recently played loaded'); }
     if (nav === 'loved') { showToast('Your loved songs'); }
   });
