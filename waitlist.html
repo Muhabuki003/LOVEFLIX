@@ -668,9 +668,10 @@
 <script>
 (function(){
   // Early access gate: mobile shows a low-opacity button; desktop opens via Cmd/Ctrl+Shift+L.
-  // The entered password is verified server-side by /api/unlock (env WAITLIST_BYPASS),
-  // which sets the lf_unlock cookie. On success we send the user into the gated app.
+  // Password is checked client-side, then we set the lf_unlock cookie the gated pages read
+  // and send the user into the app. (No server/env dependency required.)
   var DEST = '/landing.html';
+  var PASSWORD = 'Booki2003?';
   var modal  = document.getElementById('gate-modal');
   var openBtn = document.getElementById('early-access-btn');
   var closeBtn = document.getElementById('gate-close');
@@ -712,20 +713,12 @@
     var code = (input.value || '').trim();
     errorEl.textContent = '';
     if (!code) { errorEl.textContent = 'Enter the access password.'; return false; }
+    if (code !== PASSWORD) { errorEl.textContent = 'Incorrect password.'; return false; }
+    // Set the cookie the gated pages (landing.html etc.) check for — 24h.
+    try { document.cookie = 'lf_unlock=1; Path=/; Max-Age=86400; SameSite=Lax'; } catch (e) {}
     submit.disabled = true;
-    var original = submit.textContent;
-    submit.textContent = 'Checking…';
-    fetch('/api/unlock?code=' + encodeURIComponent(code))
-      .then(function(r){ return r.json().catch(function(){ return { ok:false }; }); })
-      .then(function(d){
-        if (d && d.ok) { window.location.href = DEST; return; }
-        errorEl.textContent = 'Incorrect password.';
-        submit.disabled = false; submit.textContent = original;
-      })
-      .catch(function(){
-        errorEl.textContent = "Couldn't reach the server. Try again.";
-        submit.disabled = false; submit.textContent = original;
-      });
+    submit.textContent = 'Unlocking…';
+    window.location.href = DEST;
     return false;
   });
 })();
