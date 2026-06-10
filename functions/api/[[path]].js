@@ -43,7 +43,7 @@ const PUBLIC_ROUTES = new Set([
 // LoveFlix plan catalog. Prices in cents (USD). Source of truth for checkout amount.
 const LOVEFLIX_PLANS = {
   crush:      { name: 'Crush',      price: 600,  display: '$6',  blurb: '25 videos · 1080p' },
-  sweetheart: { name: 'Sweetheart', price: 1200, display: '$12', blurb: 'Unlimited · 4K · custom URL' },
+  sweetheart: { name: 'Sweetheart', price: 1200, display: '$12', blurb: 'Unlimited · 4K HDR' },
   forever:    { name: 'Forever',    price: 2400, display: '$24', blurb: 'All features · concierge' },
 };
 

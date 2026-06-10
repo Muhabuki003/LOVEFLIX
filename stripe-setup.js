@@ -37,14 +37,14 @@ const plans = [
   {
     id: 'sweetheart',
     name: 'Sweetheart',
-    description: 'For real couples — unlimited videos, 4K HDR, custom subdomain.',
+    description: 'For real couples — unlimited videos, 4K HDR, custom accent + theme.',
     monthly: 1200,  // $12.00
     yearly: 10800,  // $108.00 ($9/mo)
   },
   {
     id: 'forever',
     name: 'Forever',
-    description: 'For the long haul — unlimited everything, custom domain, 6 profiles.',
+    description: 'For the long haul — unlimited everything, video editor, 6 profiles.',
     monthly: 2400,  // $24.00
     yearly: 21600,  // $216.00 ($18/mo)
   },

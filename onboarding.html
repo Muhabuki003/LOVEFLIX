@@ -189,7 +189,7 @@
   <div class="step-card hidden" data-pane="3">
     <div class="step-eyebrow">Step 3 of 4</div>
     <h1 class="step-title">Pick a vibe.</h1>
-    <p class="step-sub">Your accent color, your custom URL. You can change all of this later in settings.</p>
+    <p class="step-sub">Pick your accent color and theme. You can change all of this later in settings.</p>
     <div class="field"><label>Your accent color</label></div>
     <div class="colors" id="colors">
       <div class="color selected" data-c="#e50914" style="background:#e50914"></div>
@@ -200,20 +200,11 @@
       <div class="color" data-c="#f59e0b" style="background:#f59e0b"></div>
       <div class="color" data-c="#fb7185" style="background:#fb7185"></div>
     </div>
-    <div class="field" style="margin-top:24px">
-      <label>Your custom URL</label>
-      <div class="url-field">
-        <span class="prefix">loveflix.us/</span>
-        <input type="text" id="urlSlug" placeholder="yourname" value="">
-      </div>
-      <div class="field-hint">This is what you'll send them. <span style="color:#10b981">✓ Available</span></div>
-    </div>
     <div class="preview-chip">
       <div>
         <div class="chip-label">Preview</div>
         <div class="chip-logo" id="chipLogo">LOVE<span class="heart">♥</span>FLIX</div>
       </div>
-      <div class="chip-url" id="chipUrl">loveflix.us/yourname-and-love</div>
     </div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(2)">← Back</button>
@@ -228,7 +219,7 @@
     <p class="step-sub">All plans include a 14-day free trial. No card needed today.</p>
     <div class="plan-cards" id="planCards">
       <div class="plan-card" data-plan="crush"><div class="pname">Crush</div><div class="pprice">$6</div><div class="pper">/ month</div><div class="pdesc">25 videos · 1080p</div></div>
-      <div class="plan-card selected" data-plan="sweetheart"><div class="pname">Sweetheart ★</div><div class="pprice">$12</div><div class="pper">/ month</div><div class="pdesc">Unlimited · 4K · custom URL</div></div>
+      <div class="plan-card selected" data-plan="sweetheart"><div class="pname">Sweetheart ★</div><div class="pprice">$12</div><div class="pper">/ month</div><div class="pdesc">Unlimited · 4K HDR</div></div>
       <div class="plan-card" data-plan="forever"><div class="pname">Forever</div><div class="pprice">$24</div><div class="pper">/ month</div><div class="pdesc">All features · concierge</div></div>
     </div>
     <div class="field-hint" style="text-align:center;margin-bottom:8px">Free for 14 days, then your selected plan. Cancel any time before.</div>
@@ -250,10 +241,6 @@
       <div id="confirmEmailNotice" class="hidden" style="background:#1f2937;border:1px solid #374151;border-radius:8px;padding:16px 20px;margin:20px auto;max-width:480px;text-align:left;font-size:14px;color:#cfcfcf;line-height:1.5">
         <strong style="color:#fff">Almost there.</strong> Check your email for a confirmation link. Click it, then sign in to start watching.
       </div>
-      <div class="success-url">
-        <span id="successUrl">loveflix.us/yourname-and-love</span>
-        <button class="copy-btn" onclick="this.textContent='Copied ✓'">COPY</button>
-      </div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <a href="loveflix_login_screen.html" class="btn btn-primary" id="primaryCta">Sign in to your site →</a>
         <a href="home.html" class="btn btn-ghost">Preview the site</a>
@@ -264,29 +251,11 @@
 </main>
 
 <script>
-  function slugify(s) {
-    return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  }
-  function buildSlug() {
-    const a = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
-    const p = document.getElementById('theirName').value.trim();
-    const sa = slugify(a) || 'yourname';
-    const sp = slugify(p) || 'love';
-    return sa + '-and-' + sp;
-  }
-  function refreshSlug() {
-    const s = buildSlug();
-    document.getElementById('urlSlug').value = s;
-    document.getElementById('chipUrl').textContent = 'loveflix.us/' + s;
-    document.getElementById('successUrl').textContent = 'loveflix.us/' + s;
-  }
-
   async function proceedToCheckout() {
     // Persist onboarding choices before leaving for /checkout (matches the previous
     // step-5 save behavior, minus the success pane).
     const adminName = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
     const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
-    const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
     const accentEl = document.querySelector('#colors .color.selected');
     const savedPasscode = document.getElementById('adminPasscode').value.trim();
     const selectedPlan = (document.querySelector('#planCards .plan-card.selected') || {}).dataset?.plan || 'sweetheart';
@@ -295,7 +264,6 @@
       const onboardingSettings = {
         adminName: adminName || 'You',
         partnerName: partnerName,
-        urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
         adminPasscode: savedPasscode || '1234',
       };
@@ -322,10 +290,6 @@
       document.getElementById('hisInitial').textContent = (n2.value[0] || n1[0] || 'Y').toUpperCase();
     }
 
-    if (step === 3) {
-      refreshSlug();
-    }
-
     if (step === 5) {
       // Save all settings — written to localStorage AND a pending mirror so
       // they survive an email-confirm gap and land server-side on first
@@ -333,14 +297,12 @@
       // next page sees the names.
       const adminName = document.getElementById('adminName2').value.trim() || document.getElementById('adminName').value.trim();
       const partnerName = document.getElementById('theirName').value.trim() || 'My Love';
-      const slug = document.getElementById('urlSlug').value.trim() || buildSlug();
       const accentEl = document.querySelector('#colors .color.selected');
       const savedPasscode = document.getElementById('adminPasscode').value.trim();
       const anniversaryDate = (document.getElementById('anniversaryDate') || {}).value || '';
       const step5Settings = {
         adminName: adminName || 'You',
         partnerName: partnerName,
-        urlSlug: slug,
         accentColor: accentEl ? accentEl.dataset.c : '#e50914',
         adminPasscode: savedPasscode || '1234',
       };
@@ -351,7 +313,6 @@
         LoveFlix.syncLockedNames(adminName || 'You', partnerName).catch(() => {});
         LoveFlix.syncDisplayNames(adminName || 'You', partnerName).catch(() => {});
       }
-      document.getElementById('successUrl').textContent = 'loveflix.us/' + slug;
       const notice = document.getElementById('confirmEmailNotice');
       const cta = document.getElementById('primaryCta');
       if (window._needsEmailConfirm) {
@@ -379,16 +340,6 @@
     colors.querySelectorAll('.color').forEach(x => x.classList.remove('selected'));
     c.classList.add('selected');
     chipLogo.style.color = c.dataset.c;
-  });
-
-  // url slug live preview (step 3) — manual override
-  const urlSlugEl = document.getElementById('urlSlug');
-  const chipUrl = document.getElementById('chipUrl');
-  const successUrl = document.getElementById('successUrl');
-  urlSlugEl.addEventListener('input', e => {
-    const v = e.target.value || 'yourname';
-    chipUrl.textContent = `loveflix.us/${v}`;
-    successUrl.textContent = `loveflix.us/${v}`;
   });
 
   // plan picker (step 4)
