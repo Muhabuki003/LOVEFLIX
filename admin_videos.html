@@ -191,7 +191,7 @@
       </table>
       <div class="footer-row">
         <span>Showing <strong id="visCount">10</strong> of <strong id="totalCount">86</strong> videos</span>
-        <span><a href="#" style="color:var(--text-dim)">Bulk edit</a> · <a href="#" style="color:var(--text-dim)">Export CSV</a></span>
+        <span><a href="#" style="color:var(--text-dim)">Bulk edit</a> · <button onclick="exportCSV()" style="background:none;border:none;color:var(--text-dim);font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:none">Export CSV</button></span>
       </div>
     </div>
   </main>
@@ -287,6 +287,31 @@
     render();
   }
   load();
+
+  /* ── Export CSV ── */
+  function exportCSV() {
+    if (!VIDEOS.length) { alert('No videos to export.'); return; }
+    const headers = ['Title','Category','Date','Duration','Status','Views','ID'];
+    const rows = VIDEOS.map(v => [
+      '"' + (v.title || '').replace(/"/g,'""') + '"',
+      '"' + (v.category || '').replace(/"/g,'""') + '"',
+      '"' + (v.date || '').replace(/"/g,'""') + '"',
+      v.duration_seconds ? fmtDur(v.duration_seconds) : '—',
+      v.is_published ? 'Published' : 'Draft',
+      v.view_count || 0,
+      v.id || ''
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'loveflix-videos.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
   search.addEventListener('input', render);
   fCat.addEventListener('change', render);
