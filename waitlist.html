@@ -294,6 +294,15 @@
 @keyframes zoom-in{0%{transform:scale(1)}100%{transform:scale(15)}}
 @keyframes showing-lumieres{0%{opacity:0}100%{opacity:1}}
 @keyframes fading-lumieres-box{0%{background-color:rgba(228,9,19,.5)}100%{background-color:rgba(228,9,19,0)}}
+
+/* ===== Early access (mobile button + secret-key modal) ===== */
+#early-access-btn{display:none;position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);font:600 10px/1 'Inter',sans-serif;letter-spacing:.18em;text-transform:uppercase;padding:9px 16px;border-radius:999px;opacity:.18;transition:opacity .2s}
+#early-access-btn:hover,#early-access-btn:active{opacity:.5}
+@media (max-width:640px){#early-access-btn{display:inline-flex}}
+.gate-form{display:grid;gap:14px;text-align:left;margin-top:6px}
+.gate-form input{width:100%;padding:15px 18px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:#fff;font:400 15px/1.2 'Inter',sans-serif;border-radius:6px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;text-align:center;letter-spacing:.1em}
+.gate-form input:focus{border-color:var(--red);background:rgba(229,9,20,0.05);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+.gate-form .error{margin:0}
 </style>
 <base target="_blank">
 </head>
@@ -391,6 +400,24 @@
       <h2 id="success-title">Welcome to <span class="accent">Loveflix.</span></h2>
       <p>We've saved your spot. You'll be first to access private streaming, the LoveConnect live map, encrypted video calls, and everything else we're building — be ready to make her cry, in a good way.</p>
       <button type="button" class="btn btn-primary btn-lg" id="success-ok" style="min-width:180px">Got it</button>
+    </div>
+  </div>
+
+  <button type="button" id="early-access-btn" aria-label="Early access">Early access</button>
+
+  <div class="modal-backdrop" id="gate-modal" role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-hidden="true">
+    <div class="modal">
+      <button type="button" class="close" id="gate-close" aria-label="Close">×</button>
+      <div class="heart-icon" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.6 2.7 5 6.2 5c2.1 0 3.6 1.1 4.8 2.6C12.2 6.1 13.7 5 15.8 5c3.5 0 5.2 3.6 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+      </div>
+      <h2 id="gate-title">Early <span class="accent">access.</span></h2>
+      <p>Enter your access password to skip the waitlist.</p>
+      <form class="gate-form" id="gate-form" novalidate action="javascript:void(0);" onsubmit="return false;">
+        <input id="gate-pass" type="password" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Password" aria-label="Access password">
+        <button type="submit" class="btn btn-primary btn-lg" id="gate-submit">Unlock</button>
+        <div class="error" id="gate-error" role="alert" aria-live="polite"></div>
+      </form>
     </div>
   </div>
 
@@ -637,6 +664,71 @@
     if (!reduce) tick();
     addEventListener('resize', resize);
   })();
+</script>
+<script>
+(function(){
+  // Early access gate: mobile shows a low-opacity button; desktop opens via Cmd/Ctrl+Shift+L.
+  // The entered password is verified server-side by /api/unlock (env WAITLIST_BYPASS),
+  // which sets the lf_unlock cookie. On success we send the user into the gated app.
+  var DEST = '/landing.html';
+  var modal  = document.getElementById('gate-modal');
+  var openBtn = document.getElementById('early-access-btn');
+  var closeBtn = document.getElementById('gate-close');
+  var form   = document.getElementById('gate-form');
+  var input  = document.getElementById('gate-pass');
+  var submit = document.getElementById('gate-submit');
+  var errorEl = document.getElementById('gate-error');
+  if (!modal || !form) return;
+
+  function open(){
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+    errorEl.textContent = '';
+    setTimeout(function(){ input && input.focus(); }, 60);
+  }
+  function close(){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+    if (input) input.value = '';
+  }
+
+  openBtn && openBtn.addEventListener('click', open);
+  closeBtn && closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && modal.classList.contains('show')) close(); });
+
+  // Secret desktop shortcut: Cmd+Shift+L (mac) / Ctrl+Shift+L (win/linux)
+  document.addEventListener('keydown', function(e){
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'L' || e.key === 'l' || e.code === 'KeyL')) {
+      e.preventDefault();
+      modal.classList.contains('show') ? close() : open();
+    }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var code = (input.value || '').trim();
+    errorEl.textContent = '';
+    if (!code) { errorEl.textContent = 'Enter the access password.'; return false; }
+    submit.disabled = true;
+    var original = submit.textContent;
+    submit.textContent = 'Checking…';
+    fetch('/api/unlock?code=' + encodeURIComponent(code))
+      .then(function(r){ return r.json().catch(function(){ return { ok:false }; }); })
+      .then(function(d){
+        if (d && d.ok) { window.location.href = DEST; return; }
+        errorEl.textContent = 'Incorrect password.';
+        submit.disabled = false; submit.textContent = original;
+      })
+      .catch(function(){
+        errorEl.textContent = "Couldn't reach the server. Try again.";
+        submit.disabled = false; submit.textContent = original;
+      });
+    return false;
+  });
+})();
 </script>
 </body>
 </html>
