@@ -148,6 +148,19 @@
     .danger .btn{width:100%;justify-content:center}
     .avatar-pic{width:100px;height:100px;font-size:48px}
   }
+
+  /* ── Confirmation Modal ── */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+  .modal-overlay.open{opacity:1;pointer-events:auto}
+  .modal-box{background:var(--panel);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:32px;max-width:440px;width:90%;text-align:center}
+  .modal-box .icon{font-size:40px;margin-bottom:12px}
+  .modal-box h3{font-size:18px;font-weight:700;color:#fca5a5;margin-bottom:8px}
+  .modal-box p{font-size:14px;color:var(--text-light);margin-bottom:20px;line-height:1.5}
+  .modal-box .modal-input{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;color:#fff;font:inherit;font-size:16px;text-align:center;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;transition:border-color .15s,box-shadow .15s}
+  .modal-box .modal-input:focus{outline:none;border-color:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,0.15)}
+  .modal-box .modal-hint{font-size:11px;color:var(--text-dim);margin-bottom:16px;letter-spacing:.5px}
+  .modal-actions{display:flex;gap:10px;justify-content:center}
+  .modal-actions .btn{min-width:100px;justify-content:center}
 </style>
 </head>
 <body>
@@ -402,9 +415,9 @@
           <h2>Danger Zone</h2>
           <p class="desc">Irreversible. Be sure.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-danger">Reset Watch History</button>
-            <button class="btn btn-danger">Export All Videos</button>
-            <button class="btn btn-danger">Delete Site</button>
+            <button class="btn btn-danger" onclick="resetWatchHistory()">Reset Watch History</button>
+            <button class="btn btn-danger" onclick="exportAllVideos()">Export All Videos</button>
+            <button class="btn btn-danger" onclick="showDeleteModal()">Delete Site</button>
           </div>
         </div>
 
@@ -426,6 +439,21 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- ── Delete Site Confirmation Modal ── -->
+<div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal-box">
+    <div class="icon">⚠️</div>
+    <h3>Delete Site Forever?</h3>
+    <p>This will permanently delete your LoveFlix site, all videos, settings, and partner data. <strong style="color:#fca5a5">This cannot be undone.</strong></p>
+    <div class="modal-hint">Type <strong>DELETE</strong> to confirm</div>
+    <input type="text" class="modal-input" id="deleteInput" placeholder="DELETE" maxlength="6" autocomplete="off" oninput="onDeleteInput()" onkeydown="if(event.key==='Enter')confirmDelete()">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()" disabled style="opacity:0.4">Delete</button>
+    </div>
+  </div>
 </div>
 
 <div class="saved-toast" id="toast">
@@ -977,6 +1005,79 @@
       btn.innerHTML = orig;
     }
   });
+
+  // ── Danger Zone ──────────────────────────────────────────────────────────────
+
+  async function resetWatchHistory() {
+    if (!confirm('Reset all watch history for both partners? This cannot be undone.')) return;
+    try {
+      await LoveFlix.api('/api/watch/reset', { method: 'POST' });
+      showToast('Watch history reset');
+    } catch (_) {
+      showToast('Failed to reset — try again', 'error');
+    }
+  }
+
+  async function exportAllVideos() {
+    try {
+      const data = await LoveFlix.api('/api/videos?all=true');
+      if (!data || !data.length) {
+        showToast('No videos to export', 'error');
+        return;
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'loveflix-videos-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported ' + data.length + ' videos');
+    } catch (_) {
+      showToast('Export failed — try again', 'error');
+    }
+  }
+
+  // ── Delete Site Confirmation ───────────────────────────────────────────────
+
+  function showDeleteModal() {
+    document.getElementById('deleteModal').classList.add('open');
+    document.getElementById('deleteInput').value = '';
+    document.getElementById('deleteConfirmBtn').disabled = true;
+    document.getElementById('deleteConfirmBtn').style.opacity = '0.4';
+    setTimeout(function(){ document.getElementById('deleteInput').focus(); }, 100);
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+  }
+
+  function onDeleteInput() {
+    var val = document.getElementById('deleteInput').value.trim();
+    var btn = document.getElementById('deleteConfirmBtn');
+    var match = val === 'DELETE';
+    btn.disabled = !match;
+    btn.style.opacity = match ? '1' : '0.4';
+  }
+
+  async function confirmDelete() {
+    var val = document.getElementById('deleteInput').value.trim();
+    if (val !== 'DELETE') return;
+    document.getElementById('deleteConfirmBtn').disabled = true;
+    document.getElementById('deleteConfirmBtn').textContent = 'Deleting…';
+    try {
+      await LoveFlix.api('/api/site/delete', { method: 'POST' });
+      showToast('Site deleted');
+      closeDeleteModal();
+      setTimeout(function(){ window.location.href = '/'; }, 1500);
+    } catch (_) {
+      document.getElementById('deleteConfirmBtn').disabled = false;
+      document.getElementById('deleteConfirmBtn').textContent = 'Delete';
+      showToast('Delete failed — try again', 'error');
+    }
+  }
 </script>
 </body>
 </html>
