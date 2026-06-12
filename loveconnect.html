@@ -1263,10 +1263,8 @@ function initGoogleMaps() {
     renderWorldCopies:false
   });
 
-  // try globe projection (maplibre >= 4.6)
-  map.on('style.load', () => {
-    try { map.setProjection({ type:'globe' }); } catch(e){}
-  });
+  // Globe projection is opt-in (revolve mode) — keep Mercator on initial load
+  // so pitch:45 is respected from the start.
 
   // ---------- BUILD CUSTOM MARKERS ----------
   function makePartnerMarker(p, withLabelMeta){
@@ -1345,11 +1343,20 @@ function initGoogleMaps() {
 
   map.on('load', () => {
     // ---------- 3D BUILDINGS ----------
-    if (map.getSource('openmaptiles')) {
+    // Dynamically resolve the source that owns the 'building' source-layer
+    // (Carto styles use 'carto', older OpenMapTiles styles use 'openmaptiles')
+    const buildingSource = (() => {
+      const layers = map.getStyle().layers || [];
+      for (const l of layers) {
+        if (l['source-layer'] === 'building' && l.source) return l.source;
+      }
+      return null;
+    })();
+    if (buildingSource) {
       map.addLayer({
         id: 'lf-3d-buildings',
         type: 'fill-extrusion',
-        source: 'openmaptiles',
+        source: buildingSource,
         'source-layer': 'building',
         minzoom: 14,
         paint: {
@@ -1447,7 +1454,7 @@ function initGoogleMaps() {
     const pad = mobile
       ? { top:80, bottom:160, left:24, right:24 }
       : { top:140, bottom:200, left:360, right:380 };
-    map.fitBounds(bounds, { padding:pad, duration:1500, maxZoom:5 });
+    map.fitBounds(bounds, { padding:pad, duration:1500, maxZoom:5, pitch:45, bearing:-17 });
   }
 
   // ---------- REVOLVE (Google Earth-style orbit) ----------
