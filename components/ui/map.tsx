@@ -142,6 +142,12 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Show a loading indicator on the map */
   loading?: boolean;
+  /**
+   * Enable 3D building extrusions. Uses the openmaptiles `building` source-layer
+   * from Carto vector tiles. Only visible at zoom ≥ 14.
+   * Defaults to true when dark theme is active.
+   */
+  buildings?: boolean;
 } & Omit<MapLibreGL.MapOptions, "container" | "style">;
 
 function DefaultLoader() {
@@ -176,6 +182,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     viewport,
     onViewportChange,
     loading = false,
+    buildings,
     ...props
   },
   ref,
@@ -312,6 +319,42 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
 
     mapInstance.setStyle(newStyle, { diff: true });
   }, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
+
+  // 3D buildings fill-extrusion layer
+  const showBuildings = buildings ?? resolvedTheme === "dark";
+  useEffect(() => {
+    if (!mapInstance || !isStyleLoaded) return;
+
+    const LAYER_ID = "__lf-3d-buildings";
+
+    if (mapInstance.getLayer(LAYER_ID)) mapInstance.removeLayer(LAYER_ID);
+    if (!showBuildings) return;
+    if (!mapInstance.getSource("openmaptiles")) return;
+
+    mapInstance.addLayer({
+      id: LAYER_ID,
+      type: "fill-extrusion",
+      source: "openmaptiles",
+      "source-layer": "building",
+      minzoom: 14,
+      paint: {
+        "fill-extrusion-color": "#1a0a2e",
+        "fill-extrusion-height": [
+          "coalesce",
+          ["get", "render_height"],
+          ["get", "height"],
+          20,
+        ],
+        "fill-extrusion-base": [
+          "coalesce",
+          ["get", "render_min_height"],
+          ["get", "min_height"],
+          0,
+        ],
+        "fill-extrusion-opacity": 0.85,
+      },
+    });
+  }, [mapInstance, isStyleLoaded, showBuildings]);
 
   const contextValue = useMemo(
     () => ({

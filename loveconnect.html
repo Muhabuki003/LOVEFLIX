@@ -1257,8 +1257,8 @@ function initGoogleMaps() {
     style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
     center:[ (HER.lng+HIM.lng)/2, (HER.lat+HIM.lat)/2 ],
     zoom:2.6,
-    bearing:0,
-    pitch:0,
+    bearing:-17,
+    pitch:45,
     attributionControl:{ compact:true },
     renderWorldCopies:false
   });
@@ -1344,6 +1344,27 @@ function initGoogleMaps() {
   }
 
   map.on('load', () => {
+    // ---------- 3D BUILDINGS ----------
+    if (map.getSource('openmaptiles')) {
+      map.addLayer({
+        id: 'lf-3d-buildings',
+        type: 'fill-extrusion',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        minzoom: 14,
+        paint: {
+          'fill-extrusion-color': '#1a0a2e',
+          'fill-extrusion-height': [
+            'coalesce', ['get','render_height'], ['get','height'], 20
+          ],
+          'fill-extrusion-base': [
+            'coalesce', ['get','render_min_height'], ['get','min_height'], 0
+          ],
+          'fill-extrusion-opacity': 0.85
+        }
+      });
+    }
+
     // arc data
     map.addSource('love-arc', { type:'geojson', data: buildArcFeature() });
 
