@@ -329,12 +329,18 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
 
     if (mapInstance.getLayer(LAYER_ID)) mapInstance.removeLayer(LAYER_ID);
     if (!showBuildings) return;
-    if (!mapInstance.getSource("openmaptiles")) return;
+
+    // Find whichever source owns the 'building' source-layer
+    const buildingSource = mapInstance
+      .getStyle()
+      .layers?.find((l) => (l as { "source-layer"?: string })["source-layer"] === "building" && "source" in l)
+      ?.source as string | undefined;
+    if (!buildingSource) return;
 
     mapInstance.addLayer({
       id: LAYER_ID,
       type: "fill-extrusion",
-      source: "openmaptiles",
+      source: buildingSource,
       "source-layer": "building",
       minzoom: 14,
       paint: {
