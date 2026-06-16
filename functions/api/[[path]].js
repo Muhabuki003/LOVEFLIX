@@ -1862,11 +1862,36 @@ function buildConciergeSystemPrompt(ctx) {
     recentDates = 'recent adventures',
     avgBudgetSpent = 'your usual range',
     daysSinceLastUpload = null,
+    yourLocation = null,
+    partnerLocation = null,
+    yourTimezone = null,
+    partnerTimezone = null,
+    midpoint = null,
+    distanceApartKm = null,
+    sameCity = null,
   } = ctx || {};
 
   const uploadNudge = daysSinceLastUpload !== null && daysSinceLastUpload > 7
     ? `It has been ${daysSinceLastUpload} days since their last video upload — gently nudge them to capture a new memory.`
     : '';
+
+  // Location & timezone block — only included when we actually have data.
+  let locationBlock = '';
+  if (yourLocation || partnerLocation) {
+    const lines = ['', 'LOCATION & LOGISTICS (use this for date-spot ideas):'];
+    if (yourLocation)    lines.push(`- ${name1}'s location: ${yourLocation}${yourTimezone ? ` (timezone ${yourTimezone})` : ''}`);
+    if (partnerLocation) lines.push(`- ${name2}'s location: ${partnerLocation}${partnerTimezone ? ` (timezone ${partnerTimezone})` : ''}`);
+    if (distanceApartKm != null) lines.push(`- Roughly ${distanceApartKm} km apart.`);
+    if (sameCity === true) {
+      lines.push('- They are in the same area — suggest local date spots near them.');
+    } else if (midpoint) {
+      lines.push(`- They are apart — suggest places to meet roughly HALFWAY (midpoint near ${midpoint}), or thoughtful long-distance / virtual date ideas.`);
+    }
+    if (yourTimezone && partnerTimezone && yourTimezone !== partnerTimezone) {
+      lines.push('- They are in different timezones — be mindful of the time difference when suggesting when to meet or call.');
+    }
+    locationBlock = lines.join('\n');
+  }
 
   return `You are the LoveFlix Relationship Concierge — a deeply personal AI built exclusively for ${coupleName} on LoveFlix (loveflix.us), a private streaming platform where couples upload and share their memories.
 
@@ -1887,6 +1912,7 @@ COUPLE CONTEXT:
 - Recent Date Locations: ${recentDates}
 - Average Date Budget: ${avgBudgetSpent}
 ${uploadNudge}
+${locationBlock}
 
 YOUR CAPABILITIES:
 1. DATE PLANNING — suggest date ideas tailored to their actual interests, budget, and location.
@@ -1897,11 +1923,12 @@ YOUR CAPABILITIES:
 6. MILESTONES — celebrate anniversaries, days-together counts, and upload streaks.
 
 RESPONSE RULES:
-- Keep it SHORT: 2–3 sentences for simple questions, 4 sentences MAX for complex planning. Never exceed 200 words.
-- Be warm, romantic, and personal — you know them deeply.
-- Use their names (${name1} and ${name2}) when it feels natural.
-- Everything you suggest should feel tailored to THEIR story, not generic.
-- If asked something outside LoveFlix scope, gently redirect: "I'm built for your love story. Let's plan something special instead?"
+- BE SHORT AND CONCISE. 1–3 short sentences. Under 60 words. Never write paragraphs or long lists.
+- Get straight to the suggestion — skip preamble and filler.
+- At most one follow-up question, only when it genuinely helps.
+- For date spots: if they're in the same area suggest local places; if apart, suggest meeting roughly halfway or a long-distance/virtual idea. Be mindful of timezone differences.
+- Be warm and personal, but brief. Use their names (${name1}, ${name2}) only when natural.
+- If asked something outside LoveFlix scope, gently redirect in one line: "I'm built for your love story — want to plan something instead?"
 
 STRICT BOUNDARIES:
 - Only help with date planning, memory insights, and relationship moments.
@@ -1960,7 +1987,7 @@ async function handleAiChat(env, request, user) {
           { role: 'system', content: systemPrompt },
           ...userMessages,
         ],
-        max_tokens: 300,
+        max_tokens: 160,
         temperature: 0.8,
       }),
     });
