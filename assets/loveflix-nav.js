@@ -30,6 +30,9 @@
       '.lf-icon-btn{background:none;border:none;color:#fff;width:24px;height:24px;padding:0;cursor:pointer}',
       '.lf-icon-btn svg{width:100%;height:100%;fill:#fff}',
       '.lf-nav-avatar{width:32px;height:32px;border-radius:4px;background:radial-gradient(circle at 30% 25%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,#ff5f8f 0%,#d6336c 55%,#8f1d4a 100%);display:flex;align-items:center;justify-content:center;font-family:"Bebas Neue",sans-serif;font-size:18px;letter-spacing:1px;color:#fff;text-decoration:none}',
+      '.lf-lola-btn{width:30px;height:30px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s ease,filter .15s ease;filter:drop-shadow(0 0 6px rgba(229,9,20,0.4))}',
+      '.lf-lola-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none}',
+      '.lf-lola-btn:hover{transform:scale(1.12);filter:drop-shadow(0 0 12px rgba(229,9,20,0.85))}',
       '@media(max-width:900px){nav.lf-topnav{padding:14px 24px}}',
       '@media(max-width:720px){nav.lf-topnav{padding:12px 16px}.lf-nav-left{gap:18px}.lf-nf-logo{font-size:28px}.lf-nf-logo .lf-heart{font-size:20px}.lf-nav-links{display:none}.lf-nav-right{gap:12px}}',
     ].join('');
@@ -50,6 +53,7 @@
       '<div class="lf-nav-links">' + links + '</div>' +
     '</div>' +
     '<div class="lf-nav-right">' +
+      '<button class="lf-icon-btn lf-lola-btn" id="lf-lolaBtn" aria-label="Chat with Lola, your LOVEFLIX AI" title="Chat with Lola ♥"><img src="assets/lola-logo.png" alt="Lola AI" /></button>' +
       '<button class="lf-icon-btn" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>' +
       '<button class="lf-icon-btn" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg></button>' +
       '<a href="whos_watching.html" class="lf-nav-avatar" id="lf-navAvatar" title="Switch profile">M</a>' +
@@ -72,5 +76,22 @@
 
   if (window.LoveFlix && LoveFlix.paintNavAvatar) {
     LoveFlix.paintNavAvatar(document.getElementById('lf-navAvatar'));
+  }
+
+  // ── Lola AI concierge — present on every signed-in page ────────────────────
+  // The nav button opens the panel; the widget script renders the (optionally
+  // floating) launcher + chat panel and wires it to /api/ai (concierge mode).
+  var lolaBtn = document.getElementById('lf-lolaBtn');
+  if (lolaBtn) {
+    lolaBtn.addEventListener('click', function () {
+      if (window.Lola) window.Lola.toggle();
+    });
+  }
+  if (!window.__lolaLoaded && !document.getElementById('lola-widget-script')) {
+    var lw = document.createElement('script');
+    lw.id = 'lola-widget-script';
+    lw.src = 'assets/lola-widget.js';
+    lw.defer = true;
+    document.body.appendChild(lw);
   }
 })();
