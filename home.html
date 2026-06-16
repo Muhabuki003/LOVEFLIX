@@ -636,6 +636,11 @@
   .bt-link:hover { background: rgba(255,255,255,.08); }
   .bt-link span:first-child { font-size: 19px; }
   .bt-link.hot span:last-child { color: var(--brand-accent, var(--red)); }
+  .bt-link-lola { background: none; border: none; cursor: pointer; font-family: inherit; }
+  .bt-link-lola span:last-child { color: var(--brand-accent, var(--red)); font-weight: 600; }
+  .bt-link-lola .lola-grid-ic { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 6px rgba(229,9,20,0.5)); }
+  .bt-link-lola .lola-grid-ic img { width: 100%; height: 100%; object-fit: contain; }
+  .bt-link-lola:hover { background: rgba(229,9,20,.12); }
 </style>
 </head>
 <body>
@@ -906,11 +911,21 @@
   <div style="margin-top: 8px;">© 2026 · <a href="whos_watching.html" style="color:#a3a3a3; text-decoration: underline;">Switch profile</a></div>
 </footer>
 
+<!-- Home hosts Lola in the nav bar + dashboard grid, so skip the floating launcher. -->
+<script>window.LOLA_CONFIG = { noLauncher: true };</script>
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-nav.js"></script>
 <script src="assets/loveflix-call.js"></script>
 <script>
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
+
+  // Open Lola from the dashboard grid box (rendered into the bento links).
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#lolaGridBtn')) {
+      e.preventDefault();
+      if (window.Lola) window.Lola.open();
+    }
+  });
 
   // Personalize the "Continue Watching" row for whoever's signed in.
   function paintContinueWatchingTitle() {
@@ -1283,6 +1298,7 @@
 
       <div class="bt bt-links">
         <div class="bt-links-inner">
+          <button type="button" class="bt-link bt-link-lola" id="lolaGridBtn" aria-label="Chat with Lola, your LOVEFLIX AI"><span class="lola-grid-ic"><img src="assets/lola-logo.png" alt="Lola AI" /></span><span>Lola</span></button>
           <a href="/browse.html"        class="bt-link hot"><span>&#127909;</span><span>Browse</span></a>
           <a href="/our-story.html"     class="bt-link"><span>&#128214;</span><span>Our Story</span></a>
           <a href="/admin_upload.html"  class="bt-link"><span>&#43;</span><span>Upload</span></a>

@@ -1,0 +1,425 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Lola — LOVEFLIX AI relationship concierge.
+//
+// A self-contained floating widget that can be dropped onto any signed-in page.
+// It renders a draggable / resizable launcher + chat panel and talks to the
+// existing /api/ai endpoint in "concierge" mode (DeepSeek, keyed by the
+// DEEPSEEK_API_KEY Cloudflare secret). No build step, no dependencies.
+//
+// Public API (window.Lola):
+//   Lola.open()    — open the chat panel
+//   Lola.close()   — close it
+//   Lola.toggle()  — toggle
+//
+// Configuration (set window.LOLA_CONFIG before this script loads):
+//   { noLauncher: true }  — hide the floating launcher (used on pages that open
+//                           Lola from a nav button / grid box instead, e.g. home)
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+  'use strict';
+
+  // Guard against double-injection (nav.js + per-page tags both load us).
+  if (window.__lolaLoaded) return;
+  window.__lolaLoaded = true;
+
+  var CFG = window.LOLA_CONFIG || {};
+  var API_AI    = '/api/ai';
+  var API_STATS = '/api/couple-stats';
+  var LOGO      = '/assets/lola-logo.png';
+  var LS_POS    = 'lola_launcher_pos';
+  var LS_SIZE   = 'lola_panel_size';
+
+  // ── Only show Lola to signed-in couples ────────────────────────────────────
+  function isSignedIn() {
+    try {
+      if (localStorage.getItem('loveflix_token')) return true;
+      var s = JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
+      return !!(s && (s.adminName || s.partnerName || s.partner_1_name));
+    } catch (e) { return false; }
+  }
+  if (!isSignedIn()) return;
+
+  var isMobile = window.matchMedia('(max-width: 600px)').matches;
+
+  // ── Styles ─────────────────────────────────────────────────────────────────
+  if (!document.getElementById('lola-style')) {
+    var st = document.createElement('style');
+    st.id = 'lola-style';
+    st.textContent = [
+      '.lola-root{--lo-red:#e50914;--lo-rose:#ff5f8f;--lo-panel:rgba(18,18,18,0.94);--lo-border:rgba(255,255,255,0.09);--lo-border-s:rgba(255,255,255,0.16);--lo-text:#f4f4f4;--lo-dim:#8a8a8a;--lo-light:#cfcfcf;--lo-green:#10b981;--lo-launch:60px;--lo-gap:24px;font-family:"Inter",system-ui,sans-serif}',
+      // panel
+      '.lola-panel{position:fixed;right:var(--lo-gap);bottom:calc(var(--lo-gap) + var(--lo-launch) + 14px);width:380px;height:560px;max-height:calc(100vh - 2*var(--lo-gap));max-width:calc(100vw - 2*var(--lo-gap));z-index:2147483000;display:flex;flex-direction:column;background:var(--lo-panel);-webkit-backdrop-filter:blur(26px) saturate(1.2);backdrop-filter:blur(26px) saturate(1.2);border:1px solid var(--lo-border);border-radius:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,0.8),0 0 0 1px rgba(0,0,0,0.4);overflow:hidden;opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:transform .34s cubic-bezier(.2,.9,.25,1),opacity .24s ease}',
+      '.lola-panel.lola-open{opacity:1;transform:none;pointer-events:auto}',
+      // header
+      '.lola-head{display:flex;align-items:center;gap:12px;padding:16px 14px;border-bottom:1px solid var(--lo-border);background:linear-gradient(180deg,rgba(229,9,20,0.10),transparent);flex-shrink:0;cursor:grab;touch-action:none}',
+      '.lola-head:active{cursor:grabbing}',
+      '.lola-badge{width:40px;height:40px;border-radius:50%;flex-shrink:0;position:relative;background:radial-gradient(circle at 32% 28%,#ffb3c7 0%,transparent 55%),linear-gradient(135deg,var(--lo-rose) 0%,var(--lo-red) 78%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(229,9,20,0.4)}',
+      '.lola-badge .lo-heart{color:#fff;font-size:18px;line-height:1}',
+      '.lola-badge .lo-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--lo-green);border:2px solid #141414;box-shadow:0 0 8px var(--lo-green)}',
+      '.lola-id{flex:1;min-width:0;line-height:1.1}',
+      '.lola-id .lo-nm{font-family:"Bebas Neue",sans-serif;font-size:22px;letter-spacing:1.5px;display:flex;align-items:center;gap:8px;color:#fff}',
+      '.lola-id .lo-tag{font-size:8.5px;font-weight:800;letter-spacing:1.5px;color:var(--lo-red);border:1px solid rgba(229,9,20,0.55);padding:2px 5px;border-radius:4px}',
+      '.lola-id .lo-st{font-size:11px;color:var(--lo-dim);margin-top:3px;display:flex;align-items:center;gap:6px}',
+      '.lola-id .lo-st b{color:var(--lo-green);font-weight:600}',
+      '.lola-close{width:32px;height:32px;border-radius:9px;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid var(--lo-border);display:flex;align-items:center;justify-content:center;color:var(--lo-light);transition:background .15s,border-color .15s,transform .1s}',
+      '.lola-close:hover{background:var(--lo-red);border-color:var(--lo-red);color:#fff}',
+      '.lola-close:active{transform:scale(.92)}',
+      '.lola-close svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}',
+      // body
+      '.lola-body{flex:1;overflow-y:auto;padding:20px 16px 8px;display:flex;flex-direction:column;gap:14px}',
+      '.lola-body::-webkit-scrollbar{width:6px}',
+      '.lola-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px}',
+      '.lola-day{align-self:center;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lo-dim);background:rgba(255,255,255,0.04);padding:4px 10px;border-radius:999px}',
+      '.lola-msg{max-width:82%;display:flex;flex-direction:column;gap:4px;animation:lolaRise .4s cubic-bezier(.2,.8,.2,1) both}',
+      '@keyframes lolaRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+      '.lola-msg .lo-bubble{padding:11px 14px;font-size:13.5px;line-height:1.5;border-radius:16px;word-wrap:break-word;overflow-wrap:anywhere}',
+      '.lola-msg .lo-meta{font-size:10px;color:var(--lo-dim);padding:0 6px}',
+      '.lola-msg.bot{align-self:flex-start}',
+      '.lola-msg.bot .lo-bubble{background:rgba(255,255,255,0.06);border:1px solid var(--lo-border);border-bottom-left-radius:5px;color:var(--lo-light)}',
+      '.lola-msg.me{align-self:flex-end;align-items:flex-end}',
+      '.lola-msg.me .lo-bubble{background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));color:#fff;border-bottom-right-radius:5px;font-weight:500}',
+      '.lola-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 2px 8px;animation:lolaRise .45s .1s both}',
+      '.lola-chip{font-size:12px;font-weight:500;color:var(--lo-light);cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid var(--lo-border-s);padding:8px 13px;border-radius:999px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}',
+      '.lola-chip:hover{background:rgba(229,9,20,0.16);border-color:rgba(229,9,20,0.5);color:#fff;transform:translateY(-1px)}',
+      '.lola-chip .lo-ic{color:var(--lo-rose)}',
+      '.lola-typing{align-self:flex-start;display:none;gap:4px;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid var(--lo-border);border-radius:16px;border-bottom-left-radius:5px}',
+      '.lola-typing.on{display:flex}',
+      '.lola-typing i{width:6px;height:6px;border-radius:50%;background:var(--lo-dim);animation:lolaBlink 1.3s infinite}',
+      '.lola-typing i:nth-child(2){animation-delay:.18s}.lola-typing i:nth-child(3){animation-delay:.36s}',
+      '@keyframes lolaBlink{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}',
+      // input
+      '.lola-input{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--lo-border);background:rgba(0,0,0,0.25)}',
+      '.lola-field{flex:1;min-width:0;display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid var(--lo-border);border-radius:999px;padding:0 6px 0 16px;transition:border-color .15s}',
+      '.lola-field:focus-within{border-color:rgba(229,9,20,0.55)}',
+      '.lola-field input{flex:1;background:none;border:none;outline:none;color:var(--lo-text);font-family:inherit;font-size:13px;padding:11px 0}',
+      '.lola-field input::placeholder{color:var(--lo-dim)}',
+      '.lola-send{width:34px;height:34px;border-radius:50%;flex-shrink:0;cursor:pointer;border:none;background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .12s,filter .15s;box-shadow:0 4px 14px rgba(229,9,20,0.4)}',
+      '.lola-send:hover{filter:brightness(1.08)}.lola-send:active{transform:scale(.9)}',
+      '.lola-send svg{width:15px;height:15px;fill:#fff}',
+      // resize handle
+      '.lola-resize{position:absolute;left:0;top:0;width:18px;height:18px;cursor:nwse-resize;z-index:5}',
+      '.lola-resize::before{content:"";position:absolute;left:6px;top:6px;width:7px;height:7px;border-left:2px solid rgba(255,255,255,0.3);border-top:2px solid rgba(255,255,255,0.3);border-radius:2px 0 0 0}',
+      // floating launcher
+      '.lola-logo{position:fixed;right:var(--lo-gap);bottom:var(--lo-gap);width:var(--lo-launch);height:var(--lo-launch);z-index:2147483001;cursor:pointer;touch-action:none}',
+      '.lola-bob{width:100%;height:100%;animation:lolaBob 4.5s ease-in-out infinite}',
+      '.lola-logo.lola-dragging .lola-bob,.lola-logo.lola-active .lola-bob{animation:none}',
+      '@keyframes lolaBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+      '.lola-logo img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none;user-select:none;pointer-events:none;animation:lolaGlow 2.8s ease-in-out infinite}',
+      '@keyframes lolaGlow{0%,100%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(229,9,20,.35))}50%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 18px rgba(229,9,20,.75))}}',
+      '.lola-tip{position:fixed;z-index:2147483001;background:#141414;border:1px solid var(--lo-border);color:var(--lo-light);font-size:12.5px;font-weight:500;white-space:nowrap;padding:9px 14px;border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .2s}',
+      '.lola-tip b{color:#fff}',
+      // mobile
+      '@media(max-width:600px){.lola-root{--lo-gap:12px}.lola-panel{right:0;left:0;bottom:0;top:auto;width:100vw;height:78vh;max-height:none;max-width:none;border-radius:22px 22px 0 0;transform-origin:bottom center}.lola-logo{top:14px;right:14px;bottom:auto;width:52px;height:52px}.lola-resize{display:none}.lola-head{cursor:default}.lola-tip{display:none}}',
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  // ── DOM ──────────────────────────────────────────────────────────────────
+  var root = document.createElement('div');
+  root.className = 'lola-root';
+  root.innerHTML =
+    '<section class="lola-panel" id="lolaPanel" aria-label="Chat with Lola">' +
+      '<div class="lola-resize" id="lolaResize" aria-hidden="true"></div>' +
+      '<header class="lola-head" id="lolaHead">' +
+        '<div class="lola-badge"><span class="lo-heart">♥</span><span class="lo-dot"></span></div>' +
+        '<div class="lola-id"><div class="lo-nm">LOLA <span class="lo-tag">AI</span></div>' +
+        '<div class="lo-st"><b>Online</b> · your LOVEFLIX concierge</div></div>' +
+        '<button class="lola-close" id="lolaClose" aria-label="Close chat"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
+      '</header>' +
+      '<div class="lola-body" id="lolaBody">' +
+        '<div class="lola-day">Today</div>' +
+        '<div class="lola-typing" id="lolaTyping" aria-hidden="true"><i></i><i></i><i></i></div>' +
+      '</div>' +
+      '<div class="lola-input">' +
+        '<label class="lola-field"><input id="lolaField" type="text" placeholder="Message Lola…" autocomplete="off"></label>' +
+        '<button class="lola-send" id="lolaSend" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-7-8-3z"></path></svg></button>' +
+      '</div>' +
+    '</section>' +
+    (CFG.noLauncher ? '' :
+      '<div class="lola-logo" id="lolaLogo" role="button" tabindex="0" aria-label="Open Lola chat"><div class="lola-bob"><img src="' + LOGO + '" alt="Lola"></div></div>' +
+      '<div class="lola-tip" id="lolaTip">Chat with <b>Lola</b> ♥</div>');
+  document.body.appendChild(root);
+
+  var panel  = document.getElementById('lolaPanel');
+  var bodyEl = document.getElementById('lolaBody');
+  var typing = document.getElementById('lolaTyping');
+  var field  = document.getElementById('lolaField');
+  var logo   = document.getElementById('lolaLogo');
+  var tip    = document.getElementById('lolaTip');
+  var isOpen = false;
+  var greeted = false;
+
+  // ── Couple context (mirrors the legacy concierge widget) ───────────────────
+  var coupleCtx = {};
+  var ctxReady = false;
+  var history = [];
+
+  function loadCoupleContext() {
+    var token = localStorage.getItem('loveflix_token');
+    var settings;
+    try {
+      settings = (window.LoveFlix && LoveFlix.getSettings) ? LoveFlix.getSettings()
+        : JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
+    } catch (e) { settings = {}; }
+
+    var name1 = settings.adminName   || settings.partner_1_name || 'Partner 1';
+    var name2 = settings.partnerName || settings.partner_2_name || 'Partner 2';
+
+    coupleCtx = {
+      coupleName: name1 + ' & ' + name2,
+      name1: name1, name2: name2,
+      daysTogether: 'unknown', totalVideos: '?',
+      lastVideoUploaded: 'recently', musicGenres: 'your shared music',
+      city: settings.city || 'your city', nextFreeDay: 'soon',
+      recentDates: 'recent adventures', avgBudgetSpent: 'your usual range',
+      daysSinceLastUpload: null,
+    };
+
+    if (token) {
+      fetch(API_STATS, { headers: { Authorization: 'Bearer ' + token } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d) return;
+          if (d.daysTogether != null) coupleCtx.daysTogether = d.daysTogether;
+          if (d.totalVideos != null) coupleCtx.totalVideos = d.totalVideos;
+          if (d.daysSinceLastUpload != null) coupleCtx.daysSinceLastUpload = d.daysSinceLastUpload;
+          if (d.partner1Name) coupleCtx.name1 = d.partner1Name;
+          if (d.partner2Name) coupleCtx.name2 = d.partner2Name;
+          if (d.partner1Name || d.partner2Name) coupleCtx.coupleName = coupleCtx.name1 + ' & ' + coupleCtx.name2;
+          if (d.lastUploadedAt) {
+            var dt = new Date(d.lastUploadedAt);
+            coupleCtx.lastVideoUploaded = dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+          }
+        })
+        .catch(function () {})
+        .then(function () { ctxReady = true; });
+    } else {
+      ctxReady = true;
+    }
+  }
+  loadCoupleContext();
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'loveflix_settings') loadCoupleContext();
+  });
+
+  // ── Messages ────────────────────────────────────────────────────────────
+  function addMsg(html, who) {
+    var m = document.createElement('div');
+    m.className = 'lola-msg ' + who;
+    m.innerHTML = '<div class="lo-bubble">' + html + '</div><div class="lo-meta">' +
+      (who === 'bot' ? 'Lola' : 'You') + ' · now</div>';
+    bodyEl.insertBefore(m, typing);
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+    return m.querySelector('.lo-bubble');
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>]/g, function (c) {
+      return c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;';
+    });
+  }
+
+  function greet() {
+    if (greeted) return;
+    greeted = true;
+    var name = coupleCtx.name1 && coupleCtx.name1 !== 'Partner 1' ? (' ' + coupleCtx.name1) : '';
+    addMsg("Hey" + escapeHtml(name) + ", I’m Lola ♥ your LOVEFLIX relationship concierge. Tell me what you two are in the mood for and I’ll take care of the rest.", 'bot');
+    var chips = document.createElement('div');
+    chips.className = 'lola-chips';
+    var opts = [
+      ['♥', 'Plan a date night', 'Plan a special date night for us this week.'],
+      ['☀', 'Surprise me', 'Surprise me with something romantic for us to do.'],
+      ['✨', 'Our next adventure', 'What should our next adventure together be?'],
+    ];
+    opts.forEach(function (o) {
+      var b = document.createElement('button');
+      b.className = 'lola-chip';
+      b.innerHTML = '<span class="lo-ic">' + o[0] + '</span> ' + o[1];
+      b.addEventListener('click', function () { chips.remove(); send(o[2]); });
+      chips.appendChild(b);
+    });
+    bodyEl.insertBefore(chips, typing);
+  }
+
+  function send(text) {
+    text = (text || '').trim();
+    if (!text) return;
+    addMsg(escapeHtml(text), 'me');
+    history.push({ role: 'user', content: text });
+    field.value = '';
+    typing.classList.add('on');
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+
+    fetch(API_AI, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'concierge', coupleContext: coupleCtx, messages: history }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        typing.classList.remove('on');
+        var reply = (data && data.choices && data.choices[0] && data.choices[0].message &&
+          data.choices[0].message.content) || 'Something went wrong — try again!';
+        history.push({ role: 'assistant', content: reply });
+        if (history.length > 16) history = history.slice(-16);
+        typeWriter(escapeHtml(reply), addMsg('', 'bot'));
+      })
+      .catch(function () {
+        typing.classList.remove('on');
+        addMsg('Connection issue — try again in a moment.', 'bot');
+      });
+  }
+
+  function typeWriter(text, el) {
+    var i = 0;
+    el.textContent = '';
+    var iv = setInterval(function () {
+      el.textContent += text[i++];
+      bodyEl.scrollTop = bodyEl.scrollHeight;
+      if (i >= text.length) clearInterval(iv);
+    }, 14);
+  }
+
+  document.getElementById('lolaSend').addEventListener('click', function () { send(field.value); });
+  field.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(field.value); });
+
+  // ── Open / close ──────────────────────────────────────────────────────────
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+    panel.classList.add('lola-open');
+    if (logo) logo.classList.add('lola-active');
+    greet();
+    setTimeout(function () { try { field.focus(); } catch (e) {} }, 360);
+  }
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    panel.classList.remove('lola-open');
+    if (logo) logo.classList.remove('lola-active');
+  }
+  function toggle() { isOpen ? close() : open(); }
+
+  document.getElementById('lolaClose').addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+  window.Lola = { open: open, close: close, toggle: toggle };
+
+  // ── Restore persisted panel size ────────────────────────────────────────
+  try {
+    var sz = JSON.parse(localStorage.getItem(LS_SIZE) || 'null');
+    if (sz && !isMobile) { panel.style.width = sz.w + 'px'; panel.style.height = sz.h + 'px'; }
+  } catch (e) {}
+
+  // ── Launcher: drag anywhere + click-to-open ───────────────────────────────
+  if (logo) {
+    // restore saved position
+    try {
+      var pos = JSON.parse(localStorage.getItem(LS_POS) || 'null');
+      if (pos && !isMobile) {
+        logo.style.left = pos.x + 'px'; logo.style.top = pos.y + 'px';
+        logo.style.right = 'auto'; logo.style.bottom = 'auto';
+      }
+    } catch (e) {}
+
+    var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    logo.addEventListener('pointerdown', function (e) {
+      if (isMobile) return; // tap-only on mobile
+      dragging = true; moved = false;
+      var r = logo.getBoundingClientRect();
+      ox = r.left; oy = r.top; sx = e.clientX; sy = e.clientY;
+      logo.setPointerCapture(e.pointerId);
+      logo.classList.add('lola-dragging');
+    });
+    logo.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      var nx = Math.max(4, Math.min(window.innerWidth - logo.offsetWidth - 4, ox + dx));
+      var ny = Math.max(4, Math.min(window.innerHeight - logo.offsetHeight - 4, oy + dy));
+      logo.style.left = nx + 'px'; logo.style.top = ny + 'px';
+      logo.style.right = 'auto'; logo.style.bottom = 'auto';
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      logo.classList.remove('lola-dragging');
+      try { logo.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (moved) {
+        var r = logo.getBoundingClientRect();
+        try { localStorage.setItem(LS_POS, JSON.stringify({ x: r.left, y: r.top })); } catch (err) {}
+      }
+    }
+    logo.addEventListener('pointerup', function (e) {
+      var wasMoved = moved;
+      endDrag(e);
+      if (!wasMoved) toggle();
+    });
+    logo.addEventListener('pointercancel', endDrag);
+    logo.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+    logo.addEventListener('mouseenter', function () {
+      if (tip && !isMobile) {
+        var r = logo.getBoundingClientRect();
+        tip.style.left = 'auto';
+        tip.style.right = (window.innerWidth - r.left + 12) + 'px';
+        tip.style.bottom = (window.innerHeight - r.bottom + 14) + 'px';
+        tip.style.opacity = isOpen ? '0' : '1';
+      }
+    });
+    logo.addEventListener('mouseleave', function () { if (tip) tip.style.opacity = '0'; });
+  }
+
+  // ── Panel: drag by header + resize from top-left handle ───────────────────
+  if (!isMobile) {
+    var head = document.getElementById('lolaHead');
+    var hDrag = false, hsx = 0, hsy = 0, hl = 0, ht = 0;
+    head.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.lola-close')) return;
+      hDrag = true;
+      var r = panel.getBoundingClientRect();
+      hl = r.left; ht = r.top; hsx = e.clientX; hsy = e.clientY;
+      // switch to top/left positioning so dragging is absolute
+      panel.style.left = hl + 'px'; panel.style.top = ht + 'px';
+      panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', function (e) {
+      if (!hDrag) return;
+      var nx = Math.max(4, Math.min(window.innerWidth - 80, hl + e.clientX - hsx));
+      var ny = Math.max(4, Math.min(window.innerHeight - 60, ht + e.clientY - hsy));
+      panel.style.left = nx + 'px'; panel.style.top = ny + 'px';
+    });
+    function endHead(e) { if (hDrag) { hDrag = false; try { head.releasePointerCapture(e.pointerId); } catch (err) {} } }
+    head.addEventListener('pointerup', endHead);
+    head.addEventListener('pointercancel', endHead);
+
+    var rz = document.getElementById('lolaResize');
+    var rDrag = false, rsx = 0, rsy = 0, rw = 0, rh = 0, rRight = 0, rBottom = 0;
+    rz.addEventListener('pointerdown', function (e) {
+      e.stopPropagation();
+      rDrag = true;
+      var r = panel.getBoundingClientRect();
+      rw = r.width; rh = r.height; rsx = e.clientX; rsy = e.clientY;
+      rRight = window.innerWidth - r.right; rBottom = window.innerHeight - r.bottom;
+      // anchor bottom-right so resizing from top-left grows naturally
+      panel.style.left = 'auto'; panel.style.top = 'auto';
+      panel.style.right = rRight + 'px'; panel.style.bottom = rBottom + 'px';
+      rz.setPointerCapture(e.pointerId);
+    });
+    rz.addEventListener('pointermove', function (e) {
+      if (!rDrag) return;
+      var nw = Math.max(300, Math.min(window.innerWidth - 40, rw - (e.clientX - rsx)));
+      var nh = Math.max(360, Math.min(window.innerHeight - 40, rh - (e.clientY - rsy)));
+      panel.style.width = nw + 'px'; panel.style.height = nh + 'px';
+    });
+    function endRz(e) {
+      if (!rDrag) return;
+      rDrag = false;
+      try { rz.releasePointerCapture(e.pointerId); } catch (err) {}
+      try { localStorage.setItem(LS_SIZE, JSON.stringify({ w: panel.offsetWidth, h: panel.offsetHeight })); } catch (err) {}
+    }
+    rz.addEventListener('pointerup', endRz);
+    rz.addEventListener('pointercancel', endRz);
+  }
+})();
