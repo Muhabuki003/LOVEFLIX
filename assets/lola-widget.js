@@ -198,9 +198,87 @@
     }
   }
   loadCoupleContext();
+  loadLocations();
   window.addEventListener('storage', function (e) {
     if (e.key === 'loveflix_settings') loadCoupleContext();
   });
+
+  // ── Both partners' locations + timezones (for halfway date ideas) ──────────
+  // Decode PostGIS WKB point hex → [lng, lat] (same routine the home orbit uses).
+  function parseWKB(hex) {
+    if (!hex || hex.length < 42) return null;
+    try {
+      var buf = new Uint8Array(hex.match(/../g).map(function (b) { return parseInt(b, 16); }));
+      var view = new DataView(buf.buffer);
+      var le = buf[0] === 1;
+      var type = view.getUint32(1, le);
+      var off = (type & 0x20000000) ? 9 : 5;
+      var lng = view.getFloat64(off, le);
+      var lat = view.getFloat64(off + 8, le);
+      return (isFinite(lng) && isFinite(lat)) ? [lng, lat] : null;
+    } catch (e) { return null; }
+  }
+  // Rough timezone from longitude (15° ≈ 1h). Good enough for "they're ~Nh ahead".
+  function approxTz(lng) {
+    if (lng == null || !isFinite(lng)) return null;
+    var off = Math.round(lng / 15);
+    return 'UTC' + (off >= 0 ? '+' + off : off);
+  }
+
+  function loadLocations() {
+    if (!window.LoveFlix || !LoveFlix.getToken) return;
+    var token = LoveFlix.getToken && LoveFlix.getToken();
+    var coupleId = LoveFlix.getCoupleId && LoveFlix.getCoupleId();
+    var userId = LoveFlix.getUserId && LoveFlix.getUserId();
+    if (!token || !coupleId || !userId) return;
+
+    // The current user's real IANA timezone, straight from the browser.
+    try { coupleCtx.yourTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+
+    fetch(LoveFlix.SUPABASE_URL + '/rest/v1/couple_locations?couple_id=eq.' +
+      encodeURIComponent(coupleId) + '&select=user_id,location,city,updated_at&order=updated_at.desc', {
+      headers: { Authorization: 'Bearer ' + token, apikey: LoveFlix.SUPABASE_ANON_KEY },
+    })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        if (!Array.isArray(rows)) return;
+        var you = null, partner = null;
+        rows.forEach(function (row) {
+          if (row.user_id === userId && !you) you = row;
+          else if (row.user_id !== userId && !partner) partner = row;
+        });
+        function pack(row) {
+          if (!row) return null;
+          var c = parseWKB(row.location);
+          return {
+            city: row.city || (c ? c[1].toFixed(2) + '°, ' + c[0].toFixed(2) + '°' : 'unknown'),
+            coords: c,
+            approxTimezone: c ? approxTz(c[0]) : null,
+          };
+        }
+        var y = pack(you), p = pack(partner);
+        if (y) {
+          coupleCtx.yourLocation = y.city;
+          if (!coupleCtx.yourTimezone && y.approxTimezone) coupleCtx.yourTimezone = y.approxTimezone + ' (approx)';
+        }
+        if (p) {
+          coupleCtx.partnerLocation = p.city;
+          coupleCtx.partnerTimezone = p.approxTimezone ? p.approxTimezone + ' (approx)' : null;
+        }
+        // Geographic midpoint → anchor for "meet halfway" date spots.
+        if (y && p && y.coords && p.coords) {
+          var mlng = (y.coords[0] + p.coords[0]) / 2;
+          var mlat = (y.coords[1] + p.coords[1]) / 2;
+          coupleCtx.midpoint = mlat.toFixed(3) + '°, ' + mlng.toFixed(3) + '°';
+          // crude great-circle-ish distance (km) so Lola knows if they're near or far
+          var dx = (p.coords[0] - y.coords[0]) * 111 * Math.cos(mlat * Math.PI / 180);
+          var dy = (p.coords[1] - y.coords[1]) * 111;
+          coupleCtx.distanceApartKm = Math.round(Math.sqrt(dx * dx + dy * dy));
+          coupleCtx.sameCity = coupleCtx.distanceApartKm < 30;
+        }
+      })
+      .catch(function () {});
+  }
 
   // ── Messages ────────────────────────────────────────────────────────────
   function addMsg(html, who) {
