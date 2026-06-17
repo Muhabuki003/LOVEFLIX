@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #000; min-height: 100vh; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; overflow-y: auto; }
 
   .bg-collage {
     position: fixed; inset: 0;
@@ -65,7 +65,9 @@
     position: relative; z-index: 5;
     min-height: 100vh;
     display: flex; align-items: center; justify-content: center;
-    padding: 100px 24px 80px;
+    /* Bottom padding clears the fixed footer so the signup row / reCAPTCHA
+       note are never hidden or bleeding behind it. */
+    padding: 100px 24px 200px;
   }
 
   .login-card {
@@ -186,8 +188,11 @@
 
   footer {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(0,0,0,0.75);
-    padding: 20px 48px; z-index: 10;
+    /* Solid dark background (was translucent, which let the card text bleed
+       through) and a high z-index so the footer sits cleanly on top. */
+    background: #000;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 20px 48px; z-index: 100;
   }
   footer p { font-size: 13px; color: #737373; margin-bottom: 12px; }
   .footer-links { display: flex; flex-wrap: wrap; gap: 8px 24px; }
@@ -196,6 +201,20 @@
 
   @keyframes shimmer { to { left: 100%; } }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Mobile (e.g. 390px wide) — keep the card readable and make sure its
+     bottom content clears the fixed footer, which gets taller as the links
+     wrap onto multiple lines. */
+  @media (max-width: 480px) {
+    nav { padding: 18px 24px; }
+    .nf-logo { font-size: 34px; }
+    .page { padding: 90px 16px 240px; }
+    .login-card { padding: 40px 28px 32px; }
+    .login-card h1 { font-size: 28px; }
+    .remember-row { flex-wrap: wrap; gap: 10px; }
+    footer { padding: 16px 24px; }
+    .footer-links { gap: 8px 18px; }
+  }
 </style>
 </head>
 <body>
