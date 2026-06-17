@@ -1523,6 +1523,82 @@ function initGoogleMaps() {
     if (badge) badge.classList.remove('active');
   }
 
+  // ── "Go to Spot" cinematic sequence (Lola date-suggestion cards) ───────────
+  // Pulls back, flies to the spot (duration scaled to distance), then hands off
+  // to the existing revolve/orbit. Reuses startRevolve / stopRevolve / hav — does
+  // NOT implement its own orbit loop.
+  function goToSpot(spot) {
+    if (!spot || spot.lat == null || spot.lng == null) return;
+    const lng = Number(spot.lng), lat = Number(spot.lat);
+    if (!isFinite(lng) || !isFinite(lat)) return;
+
+    // Capture a return state in case we want to reverse later.
+    goToSpot._returnState = {
+      center: map.getCenter(), zoom: map.getZoom(),
+      bearing: map.getBearing(), pitch: map.getPitch(),
+    };
+
+    // Never run two orbit loops at once — stop any active revolve cleanly first.
+    if (revolveState.active) stopRevolve(true);
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mobile = window.matchMedia('(max-width: 760px)').matches;
+
+    // Respect reduced-motion: skip the cinematic, jump to the orbit's start zoom.
+    if (reduced) {
+      try { map.setProjection({ type: 'mercator' }); } catch (e) {}
+      map.jumpTo({ center: [lng, lat], zoom: 9.5, pitch: 60 });
+      startRevolve({ lng, lat, name: spot.name || 'Spot' });
+      return;
+    }
+
+    // Scale the flight to distance from current center (snappy when near, longer
+    // when far). Trim ~35% on mobile where desktop timing feels sluggish.
+    const c = map.getCenter();
+    const distKm = hav(c.lat, c.lng, lat, lng);
+    const mFactor = mobile ? 0.62 : 1;
+    const flyMs = Math.round(Math.max(1500, Math.min(3000, 1500 + distKm * 0.25)) * mFactor);
+    const pullMs = Math.round((mobile ? 360 : 500) * 1);
+
+    // 1) Pull back / leave the current view: lower zoom a touch, reset tilt.
+    map.easeTo({
+      zoom: Math.max(2.4, map.getZoom() - 1.5),
+      bearing: 0, pitch: 0,
+      duration: pullMs, essential: true,
+    });
+
+    // 2) After the pull-back, fly to the spot with an ease-in-out curve.
+    setTimeout(function () {
+      const onArrive = function () {
+        map.off('moveend', onArrive);
+        // 3) Hand off to the existing orbit — it eases into zoom 9.5 / pitch 60.
+        startRevolve({ lng, lat, name: spot.name || 'Spot' });
+      };
+      map.on('moveend', onArrive);
+      map.flyTo({
+        center: [lng, lat],
+        zoom: 8.5,
+        bearing: 0, pitch: 30,
+        duration: flyMs,
+        curve: 1.42, easing: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+        essential: true,
+      });
+    }, pullMs + 40);
+  }
+  window.goToSpot = goToSpot;
+
+  // If LoveConnect was opened from a Lola "Go to Spot" card, run it on map load.
+  (function () {
+    try {
+      const q = new URLSearchParams(location.search);
+      const sLat = q.get('spotLat'), sLng = q.get('spotLng');
+      if (sLat && sLng) {
+        const spot = { lat: parseFloat(sLat), lng: parseFloat(sLng), name: q.get('spotName') || 'Spot' };
+        map.on('load', () => setTimeout(() => goToSpot(spot), 800));
+      }
+    } catch (e) {}
+  })();
+
   // ESC exits revolve
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && revolveState.active) stopRevolve(); });
 

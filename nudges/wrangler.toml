@@ -1,0 +1,25 @@
+name = "loveflix-nudges"
+main = "worker.js"
+compatibility_date = "2025-05-01"
+
+# Scheduled sweep — evaluate the nudge trigger table per account and write
+# pending_nudge rows. Runs every 6 hours; one nudge per account per check-in.
+[triggers]
+crons = ["0 */6 * * *"]
+
+# Main LoveFlix D1 (videos / music / couple_settings) — same DB the Pages
+# Function uses. database_id must match wrangler.toml at the repo root.
+[[d1_databases]]
+binding = "DB"
+database_name = "loveflix-db"
+database_id = "daba2b39-0ff8-4ef0-b28a-e586bb1fd6a6"
+
+[vars]
+SUPABASE_URL = "https://jeblgjjutyzzdursjqnn.supabase.co"
+# DeepSeek model used to write nudge copy (same as the concierge endpoint).
+DEEPSEEK_MODEL = "deepseek-chat"
+
+# Secrets (set via `wrangler secret put <NAME>` in this directory):
+#   SUPABASE_SERVICE_ROLE_KEY — reads all couples + inserts pending_nudge (bypasses RLS).
+#   DEEPSEEK_API_KEY          — writes the nudge copy. If unset, a templated
+#                               fallback line is used so the sweep still runs.
