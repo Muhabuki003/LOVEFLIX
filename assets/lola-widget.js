@@ -108,6 +108,18 @@
       '@keyframes lolaGlow{0%,100%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(229,9,20,.35))}50%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 18px rgba(229,9,20,.75))}}',
       '.lola-tip{position:fixed;z-index:2147483001;background:#141414;border:1px solid var(--lo-border);color:var(--lo-light);font-size:12.5px;font-weight:500;white-space:nowrap;padding:9px 14px;border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .2s}',
       '.lola-tip b{color:#fff}',
+      // action cards
+      '.lola-actions{display:flex;flex-direction:column;gap:10px;align-self:flex-start;width:100%;animation:lolaRise .4s both}',
+      '.lola-card{background:rgba(255,255,255,0.05);border:1px solid var(--lo-border-s);border-radius:14px;padding:12px 13px}',
+      '.lola-card .lo-cat{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--lo-rose)}',
+      '.lola-card .lo-name{font-size:14px;font-weight:600;color:#fff;margin-top:3px}',
+      '.lola-card .lo-reason{font-size:12px;color:var(--lo-light);margin-top:4px;line-height:1.4}',
+      '.lola-card .lo-addr{font-size:11px;color:var(--lo-dim);margin-top:4px}',
+      '.lola-card .lo-tracks{margin:8px 0 0;padding-left:16px;font-size:12px;color:var(--lo-light);line-height:1.6}',
+      '.lola-card .lo-tracks span{color:var(--lo-dim)}',
+      '.lola-go{margin-top:10px;width:100%;cursor:pointer;border:none;border-radius:10px;padding:9px;font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));transition:filter .15s,transform .1s}',
+      '.lola-go:hover{filter:brightness(1.08)}.lola-go:active{transform:scale(.97)}',
+      '.lola-go:disabled{opacity:.7;cursor:default}',
       // mobile
       '@media(max-width:600px){.lola-root{--lo-gap:12px}.lola-panel{right:0;left:0;bottom:0;top:auto;width:100vw;height:78vh;max-height:none;max-width:none;border-radius:22px 22px 0 0;transform-origin:bottom center}.lola-logo{top:14px;right:14px;bottom:auto;width:52px;height:52px}.lola-resize{display:none}.lola-head{cursor:default}.lola-tip{display:none}}',
     ].join('');
@@ -327,9 +339,13 @@
     typing.classList.add('on');
     bodyEl.scrollTop = bodyEl.scrollHeight;
 
+    var token = localStorage.getItem('loveflix_token');
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = 'Bearer ' + token;
+
     fetch(API_AI, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify({ mode: 'concierge', coupleContext: coupleCtx, messages: history }),
     })
       .then(function (r) { return r.json(); })
@@ -339,7 +355,9 @@
           data.choices[0].message.content) || 'Something went wrong — try again!';
         history.push({ role: 'assistant', content: reply });
         if (history.length > 16) history = history.slice(-16);
-        typeWriter(escapeHtml(reply), addMsg('', 'bot'));
+        var bubble = addMsg('', 'bot');
+        var actions = (data && data.lola && Array.isArray(data.lola.actions)) ? data.lola.actions : [];
+        typeWriter(escapeHtml(reply), bubble, function () { renderActions(actions); });
       })
       .catch(function () {
         typing.classList.remove('on');
@@ -347,14 +365,146 @@
       });
   }
 
-  function typeWriter(text, el) {
+  function typeWriter(text, el, done) {
     var i = 0;
     el.textContent = '';
     var iv = setInterval(function () {
       el.textContent += text[i++];
       bodyEl.scrollTop = bodyEl.scrollHeight;
-      if (i >= text.length) clearInterval(iv);
+      if (i >= text.length) { clearInterval(iv); if (typeof done === 'function') done(); }
     }, 14);
+  }
+
+  // ── Action cards (Lola Knowledge Layer §4) ────────────────────────────────
+  // Renders the structured actions Lola returns: date spots (each with a
+  // "Go to Spot" button), a flights menu, and a playlist draft.
+  function renderActions(actions) {
+    if (!actions || !actions.length) return;
+    actions.forEach(function (a) {
+      if (!a || !a.type) return;
+      if (a.type === 'suggest_date_spots') renderDateSpots(a.payload);
+      else if (a.type === 'open_flights') renderFlights(a.payload);
+      else if (a.type === 'create_playlist_draft') renderPlaylistDraft(a.payload);
+    });
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+  }
+
+  var CAT_LABEL = {
+    near_partner_a: 'Near you',
+    near_partner_b: 'Near your partner',
+    midpoint: 'Halfway',
+  };
+
+  function renderDateSpots(payload) {
+    var spots = (payload && Array.isArray(payload.spots)) ? payload.spots : [];
+    if (!spots.length) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'lola-actions';
+    spots.forEach(function (s) {
+      var card = document.createElement('div');
+      card.className = 'lola-card';
+      card.innerHTML =
+        '<div class="lo-cat">' + escapeHtml(CAT_LABEL[s.category] || s.category || 'Spot') + '</div>' +
+        '<div class="lo-name">' + escapeHtml(s.name || 'A lovely spot') + '</div>' +
+        (s.reason ? '<div class="lo-reason">' + escapeHtml(s.reason) + '</div>' : '') +
+        (s.address ? '<div class="lo-addr">' + escapeHtml(s.address) + '</div>' : '');
+      if (s.lat != null && s.lng != null) {
+        var btn = document.createElement('button');
+        btn.className = 'lola-go';
+        btn.textContent = 'Go to Spot →';
+        btn.addEventListener('click', function () {
+          goToSpot({ lat: Number(s.lat), lng: Number(s.lng), name: s.name || 'Spot' });
+        });
+        card.appendChild(btn);
+      }
+      wrap.appendChild(card);
+    });
+    bodyEl.insertBefore(wrap, typing);
+  }
+
+  function renderFlights(payload) {
+    payload = payload || {};
+    var wrap = document.createElement('div');
+    wrap.className = 'lola-actions';
+    var card = document.createElement('div');
+    card.className = 'lola-card';
+    card.innerHTML =
+      '<div class="lo-cat">Flights</div>' +
+      '<div class="lo-name">' + escapeHtml(payload.origin || 'You') + ' → ' + escapeHtml(payload.destination || 'Them') + '</div>';
+    var btn = document.createElement('button');
+    btn.className = 'lola-go';
+    btn.textContent = 'Open Flights →';
+    btn.addEventListener('click', function () { openFlights(payload); });
+    card.appendChild(btn);
+    wrap.appendChild(card);
+    bodyEl.insertBefore(wrap, typing);
+  }
+
+  function renderPlaylistDraft(payload) {
+    payload = payload || {};
+    var tracks = Array.isArray(payload.tracks) ? payload.tracks : [];
+    var wrap = document.createElement('div');
+    wrap.className = 'lola-actions';
+    var card = document.createElement('div');
+    card.className = 'lola-card';
+    var list = tracks.slice(0, 8).map(function (t) {
+      return '<li>' + escapeHtml(t.title || '') + (t.artist ? ' — <span>' + escapeHtml(t.artist) + '</span>' : '') + '</li>';
+    }).join('');
+    card.innerHTML =
+      '<div class="lo-cat">Playlist draft</div>' +
+      '<div class="lo-name">' + escapeHtml(payload.name || 'For us') + '</div>' +
+      '<ul class="lo-tracks">' + list + '</ul>';
+    var btn = document.createElement('button');
+    btn.className = 'lola-go';
+    btn.textContent = 'Save playlist →';
+    btn.addEventListener('click', function () { savePlaylistDraft(payload, btn); });
+    card.appendChild(btn);
+    wrap.appendChild(card);
+    bodyEl.insertBefore(wrap, typing);
+  }
+
+  // "Go to Spot": if a goToSpot() exists on the current page (LoveConnect map),
+  // drive it directly; otherwise hand off to LoveConnect with the spot in the URL.
+  function goToSpot(spot) {
+    if (typeof window.goToSpot === 'function' && window.goToSpot !== goToSpot) {
+      window.goToSpot(spot);
+      return;
+    }
+    var q = 'spotLat=' + encodeURIComponent(spot.lat) +
+            '&spotLng=' + encodeURIComponent(spot.lng) +
+            '&spotName=' + encodeURIComponent(spot.name || 'Spot');
+    window.location.href = '/loveconnect.html?' + q;
+  }
+
+  function openFlights(payload) {
+    var q = 'from=' + encodeURIComponent(payload.origin || '') +
+            '&to=' + encodeURIComponent(payload.destination || '');
+    window.location.href = '/flights.html?' + q;
+  }
+
+  function savePlaylistDraft(payload, btn) {
+    var token = localStorage.getItem('loveflix_token');
+    if (!token) { btn.textContent = 'Sign in to save'; return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    fetch('/api/music/playlists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ name: payload.name || 'For us' }),
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (pl) {
+        var id = pl && (pl.id || (pl.playlist && pl.playlist.id));
+        if (!id) { btn.textContent = 'Saved ♥'; return; }
+        var tracks = Array.isArray(payload.tracks) ? payload.tracks.slice(0, 8) : [];
+        return Promise.all(tracks.map(function (t) {
+          return fetch('/api/music/playlists/' + id + '/songs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ title: t.title, artist: t.artist }),
+          }).catch(function () {});
+        })).then(function () { btn.textContent = 'Saved ♥'; });
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = 'Try again'; });
   }
 
   document.getElementById('lolaSend').addEventListener('click', function () { send(field.value); });

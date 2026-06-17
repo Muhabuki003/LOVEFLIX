@@ -349,6 +349,7 @@ export async function onRequest(context) {
 
     if (method === 'GET'    && path === '/api/favorites') return listFavorites(env, user);
     if (method === 'GET'    && path === '/api/couple-stats') return getCoupleStats(env, request, user);
+    if (method === 'GET'    && path === '/api/couple-context') return getCoupleContextRoute(env, request, user, url);
     const favMatch = path.match(/^\/api\/favorites\/([^/]+)$/);
     if (favMatch && method === 'POST')   return addFavorite(env, favMatch[1], user);
     if (favMatch && method === 'DELETE') return removeFavorite(env, favMatch[1], user);
@@ -1768,6 +1769,214 @@ const VALID_ACCENT_COLORS = new Set([
   '#64748b', // Slate Gray
 ]);
 
+// ── Couple Context aggregator (Lola Knowledge Layer §1) ──────────────────────
+// Builds the spec's Couple Context Object server-side from D1 + Supabase, caches
+// the full object in COUPLE_CONTEXT_KV (short TTL), and trims per task type before
+// it reaches the model. Gemma-class models can't reliably do multi-table lookups,
+// and even DeepSeek is cheaper/faster with a precomputed slice — so we precompute.
+
+const CTX_CACHE_TTL_SECONDS = 300; // 5 min — most fields change slowly
+
+// Decode a PostGIS EWKB hex POINT into [lng, lat]. Mirror of parseWKB() in
+// loveconnect.html / home.html so the server reads couple_locations the same way.
+function parseWkbPoint(hex) {
+  if (!hex || typeof hex !== 'string' || hex.length < 42) return null;
+  try {
+    const bytes = hex.match(/../g).map(b => parseInt(b, 16));
+    const buf = new Uint8Array(bytes);
+    const view = new DataView(buf.buffer);
+    const le = buf[0] === 1;
+    const type = view.getUint32(1, le);
+    const off = (type & 0x20000000) ? 9 : 5; // skip SRID when the flag is set
+    const lng = view.getFloat64(off, le);
+    const lat = view.getFloat64(off + 8, le);
+    return (isFinite(lng) && isFinite(lat)) ? { lng, lat } : null;
+  } catch { return null; }
+}
+
+function daysSince(ms) {
+  if (ms == null) return null;
+  return Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+}
+
+// Great-circle distance in km between two {lat,lng} points.
+function haversineKm(a, b) {
+  if (!a || !b) return null;
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const s = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(s)) * 10) / 10;
+}
+
+// Resolve the Supabase couple_id for this user (D1 tables key on tenant_id =
+// creator user_id, but couple_locations / call_logs key on the real couple_id).
+async function getSupabaseCoupleId(env, user) {
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${encodeURIComponent(user.id)}&select=couple_id&limit=1`,
+      { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` } }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json().catch(() => []);
+    return rows?.[0]?.couple_id || null;
+  } catch { return null; }
+}
+
+// Assemble the full Couple Context Object for a tenant. Cached in KV.
+async function buildFullCoupleContext(env, request, user) {
+  const tenantId = user.id;
+
+  // ---- D1: settings, videos, music ----
+  const [settingsRow, videoAgg, momentAgg, tripAgg, lastPlay, playlistAgg] = await Promise.all([
+    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT COUNT(*) c, MAX(created_at) last FROM videos WHERE tenant_id = ? AND is_published = 1').bind(tenantId).first().catch(() => null),
+    env.DB.prepare("SELECT COUNT(*) c FROM videos WHERE tenant_id = ? AND is_published = 1 AND lower(category) IN ('moment','moments')").bind(tenantId).first().catch(() => null),
+    env.DB.prepare("SELECT COUNT(*) c FROM videos WHERE tenant_id = ? AND is_published = 1 AND lower(category) IN ('trip','trips','travel')").bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT MAX(played_at) last FROM couple_music_plays WHERE couple_id = ?').bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT COUNT(*) c, MAX(created_at) last FROM couple_playlists WHERE couple_id = ?').bind(tenantId).first().catch(() => null),
+  ]);
+
+  // D1 timestamps are unix SECONDS (strftime('%s')). Convert to ms.
+  const sec = v => (v != null ? Number(v) * 1000 : null);
+
+  const anniversary = settingsRow?.anniversary_date || null;
+  let daysUntilAnniversary = null;
+  if (anniversary) {
+    const now = new Date();
+    const ann = new Date(anniversary);
+    const next = new Date(now.getFullYear(), ann.getMonth(), ann.getDate());
+    if (next < now) next.setFullYear(now.getFullYear() + 1);
+    daysUntilAnniversary = Math.ceil((next - now) / 86400000);
+  }
+
+  const lastVideoMs = sec(videoAgg?.last);
+  const lastPlaylistMs = sec(playlistAgg?.last);
+
+  // ---- Supabase: locations + calls (keyed on real couple_id) ----
+  const coupleId = await getSupabaseCoupleId(env, user);
+  let partnerA = null, partnerB = null, lastCallMs = null, lastCallDuration = null;
+  if (coupleId) {
+    const sbHeaders = { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` };
+    const [locRes, callRes] = await Promise.all([
+      fetch(`${env.SUPABASE_URL}/rest/v1/couple_locations?couple_id=eq.${coupleId}&select=user_id,location,city,updated_at&order=updated_at.desc`, { headers: sbHeaders }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`${env.SUPABASE_URL}/rest/v1/call_logs?couple_id=eq.${coupleId}&select=started_at,duration_seconds&order=started_at.desc&limit=1`, { headers: sbHeaders }).then(r => r.ok ? r.json() : []).catch(() => []),
+    ]);
+    const seen = new Set();
+    for (const row of (Array.isArray(locRes) ? locRes : [])) {
+      if (seen.has(row.user_id)) continue;
+      seen.add(row.user_id);
+      const coords = parseWkbPoint(row.location);
+      if (!coords) continue;
+      const entry = {
+        id: row.user_id,
+        current_location: { lat: coords.lat, lng: coords.lng, city: row.city || null },
+        last_active_at: row.updated_at || null,
+      };
+      if (row.user_id === user.id && !partnerA) partnerA = entry;
+      else if (!partnerB) partnerB = entry;
+      else if (!partnerA) partnerA = entry;
+    }
+    if (Array.isArray(callRes) && callRes[0]) {
+      lastCallMs = callRes[0].started_at ? new Date(callRes[0].started_at).getTime() : null;
+      lastCallDuration = callRes[0].duration_seconds != null ? Math.round(callRes[0].duration_seconds / 60) : null;
+    }
+  }
+
+  // Attach names from couple_settings to whichever partner slot we have.
+  if (partnerA) partnerA.name = settingsRow?.partner_1_name || 'Partner A';
+  if (partnerB) partnerB.name = settingsRow?.partner_2_name || 'Partner B';
+
+  const distanceKm = haversineKm(partnerA?.current_location, partnerB?.current_location);
+
+  return {
+    couple_id: coupleId || tenantId,
+    partner_a: partnerA,
+    partner_b: partnerB,
+    relationship: {
+      anniversary_date: anniversary,
+      days_until_anniversary: daysUntilAnniversary,
+      shared_interests: [], // not yet modelled — populated when a tags source exists
+    },
+    location: {
+      distance_apart_km: distanceKm,
+      same_city: (partnerA && partnerB && distanceKm != null) ? distanceKm < 25 : null,
+    },
+    communication: {
+      last_call_at: lastCallMs ? new Date(lastCallMs).toISOString() : null,
+      last_call_duration_minutes: lastCallDuration,
+      days_since_last_call: daysSince(lastCallMs),
+      // Chat lives in the separate loveflix-chat Worker DB; wired separately.
+      days_since_last_message: null,
+    },
+    content: {
+      moment_videos_count: momentAgg?.c ?? 0,
+      trip_videos_count: tripAgg?.c ?? 0,
+      total_videos_count: videoAgg?.c ?? 0,
+      last_video_upload_at: lastVideoMs ? new Date(lastVideoMs).toISOString() : null,
+      days_since_last_video_upload: daysSince(lastVideoMs),
+    },
+    music: {
+      shared_playlists_count: playlistAgg?.c ?? 0,
+      last_shared_playlist_at: lastPlaylistMs ? new Date(lastPlaylistMs).toISOString() : null,
+      days_since_shared_playlist: daysSince(lastPlaylistMs),
+      days_since_last_play: daysSince(sec(lastPlay?.last)),
+    },
+    _built_at: new Date().toISOString(),
+  };
+}
+
+// Cached accessor — reads KV, falls back to a fresh build, writes back.
+async function getCoupleContext(env, request, user) {
+  const key = `ctx:${user.id}`;
+  if (env.COUPLE_CONTEXT_KV) {
+    try {
+      const cached = await env.COUPLE_CONTEXT_KV.get(key, 'json');
+      if (cached) return cached;
+    } catch { /* fall through to rebuild */ }
+  }
+  const ctx = await buildFullCoupleContext(env, request, user);
+  if (env.COUPLE_CONTEXT_KV) {
+    try { await env.COUPLE_CONTEXT_KV.put(key, JSON.stringify(ctx), { expirationTtl: CTX_CACHE_TTL_SECONDS }); } catch { /* non-fatal */ }
+  }
+  return ctx;
+}
+
+// Trim the full context down to just what a task needs (spec §1/§5).
+function trimCoupleContext(ctx, task) {
+  if (!ctx) return ctx;
+  switch (task) {
+    case 'date_spots':
+      return {
+        partner_a: ctx.partner_a, partner_b: ctx.partner_b,
+        relationship: { shared_interests: ctx.relationship?.shared_interests || [] },
+        location: ctx.location,
+      };
+    case 'flights':
+      return { partner_a: ctx.partner_a, partner_b: ctx.partner_b, location: ctx.location };
+    case 'playlist':
+      return { relationship: { shared_interests: ctx.relationship?.shared_interests || [] }, music: ctx.music };
+    case 'nudge':
+      return {
+        partner_a: ctx.partner_a ? { name: ctx.partner_a.name } : null,
+        partner_b: ctx.partner_b ? { name: ctx.partner_b.name } : null,
+        relationship: ctx.relationship,
+        communication: ctx.communication,
+        content: ctx.content,
+        music: ctx.music,
+      };
+    case 'chat':
+    default:
+      return ctx;
+  }
+}
+
+async function getCoupleContextRoute(env, request, user, url) {
+  const task = url.searchParams.get('task') || 'chat';
+  const ctx = await getCoupleContext(env, request, user);
+  return json({ task, context: trimCoupleContext(ctx, task) });
+}
+
 // ── /api/ai — dual-mode AI chat endpoint ─────────────────────────────────────
 // Reads `mode` from the request body:
 //   "landing"    — landing-page assistant, no couple context, product Q&A only
@@ -1939,6 +2148,74 @@ STRICT BOUNDARIES:
 TONE: Warm, witty, romantic, and genuinely invested in their happiness.`;
 }
 
+// Lola Knowledge Layer §3 — structured concierge prompt. Emits the strict
+// { message, actions[] } contract so the client can render date-spot / flights /
+// playlist actions instead of parsing prose.
+function buildLolaSystemPrompt(ctx) {
+  const ctxJson = JSON.stringify(ctx || {}, null, 2);
+  return `You are Lola, the AI relationship concierge inside LoveFlix. You speak to ONE partner
+at a time, inside their own account. You never address both partners in the same
+message, and you never assume the other partner knows what you just said.
+
+TONE
+Warm, playful, a little romantic — like a thoughtful friend who happens to know
+everything about this relationship. Never robotic, clinical, or repetitive. Never
+guilt-trip; every nudge is an invitation, not a complaint. Keep messages under 3
+sentences. Always anchor in something specific and real from COUPLE_CONTEXT (the
+actual anniversary, a real video count, a real distance) so it reads as personal,
+not templated.
+
+CONTEXT
+You are given a COUPLE_CONTEXT JSON object, trimmed to what's relevant. Never invent
+facts (dates, locations, history) that aren't present in COUPLE_CONTEXT — if something
+is missing, ask rather than guess.
+
+COUPLE_CONTEXT:
+${ctxJson}
+
+CAPABILITIES
+1. Date spot suggestions — when asked for date ideas, return exactly three categorized
+   suggestions: "near_partner_a" (near partner_a.current_location), "near_partner_b"
+   (near partner_b.current_location), and "midpoint" (roughly equidistant). Each needs
+   name, a one-sentence reason, address, lat, lng. Do not describe camera behavior.
+2. Flights menu — when the conversation is about visiting each other or trip planning,
+   include an "open_flights" action with origin/destination prefilled from the partners'
+   locations.
+3. Playlist draft — when the topic is music, include a "create_playlist_draft" action
+   with 5-8 tracks based on shared_interests.
+
+RESPONSE FORMAT — return ONLY valid JSON, no markdown fences:
+{
+  "message": "string — what the partner sees",
+  "actions": [ { "type": "suggest_date_spots" | "open_flights" | "create_playlist_draft" | "none", "payload": { } } ]
+}
+"actions" may be empty. Only include an action when the message genuinely calls for one.
+Payload shapes:
+- suggest_date_spots: { "spots": [ { "category": "near_partner_a"|"near_partner_b"|"midpoint", "name", "reason", "lat", "lng", "address" } ] }
+- open_flights: { "origin", "destination", "suggested_dates": [] }
+- create_playlist_draft: { "name", "tracks": [ { "title", "artist" } ] }`;
+}
+
+// Pull the first balanced JSON object out of a model reply (handles stray prose
+// or ```json fences) and coerce it into the { message, actions } contract.
+function parseLolaReply(raw) {
+  if (!raw || typeof raw !== 'string') return { message: '', actions: [] };
+  let text = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    try {
+      const obj = JSON.parse(text.slice(start, end + 1));
+      const actions = Array.isArray(obj.actions)
+        ? obj.actions.filter(a => a && a.type && a.type !== 'none')
+        : [];
+      return { message: String(obj.message || '').trim(), actions };
+    } catch { /* fall through */ }
+  }
+  // Not JSON — treat the whole thing as plain copy so the widget still shows it.
+  return { message: text, actions: [] };
+}
+
 async function handleAiChat(env, request, user) {
   // Reject oversized payloads before parsing JSON (32 KB is ample for 16 turns × 1000 chars).
   const contentLength = parseInt(request.headers.get('content-length') || '0');
@@ -1946,12 +2223,27 @@ async function handleAiChat(env, request, user) {
 
   const body = await request.json().catch(() => ({}));
 
-  // Determine which mode the client requested
-  const mode = body.mode === 'concierge' ? 'concierge' : 'landing';
+  // Determine which mode the client requested. Concierge mode requires an
+  // authenticated user (so we can build their private couple_context); fall back
+  // to landing mode otherwise.
+  const mode = (body.mode === 'concierge' && user) ? 'concierge' : 'landing';
+
+  // For concierge mode, build the couple_context server-side (cached) rather than
+  // trusting the client. Trim to the full "chat" slice — Lola decides per turn
+  // which capability fires. Fall back to any client-provided context on failure.
+  let lolaContext = null;
+  if (mode === 'concierge') {
+    try {
+      const full = await getCoupleContext(env, request, user);
+      lolaContext = trimCoupleContext(full, 'chat');
+    } catch {
+      lolaContext = body.coupleContext || null;
+    }
+  }
 
   // Build the appropriate system prompt
   const systemPrompt = mode === 'concierge'
-    ? buildConciergeSystemPrompt(body.coupleContext)
+    ? buildLolaSystemPrompt(lolaContext)
     : buildLandingSystemPrompt();
 
   // Sanitize and validate incoming conversation history (max 16 turns)
@@ -1987,8 +2279,11 @@ async function handleAiChat(env, request, user) {
           { role: 'system', content: systemPrompt },
           ...userMessages,
         ],
-        max_tokens: 160,
+        // Concierge replies are structured JSON (message + actions) and need more
+        // room than a one-line landing answer.
+        max_tokens: mode === 'concierge' ? 700 : 160,
         temperature: 0.8,
+        ...(mode === 'concierge' ? { response_format: { type: 'json_object' } } : {}),
       }),
     });
   } catch (e) {
@@ -2005,6 +2300,17 @@ async function handleAiChat(env, request, user) {
   }
 
   const data = await dsRes.json();
+
+  // Concierge mode returns the strict { message, actions[] } contract. Parse the
+  // model's JSON, attach it as `lola`, and overwrite the visible content with the
+  // clean message so the existing widget keeps rendering text even if it ignores
+  // the actions array.
+  if (mode === 'concierge') {
+    const rawContent = data?.choices?.[0]?.message?.content || '';
+    const lola = parseLolaReply(rawContent);
+    data.lola = lola;
+    if (data?.choices?.[0]?.message) data.choices[0].message.content = lola.message;
+  }
 
   await phCapture(env, {
     // Landing-page users have no auth; fall back to the CF-provided IP so
