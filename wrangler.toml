@@ -27,7 +27,7 @@ id = "d3e5072b03204704a88193f22412b061"
 # Then replace the placeholder id below with the one printed by that command.
 [[kv_namespaces]]
 binding = "COUPLE_CONTEXT_KV"
-id = "REPLACE_WITH_COUPLE_CONTEXT_KV_ID"
+id = "0fc934f23ca84ed4854632a623d11968"
 
 # ---- Public env (safe to expose) ----
 [vars]
