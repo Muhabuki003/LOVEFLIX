@@ -433,6 +433,7 @@
     }
     startPresence();
     startMsgNotifications();
+    fetchPendingNudge();
     return true;
   }
 
@@ -968,6 +969,49 @@
     try { localStorage.setItem('lf_chat_last_checked', String(Date.now())); } catch (_) {}
   }
 
+  // ── Lola proactive nudge (Lola Knowledge Layer §2) ────────────────────────
+  // On app open, fetch this account's single pending nudge (written async by the
+  // nudges sweep Worker) and surface it once via the existing toast. Marks it
+  // delivered so it only ever shows one time.
+  let _nudgeChecked = false;
+  async function fetchPendingNudge() {
+    if (_nudgeChecked) return;
+    _nudgeChecked = true;
+    const token = getToken();
+    const userId = getUserId();
+    if (!token || !userId) return;
+    try {
+      const settings = getSettings ? getSettings() : {};
+      if (settings && settings.notifications_enabled === false) return;
+    } catch (_) {}
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/pending_nudge?user_id=eq.${userId}` +
+        `&delivered_at=is.null&dismissed_at=is.null&select=id,message&order=created_at.desc&limit=1`,
+        { headers: { Authorization: 'Bearer ' + token, apikey: SUPABASE_ANON_KEY } }
+      );
+      if (!res.ok) return;
+      const rows = await res.json();
+      const nudge = Array.isArray(rows) && rows[0];
+      if (!nudge || !nudge.message) return;
+
+      // Surface it through the same toast the chat notifications use.
+      _showMsgToast('Lola ♥', nudge.message);
+
+      // Mark delivered so it won't show again (RLS allows updating own rows).
+      fetch(`${SUPABASE_URL}/rest/v1/pending_nudge?id=eq.${nudge.id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          apikey: SUPABASE_ANON_KEY,
+          'content-type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ delivered_at: new Date().toISOString() }),
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   // Set up fullscreen listeners once
   function _initNotifFullscreen() {
     if (_notifFullscreen !== false) return; // already a boolean (already inited)
@@ -1106,6 +1150,7 @@
     handleOAuthRedirect,
     signOut,
     requireAuth,
+    fetchPendingNudge,
     startPresence,
     api,
     putWithProgress,
