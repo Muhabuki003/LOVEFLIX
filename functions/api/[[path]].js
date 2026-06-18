@@ -2177,7 +2177,8 @@ CAPABILITIES
 1. Date spot suggestions — when asked for date ideas, return exactly three categorized
    suggestions: "near_partner_a" (near partner_a.current_location), "near_partner_b"
    (near partner_b.current_location), and "midpoint" (roughly equidistant). Each needs
-   name, a one-sentence reason, address, lat, lng. Do not describe camera behavior.
+   name, a one-sentence reason, a 1-2 sentence description, a plausible rating from
+   4.0 to 5.0, address, lat, lng. Do not describe camera behavior.
 2. Flights menu — when the conversation is about visiting each other or trip planning,
    include an "open_flights" action with origin/destination prefilled from the partners'
    locations.
@@ -2191,7 +2192,7 @@ RESPONSE FORMAT — return ONLY valid JSON, no markdown fences:
 }
 "actions" may be empty. Only include an action when the message genuinely calls for one.
 Payload shapes:
-- suggest_date_spots: { "spots": [ { "category": "near_partner_a"|"near_partner_b"|"midpoint", "name", "reason", "lat", "lng", "address" } ] }
+- suggest_date_spots: { "spots": [ { "category": "near_partner_a"|"near_partner_b"|"midpoint", "name", "reason", "description", "rating", "lat", "lng", "address" } ] }
 - open_flights: { "origin", "destination", "suggested_dates": [] }
 - create_playlist_draft: { "name", "tracks": [ { "title", "artist" } ] }`;
 }

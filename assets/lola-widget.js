@@ -120,6 +120,31 @@
       '.lola-go{margin-top:10px;width:100%;cursor:pointer;border:none;border-radius:10px;padding:9px;font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));transition:filter .15s,transform .1s}',
       '.lola-go:hover{filter:brightness(1.08)}.lola-go:active{transform:scale(.97)}',
       '.lola-go:disabled{opacity:.7;cursor:default}',
+      // date-spot two-pane result
+      '.lola-spots{display:grid;grid-template-columns:40% 1fr;gap:10px;align-self:stretch;width:100%;animation:lolaRise .4s both}',
+      '.lola-spots-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:2px}',
+      '.lola-spots-list::-webkit-scrollbar{width:5px}.lola-spots-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}',
+      '.lola-spot-card{display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;padding:0;border:1px solid transparent;border-radius:13px;background:none;transition:border-color .15s}',
+      '.lola-spot-card .lo-thumb{width:100%;height:92px;border-radius:11px;background-size:cover;background-position:center;background-color:#2a2120;display:flex;align-items:center;justify-content:center;overflow:hidden}',
+      '.lola-spot-card .lo-thumb span{font-family:"Bebas Neue",sans-serif;font-size:34px;color:rgba(255,255,255,.5)}',
+      '.lola-spot-card.on .lo-thumb{outline:2px solid var(--lo-red);outline-offset:1px}',
+      '.lola-spot-card .lo-sc-cat{font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--lo-rose);opacity:.85}',
+      '.lola-spot-card .lo-sc-name{font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:.6px;color:#fff;line-height:1.05}',
+      '.lola-spot-card .lo-rate{font-family:"Inter",sans-serif;font-size:11px;color:var(--lo-dim);letter-spacing:0}',
+      '.lo-stars{display:block;font-size:11px;color:#f5b301;letter-spacing:1px}',
+      '.lola-spots-feature{display:flex;flex-direction:column;gap:10px;min-width:0}',
+      '.lola-spots-feature .lo-hero{position:relative;width:100%;min-height:190px;flex:1;border-radius:14px;background-size:cover;background-position:center;background-color:#241a18;display:flex;align-items:center;justify-content:center;overflow:hidden}',
+      '.lola-spots-feature .lo-hero-ph{font-family:"Bebas Neue",sans-serif;font-size:64px;color:rgba(255,255,255,.4)}',
+      '.lo-view{position:absolute;left:12px;right:12px;bottom:12px;cursor:pointer;border:none;border-radius:11px;padding:11px;font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:2px;color:#fff;background:linear-gradient(135deg,rgba(255,95,143,.92),rgba(229,9,20,.92));-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:filter .15s,transform .1s}',
+      '.lo-view:hover{filter:brightness(1.08)}.lo-view:active{transform:scale(.98)}',
+      '.lola-spots-feature .lo-pick{background:rgba(255,255,255,.05);border:1px solid var(--lo-border-s);border-radius:14px;padding:13px}',
+      '.lo-pick-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}',
+      '.lo-pick-label{font-size:9px;font-weight:800;letter-spacing:1.4px;color:var(--lo-red)}',
+      '.lo-pick-name{font-family:"Bebas Neue",sans-serif;font-size:21px;letter-spacing:.8px;color:#fff;line-height:1.02}',
+      '.lo-pick-addr{font-size:9.5px;line-height:1.35;color:var(--lo-light);text-align:right;max-width:42%;text-transform:uppercase;letter-spacing:.5px}',
+      '.lo-pick .lo-stars{margin:7px 0 6px}',
+      '.lo-pick-desc{font-size:12px;line-height:1.5;color:var(--lo-light)}',
+      '@media(max-width:600px){.lola-spots{grid-template-columns:1fr}.lola-spots-list{flex-direction:row;max-height:none;overflow-x:auto}.lola-spot-card{min-width:120px}}',
       // mobile
       '@media(max-width:600px){.lola-root{--lo-gap:12px}.lola-panel{right:0;left:0;bottom:0;top:auto;width:100vw;height:78vh;max-height:none;max-width:none;border-radius:22px 22px 0 0;transform-origin:bottom center}.lola-logo{top:14px;right:14px;bottom:auto;width:52px;height:52px}.lola-resize{display:none}.lola-head{cursor:default}.lola-tip{display:none}}',
     ].join('');
@@ -395,31 +420,101 @@
     midpoint: 'Halfway',
   };
 
+  // Render 0-5 stars from a numeric rating (e.g. 4.6 → ★★★★½).
+  function starsHtml(rating) {
+    var r = Math.max(0, Math.min(5, Number(rating) || 0));
+    var full = Math.floor(r), half = (r - full) >= 0.5;
+    var s = '';
+    for (var i = 0; i < full; i++) s += '★';
+    if (half && full < 5) { s += '★'; full++; } // round half up visually
+    for (var j = full; j < 5; j++) s += '☆';
+    return '<span class="lo-stars">' + s + '</span>';
+  }
+
+  function spotInitial(name) {
+    return escapeHtml((name || '?').trim().charAt(0).toUpperCase() || '?');
+  }
+
+  // Two-pane date-spot result (matches the LOLA in-chat design): a scrollable
+  // list of spots on the left, a large hero + "LOLA'S PICK" detail on the right.
   function renderDateSpots(payload) {
     var spots = (payload && Array.isArray(payload.spots)) ? payload.spots : [];
+    spots = spots.filter(function (s) { return s && s.name; });
     if (!spots.length) return;
+
     var wrap = document.createElement('div');
-    wrap.className = 'lola-actions';
-    spots.forEach(function (s) {
-      var card = document.createElement('div');
-      card.className = 'lola-card';
+    wrap.className = 'lola-spots';
+
+    var list = document.createElement('div');
+    list.className = 'lola-spots-list';
+
+    var feature = document.createElement('div');
+    feature.className = 'lola-spots-feature';
+
+    // Background image (or a gradient placeholder with the venue initial).
+    function bgFor(s) {
+      return s.image
+        ? 'background-image:url(\'' + String(s.image).replace(/'/g, '') + '\');'
+        : '';
+    }
+
+    spots.forEach(function (s, i) {
+      var card = document.createElement('button');
+      card.className = 'lola-spot-card';
+      card.setAttribute('data-i', i);
       card.innerHTML =
-        '<div class="lo-cat">' + escapeHtml(CAT_LABEL[s.category] || s.category || 'Spot') + '</div>' +
-        '<div class="lo-name">' + escapeHtml(s.name || 'A lovely spot') + '</div>' +
-        (s.reason ? '<div class="lo-reason">' + escapeHtml(s.reason) + '</div>' : '') +
-        (s.address ? '<div class="lo-addr">' + escapeHtml(s.address) + '</div>' : '');
-      if (s.lat != null && s.lng != null) {
-        var btn = document.createElement('button');
-        btn.className = 'lola-go';
-        btn.textContent = 'Go to Spot →';
-        btn.addEventListener('click', function () {
-          goToSpot({ lat: Number(s.lat), lng: Number(s.lng), name: s.name || 'Spot' });
-        });
-        card.appendChild(btn);
-      }
-      wrap.appendChild(card);
+        '<div class="lo-thumb" style="' + bgFor(s) + '">' +
+          (s.image ? '' : '<span>' + spotInitial(s.name) + '</span>') +
+        '</div>' +
+        '<div class="lo-sc-meta">' +
+          '<div class="lo-sc-cat">' + escapeHtml(CAT_LABEL[s.category] || s.category || '') + '</div>' +
+          '<div class="lo-sc-name">' + escapeHtml(s.name) +
+            (s.rating ? ' <span class="lo-rate">(' + escapeHtml(String(s.rating)) + ')</span>' : '') +
+          '</div>' +
+          (s.rating ? starsHtml(s.rating) : '') +
+        '</div>';
+      card.addEventListener('click', function () {
+        Array.prototype.forEach.call(list.children, function (c) { c.classList.remove('on'); });
+        card.classList.add('on');
+        selectSpot(feature, s);
+      });
+      list.appendChild(card);
     });
+
+    wrap.appendChild(list);
+    wrap.appendChild(feature);
     bodyEl.insertBefore(wrap, typing);
+
+    // Select the first spot by default.
+    if (list.firstChild) list.firstChild.classList.add('on');
+    selectSpot(feature, spots[0]);
+  }
+
+  // Paint the feature pane (hero image + VIEW LOCATION + LOLA'S PICK card).
+  function selectSpot(feature, s) {
+    var hasGeo = (s.lat != null && s.lng != null);
+    var bg = s.image ? 'background-image:url(\'' + String(s.image).replace(/'/g, '') + '\');' : '';
+    feature.innerHTML =
+      '<div class="lo-hero" style="' + bg + '">' +
+        (s.image ? '' : '<span class="lo-hero-ph">' + spotInitial(s.name) + '</span>') +
+        (hasGeo ? '<button class="lo-view">VIEW LOCATION</button>' : '') +
+      '</div>' +
+      '<div class="lo-pick">' +
+        '<div class="lo-pick-top">' +
+          '<div class="lo-pick-id">' +
+            '<div class="lo-pick-label">LOLA’S PICK</div>' +
+            '<div class="lo-pick-name">' + escapeHtml(s.name) + '</div>' +
+          '</div>' +
+          (s.address ? '<div class="lo-pick-addr">' + escapeHtml(s.address) + '</div>' : '') +
+        '</div>' +
+        (s.rating ? starsHtml(s.rating) : '') +
+        '<div class="lo-pick-desc">' + escapeHtml(s.description || s.reason || '') + '</div>' +
+      '</div>';
+    var view = feature.querySelector('.lo-view');
+    if (view) view.addEventListener('click', function () {
+      goToSpot({ lat: Number(s.lat), lng: Number(s.lng), name: s.name || 'Spot' });
+    });
+    bodyEl.scrollTop = bodyEl.scrollHeight;
   }
 
   function renderFlights(payload) {
