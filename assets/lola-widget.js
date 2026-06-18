@@ -142,7 +142,8 @@
       '.lo-pick-label{font-size:9px;font-weight:800;letter-spacing:1.4px;color:var(--lo-red)}',
       '.lo-pick-name{font-family:"Bebas Neue",sans-serif;font-size:21px;letter-spacing:.8px;color:#fff;line-height:1.02}',
       '.lo-pick-addr{font-size:9.5px;line-height:1.35;color:var(--lo-light);text-align:right;max-width:42%;text-transform:uppercase;letter-spacing:.5px}',
-      '.lo-pick .lo-stars{margin:7px 0 6px}',
+      '.lo-pick-rating{display:flex;align-items:center;gap:7px;margin:7px 0 6px}',
+      '.lo-pick-rating span{font-size:11px;color:var(--lo-dim)}',
       '.lo-pick-desc{font-size:12px;line-height:1.5;color:var(--lo-light)}',
       '@media(max-width:600px){.lola-spots{grid-template-columns:1fr}.lola-spots-list{flex-direction:row;max-height:none;overflow-x:auto}.lola-spot-card{min-width:120px}}',
       // mobile
@@ -507,7 +508,10 @@
           '</div>' +
           (s.address ? '<div class="lo-pick-addr">' + escapeHtml(s.address) + '</div>' : '') +
         '</div>' +
-        (s.rating ? starsHtml(s.rating) : '') +
+        (s.rating ? '<div class="lo-pick-rating">' + starsHtml(s.rating) +
+          ' <span>' + escapeHtml(String(s.rating)) +
+          (s.rating_count ? ' · ' + Number(s.rating_count).toLocaleString() + ' reviews' : '') +
+          '</span></div>' : '') +
         '<div class="lo-pick-desc">' + escapeHtml(s.description || s.reason || '') + '</div>' +
       '</div>';
     var view = feature.querySelector('.lo-view');

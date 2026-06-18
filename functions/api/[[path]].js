@@ -249,7 +249,14 @@ export async function onRequest(context) {
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    if (method === 'GET' && path === '/api/health') return json({ ok: true });
+    if (method === 'GET' && path === '/api/health') return json({
+      ok: true,
+      // Booleans only — never the secret values. Lets us confirm which deployment
+      // environment actually has the keys wired (diagnoses /api/ai 503s, etc.).
+      deepseek: !!env.DEEPSEEK_API_KEY,
+      places: !!(env.GOOGLE_PLACES_API_KEY || env.GOOGLE_MAPS_API_KEY),
+      couple_context_kv: !!env.COUPLE_CONTEXT_KV,
+    });
 
     if (method === 'GET' && path === '/api/videos') return listVideos(env, url, user, request);
     if (method === 'POST' && path === '/api/videos') return createVideo(env, request, user);
@@ -2197,6 +2204,80 @@ Payload shapes:
 - create_playlist_draft: { "name", "tracks": [ { "title", "artist" } ] }`;
 }
 
+// Enrich Lola's date-spot suggestions with real, current data from Google Places
+// (New). For each spot we Text Search by name + address, then merge in the real
+// rating, formatted address, coordinates, editorial summary, and a photo URL — so
+// the cards show correct, current info instead of model guesses. Best-effort: any
+// failure leaves the model's original values intact.
+async function enrichSpotsWithPlaces(env, spots) {
+  // These calls are made server-side, so the key must NOT be HTTP-referrer
+  // restricted (that would deny a request with no Referer). Prefer a dedicated
+  // GOOGLE_PLACES_API_KEY (unrestricted or IP-restricted, with Places API (New)
+  // enabled); fall back to the Maps key only if it isn't referrer-locked.
+  const key = env.GOOGLE_PLACES_API_KEY || env.GOOGLE_MAPS_API_KEY;
+  if (!key || !Array.isArray(spots) || !spots.length) return;
+
+  await Promise.all(spots.map(async (spot) => {
+    try {
+      const query = [spot.name, spot.address].filter(Boolean).join(', ');
+      if (!query) return;
+
+      const searchBody = { textQuery: query, maxResultCount: 1 };
+      // Bias toward the model's coordinates when present for a better match.
+      if (spot.lat != null && spot.lng != null) {
+        searchBody.locationBias = {
+          circle: { center: { latitude: Number(spot.lat), longitude: Number(spot.lng) }, radius: 30000 },
+        };
+      }
+
+      const abort = new AbortController();
+      const to = setTimeout(() => abort.abort(), 6000);
+      const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+        method: 'POST',
+        signal: abort.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': key,
+          'X-Goog-FieldMask':
+            'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.location,places.editorialSummary,places.photos',
+        },
+        body: JSON.stringify(searchBody),
+      }).catch(() => null);
+      clearTimeout(to);
+      if (!res || !res.ok) return;
+
+      const data = await res.json().catch(() => null);
+      const place = data?.places?.[0];
+      if (!place) return;
+
+      // Merge real, current fields over the model's guesses.
+      if (place.displayName?.text) spot.name = place.displayName.text;
+      if (place.formattedAddress) spot.address = place.formattedAddress;
+      if (place.rating != null) spot.rating = place.rating;
+      if (place.userRatingCount != null) spot.rating_count = place.userRatingCount;
+      if (place.location) { spot.lat = place.location.latitude; spot.lng = place.location.longitude; }
+      // Prefer Google's editorial summary for the "Lola's Pick" description.
+      if (place.editorialSummary?.text) spot.description = place.editorialSummary.text;
+
+      // Resolve a real photo URL (skipHttpRedirect → a signed, key-less photoUri).
+      const photoName = place.photos?.[0]?.name;
+      if (photoName) {
+        const pAbort = new AbortController();
+        const pTo = setTimeout(() => pAbort.abort(), 5000);
+        const pRes = await fetch(
+          `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&skipHttpRedirect=true&key=${encodeURIComponent(key)}`,
+          { signal: pAbort.signal }
+        ).catch(() => null);
+        clearTimeout(pTo);
+        if (pRes && pRes.ok) {
+          const pData = await pRes.json().catch(() => null);
+          if (pData?.photoUri) spot.image = pData.photoUri;
+        }
+      }
+    } catch { /* best-effort — keep the model's original spot data */ }
+  }));
+}
+
 // Pull the first balanced JSON object out of a model reply (handles stray prose
 // or ```json fences) and coerce it into the { message, actions } contract.
 function parseLolaReply(raw) {
@@ -2309,6 +2390,14 @@ async function handleAiChat(env, request, user) {
   if (mode === 'concierge') {
     const rawContent = data?.choices?.[0]?.message?.content || '';
     const lola = parseLolaReply(rawContent);
+
+    // Replace the model's guessed venue data with real, current Google Places
+    // info (rating, address, coords, description, photo) before returning.
+    const spotsAction = (lola.actions || []).find(a => a.type === 'suggest_date_spots');
+    if (spotsAction?.payload?.spots) {
+      await enrichSpotsWithPlaces(env, spotsAction.payload.spots);
+    }
+
     data.lola = lola;
     if (data?.choices?.[0]?.message) data.choices[0].message.content = lola.message;
   }
