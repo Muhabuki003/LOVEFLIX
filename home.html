@@ -13,6 +13,8 @@
 <!-- MapLibre preloaded so the orbit map canvas sizes correctly on first paint -->
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
+<!-- GSAP powers the cinematic showcase carousel; loaded eagerly so it's ready before init -->
+<script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -65,6 +67,167 @@
     background: radial-gradient(circle at 30% 25%, #ffb3c7 0%, transparent 55%), linear-gradient(135deg, #ff5f8f 0%, #d6336c 55%, #8f1d4a 100%);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px;
+  }
+
+  /* ---------- cinematic showcase (GSAP) ---------- */
+  #cinematic { display: none; }
+  body.cine-on #cinematic { display: block; }
+  .cine {
+    position: relative;
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: #000;
+    /* Isolate paint + layout so the showcase never reflows the dashboard below. */
+    contain: layout paint style;
+  }
+  .cine-bg { position: absolute; inset: 0; z-index: 1; }
+  .cine-bg video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
+    /* Promote to its own GPU layer so the crossfade is composited, not painted. */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  .cine-bg video.active { opacity: 1; }
+  .cine-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 36%, rgba(0,0,0,0.05) 72%),
+      linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 48%);
+    z-index: 2;
+  }
+  .cine-stage { position: relative; z-index: 3; width: 100%; height: 100%; }
+
+  .cine-details {
+    position: absolute;
+    left: 64px; top: 50%; transform: translateY(-50%);
+    max-width: 560px;
+    will-change: transform, opacity;
+  }
+  .cine-details .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--brand-accent, var(--red)); font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .cine-details .title-1, .cine-details .title-2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    line-height: 0.92; letter-spacing: 1px;
+  }
+  .cine-details .title-1 { font-size: clamp(48px, 6.6vw, 94px); }
+  .cine-details .title-2 { font-size: clamp(20px, 2.4vw, 32px); color: var(--text-light); letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+  .cine-details .desc {
+    margin-top: 18px;
+    font-size: 15px; line-height: 1.6; color: var(--text-light);
+    max-width: 460px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cine-details .cta {
+    margin-top: 26px;
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #fff; color: #000;
+    border: none; border-radius: 4px;
+    padding: 12px 26px; font-weight: 700; font-size: 15px;
+    transition: background 0.18s ease;
+  }
+  .cine-details .cta:hover { background: rgba(255,255,255,0.82); }
+  .cine-details .cta svg { width: 20px; height: 20px; fill: currentColor; }
+
+  .cine-cards {
+    position: absolute;
+    right: 48px; bottom: 56px;
+    display: flex; gap: 16px;
+    z-index: 4;
+    will-change: transform;
+  }
+  .cine-cards .card {
+    position: relative;
+    width: 160px; height: 224px;
+    border-radius: 10px; overflow: hidden;
+    flex: 0 0 auto; cursor: pointer;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    outline: 2px solid transparent;
+    transition: outline-color 0.25s ease, transform 0.25s ease;
+  }
+  .cine-cards .card:hover { transform: translateY(-4px); }
+  .cine-cards .card.is-active { outline-color: var(--brand-accent, var(--red)); }
+  .cine-cards .card-content { position: absolute; inset: 0; }
+  .cine-cards .card-content img { width: 100%; height: 100%; object-fit: cover; }
+  .cine-cards .card-content::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.82), transparent 58%);
+  }
+  .cine-cards .card-label {
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
+    font-size: 13px; font-weight: 600; z-index: 2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .cine-nav { position: absolute; right: 48px; bottom: 300px; display: flex; gap: 12px; z-index: 5; }
+  .cine-nav button {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.35); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .cine-nav button:hover { background: rgba(255,255,255,0.16); border-color: #fff; }
+  .cine-nav button svg { width: 22px; height: 22px; fill: #fff; }
+
+  .progress-sub {
+    position: absolute;
+    left: 64px; bottom: 60px;
+    width: 500px; max-width: 42vw;
+    height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,0.22);
+    overflow: hidden; z-index: 4;
+  }
+  .progress-sub-foreground {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0; border-radius: 2px;
+    background: var(--brand-accent, var(--red));
+  }
+
+  .cine-toggle {
+    position: fixed; top: 86px; right: 24px; z-index: 60;
+    display: inline-flex; align-items: center; gap: 9px;
+    background: rgba(10,10,10,0.7);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 999px;
+    padding: 8px 15px; font-size: 12px; font-weight: 600; letter-spacing: 0.4px; color: #fff;
+    transition: border-color 0.15s ease;
+  }
+  .cine-toggle:hover { border-color: rgba(255,255,255,0.45); }
+  .cine-toggle .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #777;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  body.cine-on .cine-toggle .dot {
+    background: var(--brand-accent, var(--red));
+    box-shadow: 0 0 8px var(--brand-accent, var(--red));
+  }
+
+  @media (max-width: 720px) {
+    .cine-details { left: 24px; right: 24px; top: 40%; max-width: none; }
+    .cine-details .title-1 { font-size: clamp(40px, 13vw, 66px); }
+    .cine-cards { right: 16px; bottom: 92px; gap: 12px; }
+    .cine-cards .card { width: 104px; height: 150px; }
+    .progress-sub { left: 24px; width: 60vw; bottom: 64px; }
+    .cine-nav { right: 16px; bottom: 256px; }
+    .cine-toggle { top: auto; bottom: 16px; right: 16px; }
+  }
+
+  /* Respect reduced-motion: kill the transition/hover motion (JS also disables auto-advance). */
+  @media (prefers-reduced-motion: reduce) {
+    .cine-bg video { transition: none; }
+    .cine-cards .card { transition: none; }
+    .cine-cards .card:hover { transform: none; }
   }
 
   /* ---------- hero banner ---------- */
@@ -640,6 +803,39 @@
 
 <div id="site-nav"></div>
 
+<!-- CINEMATIC SHOWCASE (GSAP) — full-page takeover above the dashboard -->
+<section id="cinematic" class="cine" aria-label="Featured showcase">
+  <div class="cine-bg">
+    <video id="cineVideoA" muted playsinline webkit-playsinline preload="auto" loop disablepictureinpicture></video>
+    <video id="cineVideoB" muted playsinline webkit-playsinline preload="auto" loop disablepictureinpicture></video>
+  </div>
+  <div class="cine-stage">
+    <div class="cine-details cine-details-active">
+      <div class="eyebrow">LoveFlix Original · Featured</div>
+      <h2 class="title-1"></h2>
+      <div class="title-2"></div>
+      <p class="desc"></p>
+      <button class="cta" type="button"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Play</span></button>
+    </div>
+    <div class="cine-details cine-details-inactive">
+      <div class="eyebrow">LoveFlix Original · Featured</div>
+      <h2 class="title-1"></h2>
+      <div class="title-2"></div>
+      <p class="desc"></p>
+      <button class="cta" type="button"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Play</span></button>
+    </div>
+
+    <div class="cine-nav">
+      <button class="cine-prev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+      <button class="cine-next" type="button" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>
+    </div>
+
+    <div class="cine-cards"></div>
+
+    <div class="progress-sub"><div class="progress-sub-foreground"></div></div>
+  </div>
+</section>
+
 <!-- HERO -->
 <section class="hero" id="hero">
   <div class="hero-video-layer" id="heroVideoLayer">
@@ -1143,6 +1339,9 @@
     // Hero cycle
     if (videos.length) startHeroCycle(videos.filter(v => v && (v.video_url || v.title)));
 
+    // Cinematic showcase — reuse the SAME video array (no hardcoding), all videos.
+    initCinematic(videos.filter(v => v && v.video_url));
+
     // Continue Watching — RIGHT under the hero (first row)
     const inProgress = videos.filter(v => {
       const p = progressById[v.id];
@@ -1628,6 +1827,8 @@
       try { b.pause(); } catch (_) {}
     } else if (heroPaused) {
       heroPaused = false;
+      // Don't resume the hero while the cinematic takeover owns the screen.
+      if (document.body.classList.contains('cine-on')) return;
       const active = a.classList.contains('active') ? a : (b.classList.contains('active') ? b : null);
       if (active) active.play().catch(() => {});
       heroTimer = setTimeout(advanceHero, HERO_PREVIEW_MS);
@@ -1637,9 +1838,8 @@
   // Some mobile browsers block muted autoplay until the first gesture — nudge it.
   (function () {
     function kick() {
-      const a = document.getElementById('heroVideoA');
-      const b = document.getElementById('heroVideoB');
-      [a, b].forEach(v => {
+      ['heroVideoA', 'heroVideoB', 'cineVideoA', 'cineVideoB'].forEach(id => {
+        const v = document.getElementById(id);
         if (v && v.classList.contains('active') && v.paused) {
           const p = v.play(); if (p && p.catch) p.catch(() => {});
         }
@@ -1648,6 +1848,304 @@
     ['touchstart', 'pointerdown', 'click'].forEach(evt =>
       window.addEventListener(evt, kick, { once: true, passive: true }));
   })();
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  CINEMATIC SHOWCASE (GSAP) — full-page takeover carousel
+  // ══════════════════════════════════════════════════════════════════════
+  let cineData = [];
+  let cineOrder = [];
+  let cineActive = 0;
+  let cineTimer = null;
+  let cineAnimating = false;
+  let cineCurrentBg = 'A';
+  let cineCardStep = 176;     // cached card width + gap (avoids per-step layout reads)
+  let cineVisible = true;     // is the showcase currently on-screen?
+  const CINE_INTERVAL_MS = 7000;
+  const CINE_BG_FADE_MS = 1000;
+  const cineReduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  const detailsActive = '.cine-details-active';
+  const detailsInactive = '.cine-details-inactive';
+
+  // Map the reference `$(panel).part` pseudo-code onto real DOM nodes.
+  function $(panelSel) {
+    return {
+      text:   document.querySelector(panelSel + ' .eyebrow'),
+      title1: document.querySelector(panelSel + ' .title-1'),
+      title2: document.querySelector(panelSel + ' .title-2'),
+      desc:   document.querySelector(panelSel + ' .desc'),
+      cta:    document.querySelector(panelSel + ' .cta'),
+    };
+  }
+  function getCardContent(i) {
+    const cards = document.querySelectorAll('.cine-cards .card');
+    return cards[i] ? cards[i].querySelector('.card-content') : null;
+  }
+  function cineSafePlay(v) { if (!v) return; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+
+  // The provided initialization / reset block — translated to runnable code.
+  function init() {
+    const active = cineActive;
+    const order = cineOrder;
+    const cc = getCardContent(active);
+    if (cc) gsap.set(cc, { x: 0, y: 0, opacity: 0 });
+    gsap.set(detailsActive, { opacity: 0, zIndex: 22, x: -200 });
+    gsap.set(detailsInactive, { opacity: 0, zIndex: 12 });
+    gsap.set($(detailsInactive).text,   { y: 100 });
+    gsap.set($(detailsInactive).title1, { y: 100 });
+    gsap.set($(detailsInactive).title2, { y: 100 });
+    gsap.set($(detailsInactive).desc,   { y: 50 });
+    gsap.set($(detailsInactive).cta,    { y: 60 });
+
+    gsap.set('.progress-sub-foreground', {
+      width: 500 * (1 / order.length) * (active + 1),
+    });
+  }
+
+  function cineFill(panelSel, v) {
+    const p = $(panelSel);
+    if (p.title1) p.title1.textContent = (v.title || 'Untitled').trim();
+    if (p.title2) p.title2.textContent = v.date || v.category || '';
+    if (p.desc)   p.desc.textContent = v.description || '';
+  }
+
+  function cineShowBg(v) {
+    if (!v.video_url) return;
+    const a = document.getElementById('cineVideoA');
+    const b = document.getElementById('cineVideoB');
+    const incoming = cineCurrentBg === 'A' ? b : a;
+    const outgoing = cineCurrentBg === 'A' ? a : b;
+    incoming.muted = true; incoming.playsInline = true;
+    // Poster = thumbnail → an instant first frame instead of a black flash while the video buffers.
+    if (v.thumbnail_url) incoming.poster = v.thumbnail_url;
+    incoming.src = v.video_url;
+    // Only buffer when the showcase is actually on-screen, so scrolling away costs nothing.
+    const tryPlay = () => { if (!cineVisible) return; const pr = incoming.play(); if (pr && pr.catch) pr.catch(() => {}); };
+    incoming.addEventListener('loadeddata', tryPlay, { once: true });
+    incoming.addEventListener('canplay', tryPlay, { once: true });
+    incoming.load();
+    incoming.classList.add('active');
+    setTimeout(() => {
+      outgoing.classList.remove('active');
+      try { outgoing.pause(); } catch (_) {}
+      // Release the decoder/buffer of the now-hidden clip.
+      try { outgoing.removeAttribute('src'); outgoing.load(); } catch (_) {}
+    }, CINE_BG_FADE_MS);
+    cineCurrentBg = cineCurrentBg === 'A' ? 'B' : 'A';
+  }
+
+  function cineSwapPanels() {
+    const a = document.querySelector(detailsActive);
+    const b = document.querySelector(detailsInactive);
+    if (!a || !b) return;
+    a.className = 'cine-details cine-details-inactive';
+    b.className = 'cine-details cine-details-active';
+  }
+
+  function cineSlideCards(animate) {
+    const wrap = document.querySelector('.cine-cards');
+    const cards = wrap.querySelectorAll('.card');
+    if (!cards.length) return;
+    cards.forEach((c, i) => c.classList.toggle('is-active', i === cineActive));
+    const visible = 4;
+    const firstVisible = Math.max(0, cineActive - (visible - 1));
+    const x = -firstVisible * cineCardStep;   // GPU transform, no per-step layout read
+    if (typeof gsap === 'undefined') { wrap.style.transform = 'translateX(' + x + 'px)'; return; }
+    if (animate && !cineReduceMotion) gsap.to(wrap, { x: x, duration: 0.6, ease: 'power3.out' });
+    else gsap.set(wrap, { x: x });
+  }
+
+  function buildCineCards() {
+    const wrap = document.querySelector('.cine-cards');
+    wrap.innerHTML = '';
+    cineOrder.forEach((di, i) => {
+      const v = cineData[di];
+      const card = document.createElement('div');
+      card.className = 'card';
+      const content = document.createElement('div');
+      content.className = 'card-content';
+      if (v.thumbnail_url) {
+        const img = document.createElement('img');
+        img.src = v.thumbnail_url; img.alt = ''; img.loading = 'lazy';
+        content.appendChild(img);
+      }
+      const lab = document.createElement('div');
+      lab.className = 'card-label';
+      lab.textContent = v.title || '';
+      content.appendChild(lab);
+      card.appendChild(content);
+      card.addEventListener('click', () => cineTransitionTo(i));
+      wrap.appendChild(card);
+    });
+    // Cache the card stride once (width + 16px gap) so cineSlideCards never reads layout per step.
+    const first = wrap.querySelector('.card');
+    if (first && first.offsetWidth) cineCardStep = first.offsetWidth + 16;
+  }
+
+  function cineTransitionTo(target, immediate) {
+    if (cineAnimating || typeof gsap === 'undefined') return;
+    const len = cineOrder.length;
+    if (!len) return;
+
+    const proceed = () => {
+      cineActive = ((target % len) + len) % len;
+      const v = cineData[cineOrder[cineActive]];
+      cineFill(detailsInactive, v);
+      cineShowBg(v);
+      init();
+      const p = $(detailsInactive);
+      cineAnimating = true;
+      const tl = gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        onComplete: () => { cineSwapPanels(); cineAnimating = false; },
+      });
+      tl.to(detailsInactive, { opacity: 1, x: 0, duration: 0.7 }, 0)
+        .to(p.text,   { y: 0, duration: 0.6 }, 0.0)
+        .to(p.title1, { y: 0, duration: 0.7 }, 0.06)
+        .to(p.title2, { y: 0, duration: 0.7 }, 0.13)
+        .to(p.desc,   { y: 0, duration: 0.6 }, 0.22)
+        .to(p.cta,    { y: 0, duration: 0.6 }, 0.30)
+        .to('.progress-sub-foreground', { width: 500 * (1 / len) * (cineActive + 1), duration: 0.6 }, 0);
+      cineSlideCards(true);
+    };
+
+    if (immediate) { proceed(); return; }
+    cineAnimating = true;
+    gsap.to(detailsActive, {
+      opacity: 0, x: -160, duration: 0.45, ease: 'power2.in',
+      onComplete: () => { cineAnimating = false; proceed(); },
+    });
+  }
+
+  function cineStep(dir) { cineTransitionTo(cineActive + dir); }
+
+  function cineTick() {
+    if (!document.hidden && document.body.classList.contains('cine-on') && !cineAnimating) cineStep(1);
+    cineTimer = setTimeout(cineTick, CINE_INTERVAL_MS);
+  }
+  function cineStart() {
+    cineStop();
+    if (cineReduceMotion) return;                 // honor reduced-motion: no auto-advance
+    if (cineOrder.length > 1 && cineVisible) cineTimer = setTimeout(cineTick, CINE_INTERVAL_MS);
+  }
+  function cineStop() { if (cineTimer) { clearTimeout(cineTimer); cineTimer = null; } }
+
+  // Pause/resume the classic hero so we never decode two fullscreen video layers at once.
+  function cinePauseHero() {
+    try { if (typeof heroTimer !== 'undefined') clearTimeout(heroTimer); } catch (_) {}
+    ['heroVideoA', 'heroVideoB'].forEach(id => { const v = document.getElementById(id); if (v) { try { v.pause(); } catch (_) {} } });
+  }
+  function cineResumeHero() {
+    const a = document.getElementById('heroVideoA');
+    const b = document.getElementById('heroVideoB');
+    const act = a && a.classList.contains('active') ? a : (b && b.classList.contains('active') ? b : null);
+    cineSafePlay(act);
+    try {
+      if (typeof heroList !== 'undefined' && heroList.length && typeof advanceHero === 'function') {
+        clearTimeout(heroTimer);
+        heroTimer = setTimeout(advanceHero, HERO_PREVIEW_MS);
+      }
+    } catch (_) {}
+  }
+
+  // Pause the showcase video + timer whenever it scrolls out of view (e.g. browsing the dashboard).
+  function cineObserve() {
+    const section = document.getElementById('cinematic');
+    if (!section || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        cineVisible = e.isIntersecting;
+        if (!document.body.classList.contains('cine-on')) return;
+        if (cineVisible) {
+          document.querySelectorAll('.cine-bg video.active').forEach(cineSafePlay);
+          cineStart();
+        } else {
+          cineStop();
+          document.querySelectorAll('.cine-bg video').forEach(v => { try { v.pause(); } catch (_) {} });
+        }
+      });
+    }, { threshold: 0.12 });
+    io.observe(section);
+  }
+
+  function cineMountToggle() {
+    if (document.querySelector('.cine-toggle')) return;
+    const btn = document.createElement('button');
+    btn.className = 'cine-toggle';
+    btn.type = 'button';
+    btn.innerHTML = '<span class="dot"></span><span class="cine-toggle-label">Cinematic</span>';
+    btn.addEventListener('click', () => cineApplyMode(!document.body.classList.contains('cine-on'), true));
+    document.body.appendChild(btn);
+  }
+
+  function cineApplyMode(on, persist) {
+    document.body.classList.toggle('cine-on', on);
+    const label = document.querySelector('.cine-toggle-label');
+    if (label) label.textContent = on ? 'Cinematic: On' : 'Classic';
+    if (on) {
+      window.scrollTo(0, 0);
+      const cur = document.querySelector(detailsActive + ' .title-1');
+      if (cur && !cur.textContent) cineTransitionTo(cineActive, true); // first paint
+      cinePauseHero();   // only one fullscreen video layer decodes at a time
+      document.querySelectorAll('.cine-bg video.active').forEach(cineSafePlay);
+      cineStart();
+    } else {
+      cineStop();
+      document.querySelectorAll('.cine-bg video').forEach(v => { try { v.pause(); } catch (_) {} });
+      cineResumeHero();
+    }
+    if (persist && window.LoveFlix && LoveFlix.saveSettings) {
+      try { LoveFlix.saveSettings({ cinematicHome: on }); } catch (_) {}
+    }
+  }
+
+  function initCinematic(list) {
+    cineData = (list || []).slice();
+    const section = document.getElementById('cinematic');
+    const toggle = document.querySelector('.cine-toggle');
+
+    if (!cineData.length || typeof gsap === 'undefined') {
+      if (section) section.style.display = 'none';
+      document.body.classList.remove('cine-on');
+      if (toggle) toggle.style.display = 'none';
+      return;
+    }
+
+    cineMountToggle();
+    cineOrder = cineData.map((_, i) => i);
+    cineActive = 0;
+    buildCineCards();
+
+    // Wire prev/next arrows once.
+    const prev = document.querySelector('.cine-prev');
+    const next = document.querySelector('.cine-next');
+    if (prev && !prev.dataset.wired) { prev.dataset.wired = '1'; prev.addEventListener('click', () => cineStep(-1)); }
+    if (next && !next.dataset.wired) { next.dataset.wired = '1'; next.addEventListener('click', () => cineStep(1)); }
+    document.querySelectorAll('.cine-details .cta').forEach(c => {
+      if (!c.dataset.wired) { c.dataset.wired = '1'; c.addEventListener('click', () => { location.href = 'player.html'; }); }
+    });
+
+    // First paint of the active panel.
+    cineTransitionTo(0, true);
+    cineSlideCards(false);
+    cineObserve();
+
+    // Default ON; honor the user's saved preference.
+    const settings = (() => { try { return JSON.parse(localStorage.getItem('loveflix_settings') || '{}'); } catch { return {}; } })();
+    cineApplyMode(settings.cinematicHome !== false, false);
+  }
+
+  // Pause the cinematic background + timer when the tab is hidden.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cineStop();
+    } else if (document.body.classList.contains('cine-on')) {
+      const a = document.getElementById('cineVideoA');
+      const b = document.getElementById('cineVideoB');
+      [a, b].forEach(v => { if (v && v.classList.contains('active')) cineSafePlay(v); });
+      cineStart();
+    }
+  });
 
   loadHome();
 </script>
