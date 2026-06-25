@@ -41,6 +41,9 @@ export type LoveflixVideo = {
 let videos: LoveflixVideo[] = []
 let loadPromise: Promise<LoveflixVideo[]> | null = null
 let loadError: Error | null = null
+let resolvedTenantId: string | null = null
+
+export const getResolvedTenantId = (): string | null => resolvedTenantId
 
 export const getToken = (): string | null => {
   try {
@@ -132,6 +135,7 @@ export const loadLoveflixVideos = (
   loadPromise = (async () => {
     const token = getToken()
     const tenantId = await resolveTenantId(token)
+    resolvedTenantId = tenantId
     const headers: Record<string, string> = {}
     if (token) headers.Authorization = `Bearer ${token}`
     // Forward the couple tenant so an invited partner sees the couple's videos
@@ -176,8 +180,14 @@ const proxied = (url: string): string =>
   `/api/thumb?u=${encodeURIComponent(url)}`
 
 // Texture lookup: the loader calls this with layerIndex === cell.id.
+// When the tenant ID is resolved, use the clean index-based endpoint
+// (/api/browse/img/{n}?tid=...) so URLs are short, edge-cached, and
+// mirror the source repo's public/media/single/{n}.jpg pattern.
 export const thumbUrlForIndex = (index: number): string => {
   if (!videos.length) return ''
+  if (resolvedTenantId) {
+    return `/api/browse/img/${index}?tid=${encodeURIComponent(resolvedTenantId)}`
+  }
   return proxied(withThumbTransform(videos[mod(index, videos.length)].thumbnail_url))
 }
 

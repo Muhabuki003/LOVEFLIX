@@ -4,6 +4,7 @@ import App from './app'
 import ErrorBoundary from './cmps/common/error-boundary'
 import { ThemeProvider } from './cmps/layout'
 import config from './config'
+import { FilmPreview } from './cmps/views/film'
 import { BrowseOverlay } from './loveflix/BrowseOverlay'
 import { LoveflixCellInfo } from './loveflix/LoveflixCellInfo'
 import { bootstrapLoveflix } from './loveflix/bootstrap'
@@ -22,7 +23,11 @@ const renderLoveflix = () => {
     <StrictMode>
       <ErrorBoundary>
         <ThemeProvider>
-          {/* Floating title near the hovered tile + corner detail card. */}
+          {/* Upstream FilmPreview: exact visual match for the source site —
+              large title + tagline + genre badges that ride the neighbor cell
+              above the hovered tile. Film.fromLoveflix() maps video fields. */}
+          <FilmPreview />
+          {/* Corner detail card (title, meta, "click to play" hint). */}
           <LoveflixCellInfo />
           <BrowseOverlay />
         </ThemeProvider>
