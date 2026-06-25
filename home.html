@@ -93,12 +93,20 @@
 
   #cinematic .card-content {
     position: absolute; left: 0; top: 0;
-    color: #FFFFFFDD; padding-left: 16px; z-index: 40;
+    color: #FFFFFFDD; padding-left: 16px; padding-right: 14px; z-index: 40;
+    width: 200px; box-sizing: border-box;
   }
-  #cinematic .content-place { margin-top: 6px; font-size: 13px; font-weight: 500; }
+  #cinematic .content-place {
+    margin-top: 7px; font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text-light, #d2d2d2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   #cinematic .content-title-1, #cinematic .content-title-2 {
-    font-weight: 600; font-size: 20px; font-family: 'Oswald','Bebas Neue',sans-serif;
+    font-family: 'Bebas Neue','Oswald',sans-serif; font-weight: 400;
+    font-size: 19px; line-height: 1.04; letter-spacing: 0.6px; text-transform: uppercase;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  #cinematic .content-title-2 { color: var(--text-light, #d2d2d2); font-size: 16px; }
   #cinematic .content-start { width: 30px; height: 5px; border-radius: 99px; background-color: #FFFFFFDD; }
 
   /* left details panels (two, swapped each slide) — styled like the classic hero text */
@@ -200,6 +208,11 @@
     #cinematic .details > .desc { width: auto; max-width: 84vw; font-size: 14px; }
     #cinematic .pagination .progress-sub-container,
     #cinematic .pagination .progress-sub-background { width: 200px; max-width: 50vw; }
+    /* small-card labels track the shrunken card width (cineCardWidth = 130) */
+    #cinematic .card-content { width: 130px; padding-left: 12px; padding-right: 10px; }
+    #cinematic .content-title-1, #cinematic .content-title-2 { font-size: 15px; }
+    #cinematic .content-title-2 { font-size: 13px; }
+    #cinematic .content-place { font-size: 9px; letter-spacing: 1px; }
     .cine-toggle { top: auto; bottom: 16px; right: 16px; }
   }
 
