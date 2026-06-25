@@ -1857,7 +1857,7 @@
   const CINE_EASE = 'sine.inOut';
   // The pen advances ~every 3s; slow the dwell so the full cycle matches the classic hero (~15s).
   // Animation durations/easing stay identical to the pen — only the indicator "countdown" fill grows.
-  const CINE_DWELL_SEC = 13;
+  const CINE_DWELL_SEC = 9;
   const cineReduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function cineSafePlay(v) { if (!v) return; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
