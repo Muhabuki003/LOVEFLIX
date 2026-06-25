@@ -1,5 +1,5 @@
 import { mergeConfigs } from '√'
-import { getLoveflixCells } from '../../loveflix/bootstrap'
+import { getLoveflixCells, getLoveflixPixelRatio } from '../../loveflix/bootstrap'
 import { LOVEFLIX_ENABLED, thumbUrlForIndex } from '../../loveflix/loveflix'
 import baseConfig from '../config'
 import presets from '../presets'
@@ -112,19 +112,48 @@ const applyLoveflixConfig = (config: typeof baseConfig) => {
   const cells = getLoveflixCells()
   config.cells = cells
 
+  // Cap the render resolution (see bootstrap). renderer.pixelRatio overrides
+  // the device pixel ratio in voroforce/display/renderer.js.
+  const display = config.display as {
+    renderer?: { pixelRatio?: number }
+  }
+  if (!display.renderer) display.renderer = {}
+  display.renderer.pixelRatio = getLoveflixPixelRatio()
+
   // Compressed poster atlases are never shipped/used; don't preload them.
   // (empty string is falsy — the engine treats any falsy preload as "none")
   ;(config.media as { preload: unknown }).preload = ''
 
-  const single = (
-    config.media.versions as Array<Record<string, unknown>>
-  ).find((v) => v.type && v.type !== 'compressed-grid')
+  const versions = config.media.versions as Array<Record<string, unknown>>
+
+  // Safety net: every compressed-grid version still gets a GPU TEXTURE_2D_ARRAY
+  // allocated upfront (texStorage3D sized to `layers`). We never sample them —
+  // all cells are forced to media version 3 — so pin them to a single layer so
+  // they cost ~nothing even if the build env didn't already cap _LAYERS.
+  for (const v of versions) {
+    if (!v.type || v.type === 'compressed-grid') v.layers = 1
+  }
+
+  const single = versions.find((v) => v.type && v.type !== 'compressed-grid')
   if (single) {
-    const capacity =
-      (Number(single.virtualCols) || 9) * (Number(single.virtualRows) || 6)
-    // enough virtual layers to hold every cell's tile, with a little headroom
-    const neededLayers = Math.ceil(cells / capacity) + 2
-    single.virtualLayers = Math.max(4, Math.min(48, neededLayers))
+    // Per-cell thumbnails live in one uncompressed RGBA texture array, so VRAM
+    // is the dominant cost: width*height*4*virtualLayers. Use small tiles sized
+    // for on-screen cells (video thumbnails are 16:9) and keep width/height in
+    // lockstep with the tile grid so texSubImage3D placement stays aligned.
+    const virtualCols = 9
+    const virtualRows = 6
+    const tileWidth = 192
+    const tileHeight = 108
+    const capacity = virtualCols * virtualRows
+    single.virtualCols = virtualCols
+    single.virtualRows = virtualRows
+    single.tileWidth = tileWidth
+    single.tileHeight = tileHeight
+    single.width = virtualCols * tileWidth
+    single.height = virtualRows * tileHeight
+    // Exactly enough layers for every cell's unique tile (+1 headroom), bounded
+    // so a misconfigured cell count can never request a huge allocation.
+    single.virtualLayers = Math.max(2, Math.min(24, Math.ceil(cells / capacity) + 1))
     single.layers = Math.max(cells, capacity)
     single.layerSrcFormat = (layerIndex: number) => thumbUrlForIndex(layerIndex)
   }
