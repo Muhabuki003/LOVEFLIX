@@ -7,6 +7,52 @@ class LoaderEvent extends Event {
   }
 }
 
+// Draw an arbitrarily sized image into a canvas of exactly tileWidth×tileHeight
+// using a center "cover" fit (fills the tile, crops overflow). Returns the
+// canvas, which is a valid texSubImage3D source of the precise tile size.
+function resizeImageToTileCover(image, tileWidth, tileHeight) {
+  const sourceWidth = image.naturalWidth || image.width
+  const sourceHeight = image.naturalHeight || image.height
+  if (!sourceWidth || !sourceHeight) return image
+
+  const canvas = document.createElement('canvas')
+  canvas.width = tileWidth
+  canvas.height = tileHeight
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return image
+
+  const sourceRatio = sourceWidth / sourceHeight
+  const tileRatio = tileWidth / tileHeight
+  let drawWidth
+  let drawHeight
+  let offsetX
+  let offsetY
+  if (sourceRatio > tileRatio) {
+    // source is wider than the tile — match height, crop sides
+    drawHeight = sourceHeight
+    drawWidth = sourceHeight * tileRatio
+    offsetX = (sourceWidth - drawWidth) / 2
+    offsetY = 0
+  } else {
+    drawWidth = sourceWidth
+    drawHeight = sourceWidth / tileRatio
+    offsetX = 0
+    offsetY = (sourceHeight - drawHeight) / 2
+  }
+  ctx.drawImage(
+    image,
+    offsetX,
+    offsetY,
+    drawWidth,
+    drawHeight,
+    0,
+    0,
+    tileWidth,
+    tileHeight,
+  )
+  return canvas
+}
+
 export class Loader extends CustomEventTarget {
   constructor(sharedLoadedMediaVersionLayersData, config) {
     super()
@@ -181,7 +227,24 @@ export class Loader extends CustomEventTarget {
           img.src = src
         })
       }
-      bytes = await loadImage(URL.createObjectURL(blob))
+      const image = await loadImage(URL.createObjectURL(blob))
+
+      // For the uncompressed-single version each source image is uploaded into
+      // a fixed tileWidth×tileHeight slot via texSubImage3D, which reads a
+      // region of exactly that size from the top-left — it does NOT scale. The
+      // upstream posters happened to already be tile-sized; LoveFlix thumbnails
+      // are arbitrary (16:9 R2/Supabase images), so resize them to the tile
+      // with a center "cover" fit here. Otherwise cells show a corner crop, or
+      // (when a thumbnail is smaller than a tile) the upload throws.
+      if (
+        (type === 'uncompressed-single' || config.type === 'uncompressed-single') &&
+        config.tileWidth &&
+        config.tileHeight
+      ) {
+        bytes = resizeImageToTileCover(image, config.tileWidth, config.tileHeight)
+      } else {
+        bytes = image
+      }
     }
 
     this.loadedIndex++

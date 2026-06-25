@@ -10,17 +10,32 @@ import { DEVICE_CLASS, VOROFORCE_PRESET } from '../vf/consts'
 import { estimateDeviceClass } from '../vf/utils/device-class'
 import { loadLoveflixVideos } from './loveflix'
 
-// Tiered cell counts (capped well below the upstream 50k for a couple's
-// library and for smoothness on mobile).
+// Tiered cell counts. Kept deliberately low: every cell holds its own
+// uncompressed thumbnail tile in a GPU texture array, so VRAM ≈
+// cells × tileW × tileH × 4. Pushing this too high blows the GPU memory
+// budget and the WebGL context is lost (= the "loads then crashes" symptom).
 const CELLS_BY_DEVICE_CLASS: Record<DEVICE_CLASS, number> = {
-  [DEVICE_CLASS.high]: 1500,
-  [DEVICE_CLASS.mid]: 800,
-  [DEVICE_CLASS.low]: 300,
-  [DEVICE_CLASS.mobile]: 300,
+  [DEVICE_CLASS.high]: 800,
+  [DEVICE_CLASS.mid]: 450,
+  [DEVICE_CLASS.low]: 250,
+  [DEVICE_CLASS.mobile]: 200,
+}
+
+// Device-tiered render scale. The voronoi fragment shader runs per screen
+// pixel, so on a 3× DPR phone an uncapped canvas is ~9× the work — the single
+// biggest cause of jank. Capping the pixel ratio is the cheapest large win.
+const MAX_PIXEL_RATIO_BY_DEVICE_CLASS: Record<DEVICE_CLASS, number> = {
+  [DEVICE_CLASS.high]: 1.5,
+  [DEVICE_CLASS.mid]: 1.25,
+  [DEVICE_CLASS.low]: 1,
+  [DEVICE_CLASS.mobile]: 1,
 }
 
 let cells = CELLS_BY_DEVICE_CLASS[DEVICE_CLASS.low]
 export const getLoveflixCells = (): number => cells
+
+let pixelRatio = 1
+export const getLoveflixPixelRatio = (): number => pixelRatio
 
 export const bootstrapLoveflix = async (): Promise<void> => {
   // Start the video fetch immediately (parallel with GPU detection).
@@ -33,6 +48,15 @@ export const bootstrapLoveflix = async (): Promise<void> => {
     deviceClass = DEVICE_CLASS.low
   }
   cells = CELLS_BY_DEVICE_CLASS[deviceClass] ?? CELLS_BY_DEVICE_CLASS[DEVICE_CLASS.low]
+
+  const maxPixelRatio =
+    MAX_PIXEL_RATIO_BY_DEVICE_CLASS[deviceClass] ??
+    MAX_PIXEL_RATIO_BY_DEVICE_CLASS[DEVICE_CLASS.low]
+  const devicePixelRatio =
+    typeof window !== 'undefined' && window.devicePixelRatio
+      ? window.devicePixelRatio
+      : 1
+  pixelRatio = Math.min(devicePixelRatio, maxPixelRatio)
 
   // Seed engine state directly (no persistence) so initVoroforce proceeds and
   // the intro gate (!playedIntro || !preset) is satisfied.
