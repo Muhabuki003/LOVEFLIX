@@ -72,6 +72,8 @@
   /* ---------- cinematic showcase (GSAP) ---------- */
   #cinematic { display: none; }
   body.cine-on #cinematic { display: block; }
+  /* In cinematic mode the showcase replaces the classic hero — only the dashboard sits below it. */
+  body.cine-on .hero { display: none; }
   .cine {
     position: relative;
     width: 100vw; height: 100vh;
@@ -150,6 +152,8 @@
     width: 160px; height: 224px;
     border-radius: 10px; overflow: hidden;
     flex: 0 0 auto; cursor: pointer;
+    /* Visible fallback so a thumbnail-less card is never an empty transparent box. */
+    background: linear-gradient(135deg, #2a2a2a, #111);
     box-shadow: 0 12px 30px rgba(0,0,0,0.5);
     outline: 2px solid transparent;
     transition: outline-color 0.25s ease, transform 0.25s ease;
@@ -1942,44 +1946,58 @@
     b.className = 'cine-details cine-details-active';
   }
 
-  function cineSlideCards(animate) {
+  // Endless preview carousel: a fixed window of the UPCOMING videos (modulo wrap), so it never
+  // runs out of cards and the highlight always lands on a visible "next up" card.
+  const CINE_WINDOW = 6;
+  function cineWindowCount() { return Math.min(CINE_WINDOW, cineOrder.length); }
+
+  function cineRenderCards(animate) {
     const wrap = document.querySelector('.cine-cards');
     const cards = wrap.querySelectorAll('.card');
-    if (!cards.length) return;
-    cards.forEach((c, i) => c.classList.toggle('is-active', i === cineActive));
-    const visible = 4;
-    const firstVisible = Math.max(0, cineActive - (visible - 1));
-    const x = -firstVisible * cineCardStep;   // GPU transform, no per-step layout read
-    if (typeof gsap === 'undefined') { wrap.style.transform = 'translateX(' + x + 'px)'; return; }
-    if (animate && !cineReduceMotion) gsap.to(wrap, { x: x, duration: 0.6, ease: 'power3.out' });
-    else gsap.set(wrap, { x: x });
+    const len = cineOrder.length;
+    if (!cards.length || !len) return;
+    cards.forEach((card, i) => {
+      const v = cineData[cineOrder[(cineActive + 1 + i) % len]]; // upcoming videos, endless
+      const img = card.querySelector('img');
+      const lab = card.querySelector('.card-label');
+      if (v && v.thumbnail_url) { img.src = v.thumbnail_url; img.style.display = ''; }
+      else { img.removeAttribute('src'); img.style.display = 'none'; }
+      if (lab) lab.textContent = (v && v.title) || '';
+      card.classList.toggle('is-active', i === 0); // slot 0 = the next video to play
+    });
+    if (typeof gsap === 'undefined') return;
+    if (animate && !cineReduceMotion) {
+      gsap.fromTo(wrap, { x: cineCardStep * 0.6 }, { x: 0, duration: 0.6, ease: 'power3.out' });
+      gsap.fromTo(cards, { opacity: 0.35 }, { opacity: 1, duration: 0.5, stagger: 0.04, ease: 'power2.out' });
+    } else {
+      gsap.set(wrap, { x: 0, opacity: 1 });
+    }
   }
 
   function buildCineCards() {
     const wrap = document.querySelector('.cine-cards');
     wrap.innerHTML = '';
-    cineOrder.forEach((di, i) => {
-      const v = cineData[di];
+    const n = cineWindowCount();
+    for (let i = 0; i < n; i++) {
       const card = document.createElement('div');
       card.className = 'card';
       const content = document.createElement('div');
       content.className = 'card-content';
-      if (v.thumbnail_url) {
-        const img = document.createElement('img');
-        img.src = v.thumbnail_url; img.alt = ''; img.loading = 'lazy';
-        content.appendChild(img);
-      }
+      const img = document.createElement('img');
+      img.alt = ''; img.loading = 'lazy';
+      content.appendChild(img);
       const lab = document.createElement('div');
       lab.className = 'card-label';
-      lab.textContent = v.title || '';
       content.appendChild(lab);
       card.appendChild(content);
-      card.addEventListener('click', () => cineTransitionTo(i));
+      // Clicking a preview jumps forward to that upcoming video.
+      card.addEventListener('click', () => cineTransitionTo(cineActive + i + 1));
       wrap.appendChild(card);
-    });
-    // Cache the card stride once (width + 16px gap) so cineSlideCards never reads layout per step.
+    }
+    // Cache the card stride once (width + 16px gap) so we never read layout per step.
     const first = wrap.querySelector('.card');
     if (first && first.offsetWidth) cineCardStep = first.offsetWidth + 16;
+    cineRenderCards(false);
   }
 
   function cineTransitionTo(target, immediate) {
@@ -2006,7 +2024,7 @@
         .to(p.desc,   { y: 0, duration: 0.6 }, 0.22)
         .to(p.cta,    { y: 0, duration: 0.6 }, 0.30)
         .to('.progress-sub-foreground', { width: 500 * (1 / len) * (cineActive + 1), duration: 0.6 }, 0);
-      cineSlideCards(true);
+      cineRenderCards(true);
     };
 
     if (immediate) { proceed(); return; }
@@ -2113,6 +2131,11 @@
 
     cineMountToggle();
     cineOrder = cineData.map((_, i) => i);
+    // Shuffle once (Fisher–Yates) so the endless loop auto-shuffles instead of strict order.
+    for (let i = cineOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = cineOrder[i]; cineOrder[i] = cineOrder[j]; cineOrder[j] = t;
+    }
     cineActive = 0;
     buildCineCards();
 
@@ -2127,7 +2150,6 @@
 
     // First paint of the active panel.
     cineTransitionTo(0, true);
-    cineSlideCards(false);
     cineObserve();
 
     // Default ON; honor the user's saved preference.
