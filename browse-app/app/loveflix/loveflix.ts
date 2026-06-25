@@ -165,7 +165,7 @@ const mod = (i: number, n: number): number => ((i % n) + n) % n
 const withThumbTransform = (url: string): string => {
   if (url.includes('/storage/v1/object/public/')) {
     const sep = url.includes('?') ? '&' : '?'
-    return `${url.replace('/object/public/', '/render/image/public/')}${sep}width=220&quality=60`
+    return `${url.replace('/object/public/', '/render/image/public/')}${sep}width=512&quality=70`
   }
   return url
 }
@@ -186,4 +186,23 @@ export const thumbUrlForIndex = (index: number): string => {
 export const videoForCellId = (id: number): LoveflixVideo | undefined => {
   if (!videos.length) return undefined
   return videos[mod(id, videos.length)]
+}
+
+// Format a stored date ("2026-06-25" or ISO) into a short human label.
+export const formatVideoDate = (date: string): string => {
+  if (!date) return ''
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return date
+  return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+}
+
+export type TileLabel = { title: string; meta: string }
+
+// Text baked into each tile's thumbnail by the loader (keyed by layerIndex ===
+// cell.id). Kept tiny: a title plus a "Category · Date" line.
+export const labelForIndex = (index: number): TileLabel | undefined => {
+  const v = videoForCellId(index)
+  if (!v) return undefined
+  const meta = [v.category, formatVideoDate(v.date)].filter(Boolean).join(' · ')
+  return { title: v.title || 'Untitled', meta }
 }

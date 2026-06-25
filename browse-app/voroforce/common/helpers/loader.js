@@ -8,9 +8,10 @@ class LoaderEvent extends Event {
 }
 
 // Draw an arbitrarily sized image into a canvas of exactly tileWidth×tileHeight
-// using a center "cover" fit (fills the tile, crops overflow). Returns the
-// canvas, which is a valid texSubImage3D source of the precise tile size.
-function resizeImageToTileCover(image, tileWidth, tileHeight) {
+// using a center "cover" fit (fills the tile, crops overflow), then optionally
+// bake a caption (title + meta line) into the bottom over a dark gradient.
+// Returns the canvas, a valid texSubImage3D source of the precise tile size.
+function resizeImageToTileCover(image, tileWidth, tileHeight, label) {
   const sourceWidth = image.naturalWidth || image.width
   const sourceHeight = image.naturalHeight || image.height
   if (!sourceWidth || !sourceHeight) return image
@@ -50,7 +51,65 @@ function resizeImageToTileCover(image, tileWidth, tileHeight) {
     tileWidth,
     tileHeight,
   )
+
+  if (label && (label.title || label.meta)) {
+    drawTileCaption(ctx, tileWidth, tileHeight, label)
+  }
   return canvas
+}
+
+// Bake a title + meta line over a bottom-up dark gradient so it stays legible
+// over any thumbnail. Sizes are relative to the tile so they scale with it.
+function drawTileCaption(ctx, tileWidth, tileHeight, label) {
+  const pad = Math.round(tileWidth * 0.05)
+  const titleSize = Math.max(11, Math.round(tileHeight * 0.13))
+  const metaSize = Math.max(9, Math.round(tileHeight * 0.085))
+  const gradientHeight = Math.round(tileHeight * 0.55)
+
+  const gradient = ctx.createLinearGradient(
+    0,
+    tileHeight - gradientHeight,
+    0,
+    tileHeight,
+  )
+  gradient.addColorStop(0, 'rgba(0,0,0,0)')
+  gradient.addColorStop(1, 'rgba(0,0,0,0.82)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, tileHeight - gradientHeight, tileWidth, gradientHeight)
+
+  ctx.textBaseline = 'alphabetic'
+  ctx.shadowColor = 'rgba(0,0,0,0.7)'
+  ctx.shadowBlur = 3
+
+  let baseline = tileHeight - pad
+  if (label.meta) {
+    ctx.font = `500 ${metaSize}px Inter, system-ui, sans-serif`
+    ctx.fillStyle = '#c9a96e' // warm gold
+    fillClippedText(ctx, label.meta, pad, baseline, tileWidth - pad * 2)
+    baseline -= metaSize + Math.round(tileHeight * 0.03)
+  }
+  if (label.title) {
+    ctx.font = `700 ${titleSize}px Inter, system-ui, sans-serif`
+    ctx.fillStyle = '#ffffff'
+    fillClippedText(ctx, label.title, pad, baseline, tileWidth - pad * 2)
+  }
+  ctx.shadowBlur = 0
+}
+
+// Draw text on one line, truncating with an ellipsis if it overflows maxWidth.
+function fillClippedText(ctx, text, x, y, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) {
+    ctx.fillText(text, x, y)
+    return
+  }
+  let truncated = text
+  while (
+    truncated.length > 1 &&
+    ctx.measureText(`${truncated}…`).width > maxWidth
+  ) {
+    truncated = truncated.slice(0, -1)
+  }
+  ctx.fillText(`${truncated}…`, x, y)
 }
 
 export class Loader extends CustomEventTarget {
@@ -241,7 +300,13 @@ export class Loader extends CustomEventTarget {
         config.tileWidth &&
         config.tileHeight
       ) {
-        bytes = resizeImageToTileCover(image, config.tileWidth, config.tileHeight)
+        const label = config.tileLabelForIndex?.(layerIndex)
+        bytes = resizeImageToTileCover(
+          image,
+          config.tileWidth,
+          config.tileHeight,
+          label,
+        )
       } else {
         bytes = image
       }

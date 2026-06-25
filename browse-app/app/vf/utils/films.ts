@@ -1,6 +1,7 @@
 import {
   LOVEFLIX_ENABLED,
   type LoveflixVideo,
+  formatVideoDate,
   videoForCellId,
 } from '../../loveflix/loveflix'
 import type { VoroforceCell } from '../types'
@@ -48,6 +49,10 @@ export class Film {
       backdrop_path: video.thumbnail_url,
       vote_average: 0,
       popularity: 0,
+      // Reuse the upstream preview fields: category → genre badge, date label
+      // → tagline line above the title.
+      genres: video.category || '',
+      tagline: formatVideoDate(video.date),
     })
     film.loveflix = video
     return film

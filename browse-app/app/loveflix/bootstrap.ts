@@ -7,7 +7,6 @@
 
 import { store } from '../store'
 import { DEVICE_CLASS, VOROFORCE_PRESET } from '../vf/consts'
-import { estimateDeviceClass } from '../vf/utils/device-class'
 import { loadLoveflixVideos } from './loveflix'
 
 // Tiered cell counts. Kept deliberately low: every cell holds its own
@@ -38,20 +37,17 @@ let pixelRatio = 1
 export const getLoveflixPixelRatio = (): number => pixelRatio
 
 export const bootstrapLoveflix = async (): Promise<void> => {
-  // Start the video fetch immediately (parallel with GPU detection).
+  // Start the video fetch immediately.
   void loadLoveflixVideos().catch(() => {})
 
-  let deviceClass = DEVICE_CLASS.low
-  try {
-    deviceClass = await estimateDeviceClass()
-  } catch {
-    deviceClass = DEVICE_CLASS.low
-  }
-  cells = CELLS_BY_DEVICE_CLASS[deviceClass] ?? CELLS_BY_DEVICE_CLASS[DEVICE_CLASS.low]
+  // Locked to the "potato" (low) tier. Testing showed the higher tiers don't
+  // change the look — device class is purely an internal performance dial — so
+  // we pin the smoothest, lightest setting on every device while keeping the
+  // full voronoi effect (the `minimal` preset is unchanged).
+  const deviceClass = DEVICE_CLASS.low
+  cells = CELLS_BY_DEVICE_CLASS[deviceClass]
 
-  const maxPixelRatio =
-    MAX_PIXEL_RATIO_BY_DEVICE_CLASS[deviceClass] ??
-    MAX_PIXEL_RATIO_BY_DEVICE_CLASS[DEVICE_CLASS.low]
+  const maxPixelRatio = MAX_PIXEL_RATIO_BY_DEVICE_CLASS[deviceClass]
   const devicePixelRatio =
     typeof window !== 'undefined' && window.devicePixelRatio
       ? window.devicePixelRatio

@@ -1,6 +1,10 @@
 import { mergeConfigs } from '√'
 import { getLoveflixCells, getLoveflixPixelRatio } from '../../loveflix/bootstrap'
-import { LOVEFLIX_ENABLED, thumbUrlForIndex } from '../../loveflix/loveflix'
+import {
+  LOVEFLIX_ENABLED,
+  labelForIndex,
+  thumbUrlForIndex,
+} from '../../loveflix/loveflix'
 import baseConfig from '../config'
 import presets from '../presets'
 
@@ -137,13 +141,14 @@ const applyLoveflixConfig = (config: typeof baseConfig) => {
   const single = versions.find((v) => v.type && v.type !== 'compressed-grid')
   if (single) {
     // Per-cell thumbnails live in one uncompressed RGBA texture array, so VRAM
-    // is the dominant cost: width*height*4*virtualLayers. Use small tiles sized
-    // for on-screen cells (video thumbnails are 16:9) and keep width/height in
-    // lockstep with the tile grid so texSubImage3D placement stays aligned.
-    const virtualCols = 9
+    // is the dominant cost: width*height*4*virtualLayers. Locked to the low
+    // tier (≤250 cells) we can afford sharper 16:9 tiles — enough to render a
+    // legible baked title/meta line — while keeping width/height in lockstep
+    // with the tile grid so texSubImage3D placement stays aligned.
+    const virtualCols = 6
     const virtualRows = 6
-    const tileWidth = 192
-    const tileHeight = 108
+    const tileWidth = 256
+    const tileHeight = 144
     const capacity = virtualCols * virtualRows
     single.virtualCols = virtualCols
     single.virtualRows = virtualRows
@@ -156,6 +161,10 @@ const applyLoveflixConfig = (config: typeof baseConfig) => {
     single.virtualLayers = Math.max(2, Math.min(24, Math.ceil(cells / capacity) + 1))
     single.layers = Math.max(cells, capacity)
     single.layerSrcFormat = (layerIndex: number) => thumbUrlForIndex(layerIndex)
+    // Bake the title + "Category · Date" line into each tile (see loader).
+    ;(single as { tileLabelForIndex?: unknown }).tileLabelForIndex = (
+      layerIndex: number,
+    ) => labelForIndex(layerIndex)
   }
 }
 
