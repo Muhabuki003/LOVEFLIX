@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){location.replace('/waitlist.html')}}catch(e){location.replace('/waitlist.html')}})();</script><!-- LF_GATE_END -->
+    <!-- LF_AUTH_START --><script>(function(){try{if(!localStorage.getItem('loveflix_token')){location.replace('/loveflix_login_screen.html')}}catch(e){}})();</script><!-- LF_AUTH_END -->
+    <script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);}}catch(e){}})();</script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/browse/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>LoveFlix — Browse</title>
+    <meta name="description" content="Discover movies through an interactive visualization. Explore tens of thousands of films in a unique force-directed voronoi diagram interface." />
+    <meta name="keywords" content="movies, films, discovery, visualization, interactive, WebGL, cinema, voronoi, force-directed graph" />
+    <meta name="author" content="There's nothing to watch" />
+    <link rel="canonical" href="https://nothing-to-watch.port80.ch/" />
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="There's nothing to watch - Interactive Movie Discovery" />
+    <meta property="og:description" content="Discover movies through an interactive visualization. Explore tens of thousands of films in a unique force-directed voronoi diagram interface." />
+    <meta property="og:url" content="https://nothing-to-watch.port80.ch/" />
+    <meta property="og:site_name" content="There's nothing to watch" />
+    <meta property="og:image" content="https://nothing-to-watch.port80.ch/og.jpg" />
+    <meta property="og:image:width" content="800" />
+    <meta property="og:image:height" content="800" />
+    <meta property="og:image:alt" content="Interactive movie discovery visualization interface" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="There's nothing to watch - Interactive Movie Discovery" />
+    <meta name="twitter:description" content="Discover movies through an interactive visualization. Explore tens of thousands of films in a unique force-directed voronoi diagram interface." />
+    <meta name="twitter:image" content="https://nothing-to-watch.port80.ch/og.jpg" />
+    <meta name="twitter:image:alt" content="Interactive movie discovery visualization interface" />
+    
+    <!-- Additional Meta -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Nothing to Watch" />
+    
+    <!-- Robots -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <script type="module" crossorigin src="/browse/assets/app--wDhmxwo.js"></script>
+    <link rel="stylesheet" crossorigin href="/browse/assets/app-Cm_6vkRj.css">
+  </head>
+  <body class="bg-background">
+    <div id="root"></div>
+    <div
+      id="voroforce"
+      class="pointer-events-auto fixed inset-x-0 top-0 h-dvh w-screen"
+    >
+      <canvas class="h-full w-full pointer-events-none"></canvas>
+    </div>
+  </body>
+</html>
