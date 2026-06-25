@@ -152,12 +152,14 @@
     width: 160px; height: 224px;
     border-radius: 10px; overflow: hidden;
     flex: 0 0 auto; cursor: pointer;
-    /* Visible fallback so a thumbnail-less card is never an empty transparent box. */
-    background: linear-gradient(135deg, #2a2a2a, #111);
+    /* Stays invisible (not a grey box) until its thumbnail has actually loaded. */
+    background: none;
+    opacity: 0; pointer-events: none;
     box-shadow: 0 12px 30px rgba(0,0,0,0.5);
     outline: 2px solid transparent;
-    transition: outline-color 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.35s ease, outline-color 0.25s ease, transform 0.25s ease;
   }
+  .cine-cards .card.loaded { opacity: 1; pointer-events: auto; }
   .cine-cards .card:hover { transform: translateY(-4px); }
   .cine-cards .card.is-active { outline-color: var(--brand-accent, var(--red)); }
   .cine-cards .card-content { position: absolute; inset: 0; }
@@ -1960,17 +1962,31 @@
       const v = cineData[cineOrder[(cineActive + 1 + i) % len]]; // upcoming videos, endless
       const img = card.querySelector('img');
       const lab = card.querySelector('.card-label');
-      if (v && v.thumbnail_url) { img.src = v.thumbnail_url; img.style.display = ''; }
-      else { img.removeAttribute('src'); img.style.display = 'none'; }
       if (lab) lab.textContent = (v && v.title) || '';
       card.classList.toggle('is-active', i === 0); // slot 0 = the next video to play
+      const url = v && v.thumbnail_url;
+      if (!url) { card.classList.remove('loaded'); img.removeAttribute('src'); img.dataset.src = ''; return; }
+      if (img.dataset.src === url) return;          // already showing/loading this thumbnail
+      // Preload, then swap — keeps the previous thumbnail visible until the new one decodes,
+      // so a shuffle never flashes an empty/grey slot.
+      img.dataset.src = url;
+      const pre = new Image();
+      pre.onload = () => {
+        if (img.dataset.src !== url) return;        // a newer render superseded this one
+        img.src = url;
+        card.classList.add('loaded');
+      };
+      pre.onerror = () => {
+        if (img.dataset.src !== url) return;
+        if (!img.getAttribute('src')) card.classList.remove('loaded'); // keep prior image if any
+      };
+      pre.src = url;
     });
     if (typeof gsap === 'undefined') return;
     if (animate && !cineReduceMotion) {
       gsap.fromTo(wrap, { x: cineCardStep * 0.6 }, { x: 0, duration: 0.6, ease: 'power3.out' });
-      gsap.fromTo(cards, { opacity: 0.35 }, { opacity: 1, duration: 0.5, stagger: 0.04, ease: 'power2.out' });
     } else {
-      gsap.set(wrap, { x: 0, opacity: 1 });
+      gsap.set(wrap, { x: 0 });
     }
   }
 
@@ -1984,7 +2000,7 @@
       const content = document.createElement('div');
       content.className = 'card-content';
       const img = document.createElement('img');
-      img.alt = ''; img.loading = 'lazy';
+      img.alt = '';
       content.appendChild(img);
       const lab = document.createElement('div');
       lab.className = 'card-label';
