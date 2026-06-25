@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import App from './app'
 import ErrorBoundary from './cmps/common/error-boundary'
 import { ThemeProvider } from './cmps/layout'
-import { FilmPreview } from './cmps/views/film'
 import config from './config'
 import { BrowseOverlay } from './loveflix/BrowseOverlay'
 import { LoveflixCellInfo } from './loveflix/LoveflixCellInfo'
@@ -23,9 +22,7 @@ const renderLoveflix = () => {
     <StrictMode>
       <ErrorBoundary>
         <ThemeProvider>
-          {/* Floating title that pops up near the focused tile (upstream feature). */}
-          <FilmPreview />
-          {/* Corner card with the focused video's title / category / date. */}
+          {/* Floating title near the hovered tile + corner detail card. */}
           <LoveflixCellInfo />
           <BrowseOverlay />
         </ThemeProvider>
