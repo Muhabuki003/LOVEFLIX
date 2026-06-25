@@ -4,13 +4,15 @@
 (function () {
   var NAV_PAGES = [
     { id: 'home',      label: 'Home',      href: 'home.html'      },
-    { id: 'browse',    label: 'Browse',    href: 'browse.html'    },
+    { id: 'browse',    label: 'Browse',    href: '/browse/'       },
     { id: 'music',     label: 'Music',     href: 'music.html'     },
     { id: 'our-story', label: 'Our Story', href: 'our-story.html' },
     { id: 'my-list',   label: 'My List',   href: 'my-list.html'   },
   ];
 
-  var filename = (location.pathname.split('/').pop() || 'home.html').replace('.html', '') || 'home';
+  var filename = location.pathname.indexOf('/browse') === 0
+    ? 'browse'
+    : (location.pathname.split('/').pop() || 'home.html').replace('.html', '') || 'home';
 
   if (!document.getElementById('lf-nav-style')) {
     var s = document.createElement('style');
