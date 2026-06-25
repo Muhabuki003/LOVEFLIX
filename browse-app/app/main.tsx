@@ -5,6 +5,7 @@ import ErrorBoundary from './cmps/common/error-boundary'
 import { ThemeProvider } from './cmps/layout'
 import config from './config'
 import { BrowseOverlay } from './loveflix/BrowseOverlay'
+import { LoveflixCellInfo } from './loveflix/LoveflixCellInfo'
 import { bootstrapLoveflix } from './loveflix/bootstrap'
 import { LOVEFLIX_ENABLED } from './loveflix/loveflix'
 import { animateDocTitleSuffix } from './utils/anim'
@@ -21,6 +22,8 @@ const renderLoveflix = () => {
     <StrictMode>
       <ErrorBoundary>
         <ThemeProvider>
+          {/* Floating title near the hovered tile + corner detail card. */}
+          <LoveflixCellInfo />
           <BrowseOverlay />
         </ThemeProvider>
         <Voroforce />

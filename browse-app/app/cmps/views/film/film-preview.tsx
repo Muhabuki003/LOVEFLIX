@@ -318,9 +318,11 @@ export const FilmPreview = ({ poster = false }) => {
                 </p>
                 <h3 className='line-clamp-2.2 font-black text-2xl leading-none lg:line-clamp-1.1 lg:text-5xl landscape:line-clamp-1.1'>
                   {film.title}
-                  <span className='font-normal text-foreground/50 text-xl leading-none lg:text-3xl'>
-                    &nbsp;({film.year})
-                  </span>
+                  {film.year ? (
+                    <span className='font-normal text-foreground/50 text-xl leading-none lg:text-3xl'>
+                      &nbsp;({film.year})
+                    </span>
+                  ) : null}
                 </h3>
                 <div
                   className={cn(
@@ -340,7 +342,7 @@ export const FilmPreview = ({ poster = false }) => {
                   ))}
                 </div>
               </div>
-              <FilmRatingGauge value={film.rating} />
+              {!film.loveflix && <FilmRatingGauge value={film.rating} />}
             </div>
           </div>
         </div>
