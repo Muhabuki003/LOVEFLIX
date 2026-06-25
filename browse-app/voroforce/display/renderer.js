@@ -54,7 +54,12 @@ export default class Renderer {
   }
 
   getPixelRatio(dimensions = this.dimensions) {
-    return this.config.pixelRatio ?? dimensions.pixelRatio
+    let ratio = this.config.pixelRatio ?? dimensions.pixelRatio
+    const renderScale = this.app?.globalConfig?.renderScale
+    if (renderScale !== undefined && renderScale < 1) {
+      ratio *= renderScale
+    }
+    return Math.max(0.25, ratio)
   }
 
   resize(dimensions = this.dimensions) {

@@ -1,0 +1,15 @@
+port: 7880
+rtc:
+  port_range_start: 7881
+  port_range_end: 7882
+  use_external_ip: true
+  node_ip: "0.0.0.0"
+
+logging:
+  level: info
+
+redis:
+  address: redis:6379
+
+keys:
+  84oNPD5duoAjdo_TX6wX6Q: VzjHY0K6MCaShmEoR6h7qracPs2tMYI7bQ9WVtl_6YM
