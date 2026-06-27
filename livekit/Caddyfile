@@ -1,0 +1,19 @@
+{$DOMAIN} {
+    reverse_proxy livekit-server:7880 {
+        # WebSocket support
+        header_up Host {host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # LiveKit WebSocket path
+    @ws {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @ws livekit-server:7880
+
+    log {
+        output file /var/log/caddy/livekit.log
+    }
+}

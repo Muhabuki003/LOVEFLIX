@@ -60,6 +60,8 @@ const createMockState = (overrides: Partial<StoreState> = {}): StoreState => ({
     transitioning: new Map() as ConfigUniforms,
   },
   setPerformanceMonitor: () => {},
+  qualityLevel: undefined,
+  setQualityLevel: () => {},
 
   // FilmData Slice defaults
   setFilm: () => {},

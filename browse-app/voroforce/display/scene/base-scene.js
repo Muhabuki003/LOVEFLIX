@@ -15,6 +15,17 @@ export default class BaseScene {
   activeMainRenderTarget = null
   activePostRenderTarget = null
 
+  /** How many frames to skip when idle (0 = no skip) */
+  frameSkipCount = 0
+  /** Counter for frame skipping */
+  _skipCounter = 0
+  /** Timestamp of last user interaction */
+  _lastInteraction = 0
+  /** Whether render is currently throttled */
+  _renderThrottled = false
+  /** Whether the scene has changed since last render (dirty flag) */
+  _dirty = true
+
   constructor(app) {
     this.init(app)
   }
@@ -54,6 +65,20 @@ export default class BaseScene {
   }
 
   update() {
+    // Frame-skip throttling: when idle and frameSkipCount > 0, skip N frames
+    if (this.frameSkipCount > 0) {
+      this._skipCounter++
+      if (this._skipCounter > this.frameSkipCount) {
+        this._skipCounter = 0
+        this._renderThrottled = false
+      } else if (!this._dirty) {
+        this._renderThrottled = true
+        return // Skip this frame entirely
+      } else {
+        this._renderThrottled = false
+      }
+    }
+
     this.beforeUpdate()
 
     this.updateMedia()
@@ -62,9 +87,15 @@ export default class BaseScene {
     this.updateDev()
 
     this.afterUpdate()
+    this._dirty = false
   }
 
   beforeUpdate() {
+    // Sync frameSkipCount from app config if available
+    if (this.globalConfig.frameSkipCount !== undefined) {
+      this.frameSkipCount = this.globalConfig.frameSkipCount
+    }
+
     if (this.mainBaseUniforms) {
       const { rows, cols, cellWidth, cellHeight } = this.globalConfig.lattice
 

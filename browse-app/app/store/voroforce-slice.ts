@@ -50,6 +50,9 @@ export interface VoroforceSlice {
   }
   performanceMonitor?: PerformanceMonitorApi
   setPerformanceMonitor: (performanceMonitor: PerformanceMonitorApi) => void
+  /** Current adaptive quality level ('ultra' | 'high' | 'medium' | 'low' | 'potato') */
+  qualityLevel?: string
+  setQualityLevel?: (level: string) => void
 }
 
 export const createEngineSlice: StateCreator<
@@ -128,6 +131,10 @@ export const createEngineSlice: StateCreator<
     },
     setPerformanceMonitor: (performanceMonitor) => {
       set({ performanceMonitor })
+    },
+    qualityLevel: undefined,
+    setQualityLevel: (qualityLevel: string) => {
+      set({ qualityLevel })
     },
   }
 }

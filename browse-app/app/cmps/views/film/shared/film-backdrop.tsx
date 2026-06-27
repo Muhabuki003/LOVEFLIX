@@ -1,9 +1,13 @@
 import type { Film } from '@/vf/utils'
 
 export const FilmBackdrop = ({ film }: { film: Film }) => {
+  // LoveFlix videos use their own thumbnail as backdrop
+  const src = film.loveflix?.thumbnail_url
+    ? film.loveflix.thumbnail_url
+    : `https://media.themoviedb.org/t/p/w300_and_h450_bestv2${film.backdrop}`
   return (
     <img
-      src={`https://media.themoviedb.org/t/p/w300_and_h450_bestv2${film.backdrop}`}
+      src={src}
       alt=''
       className='h-auto w-full'
     />

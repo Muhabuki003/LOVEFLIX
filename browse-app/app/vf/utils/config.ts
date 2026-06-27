@@ -77,9 +77,9 @@ export const getVoroforceConfig = (state: StoreState) => {
   }
 
   if (!preset) preset = DEFAULT_VOROFORCE_PRESET
-  // LoveFlix: the preset is fixed (minimal), regardless of any stored value or
+  // LoveFlix: the preset is fixed (mobile for perf), regardless of any stored value or
   // URL override (except an explicit ?preset for debugging, handled above).
-  if (LOVEFLIX_ENABLED && !presetOverrideParam) preset = VOROFORCE_PRESET.minimal
+  if (LOVEFLIX_ENABLED && !presetOverrideParam) preset = VOROFORCE_PRESET.mobile
 
   let config = mergeConfigs(
     baseConfig,
@@ -102,6 +102,14 @@ export const getVoroforceConfig = (state: StoreState) => {
   }
 
   if (LOVEFLIX_ENABLED) applyLoveflixConfig(config)
+
+  // Apply adaptive quality settings if available
+  const qualityLevel = state.qualityLevel
+  if (qualityLevel) {
+    // These get picked up by the engine at runtime via global config
+    config.frameSkipCount = config.frameSkipCount ?? 0
+    config.renderScale = config.renderScale ?? 1
+  }
 
   return config
 }
