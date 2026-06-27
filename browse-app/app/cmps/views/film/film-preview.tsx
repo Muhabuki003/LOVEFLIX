@@ -9,6 +9,7 @@ import {
 } from '@/vf'
 import useDimensions from '../../../hooks/use-dimensions'
 import { useMediaQuery } from '../../../hooks/use-media-query'
+import { LOVEFLIX_ENABLED } from '../../../loveflix/loveflix'
 import { clamp, lerp } from '../../../utils/math'
 import { down, only, orientation } from '../../../utils/mq'
 import { cn } from '../../../utils/tw'
@@ -23,7 +24,14 @@ export const FilmPreview = ({ poster = false }) => {
   const isLandscape = useMediaQuery(orientation('landscape'))
   const isOnlyMdScreen = useMediaQuery(only('md'))
   const isOnlyMdLandscapeScreen = isLandscape && isOnlyMdScreen
-  const isStatic = isSmallScreen || isOnlyMdLandscapeScreen
+  // LoveFlix wants the floating title card (like the source) on laptop-sized
+  // landscape windows too — only true small (phone) screens get the static,
+  // top-left fallback layout. Upstream also treats md-landscape as static,
+  // which is what pinned the LoveFlix card to the corner instead of floating
+  // above the focused tile.
+  const isStatic = LOVEFLIX_ENABLED
+    ? isSmallScreen
+    : isSmallScreen || isOnlyMdLandscapeScreen
   const [dimensionsRef, dimensions] = useDimensions()
 
   const { film, isPreviewMode, config, voroforce } = useShallowState(
