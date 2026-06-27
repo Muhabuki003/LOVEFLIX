@@ -316,7 +316,21 @@ export const FilmPreview = ({ poster = false }) => {
                 <p className='line-clamp-2 hidden font-medium text-base text-foreground/90 leading-none md:inline-block lg:line-clamp-1 lg:h-[1.25rem] lg:text-xl lg:leading-none landscape:h-[1rem] lg:landscape:h-[1.25rem]'>
                   {film.tagline}
                 </p>
-                <h3 className='line-clamp-2.2 font-black text-2xl leading-none lg:line-clamp-1.1 lg:text-5xl landscape:line-clamp-1.1'>
+                <h3
+                  className={cn(
+                    'line-clamp-2.2 font-black text-2xl leading-none lg:line-clamp-1.1 lg:text-5xl landscape:line-clamp-1.1',
+                    {
+                      // LoveFlix: video title in Bebas Neue, all caps. Same
+                      // layout/CSS as the source card — only the type changes.
+                      'font-normal uppercase tracking-wide': film.loveflix,
+                    },
+                  )}
+                  style={
+                    film.loveflix
+                      ? { fontFamily: "'Bebas Neue', sans-serif" }
+                      : undefined
+                  }
+                >
                   {film.title}
                   {film.year ? (
                     <span className='font-normal text-foreground/50 text-xl leading-none lg:text-3xl'>

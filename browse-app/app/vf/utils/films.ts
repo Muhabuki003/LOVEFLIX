@@ -55,7 +55,8 @@ export class Film {
       tagline: formatVideoDate(video.date),
     })
     film.loveflix = video
-    // Populate tags from video metadata instead of movie genres
+    // Badges (where the source shows genres): the video's own metadata —
+    // category and runtime. This is the "imdb tag" replacement the card needs.
     film.genres = []
     if (video.category) {
       film.genres.push(video.category)
@@ -63,11 +64,19 @@ export class Film {
     const dur = video.duration_seconds || 0
     const mins = Math.floor(dur / 60)
     const secs = dur % 60
-    const durStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`
-    film.genres.push(durStr)
-    // Use tagline for date if available
+    const durStr =
+      mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`
+    if (dur > 0) film.genres.push(durStr)
+    // Small line above the title (source "tagline" slot): a friendly full date.
     if (video.date) {
-      film.tagline = video.date
+      const d = new Date(video.date)
+      film.tagline = Number.isNaN(d.getTime())
+        ? video.date
+        : d.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
     }
     return film
   }
