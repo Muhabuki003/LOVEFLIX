@@ -9,6 +9,7 @@ import {
 } from '@/vf'
 import useDimensions from '../../../hooks/use-dimensions'
 import { useMediaQuery } from '../../../hooks/use-media-query'
+import { LOVEFLIX_ENABLED } from '../../../loveflix/loveflix'
 import { clamp, lerp } from '../../../utils/math'
 import { down, only, orientation } from '../../../utils/mq'
 import { cn } from '../../../utils/tw'
@@ -23,7 +24,14 @@ export const FilmPreview = ({ poster = false }) => {
   const isLandscape = useMediaQuery(orientation('landscape'))
   const isOnlyMdScreen = useMediaQuery(only('md'))
   const isOnlyMdLandscapeScreen = isLandscape && isOnlyMdScreen
-  const isStatic = isSmallScreen || isOnlyMdLandscapeScreen
+  // LoveFlix wants the floating title card (like the source) on laptop-sized
+  // landscape windows too — only true small (phone) screens get the static,
+  // top-left fallback layout. Upstream also treats md-landscape as static,
+  // which is what pinned the LoveFlix card to the corner instead of floating
+  // above the focused tile.
+  const isStatic = LOVEFLIX_ENABLED
+    ? isSmallScreen
+    : isSmallScreen || isOnlyMdLandscapeScreen
   const [dimensionsRef, dimensions] = useDimensions()
 
   const { film, isPreviewMode, config, voroforce } = useShallowState(
@@ -316,7 +324,21 @@ export const FilmPreview = ({ poster = false }) => {
                 <p className='line-clamp-2 hidden font-medium text-base text-foreground/90 leading-none md:inline-block lg:line-clamp-1 lg:h-[1.25rem] lg:text-xl lg:leading-none landscape:h-[1rem] lg:landscape:h-[1.25rem]'>
                   {film.tagline}
                 </p>
-                <h3 className='line-clamp-2.2 font-black text-2xl leading-none lg:line-clamp-1.1 lg:text-5xl landscape:line-clamp-1.1'>
+                <h3
+                  className={cn(
+                    'line-clamp-2.2 font-black text-2xl leading-none lg:line-clamp-1.1 lg:text-5xl landscape:line-clamp-1.1',
+                    {
+                      // LoveFlix: video title in Bebas Neue, all caps. Same
+                      // layout/CSS as the source card — only the type changes.
+                      'font-normal uppercase tracking-wide': film.loveflix,
+                    },
+                  )}
+                  style={
+                    film.loveflix
+                      ? { fontFamily: "'Bebas Neue', sans-serif" }
+                      : undefined
+                  }
+                >
                   {film.title}
                   {film.year ? (
                     <span className='font-normal text-foreground/50 text-xl leading-none lg:text-3xl'>
