@@ -340,7 +340,7 @@ export const FilmPreview = ({ poster = false }) => {
                   ))}
                 </div>
               </div>
-              <FilmRatingGauge value={film.rating} />
+              {!film.loveflix && <FilmRatingGauge value={film.rating} />}
             </div>
           </div>
         </div>
