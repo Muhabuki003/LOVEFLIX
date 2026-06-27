@@ -55,6 +55,20 @@ export class Film {
       tagline: formatVideoDate(video.date),
     })
     film.loveflix = video
+    // Populate tags from video metadata instead of movie genres
+    film.genres = []
+    if (video.category) {
+      film.genres.push(video.category)
+    }
+    const dur = video.duration_seconds || 0
+    const mins = Math.floor(dur / 60)
+    const secs = dur % 60
+    const durStr = mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`
+    film.genres.push(durStr)
+    // Use tagline for date if available
+    if (video.date) {
+      film.tagline = video.date
+    }
     return film
   }
 }

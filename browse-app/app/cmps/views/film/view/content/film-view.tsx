@@ -67,7 +67,7 @@ export const FilmView = ({
                 },
               )}
               alt=''
-              src={`${config.backdropBaseUrl}${film.backdrop}`}
+              src={film.loveflix?.thumbnail_url || `${config.backdropBaseUrl}${film.backdrop}`}
               onLoad={() => {
                 setBackdropHidden(false)
                 setBackdropErrored(false)
@@ -99,11 +99,15 @@ export const FilmView = ({
                       )}
                     </h3>
                     <div className='absolute top-0 right-0 flex flex-row-reverse items-center gap-3'>
-                      <FilmRatingGauge value={film.rating} />
-                      <div className='hidden text-xxs leading-none md:not-landscape:block lg:hidden xl:block'>
-                        TMDB <br />
-                        Score
-                      </div>
+                      {!film.loveflix && (
+                        <>
+                          <FilmRatingGauge value={film.rating} />
+                          <div className='hidden text-xxs leading-none md:not-landscape:block lg:hidden xl:block'>
+                            TMDB <br />
+                            Score
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className='flex flex-col gap-3'>
