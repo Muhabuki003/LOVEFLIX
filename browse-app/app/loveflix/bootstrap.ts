@@ -6,7 +6,7 @@
 // localStorage — the values are fixed for LoveFlix.
 
 import { store } from '../store'
-import { DEVICE_CLASS, VOROFORCE_PRESET } from '../vf/consts'
+import { DEVICE_CLASS, VOROFORCE_MODE, VOROFORCE_PRESET } from '../vf/consts'
 import { loadLoveflixVideos } from './loveflix'
 
 // Tiered cell counts. Kept deliberately low: every cell holds its own
@@ -55,12 +55,14 @@ export const bootstrapLoveflix = async (): Promise<void> => {
   pixelRatio = Math.min(devicePixelRatio, maxPixelRatio)
 
   // Seed engine state directly (no persistence) so initVoroforce proceeds and
-  // the intro gate (!playedIntro || !preset) is satisfied.
+  // the intro gate (!playedIntro || !preset) is satisfied. Start in preview
+  // mode so FilmPreview is visible immediately (no 4-second intro delay).
   store.setState({
     preset: VOROFORCE_PRESET.minimal,
     cellLimit: cells as never,
     deviceClass,
     estimatedDeviceClass: deviceClass,
     playedIntro: true,
+    mode: VOROFORCE_MODE.preview,
   })
 }
