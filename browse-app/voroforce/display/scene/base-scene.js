@@ -9,6 +9,30 @@ import { readPixelsAsync } from './utils/read-pixels-async'
 import { setShaderDefines } from './utils/shader-defines'
 import { VirtualMediaGridArrayTexture } from './utils/virtual-media-grid-array-texture'
 
+/**
+ * OGL's `Program` constructor swallows shader link failures: it only
+ * `console.warn`s the info log and returns early, leaving `uniformLocations`
+ * undefined. The broken program then survives init and crashes much later
+ * inside the render loop — outside React — when `Program.use()` calls
+ * `this.uniformLocations.forEach(...)` ("Cannot read properties of undefined
+ * (reading 'forEach')"), which blanks the entire page to black.
+ *
+ * Detecting the failure here, at program-creation time (synchronous within
+ * `initVoroforce()`), lets it propagate to the React ErrorBoundary so users get
+ * the graceful "Something went wrong / older device" fallback instead of a
+ * black screen. This typically fires on GPUs/drivers that reject the shader
+ * (e.g. uniform/varying limits exceeded, unsupported precision).
+ */
+const assertProgramLinked = (program, gl, label) => {
+  if (program?.uniformLocations !== undefined) return
+  const log = program?.program ? gl.getProgramInfoLog(program.program) : ''
+  throw new Error(
+    `Voroforce: WebGL shader program failed to link${
+      label ? ` [${label}]` : ''
+    }${log ? `: ${log.trim()}` : ''}`,
+  )
+}
+
 export default class BaseScene {
   mainRenderTargets = null
   postRenderTargets = null
@@ -137,6 +161,7 @@ export default class BaseScene {
     this.mainProgram = this.initProgram(
       this.config.main,
       this.initMainUniforms(),
+      'main',
     )
 
     this.mainMesh = new Mesh(this.gl, {
@@ -154,6 +179,7 @@ export default class BaseScene {
     this.postProgram = this.initProgram(
       this.config.post,
       this.initPostUniforms(),
+      'post',
     )
 
     this.postMesh = new Mesh(this.gl, {
@@ -183,6 +209,7 @@ export default class BaseScene {
         },
         transparent: true,
       })
+      assertProgramLinked(this.devPointsProgram, this.gl, 'dev-points')
 
       this.devPointsMesh = new Mesh(this.gl, {
         geometry: this.devPointsGeometry,
@@ -292,14 +319,16 @@ export default class BaseScene {
     })
   }
 
-  initProgram(config, uniforms) {
+  initProgram(config, uniforms, label) {
     let fragment = config.fragmentShader
     if (config.defines) fragment = setShaderDefines(fragment, config.defines)
-    return new Program(this.gl, {
+    const program = new Program(this.gl, {
       vertex: config.vertexShader,
       fragment,
       uniforms,
     })
+    assertProgramLinked(program, this.gl, label)
+    return program
   }
 
   initRenderTargets(count = 1, options = {}) {
