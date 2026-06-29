@@ -77,9 +77,11 @@ export const getVoroforceConfig = (state: StoreState) => {
   }
 
   if (!preset) preset = DEFAULT_VOROFORCE_PRESET
-  // LoveFlix: the preset is fixed (mobile for perf), regardless of any stored value or
-  // URL override (except an explicit ?preset for debugging, handled above).
-  if (LOVEFLIX_ENABLED && !presetOverrideParam) preset = VOROFORCE_PRESET.mobile
+  // LoveFlix: keep minimal (media.enabled=true) so applyLoveflixConfig() can wire
+  // per-cell thumbnail sources. Performance is handled by applyLoveflixConfig
+  // (cellLimit, pixelRatio cap) and the adaptive-quality system (renderScale,
+  // frameSkip) — no preset downgrade needed.
+  if (LOVEFLIX_ENABLED && !presetOverrideParam) preset = VOROFORCE_PRESET.minimal
 
   let config = mergeConfigs(
     baseConfig,
