@@ -4,6 +4,7 @@ import { handleTransitioningUniforms, initPerformanceMonitor } from '../utils'
 import { initAdaptiveQuality } from '../utils/adaptive-quality'
 import type { AdaptiveQualityApi } from '../utils/adaptive-quality'
 import { VOROFORCE_PRESET } from '../consts'
+import { LOVEFLIX_ENABLED } from '../../loveflix/loveflix'
 
 export let adaptiveQuality: AdaptiveQualityApi | undefined
 
@@ -44,8 +45,9 @@ export const handleTicker = () => {
       qualityLevel: quality.qualityLevel,
     })
 
-    // When quality suggests changing preset, update it
-    if (quality.suggestedPreset && state.voroforce) {
+    // When quality suggests a more conservative preset, update it.
+    // Skip in LoveFlix mode: mobile preset disables media → black screen.
+    if (quality.suggestedPreset && state.voroforce && !LOVEFLIX_ENABLED) {
       const currentPreset = state.preset
       const suggested = quality.suggestedPreset
 

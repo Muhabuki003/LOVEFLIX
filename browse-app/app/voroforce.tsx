@@ -3,6 +3,7 @@ import { store } from './store'
 import { initVoroforce } from './vf'
 import { adaptiveQuality } from './vf/integrations/ticker'
 import { VOROFORCE_PRESET } from './vf/consts'
+import { LOVEFLIX_ENABLED } from './loveflix/loveflix'
 
 export function Voroforce() {
   const [error, setError] = useState<Error | null>(null)
@@ -41,8 +42,9 @@ export function Voroforce() {
             qualityLevel: quality.qualityLevel,
           })
 
-          // When factor drops low (< 0.3), switch to mobile preset
-          if (quality.qualityLevel === 'low' && state.voroforce) {
+          // In LoveFlix mode, never switch to mobile — that preset disables
+          // media textures and causes a black screen. Use renderScale/frameSkip only.
+          if (quality.qualityLevel === 'low' && state.voroforce && !LOVEFLIX_ENABLED) {
             store.getState().setPreset(state.preset ?? VOROFORCE_PRESET.mobile)
           }
 
