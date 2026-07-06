@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS couple_playlist_songs (
   artwork_url           TEXT,
   stream_url            TEXT,
   youtube_id            TEXT,
+  isrc                  TEXT,
   duration              INTEGER DEFAULT 30,
   added_by_user_id      TEXT,
   added_at              INTEGER DEFAULT (strftime('%s','now')),

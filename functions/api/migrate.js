@@ -30,6 +30,10 @@ export async function onRequest(context) {
     
     // Ensure is_public column on couple_playlists
     `ALTER TABLE couple_playlists ADD COLUMN is_public INTEGER DEFAULT 1`,
+
+    // Cross-provider playlists: songs are matched by ISRC (Spotify/Apple) or
+    // title+artist search (YouTube), so store the ISRC when we have it.
+    `ALTER TABLE couple_playlist_songs ADD COLUMN isrc TEXT`,
     
     // Ensure couple_settings exists (idempotent)
     `CREATE TABLE IF NOT EXISTS couple_settings (
