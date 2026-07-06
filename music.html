@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <script src="/assets/posthog.js" defer></script>
 <script src="/assets/loveflix.js"></script>
+<script src="/assets/loveflix-music.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LoveFlix Music</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -454,6 +455,30 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
   font-weight: 500;
   letter-spacing: 0.5px;
 }
+/* ── Music Connectors (settings) ── */
+.mc-modal{width:520px;max-width:94vw}
+.mc-intro{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin:-6px 0 16px}
+.mc-option{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:border-color .15s,background .15s;background:rgba(255,255,255,0.02)}
+.mc-option.active{border-color:rgba(201,169,110,0.55);background:var(--gold-soft)}
+.mc-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--text-dim);flex-shrink:0;margin-top:2px;position:relative}
+.mc-option.active .mc-radio{border-color:var(--gold)}
+.mc-option.active .mc-radio::after{content:'';position:absolute;inset:2px;border-radius:50%;background:var(--gold)}
+.mc-body{flex:1;min-width:0}
+.mc-name{font-size:14px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mc-tag{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid var(--border-strong);color:var(--text-dim)}
+.mc-tag.free{color:var(--gold);border-color:rgba(201,169,110,0.4)}
+.mc-status{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.45}
+.mc-status .ok{color:var(--gold)}
+.mc-warn{font-size:11.5px;color:#fca5a5;margin-top:5px;line-height:1.4}
+.mc-btn{flex-shrink:0;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;font-family:var(--sans);border:1px solid var(--border-strong);background:rgba(255,255,255,0.06);color:#fff;transition:background .12s;margin-top:1px}
+.mc-btn:hover{background:rgba(255,255,255,0.12)}
+.mc-btn.primary{background:var(--red);border-color:var(--red)}
+.mc-btn.primary:hover{background:#c5070f}
+.mc-btn.ghost{background:none;color:var(--text-dim)}
+.mc-btn.ghost:hover{color:#fff}
+.mc-partner{margin-top:14px;padding:11px 13px;border-radius:9px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:12px;color:var(--text-light);line-height:1.5}
+.mc-partner strong{color:var(--gold);font-weight:600}
+.mc-section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:600;margin:2px 0 10px}
 </style>
 <base target="_blank">
 </head>
@@ -473,6 +498,7 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 <div class="nav-right">
 <div class="sync-pill" id="syncPill"><span class="sync-dot"></span><span><strong style="font-weight:600;color:#fff" id="syncName">Adrien</strong> is listening</span></div>
 <button class="ctrl-btn small" title="Notifications"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 003-3H9a3 3 0 003 3z"></path></svg></button>
+<button class="ctrl-btn small" id="musicSettingsBtn" title="Music settings"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg></button>
 <div class="nav-avatar">M</div>
 </div>
 </nav>
@@ -676,6 +702,19 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 <div class="toast-text"><strong>Adrien paused the music</strong><small>Sync paused at 1:23 · Tides (Reprise)</small></div>
 </div>
 
+<div class="lf-modal-backdrop" id="musicSettingsModal">
+<div class="lf-modal mc-modal">
+<h3>Music Settings</h3>
+<div class="mc-section-label">Music Connectors</div>
+<div class="mc-intro">Pick where your music plays from. Whichever provider each of you is on, LoveFlix keeps listening together, playback, and shared playlists in sync.</div>
+<div id="connectorList"></div>
+<div class="mc-partner" id="mcPartnerLine">Checking your partner&rsquo;s music provider&hellip;</div>
+<div class="lf-modal-btns" style="margin-top:16px">
+<button class="lf-btn-cancel" id="closeMusicSettings">Done</button>
+</div>
+</div>
+</div>
+
 <div class="lf-modal-backdrop" id="newPlaylistModal">
 <div class="lf-modal">
 <h3>New Shared Playlist</h3>
@@ -697,9 +736,8 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </div>
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-/* === LOVEFLIX MUSIC — FULL SONG PLAYBACK === */
+/* === LOVEFLIX MUSIC — TRI-PROVIDER PLAYBACK (Spotify / Apple Music / YouTube) === */
 
 // ── DATA: Real YouTube video IDs for full songs ──
 const YT_LIBRARY = {
@@ -794,9 +832,13 @@ let currentIdx = 0;
 let isPlaying = false;
 let position = 0;
 let volume = 0.72;
-let ytPlayer = null;
-let ytReady = false;
-let playerUpdateInterval = null;
+// ── Tri-provider playback (LoveFlixPlayer abstraction) ──
+let player = null;              // active LoveFlixPlayer adapter
+let activeProvider = 'youtube'; // 'spotify' | 'apple_music' | 'youtube' (free default)
+let musicConnection = null;     // active music_connections row (null when signed out / youtube)
+let partnerConnection = null;   // token-free partner provider info
+let applyingRemote = false;     // guards against echoing partner state back
+let skipStreak = 0;             // stops runaway auto-skip when nothing resolves
 let syncMode = 'following';
 let partnerName = 'My Love';
 let myName = 'You';
@@ -819,145 +861,130 @@ const $$ = (s, p=document) => [...p.querySelectorAll(s)];
 const fmtTime = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s/60), r = (s%60).toString().padStart(2,'0'); return `${m}:${r}`; };
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c)); }
 
-// ── YOUTUBE PLAYER ──
-function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player('ytPlayer', {
-    height: '100%', width: '100%',
-    playerVars: { 
-      autoplay: 0, 
-      controls: 0, 
-      disablekb: 1, 
-      fs: 0, 
-      iv_load_policy: 3, 
-      modestbranding: 1, 
-      rel: 0, 
-      showinfo: 0, 
-      playsinline: 1,
-      mute: 1  // Start muted to comply with browser autoplay policies
-    },
-    events: {
-      onReady: () => { 
-        ytReady = true; 
-        ytPlayer.setVolume(Math.round(volume * 100)); 
-        // Don't auto-load on ready - wait for user interaction
-      },
-      onStateChange: (e) => {
-        if (e.data === YT.PlayerState.PLAYING) { 
-          isPlaying = true; 
-          updatePlayBtn(); 
-          startProgressLoop(); 
-          hideClickPlay();
-          // Unmute after playback starts (browser allows this after user interaction)
-          setTimeout(() => { 
-            try { 
-              if (ytPlayer.isMuted && ytPlayer.isMuted()) {
-                ytPlayer.unMute(); 
-              }
-            } catch(err) {} 
-          }, 100);
-        }
-        if (e.data === YT.PlayerState.PAUSED) { 
-          isPlaying = false; 
-          updatePlayBtn(); 
-          stopProgressLoop(); 
-        }
-        if (e.data === YT.PlayerState.ENDED) { 
-          if (repeatOn) { 
-            ytPlayer.seekTo(0, true); 
-            ytPlayer.playVideo(); 
-          } else { 
-            nextTrack(); 
-          } 
-        }
-      },
-      onError: (e) => { 
-        console.warn('YT Error', e.data); 
-        showToast('Playback error — trying next track'); 
-        setTimeout(nextTrack, 1500); 
-      }
-    }
+// ── PLAYER (LoveFlixPlayer abstraction — Spotify / Apple Music / YouTube) ──
+
+// Convert a page/queue track into the provider-agnostic model the abstraction
+// layer resolves at play time (ISRC first, title+artist search fallback).
+function toTrackModel(t) {
+  return { title: t.title, artist: t.artist, isrc: t.isrc || null, youtubeId: t.youtubeId || null, artworkUrl: t.artworkUrl || null, duration: t.dur || null };
+}
+
+function providerLabel(p) { return (LoveFlixMusic.PROVIDERS[p] || {}).label || 'YouTube'; }
+
+function updateAttribution() {
+  const label = providerLabel(activeProvider);
+  document.querySelectorAll('.attribution, .m-fs-attr').forEach(el => {
+    el.innerHTML = 'Full songs via <span></span>';
+    el.querySelector('span').textContent = label;
   });
 }
 
-function loadTrack(idx) {
-  if (!ytReady || !QUEUE[idx]) return;
+// The YouTube video stays VISIBLE while that provider is active (free tier,
+// ad-supported, per YouTube's ToS). Other providers hide the video container.
+function updateYtContainerVisibility() {
+  const c = document.getElementById('ytPlayerContainer');
+  if (activeProvider !== 'youtube') c.classList.remove('visible');
+}
+
+function handlePlayerEvent(e) {
+  if (e.type === 'playing') { isPlaying = true; updatePlayBtn(); hideClickPlay(); }
+  if (e.type === 'paused') { isPlaying = false; updatePlayBtn(); }
+  if (e.type === 'ended') {
+    if (repeatOn) { player.seek(0); player.resume(); }
+    else nextTrack();
+  }
+  if (e.type === 'position') {
+    position = e.position || 0;
+    if (e.duration > 0 && QUEUE[currentIdx]) QUEUE[currentIdx].dur = e.duration;
+    updateSeek();
+  }
+  if (e.type === 'unavailable') {
+    // Matching failed on this provider — handled by loadTrack's skip logic.
+  }
+  if (e.type === 'error') {
+    if (e.code === 'premium_required') {
+      showToast(providerLabel(activeProvider) + ' Premium is required — YouTube is the free option');
+    } else if (e.code === 'quota') {
+      showToast('YouTube search limit reached — try again in a bit');
+    } else if (e.code === 'auth') {
+      showToast('Music session expired — reconnect in Music Settings');
+    }
+  }
+}
+
+// (Re)create the player for a provider, tearing down the previous instance.
+async function initPlayer(provider) {
+  if (player) { try { player.destroy(); } catch (_) {} player = null; }
+  activeProvider = provider;
+  isPlaying = false; updatePlayBtn();
+  updateAttribution();
+  updateYtContainerVisibility();
+  try {
+    player = await LoveFlixMusic.createPlayer(provider, {
+      youtubeElementId: 'ytPlayer',
+      volume,
+      getConnection: () => musicConnection,
+      onRequestNext: nextTrack,
+      onRequestPrevious: prevTrack,
+      onState: handlePlayerEvent,
+    });
+    player.setVolume(volume);
+  } catch (err) {
+    console.warn('Player init failed for', provider, err);
+    if (provider !== 'youtube') {
+      showToast(providerLabel(provider) + ' player unavailable — falling back to YouTube');
+      return initPlayer('youtube');
+    }
+  }
+  return player;
+}
+
+async function loadTrack(idx) {
+  if (!player || !QUEUE[idx]) return;
   const t = QUEUE[idx];
   position = 0;
-
-  // Load video but don't auto-play - wait for explicit play command
-  ytPlayer.loadVideoById({ 
-    videoId: t.youtubeId, 
-    startSeconds: 0,
-    suggestedQuality: 'small'  // Start with lower quality for faster load
-  });
-
-  ytPlayer.setVolume(Math.round(volume * 100));
   updateNowPlaying();
   renderQueue();
 
-  document.getElementById('ytPlayerContainer').classList.add('visible');
-  document.getElementById('ytPlayerTitle').textContent = t.title + ' — ' + t.artist;
-
-  // If we should be playing, start playback (requires user interaction first)
-  if (isPlaying) { 
-    // Small delay to ensure video is loaded before playing
-    setTimeout(() => {
-      try {
-        ytPlayer.playVideo();
-        // Try to unmute after play starts
-        setTimeout(() => { ytPlayer.unMute(); }, 200);
-      } catch(e) { console.warn('Play failed:', e); }
-    }, 100);
-    startProgressLoop(); 
-  } else { 
-    ytPlayer.pauseVideo(); 
-    stopProgressLoop(); 
+  const res = await player.play(toTrackModel(t));
+  if (!res.ok) {
+    if (res.reason === 'quota') {
+      isPlaying = false; updatePlayBtn();
+      showToast('YouTube search limit reached — playback paused, try again later');
+      return;
+    }
+    if (res.reason === 'premium_required' || res.reason === 'auth') {
+      isPlaying = false; updatePlayBtn();
+      return; // toast already shown by the error event
+    }
+    // No confident match on this provider (e.g. partner's Spotify track has
+    // no official YouTube upload) — announce and skip gracefully.
+    showToast(applyingRemote ? "Partner's version unavailable — skipping" : `"${t.title}" isn't available on ${providerLabel(activeProvider)} — skipping`);
+    skipStreak++;
+    if (skipStreak < Math.min(QUEUE.length, 6)) setTimeout(nextTrack, 1200);
+    else { isPlaying = false; updatePlayBtn(); }
+    return;
   }
-}
+  skipStreak = 0;
 
-function startProgressLoop() {
-  stopProgressLoop();
-  playerUpdateInterval = setInterval(() => {
-    if (!ytReady || !ytPlayer || !ytPlayer.getCurrentTime) return;
-    try {
-      position = ytPlayer.getCurrentTime() || 0;
-      const dur = ytPlayer.getDuration() || QUEUE[currentIdx]?.dur || 180;
-      if (dur > 0 && QUEUE[currentIdx]) QUEUE[currentIdx].dur = dur;
-      updateSeek();
-    } catch(e) {}
-  }, 500);
+  if (activeProvider === 'youtube') {
+    document.getElementById('ytPlayerContainer').classList.add('visible');
+    document.getElementById('ytPlayerTitle').textContent = t.title + ' — ' + t.artist;
+  }
+  isPlaying = true; updatePlayBtn();
+  pushSyncState();
 }
-
-function stopProgressLoop() { if (playerUpdateInterval) { clearInterval(playerUpdateInterval); playerUpdateInterval = null; } }
 
 // ── CONTROLS ──
 function togglePlay() {
-  if (!ytReady) {
-    showToast('Player loading... please wait');
-    return;
-  }
-
-  // If no track loaded yet, load the first one
-  if (!QUEUE[currentIdx]) {
-    showToast('No track selected');
-    return;
-  }
-
-  if (isPlaying) { 
-    ytPlayer.pauseVideo(); 
-  }
-  else { 
-    // This is a user interaction, so we can play with sound
-    ytPlayer.playVideo();
-    // Ensure unmuted after user-initiated play
-    setTimeout(() => { 
-      try { 
-        if (ytPlayer.isMuted && ytPlayer.isMuted()) {
-          ytPlayer.unMute(); 
-        }
-      } catch(e) {} 
-    }, 300);
-  }
+  if (!player) { showToast('Player loading... please wait'); return; }
+  if (!QUEUE[currentIdx]) { showToast('No track selected'); return; }
+  if (isPlaying) { player.pause(); }
+  else if (player.getCurrentTrack()) { player.resume(); }
+  else { loadTrack(currentIdx); return; }
+  isPlaying = !isPlaying;
+  updatePlayBtn();
+  pushSyncState();
 }
 
 function nextTrack() {
@@ -968,23 +995,24 @@ function nextTrack() {
 }
 
 function prevTrack() {
-  if (position > 3) { ytPlayer.seekTo(0, true); position = 0; updateSeek(); return; }
+  if (position > 3) { player && player.seek(0); position = 0; updateSeek(); return; }
   if (currentIdx > 0) { currentIdx--; }
   else { currentIdx = QUEUE.length - 1; }
   loadTrack(currentIdx);
 }
 
 function seekTo(pct) {
-  if (!ytReady || !QUEUE[currentIdx]) return;
-  const dur = ytPlayer.getDuration() || QUEUE[currentIdx].dur || 180;
+  if (!player || !QUEUE[currentIdx]) return;
+  const dur = player.getDuration() || QUEUE[currentIdx].dur || 180;
   position = pct * dur;
-  ytPlayer.seekTo(position, true);
+  player.seek(position);
   updateSeek();
+  pushSyncState();
 }
 
 function setVol(v) {
   volume = Math.max(0, Math.min(1, v));
-  if (ytReady) ytPlayer.setVolume(Math.round(volume * 100));
+  if (player) player.setVolume(volume);
   $('#volFill').style.width = (volume*100) + '%';
   $('#volThumb').style.left = (volume*100) + '%';
   const mvf = $('#mFsVolFill'); if (mvf) mvf.style.width = (volume*100)+'%';
@@ -1037,7 +1065,7 @@ function updateNowPlaying() {
 function updateSeek() {
   const t = QUEUE[currentIdx];
   if (!t) return;
-  const dur = (ytReady && ytPlayer && ytPlayer.getDuration) ? (ytPlayer.getDuration() || t.dur) : t.dur;
+  const dur = (player && player.getDuration()) || t.dur;
   const pct = dur > 0 ? Math.min(100, (position / dur) * 100) : 0;
   $('#seekFill').style.width = pct + '%';
   $('#seekThumb').style.left = pct + '%';
@@ -1051,11 +1079,24 @@ function updateSeek() {
 function setArtEl(artDiv, monoEl, t) {
   if (!artDiv || !monoEl) return;
   artDiv.className = artDiv.className.replace(/\bart-\d+\b/g, '').trim();
-  if (t.art && !artDiv.className.includes(t.art)) artDiv.className += ' ' + t.art;
-  monoEl.textContent = t.mono;
+  if (t.artworkUrl) {
+    artDiv.style.backgroundImage = `url(${JSON.stringify(t.artworkUrl)})`;
+    artDiv.style.backgroundSize = 'cover';
+    artDiv.style.backgroundPosition = 'center';
+    monoEl.textContent = '';
+  } else {
+    artDiv.style.backgroundImage = '';
+    if (t.art && !artDiv.className.includes(t.art)) artDiv.className += ' ' + t.art;
+    monoEl.textContent = t.mono || (t.title || '?')[0].toUpperCase();
+  }
 }
 
 // ── RENDERERS ──
+function trackArtCell(t, cls){
+  if (t.artworkUrl) return `<div class="${cls}"><img src="${escapeHtml(t.artworkUrl)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>`;
+  return `<div class="${cls} ${t.art || 'art-1'}"><div class="art-mono small">${escapeHtml(t.mono || (t.title||'?')[0].toUpperCase())}</div></div>`;
+}
+
 function renderTrackList(container, list, withNum=true){
   container.innerHTML = list.map((t, i) =>`
     <div class="track-row ${t.id === (QUEUE[currentIdx] && QUEUE[currentIdx].id) ? 'playing' : ''}" data-id="${t.id}">
@@ -1063,7 +1104,7 @@ function renderTrackList(container, list, withNum=true){
         <span class="track-num">${withNum ? (i+1) : ''}</span>
         <span class="num-hover"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
       </div>
-      <div class="track-art ${t.art}"><div class="art-mono small">${escapeHtml(t.mono)}</div></div>
+      ${trackArtCell(t, 'track-art')}
       <div><div class="track-title">${escapeHtml(t.title)}</div><div class="track-artist">${escapeHtml(t.artist)}</div></div>
       <div class="track-artist" style="font-size:12.5px">${escapeHtml(t.album || '')}</div>
       <div class="track-dur">${fmtTime(t.dur)}</div>
@@ -1071,16 +1112,20 @@ function renderTrackList(container, list, withNum=true){
       <button class="track-add" data-add="${t.id}" title="Add to queue"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
     </div>
   `).join('');
+  const findTrack = (id) => list.find(x => x.id === id) || TRACKS.find(x => x.id === id);
   container.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('[data-add]') || e.target.closest('[data-save]')) return;
       const idx = QUEUE.findIndex(q => q.id === row.dataset.id);
-      if (idx !== -1) { currentIdx = idx; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); }
-      else { const t = TRACKS.find(x => x.id === row.dataset.id); if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); } }
+      if (idx !== -1) { currentIdx = idx; loadTrack(currentIdx); }
+      else { const t = findTrack(row.dataset.id); if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); } }
     });
   });
   container.querySelectorAll('[data-add]').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); const t = TRACKS.find(x => x.id === btn.dataset.add); if (t) { QUEUE.push(t); renderQueue(); showToast('Added to queue: ' + t.title); } });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const t = findTrack(btn.dataset.add); if (t) { QUEUE.push(t); renderQueue(); showToast('Added to queue: ' + t.title); } });
+  });
+  container.querySelectorAll('[data-save]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const t = findTrack(btn.dataset.save); if (t) openSaveToPlaylist(t); });
   });
 }
 
@@ -1110,11 +1155,11 @@ function renderQueue(){
   let html = '';
   if (cur) {
     html += `<div class="queue-section-label"><span class="now-bars"><span></span><span></span><span></span></span>Now Playing</div>
-    <div class="queue-item current" data-qidx="${currentIdx}"><div class="drag-handle">⋮⋮</div><div class="queue-art ${cur.art}"><div class="art-mono small">${escapeHtml(cur.mono)}</div></div><div class="queue-info"><div class="queue-tname">${escapeHtml(cur.title)}</div><div class="queue-tartist">${escapeHtml(cur.artist)}</div></div><button class="queue-remove" data-remove="${currentIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`;
+    <div class="queue-item current" data-qidx="${currentIdx}"><div class="drag-handle">⋮⋮</div>${trackArtCell(cur, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(cur.title)}</div><div class="queue-tartist">${escapeHtml(cur.artist)}</div></div><button class="queue-remove" data-remove="${currentIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`;
   }
   if (upcoming.length) {
     html += `<div class="queue-section-label">Up Next</div>`;
-    upcoming.forEach((t, i) => { const realIdx = currentIdx + 1 + i; html += `<div class="queue-item" draggable="true" data-qidx="${realIdx}"><div class="drag-handle">⋮⋮</div><div class="queue-art ${t.art}"><div class="art-mono small">${escapeHtml(t.mono)}</div></div><div class="queue-info"><div class="queue-tname">${escapeHtml(t.title)}</div><div class="queue-tartist">${escapeHtml(t.artist)}</div></div><button class="queue-remove" data-remove="${realIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`; });
+    upcoming.forEach((t, i) => { const realIdx = currentIdx + 1 + i; html += `<div class="queue-item" draggable="true" data-qidx="${realIdx}"><div class="drag-handle">⋮⋮</div>${trackArtCell(t, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(t.title)}</div><div class="queue-tartist">${escapeHtml(t.artist)}</div></div><button class="queue-remove" data-remove="${realIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`; });
   } else { html += `<div class="queue-empty">No upcoming tracks.<br>Add some from search or your library.</div>`; }
   list.innerHTML = html;
   if (mList) mList.innerHTML = html;
@@ -1136,16 +1181,46 @@ const searchInput = $('#searchInput');
 const defaultView = $('#defaultView');
 const searchView = $('#searchView');
 
+let searchDebounce = null;
+let searchSeq = 0;
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim().toLowerCase();
   if (!q) { searchView.classList.add('hidden'); defaultView.classList.remove('hidden'); return; }
-  doSearch(q);
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => doSearch(q), 350);
 });
 
-function doSearch(q) {
+async function doSearch(q) {
   defaultView.classList.add('hidden');
   searchView.classList.remove('hidden');
-  const results = TRACKS.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+  const seq = ++searchSeq;
+  const local = TRACKS.filter(t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q));
+  renderSearchResults(q, local);
+
+  // Catalog search on the active provider (YouTube via our backend, Spotify /
+  // Apple Music via their own APIs) merged behind the instant local results.
+  if (!player) return;
+  let remote = [];
+  try { remote = await player.searchTracks(q); } catch (_) {}
+  if (seq !== searchSeq) return; // a newer search superseded this one
+  const seen = new Set(local.map(t => (t.title + '|' + t.artist).toLowerCase()));
+  const merged = [...local];
+  remote.forEach((t, i) => {
+    const key = ((t.title || '') + '|' + (t.artist || '')).toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push({
+      id: 'search-' + seq + '-' + i,
+      title: t.title, artist: t.artist, album: providerLabel(activeProvider),
+      dur: t.duration || 180,
+      isrc: t.isrc || null, youtubeId: t.youtubeId || null, artworkUrl: t.artworkUrl || null,
+      art: ART_CLASSES[i % ART_CLASSES.length], mono: (t.title || '?')[0].toUpperCase(),
+    });
+  });
+  renderSearchResults(q, merged);
+}
+
+function renderSearchResults(q, results) {
   $('#resultsCount').innerHTML = `<strong>${results.length}</strong> result${results.length===1?'':'s'} for <strong>"${escapeHtml(q)}"</strong>`;
   if (results.length === 0) {
     $('#searchResults').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim)">No results — try a different term.</div>';
@@ -1163,6 +1238,8 @@ $('#syncToggle').addEventListener('click', () => {
   syncMode = syncMode === 'following' ? 'independent' : 'following';
   $('#syncToggle').classList.toggle('active', syncMode === 'following');
   showToast(syncMode === 'following' ? 'Synced with ' + partnerName : 'Listening independently');
+  if (syncMode === 'following') { startSync(); pushSyncState(); }
+  else { LoveFlixMusic.sync.stop(); }
 });
 $('#shuffleBtn').addEventListener('click', () => { shuffleOn = !shuffleOn; $('#shuffleBtn').classList.toggle('active', shuffleOn); showToast(shuffleOn ? 'Shuffle on' : 'Shuffle off'); });
 $('#repeatBtn').addEventListener('click', () => { repeatOn = !repeatOn; $('#repeatBtn').classList.toggle('active', repeatOn); showToast(repeatOn ? 'Repeat on' : 'Repeat off'); });
@@ -1224,7 +1301,9 @@ document.querySelectorAll('.m-tab').forEach(t => {
 
 // YouTube player controls
 $('#ytMinimize').addEventListener('click', () => { document.getElementById('ytPlayerContainer').classList.toggle('minimized'); });
-$('#ytClose').addEventListener('click', () => { document.getElementById('ytPlayerContainer').classList.remove('visible'); if (ytReady) ytPlayer.pauseVideo(); isPlaying = false; updatePlayBtn(); });
+// Closing the video pauses playback — the video must stay visible while
+// YouTube audio plays (free-tier compliance), so close = stop, not hide-and-play.
+$('#ytClose').addEventListener('click', () => { document.getElementById('ytPlayerContainer').classList.remove('visible'); if (player) player.pause(); isPlaying = false; updatePlayBtn(); pushSyncState(); });
 
 // Click-to-play overlay
 const ytClickPlay = document.getElementById('ytClickPlay');
@@ -1281,15 +1360,38 @@ document.querySelectorAll('.feature-card').forEach(card => {
   });
 });
 
-// ── PLAYLISTS (localStorage) ──
-let playlists = JSON.parse(localStorage.getItem('loveflix_playlists') || '[]');
-if (playlists.length === 0) {
-  playlists = [
-    {id:'pl-1', name:'Our Favorites', song_count:12, art:'art-5'},
-    {id:'pl-2', name:'Road Trip 2026', song_count:8, art:'art-7'},
-    {id:'pl-3', name:'Late Night', song_count:15, art:'art-3'},
-  ];
-  localStorage.setItem('loveflix_playlists', JSON.stringify(playlists));
+// ── SHARED PLAYLISTS ──
+// LoveFlix-native playlists store title/artist/ISRC metadata (plus a youtube_id
+// hint), never provider-specific IDs — each partner resolves songs on their own
+// provider at play time. Backed by the couple's D1 playlists when signed in,
+// with a localStorage fallback for the signed-out demo.
+let playlists = [];
+let playlistsRemote = false;
+
+function saveLocalPlaylists() { localStorage.setItem('loveflix_playlists', JSON.stringify(playlists)); }
+
+async function loadPlaylists() {
+  const signedIn = !!(LoveFlix.getToken && LoveFlix.getToken());
+  const coupleId = LoveFlix.getCoupleId && LoveFlix.getCoupleId();
+  if (signedIn && coupleId) {
+    try {
+      const data = await LoveFlix.api('/api/music/playlists?couple_id=' + encodeURIComponent(coupleId));
+      playlists = (data.playlists || []).map((pl, i) => ({ ...pl, art: ART_CLASSES[i % ART_CLASSES.length] }));
+      playlistsRemote = true;
+      renderSidebarPlaylists();
+      return;
+    } catch (_) {}
+  }
+  playlists = JSON.parse(localStorage.getItem('loveflix_playlists') || '[]');
+  if (!playlists.length) {
+    playlists = [
+      {id:'pl-1', name:'Our Favorites', song_count:0, art:'art-5', songs:[]},
+      {id:'pl-2', name:'Road Trip 2026', song_count:0, art:'art-7', songs:[]},
+      {id:'pl-3', name:'Late Night', song_count:0, art:'art-3', songs:[]},
+    ];
+    saveLocalPlaylists();
+  }
+  renderSidebarPlaylists();
 }
 
 function renderSidebarPlaylists() {
@@ -1302,7 +1404,66 @@ function renderSidebarPlaylists() {
       <div style="font-size:11px;color:var(--text-dim);flex-shrink:0">${pl.song_count || 0}</div>
     </div>
   `).join('');
+  el.querySelectorAll('.playlist-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const pl = playlists.find(p => String(p.id) === row.dataset.plid);
+      if (pl) openPlaylist(pl);
+    });
+  });
 }
+
+// Resolve to whichever provider this partner is on at play time — the queue
+// holds metadata; player.play() does the ISRC / search matching.
+async function openPlaylist(pl) {
+  let songs = [];
+  if (playlistsRemote) {
+    try { const d = await LoveFlix.api(`/api/music/playlists/${pl.id}/songs`); songs = d.songs || []; } catch (_) {}
+  } else {
+    songs = pl.songs || [];
+  }
+  if (!songs.length) { showToast('"' + pl.name + '" is empty — save songs to it first'); return; }
+  QUEUE = songs.map((s, i) => ({
+    id: 'pl-' + pl.id + '-' + i,
+    title: s.title, artist: s.artist || '', album: pl.name,
+    dur: s.duration || 180,
+    isrc: s.isrc || null,
+    youtubeId: s.youtube_id || s.youtubeId || null,
+    artworkUrl: s.artwork_url || s.artworkUrl || null,
+    art: ART_CLASSES[i % ART_CLASSES.length], mono: (s.title || '?')[0].toUpperCase(),
+  }));
+  currentIdx = 0;
+  loadTrack(0);
+  showToast('Playing: ' + pl.name);
+}
+
+let pendingSaveTrack = null;
+function openSaveToPlaylist(t) {
+  pendingSaveTrack = t;
+  const el = document.getElementById('playlistChoices');
+  el.innerHTML = playlists.map(pl => `<button class="pl-choice" data-choose="${pl.id}"><div class="playlist-art ${pl.art || 'art-1'}" style="width:24px;height:24px"><span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span></div>${escapeHtml(pl.name)}</button>`).join('') || '<div style="font-size:12.5px;color:var(--text-dim);padding:8px 4px">No playlists yet — create one first.</div>';
+  el.querySelectorAll('[data-choose]').forEach(btn => btn.addEventListener('click', () => saveTrackToPlaylist(btn.dataset.choose)));
+  document.getElementById('saveToPlaylistModal').classList.add('open');
+}
+
+async function saveTrackToPlaylist(plId) {
+  const pl = playlists.find(p => String(p.id) === String(plId));
+  const t = pendingSaveTrack;
+  document.getElementById('saveToPlaylistModal').classList.remove('open');
+  if (!pl || !t) return;
+  const song = { title: t.title, artist: t.artist || '', isrc: t.isrc || null, youtube_id: t.youtubeId || null, artwork_url: t.artworkUrl || '', duration: t.dur || 180 };
+  if (playlistsRemote) {
+    try { await LoveFlix.api(`/api/music/playlists/${pl.id}/songs`, { method: 'POST', body: song }); }
+    catch (_) { showToast('Could not save — try again'); return; }
+  } else {
+    pl.songs = pl.songs || [];
+    pl.songs.push(song);
+    saveLocalPlaylists();
+  }
+  pl.song_count = (pl.song_count || 0) + 1;
+  renderSidebarPlaylists();
+  showToast('Saved to "' + pl.name + '"');
+}
+document.getElementById('cancelSaveToPlaylist').addEventListener('click', () => { document.getElementById('saveToPlaylistModal').classList.remove('open'); });
 
 // New playlist modal
 document.getElementById('newPlaylistBtn').addEventListener('click', () => {
@@ -1311,12 +1472,18 @@ document.getElementById('newPlaylistBtn').addEventListener('click', () => {
   setTimeout(() => document.getElementById('newPlaylistName').focus(), 80);
 });
 document.getElementById('cancelNewPlaylist').addEventListener('click', () => { document.getElementById('newPlaylistModal').classList.remove('open'); });
-document.getElementById('confirmNewPlaylist').addEventListener('click', () => {
+document.getElementById('confirmNewPlaylist').addEventListener('click', async () => {
   const name = document.getElementById('newPlaylistName').value.trim();
   if (!name) return;
-  const newPl = {id:'pl-' + Date.now(), name, song_count:0, art:ART_CLASSES[playlists.length % ART_CLASSES.length]};
-  playlists.push(newPl);
-  localStorage.setItem('loveflix_playlists', JSON.stringify(playlists));
+  if (playlistsRemote) {
+    try {
+      const created = await LoveFlix.api('/api/music/playlists', { method: 'POST', body: { name, couple_id: LoveFlix.getCoupleId() } });
+      playlists.push({ ...created, art: ART_CLASSES[playlists.length % ART_CLASSES.length] });
+    } catch (_) { showToast('Could not create playlist — try again'); return; }
+  } else {
+    playlists.push({ id: 'pl-' + Date.now(), name, song_count: 0, art: ART_CLASSES[playlists.length % ART_CLASSES.length], songs: [] });
+    saveLocalPlaylists();
+  }
   renderSidebarPlaylists();
   document.getElementById('newPlaylistModal').classList.remove('open');
   showToast('Playlist "' + name + '" created!');
@@ -1327,16 +1494,195 @@ document.getElementById('newPlaylistName').addEventListener('keydown', e => {
 });
 
 // Close modals on backdrop click
-['newPlaylistModal','saveToPlaylistModal'].forEach(id => {
+['newPlaylistModal','saveToPlaylistModal','musicSettingsModal'].forEach(id => {
   document.getElementById(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 });
+
+// ── MUSIC CONNECTORS (settings) ──
+const PROVIDER_META = {
+  spotify:     { name: 'Spotify',     tag: 'Premium required',      desc: 'Full songs via the Spotify player. Requires Spotify Premium.' },
+  apple_music: { name: 'Apple Music', tag: 'Subscription required', desc: 'Full songs via Apple MusicKit. Requires an Apple Music subscription.' },
+  youtube:     { name: 'YouTube',     tag: 'Free',                  desc: 'Free option — video will be visible during playback.' },
+};
+
+function renderConnectors() {
+  const el = document.getElementById('connectorList');
+  const signedIn = !!(LoveFlix.getToken && LoveFlix.getToken());
+  el.innerHTML = ['spotify','apple_music','youtube'].map(p => {
+    const meta = PROVIDER_META[p];
+    const isActive = activeProvider === p;
+    let status = '', warn = '', btn = '';
+    if (p === 'youtube') {
+      status = isActive ? '<span class="ok">Active</span> · No account connection needed' : 'No account connection needed';
+      btn = isActive ? '' : `<button class="mc-btn" data-connect="youtube">Use YouTube</button>`;
+    } else if (isActive && musicConnection && musicConnection.provider === p) {
+      const who = musicConnection.provider_account_email || musicConnection.provider_account_name || 'Connected account';
+      status = `<span class="ok">Connected</span> · ${escapeHtml(who)}`;
+      if (p === 'spotify' && musicConnection.is_premium === false) {
+        warn = 'This Spotify account isn’t Premium, so playback won’t work here. The YouTube option below is free.';
+      }
+      btn = `<button class="mc-btn ghost" data-disconnect="${p}">Disconnect</button>`;
+    } else {
+      status = signedIn ? 'Not connected' : 'Sign in to LoveFlix to connect';
+      btn = `<button class="mc-btn primary" data-connect="${p}" ${signedIn ? '' : 'disabled'}>Connect</button>`;
+    }
+    return `<div class="mc-option ${isActive ? 'active' : ''}">
+      <div class="mc-radio"></div>
+      <div class="mc-body">
+        <div class="mc-name">${meta.name} <span class="mc-tag ${p === 'youtube' ? 'free' : ''}">${meta.tag}</span></div>
+        <div class="mc-status">${escapeHtml(meta.desc)}<br>${status}</div>
+        ${warn ? `<div class="mc-warn">${warn}</div>` : ''}
+      </div>
+      ${btn}
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-connect]').forEach(b => b.addEventListener('click', () => connectProvider(b.dataset.connect)));
+  el.querySelectorAll('[data-disconnect]').forEach(b => b.addEventListener('click', () => disconnectProvider()));
+  renderPartnerLine();
+}
+
+async function renderPartnerLine() {
+  const el = document.getElementById('mcPartnerLine');
+  if (!(LoveFlix.getToken && LoveFlix.getToken())) { el.textContent = 'Sign in to see your partner’s music provider.'; return; }
+  try { partnerConnection = await LoveFlixMusic.connections.getPartner(); } catch (_) { partnerConnection = null; }
+  if (partnerConnection) {
+    el.innerHTML = `<strong>${escapeHtml(partnerName)}</strong> listens on <strong>${escapeHtml(providerLabel(partnerConnection.provider))}</strong>. Whatever combination you two use, tracks are matched across providers automatically when you listen together.`;
+  } else {
+    el.innerHTML = `${escapeHtml(partnerName)} hasn’t picked a music provider yet — they’ll use the free YouTube option by default.`;
+  }
+}
+
+async function connectProvider(p) {
+  const signedIn = !!(LoveFlix.getToken && LoveFlix.getToken());
+  try {
+    if (p === 'youtube') {
+      if (signedIn) musicConnection = await LoveFlixMusic.connections.selectYouTube();
+      else musicConnection = null;
+      await switchProvider('youtube');
+      showToast('YouTube active — free option, video stays visible during playback');
+    } else if (p === 'spotify') {
+      if (!signedIn) return showToast('Sign in to LoveFlix first');
+      rememberResume();
+      await LoveFlixMusic.connections.connectSpotify(); // full-page OAuth redirect
+      return;
+    } else if (p === 'apple_music') {
+      if (!signedIn) return showToast('Sign in to LoveFlix first');
+      const res = await LoveFlixMusic.connections.connectAppleMusic();
+      musicConnection = res.connection;
+      await switchProvider('apple_music');
+      showToast('Apple Music connected');
+    }
+  } catch (err) {
+    const msg = String((err && err.message) || err);
+    if (msg.includes('spotify_not_configured')) showToast('Spotify isn’t configured on this deployment yet');
+    else if (msg.includes('apple_not_configured')) showToast('Apple Music isn’t configured on this deployment yet');
+    else if (msg.includes('cancelled')) showToast('Connection cancelled');
+    else showToast('Could not connect — try again');
+  }
+  renderConnectors();
+}
+
+async function disconnectProvider() {
+  try { await LoveFlixMusic.connections.disconnect(); } catch (_) {}
+  musicConnection = null;
+  await switchProvider('youtube'); // graceful landing on the free option
+  showToast('Disconnected — back on the free YouTube option');
+  renderConnectors();
+}
+
+// Switching providers mid-session: tear down the old player instance and
+// resume the equivalent track on the new provider when it can be matched.
+async function switchProvider(p) {
+  const wasPlaying = isPlaying;
+  const pos = position;
+  await initPlayer(p);
+  renderConnectors();
+  if (wasPlaying && QUEUE[currentIdx]) {
+    await loadTrack(currentIdx);
+    if (player && player.getCurrentTrack() && pos > 2) { player.seek(pos); position = pos; }
+  }
+}
+
+// Stashes the in-flight track so we can resume after Spotify's OAuth redirect.
+function rememberResume() {
+  const t = QUEUE[currentIdx];
+  if (!t) return;
+  try { sessionStorage.setItem('lf_music_resume', JSON.stringify({ track: toTrackModel(t), position, wasPlaying: isPlaying })); } catch (_) {}
+}
+
+// ── LISTEN TOGETHER (shared playback state, provider-agnostic) ──
+let lastPushedAt = 0;
+function pushSyncState() {
+  if (applyingRemote || syncMode !== 'following') return;
+  if (!(LoveFlix.getToken && LoveFlix.getToken())) return;
+  const t = QUEUE[currentIdx];
+  if (!t) return;
+  lastPushedAt = Date.now();
+  LoveFlixMusic.sync.push({
+    track_title: t.title,
+    track_artist: t.artist || '',
+    track_isrc: t.isrc || null,
+    track_artwork_url: t.artworkUrl || null,
+    source_provider: activeProvider,
+    source_track_ref: t.youtubeId || null,
+    is_playing: isPlaying,
+    position_seconds: Math.round(position),
+    duration_seconds: Math.round((player && player.getDuration()) || t.dur || 0) || null,
+  });
+}
+
+// Keepalive while playing so a partner joining mid-song lands close to us.
+setInterval(() => {
+  if (isPlaying && syncMode === 'following' && Date.now() - lastPushedAt > 12000) pushSyncState();
+}, 5000);
+
+async function applyRemoteState(row) {
+  if (syncMode !== 'following' || !player) return;
+  applyingRemote = true;
+  try {
+    const cur = QUEUE[currentIdx];
+    const same = cur && cur.title === row.track_title && (cur.artist || '') === (row.track_artist || '');
+    if (!same && row.track_title) {
+      // Partner started a different track — resolve it on OUR provider
+      // (ISRC for Spotify/Apple Music, official-audio search for YouTube).
+      QUEUE.push({
+        id: 'partner-' + Date.now(),
+        title: row.track_title,
+        artist: row.track_artist || '',
+        album: 'Listening with ' + partnerName,
+        dur: Number(row.duration_seconds) || 180,
+        isrc: row.track_isrc || null,
+        youtubeId: row.source_provider === 'youtube' ? row.source_track_ref : null,
+        artworkUrl: row.track_artwork_url || null,
+        art: ART_CLASSES[QUEUE.length % ART_CLASSES.length],
+        mono: (row.track_title || '?')[0].toUpperCase(),
+      });
+      currentIdx = QUEUE.length - 1;
+      showToast(partnerName + ' started: ' + row.track_title);
+      await loadTrack(currentIdx);
+    }
+    if (player.getCurrentTrack()) {
+      if (row.is_playing && !isPlaying) player.resume();
+      if (!row.is_playing && isPlaying) { player.pause(); showToast(partnerName + ' paused the music'); }
+      const remotePos = Number(row.position_seconds) || 0;
+      if (row.is_playing && Math.abs(remotePos - position) > 8) { player.seek(remotePos); position = remotePos; }
+    }
+  } finally {
+    setTimeout(() => { applyingRemote = false; }, 800);
+  }
+}
+
+function startSync() {
+  if (syncMode !== 'following') return;
+  if (!(LoveFlix.getToken && LoveFlix.getToken()) || !(LoveFlix.getCoupleId && LoveFlix.getCoupleId())) return;
+  LoveFlixMusic.sync.start(applyRemoteState, 5000);
+}
 
 // ── INIT ──
 renderTrackList($('#topTracksList'), TOP_TRACKS);
 renderRail($('#recentRail'), RECENT_ALBUMS);
 renderRail($('#madeForRail'), MADE_FOR);
 renderQueue();
-renderSidebarPlaylists();
 updateNowPlaying();
 setVol(volume);
 updateMuteIcon();
@@ -1345,11 +1691,62 @@ updateMuteIcon();
 isPlaying = false;
 updatePlayBtn();
 
-// Check for URL params
-const urlQ = new URLSearchParams(location.search).get('q');
-if (urlQ) { searchInput.value = urlQ; doSearch(urlQ); }
+document.getElementById('musicSettingsBtn').addEventListener('click', () => {
+  renderConnectors();
+  document.getElementById('musicSettingsModal').classList.add('open');
+});
+document.getElementById('closeMusicSettings').addEventListener('click', () => {
+  document.getElementById('musicSettingsModal').classList.remove('open');
+});
 
-console.log('LoveFlix Music loaded. YouTube player initializing...');
+(async function initMusic() {
+  const signedIn = !!(LoveFlix.getToken && LoveFlix.getToken());
+  if (signedIn) {
+    // Returning leg of the Spotify OAuth redirect (?code=…&state=…).
+    try {
+      const done = await LoveFlixMusic.connections.completeSpotifyAuth();
+      if (done) {
+        musicConnection = done.connection;
+        showToast(done.isPremium
+          ? 'Spotify connected'
+          : 'Spotify connected — but this account isn’t Premium, so playback won’t work. YouTube stays free.');
+      }
+    } catch (_) { showToast('Spotify connection failed — try again'); }
+    if (!musicConnection) {
+      try { musicConnection = await LoveFlixMusic.connections.get(); } catch (_) {}
+    }
+  }
+
+  // UI data first — none of it should wait on a player SDK download.
+  renderConnectors();
+  startSync();
+  loadPlaylists();
+  await initPlayer((musicConnection && musicConnection.provider) || 'youtube');
+  renderConnectors();
+
+  // Resume the track that was playing before a Spotify OAuth redirect.
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem('lf_music_resume') || 'null'); sessionStorage.removeItem('lf_music_resume'); } catch (_) {}
+  if (saved && saved.track && saved.wasPlaying) {
+    QUEUE.push({
+      id: 'resume-' + Date.now(),
+      title: saved.track.title, artist: saved.track.artist || '', album: '',
+      dur: saved.track.duration || 180,
+      isrc: saved.track.isrc || null, youtubeId: saved.track.youtubeId || null,
+      artworkUrl: saved.track.artworkUrl || null,
+      art: 'art-1', mono: (saved.track.title || '?')[0].toUpperCase(),
+    });
+    currentIdx = QUEUE.length - 1;
+    await loadTrack(currentIdx);
+    if (player && player.getCurrentTrack() && saved.position > 2) player.seek(saved.position);
+  }
+
+  // Check for URL params
+  const urlQ = new URLSearchParams(location.search).get('q');
+  if (urlQ) { searchInput.value = urlQ; doSearch(urlQ.toLowerCase()); }
+
+  console.log('LoveFlix Music loaded — provider:', activeProvider);
+})();
 </script>
 <script src="assets/lola-widget.js" defer></script>
 </body>

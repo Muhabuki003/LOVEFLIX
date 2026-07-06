@@ -35,6 +35,13 @@ const PUBLIC_ROUTES = new Set([
   'GET /api/youtube/search',
   'GET /api/music/recent',
   'GET /api/music/yt-match',
+  'GET /api/music/search',
+  // Provider config for the music connectors. Spotify client id and the Apple
+  // Music developer token are public client-side values by design (the Spotify
+  // secret, if configured, never leaves the worker; Apple developer tokens are
+  // meant to ship to MusicKit JS in the browser).
+  'GET /api/music/spotify-config',
+  'GET /api/music/apple-config',
   // AI chat is intentionally NOT in PUBLIC_ROUTES — it calls DeepSeek at cost.
   // Unauthenticated landing-page users are allowed through by the auth block
   // below (user will be null) but are subject to IP rate limiting.
@@ -247,6 +254,18 @@ export async function onRequest(context) {
       const limited = await checkRateLimit(env, clientIP, 'yt', 20, 60);
       if (limited) return limited;
     }
+
+    // Music search (YouTube Data API): 30 req/min per IP.
+    if (method === 'GET' && path === '/api/music/search') {
+      const limited = await checkRateLimit(env, clientIP, 'msearch', 30, 60);
+      if (limited) return limited;
+    }
+
+    // Spotify token exchange/refresh: 10 req/min per user.
+    if (method === 'POST' && path === '/api/music/spotify/token') {
+      const limited = await checkRateLimit(env, user?.id || clientIP, 'sptoken', 10, 60);
+      if (limited) return limited;
+    }
     // ────────────────────────────────────────────────────────────────────────
 
     if (method === 'GET' && path === '/api/health') return json({
@@ -321,8 +340,22 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/api/directions') return getDirections(env, url, user);
 
-    // YouTube search
-    if (method === 'GET' && path === '/api/youtube/search') return youtubeSearch(env, url);
+    // Music search — YouTube Data API, biased toward "official audio"/official
+    // channels. /api/youtube/search is a legacy alias for the same handler.
+    if (method === 'GET' && (path === '/api/music/search' || path === '/api/youtube/search')) {
+      return musicSearch(env, url);
+    }
+
+    // Music connectors: provider config + Spotify token proxy.
+    if (method === 'GET' && path === '/api/music/spotify-config') {
+      return json({ clientId: env.SPOTIFY_CLIENT_ID || '' });
+    }
+    if (method === 'GET' && path === '/api/music/apple-config') {
+      return json({ developerToken: env.APPLE_MUSIC_DEVELOPER_TOKEN || '' });
+    }
+    if (method === 'POST' && path === '/api/music/spotify/token') {
+      return spotifyToken(env, request, user);
+    }
 
     // Music tracking endpoints
     if (method === 'POST' && path === '/api/music/plays') return saveMusicPlay(env, request, user);
@@ -1635,15 +1668,18 @@ async function listPlaylistSongs(env, playlistId, user) {
 
 async function addToPlaylist(env, playlistId, request, user) {
   const body = await request.json().catch(() => ({}));
-  const { title, artist, artwork_url, stream_url, youtube_id, duration } = body;
+  // LoveFlix-native playlists are stored as title/artist/isrc metadata, not
+  // provider-specific IDs — each partner resolves the track on their own
+  // provider at play time. youtube_id is kept only as a resolution hint.
+  const { title, artist, artwork_url, stream_url, youtube_id, isrc, duration } = body;
   if (!title) return json({ error: 'title required' }, 400);
   const pl = await env.DB.prepare('SELECT id FROM couple_playlists WHERE id = ?').bind(playlistId).first();
   if (!pl) return json({ error: 'playlist not found' }, 404);
   const id = genId();
   const now = Math.floor(Date.now() / 1000);
   await env.DB.prepare(
-    'INSERT INTO couple_playlist_songs (id, playlist_id, youtube_id, title, artist, artwork_url, stream_url, duration, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?,?,?)'
-  ).bind(id, playlistId, youtube_id || null, title, artist || '', artwork_url || '', stream_url || null, duration || 30, user?.sub || '', now).run();
+    'INSERT INTO couple_playlist_songs (id, playlist_id, youtube_id, isrc, title, artist, artwork_url, stream_url, duration, added_by_user_id, added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+  ).bind(id, playlistId, youtube_id || null, isrc || null, title, artist || '', artwork_url || '', stream_url || null, duration || 30, user?.sub || '', now).run();
   await env.DB.prepare('UPDATE couple_playlists SET updated_at = ? WHERE id = ?').bind(now, playlistId).run();
   return json({ id });
 }
@@ -1665,27 +1701,124 @@ async function getMusicRecent(env, url, user) {
   } catch(e) { return json({ plays: [], total: 0 }); }
 }
 
-// ytMatch — optional: needs YOUTUBE_API_KEY in Cloudflare secrets.
-// Returns the best embeddable YouTube video for a title+artist query, including
-// duration so the UI can show accurate seek bar length.
+// ── YouTube matching & search (tri-provider connectors) ─────────────────────
+// Both endpoints need YOUTUBE_API_KEY in Cloudflare secrets. Results are biased
+// toward official sources — "Artist - Topic" auto-channels, VEVO, and channels/
+// titles that say "official" — so that a partner on YouTube lands on the same
+// recording a Spotify/Apple Music partner is playing.
+
+// Score a YouTube search item for how likely it is the canonical/official
+// upload of a song. Higher is better.
+function scoreYtOfficial(item) {
+  const channel = (item.snippet?.channelTitle || '').toLowerCase();
+  const title = (item.snippet?.title || '').toLowerCase();
+  let score = 0;
+  if (channel.endsWith(' - topic')) score += 40;  // YouTube's auto-generated label channels
+  if (channel.includes('vevo')) score += 35;
+  if (channel.includes('official')) score += 20;
+  if (title.includes('official audio')) score += 30;
+  if (title.includes('official video') || title.includes('official music video')) score += 15;
+  if (title.includes('audio')) score += 5;
+  // Penalize things that are usually NOT the canonical recording.
+  for (const bad of ['cover', 'karaoke', 'live', 'remix', 'reaction', 'sped up', 'slowed', 'nightcore', '8d', 'lyrics video tutorial']) {
+    if (title.includes(bad)) score -= 25;
+  }
+  return score;
+}
+
+// True when a YouTube Data API error body is a quota problem — callers turn
+// this into a graceful "search unavailable" state instead of crashing playback.
+function ytQuotaExceeded(status, data) {
+  if (status !== 403) return false;
+  const reasons = (data?.error?.errors || []).map(e => e.reason);
+  return reasons.includes('quotaExceeded') || reasons.includes('dailyLimitExceeded') || reasons.includes('rateLimitExceeded');
+}
+
+function parseIsoDuration(iso) {
+  const m = (iso || '').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return null;
+  return ((+m[1] || 0) * 3600) + ((+m[2] || 0) * 60) + (+m[3] || 0);
+}
+
+// GET /api/music/search?q=… — YouTube-backed track search for the free tier.
+// The player embed stays fully visible in the UI per YouTube's ToS; this
+// endpoint only finds candidate videos.
+async function musicSearch(env, url) {
+  const q = (url.searchParams.get('q') || '').trim();
+  if (!q) return json({ tracks: [] });
+  const key = env.YOUTUBE_API_KEY;
+  if (!key) return json({ tracks: [], hint: 'set YOUTUBE_API_KEY to enable YouTube search' });
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=12&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (ytQuotaExceeded(res.status, data)) return json({ tracks: [], quota_exceeded: true });
+      return json({ tracks: [], _debug: `yt search ${res.status}` });
+    }
+    const items = (data.items || []).filter(i => i.id?.videoId);
+    items.sort((a, b) => scoreYtOfficial(b) - scoreYtOfficial(a));
+
+    // One batched details call for all durations.
+    const durations = {};
+    const ids = items.map(i => i.id.videoId);
+    if (ids.length) {
+      try {
+        const dRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${encodeURIComponent(ids.join(','))}&key=${encodeURIComponent(key)}`,
+          { headers: { Accept: 'application/json' } }
+        );
+        if (dRes.ok) {
+          const dd = await dRes.json();
+          for (const v of dd.items || []) durations[v.id] = parseIsoDuration(v.contentDetails?.duration);
+        }
+      } catch (_) {}
+    }
+
+    const tracks = items.map(i => ({
+      videoId: i.id.videoId,
+      title: i.snippet?.title || '',
+      artist: (i.snippet?.channelTitle || '').replace(/ - Topic$/i, ''),
+      channel: i.snippet?.channelTitle || '',
+      artwork_url: i.snippet?.thumbnails?.medium?.url || i.snippet?.thumbnails?.default?.url || '',
+      duration: durations[i.id.videoId] || null,
+      official: scoreYtOfficial(i) >= 20,
+    }));
+    return json({ tracks });
+  } catch (e) {
+    return json({ tracks: [], _debug: String(e) });
+  }
+}
+
+// GET /api/music/yt-match?q=… — best single embeddable YouTube video for a
+// "{artist} {title} official audio" query. Used to resolve a partner's
+// Spotify/Apple Music track for a YouTube-provider listener.
 async function ytMatch(env, url) {
   const q = (url.searchParams.get('q') || '').trim();
   if (!q) return json({ videoId: null });
   const key = env.YOUTUBE_API_KEY;
   if (!key) return json({ videoId: null, hint: 'set YOUTUBE_API_KEY for full songs' });
   try {
-    // Search for embeddable music videos
     const searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=3&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
+      `https://www.googleapis.com/youtube/v3/search?part=id,snippet&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=5&q=${encodeURIComponent(q)}&key=${encodeURIComponent(key)}`,
       { headers: { Accept: 'application/json' } }
     );
-    if (!searchRes.ok) return json({ videoId: null, _debug: `yt search ${searchRes.status}` });
-    const searchData = await searchRes.json();
-    const item = searchData.items?.[0];
-    if (!item) return json({ videoId: null });
-    const videoId = item.id?.videoId;
-    if (!videoId) return json({ videoId: null });
-    const title = item.snippet?.title || q;
+    const searchData = await searchRes.json().catch(() => ({}));
+    if (!searchRes.ok) {
+      if (ytQuotaExceeded(searchRes.status, searchData)) return json({ videoId: null, quota_exceeded: true });
+      return json({ videoId: null, _debug: `yt search ${searchRes.status}` });
+    }
+    const items = (searchData.items || []).filter(i => i.id?.videoId);
+    if (!items.length) return json({ videoId: null });
+    items.sort((a, b) => scoreYtOfficial(b) - scoreYtOfficial(a));
+    const best = items[0];
+    const videoId = best.id.videoId;
+    const title = best.snippet?.title || q;
+    // A confidently-official match scores well; below this the caller should
+    // show "Partner's version unavailable" rather than play a random cover.
+    const confident = scoreYtOfficial(best) >= 15;
 
     // Fetch content details for duration
     let duration = null;
@@ -1696,35 +1829,58 @@ async function ytMatch(env, url) {
       );
       if (detailRes.ok) {
         const dd = await detailRes.json();
-        const iso = dd.items?.[0]?.contentDetails?.duration; // e.g. "PT3M42S"
-        if (iso) {
-          const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-          if (m) duration = ((+m[1]||0)*3600) + ((+m[2]||0)*60) + (+m[3]||0);
-        }
+        duration = parseIsoDuration(dd.items?.[0]?.contentDetails?.duration);
       }
     } catch(_) {}
 
-    return json({ videoId, title, duration });
+    return json({ videoId, title, duration, confident });
   } catch(e) { return json({ videoId: null }); }
 }
 
-// ── YouTube search (placeholder) ────────────────────────────────────────────
-// Uses the iTunes Search API as fallback until a YouTube Data API key is configured.
-//
-// async function youtubeSearch(env, url) {
-//   const q = (url.searchParams.get('q') || '').trim();
-//   if (!q) return json({ tracks: [] });
-//   // TODO: When YOUTUBE_API_KEY is configured in env, use:
-//   //   const res = await fetch(
-//   //     `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=25&q=${encodeURIComponent(q)}&key=${env.YOUTUBE_API_KEY}`
-//   //   );
-//   // For now, return mock data with a hint.
-//   return json({
-//     tracks: [],
-//     _note: 'YouTube Data API key not configured. Set YOUTUBE_API_KEY env var to enable search.',
-//   });
-// }
-//
+// POST /api/music/spotify/token — Authorization Code (+ PKCE) exchange and
+// refresh proxy. Keeps SPOTIFY_CLIENT_SECRET (when configured) off the client;
+// with no secret it forwards the PKCE public-client exchange unchanged.
+async function spotifyToken(env, request, user) {
+  const clientId = env.SPOTIFY_CLIENT_ID;
+  if (!clientId) return json({ error: 'spotify_not_configured' }, 503);
+  const body = await request.json().catch(() => ({}));
+  const params = new URLSearchParams();
+  if (body.grant_type === 'authorization_code') {
+    if (!body.code || !validateInviteUrl(body.redirect_uri, _reqOrigin)) {
+      return json({ error: 'code and same-origin redirect_uri required' }, 400);
+    }
+    params.set('grant_type', 'authorization_code');
+    params.set('code', String(body.code));
+    params.set('redirect_uri', String(body.redirect_uri));
+    if (body.code_verifier) params.set('code_verifier', String(body.code_verifier));
+  } else if (body.grant_type === 'refresh_token') {
+    if (!body.refresh_token) return json({ error: 'refresh_token required' }, 400);
+    params.set('grant_type', 'refresh_token');
+    params.set('refresh_token', String(body.refresh_token));
+  } else {
+    return json({ error: 'unsupported grant_type' }, 400);
+  }
+
+  const headers = { 'content-type': 'application/x-www-form-urlencoded' };
+  if (env.SPOTIFY_CLIENT_SECRET) {
+    headers.authorization = 'Basic ' + btoa(`${clientId}:${env.SPOTIFY_CLIENT_SECRET}`);
+  } else {
+    params.set('client_id', clientId); // PKCE public client
+  }
+
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers,
+    body: params.toString(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return json({ error: 'spotify_token_error', detail: data.error_description || data.error || res.status }, 400);
+  }
+  // access_token, token_type, expires_in, refresh_token (maybe), scope
+  return json(data);
+}
+
 // ── iTunes / music search (legacy) ─────────────────────────────────────────
 // Music search — uses iTunes Search API (free, no key required).
 // Returns 30-second preview MP3s playable directly in the browser.
