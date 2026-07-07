@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.drop:focus-visible,[role="button"]:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
@@ -77,7 +79,7 @@
     padding:11px 14px;color:#fff;font:inherit;font-size:14px;
     transition:border-color .15s
   }
-  .field input:focus, .field textarea:focus, .field select:focus{outline:none;border-color:#666}
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:#666}
   .field textarea{min-height:90px;resize:vertical;font-family:inherit}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
@@ -86,7 +88,7 @@
 
   /* thumbnail picker */
   .thumb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  .thumb-opt{aspect-ratio:16/9;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;background:var(--bgg);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:rgba(255,255,255,0.7);letter-spacing:1px}
+  .thumb-opt{aspect-ratio:16/9;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border-color .15s;background:var(--bgg);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:rgba(255,255,255,0.7);letter-spacing:1px;width:100%;padding:0}
   .thumb-opt.selected{border-color:var(--red)}
   .thumb-opt:hover{border-color:rgba(255,255,255,0.4)}
   .thumb-upload{display:flex;align-items:center;justify-content:center;border:2px dashed #333;border-radius:4px;aspect-ratio:16/9;font-size:11px;color:var(--text-dim);text-align:center;cursor:pointer}
@@ -136,17 +138,17 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
     </div>
     <div class="side-eyebrow">Manage</div>
-    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
-    <a href="admin_upload.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
-    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
-    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
-    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
     <div class="side-foot">
       <div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin · <span id="sideUrl">loveflix.us</span></div></div>
     </div>
   </aside>
 
-  <main>
+  <main id="main-content">
     <div class="crumbs"><a href="admin.html">Dashboard</a> › Upload Video</div>
     <h1 class="page-title">Upload a Video</h1>
     <p class="page-sub">Drop a memory in. We'll handle the rest.</p>
@@ -155,37 +157,38 @@
       <div class="panel">
         <h2>1 · Video File</h2>
         <div class="drop" id="drop">
+          <label for="fileInput" class="sr-only">Video file</label>
           <input type="file" id="fileInput" accept="video/*" hidden>
           <div id="dropEmpty">
-            <div class="icon"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
             <div class="t">Drag and drop a video here</div>
             <div class="s">or click to browse — MP4, MOV, up to 4GB</div>
             <button type="button" class="browse" id="browseBtn">Choose File</button>
             <div class="specs">1080p · 4K · HDR Supported</div>
           </div>
           <div class="uploaded" id="uploaded">
-            <div class="uploaded-thumb" id="uploadedThumb">VIDEO</div>
+            <div class="uploaded-thumb" id="uploadedThumb" aria-hidden="true">VIDEO</div>
             <div class="uploaded-meta">
               <div class="t" id="uploadedName">lisbon-day3-final.mp4</div>
-              <div class="s" id="uploadedStatus">Uploading… 0%</div>
-              <div class="upload-bar"><div id="uploadFill"></div></div>
+              <div class="s" id="uploadedStatus" role="status" aria-live="polite">Uploading… 0%</div>
+              <div class="upload-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Upload progress"><div id="uploadFill"></div></div>
             </div>
-            <button class="uploaded-x" id="cancelUpload" aria-label="Cancel"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+            <button class="uploaded-x" id="cancelUpload" aria-label="Cancel upload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
           </div>
         </div>
 
         <h2 style="margin-top:30px">2 · Details</h2>
         <div class="field">
-          <label>Title</label>
+          <label for="vTitle">Title</label>
           <input type="text" id="vTitle" placeholder="The Lisbon Trip · Day 3">
         </div>
         <div class="field">
-          <label>Description</label>
+          <label for="vDesc">Description</label>
           <textarea id="vDesc" placeholder="Tell us what happened that day..."></textarea>
         </div>
         <div class="field-grid">
           <div class="field">
-            <label>Category</label>
+            <label for="vCat">Category</label>
             <select id="vCat">
               <option>Moments</option>
               <option>Trips</option>
@@ -196,17 +199,17 @@
             </select>
           </div>
           <div class="field">
-            <label>Date Recorded</label>
+            <label for="vDate">Date Recorded</label>
             <input type="date" id="vDate">
           </div>
         </div>
         <div class="field-grid">
           <div class="field">
-            <label>Season (optional)</label>
+            <label for="vSeason">Season (optional)</label>
             <input type="text" id="vSeason" placeholder="3">
           </div>
           <div class="field">
-            <label>Episode (optional)</label>
+            <label for="vEpisode">Episode (optional)</label>
             <input type="text" id="vEpisode" placeholder="4">
           </div>
         </div>
@@ -220,10 +223,10 @@
         <div class="panel" style="margin-bottom:20px">
           <h2>3 · Thumbnail</h2>
           <div class="thumb-grid" id="thumbGrid">
-            <div class="thumb-opt selected" data-tint="linear-gradient(135deg,#ff7aa2,#5a0a23)" style="--bgg:linear-gradient(135deg,#ff7aa2,#5a0a23)">Auto 1</div>
-            <div class="thumb-opt" data-tint="linear-gradient(135deg,#a855f7,#2e1065)" style="--bgg:linear-gradient(135deg,#a855f7,#2e1065)">Auto 2</div>
-            <div class="thumb-opt" data-tint="linear-gradient(135deg,#f59e0b,#6b3a02)" style="--bgg:linear-gradient(135deg,#f59e0b,#6b3a02)">Auto 3</div>
-            <div class="thumb-opt" data-tint="linear-gradient(135deg,#0ea5e9,#082f49)" style="--bgg:linear-gradient(135deg,#0ea5e9,#082f49)">Auto 4</div>
+            <button type="button" class="thumb-opt selected" aria-pressed="true" data-tint="linear-gradient(135deg,#ff7aa2,#5a0a23)" style="--bgg:linear-gradient(135deg,#ff7aa2,#5a0a23)">Auto 1</button>
+            <button type="button" class="thumb-opt" aria-pressed="false" data-tint="linear-gradient(135deg,#a855f7,#2e1065)" style="--bgg:linear-gradient(135deg,#a855f7,#2e1065)">Auto 2</button>
+            <button type="button" class="thumb-opt" aria-pressed="false" data-tint="linear-gradient(135deg,#f59e0b,#6b3a02)" style="--bgg:linear-gradient(135deg,#f59e0b,#6b3a02)">Auto 3</button>
+            <button type="button" class="thumb-opt" aria-pressed="false" data-tint="linear-gradient(135deg,#0ea5e9,#082f49)" style="--bgg:linear-gradient(135deg,#0ea5e9,#082f49)">Auto 4</button>
           </div>
           <input type="file" id="thumbInput" accept="image/*" hidden>
           <button type="button" class="thumb-upload" id="thumbUpload" style="margin-top:10px;width:100%;color:inherit;background:transparent">+ Upload custom thumbnail (JPG / PNG)</button>
@@ -246,7 +249,7 @@
       <div class="actions-right">
         <button class="btn btn-ghost" id="saveDraft">Save as Draft</button>
         <button class="btn btn-primary" id="publish">
-          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           Publish
         </button>
       </div>
@@ -349,13 +352,16 @@
 
       durationSeconds = await probeDuration(file);
 
+      const progressBar = fill.closest('.upload-bar');
       await LoveFlix.putWithProgress(presign.upload_url, file, p => {
         const pct = Math.floor(p * 100);
         fill.style.width = pct + '%';
+        if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
         status.textContent = `Uploading… ${pct}% · ${readableSize(file.size)}`;
       });
 
       fill.style.width = '100%';
+      if (progressBar) progressBar.setAttribute('aria-valuenow', '100');
       uploadComplete = true;
       status.textContent = 'Ready to publish · ' + readableSize(file.size);
     } catch (e) {
@@ -409,7 +415,7 @@
       previewBox.innerHTML = '';
       uploadedThumb.style.background = url;
       uploadedThumb.textContent = '';
-      document.querySelectorAll('.thumb-opt').forEach(t => t.classList.remove('selected'));
+      document.querySelectorAll('.thumb-opt').forEach(t => { t.classList.remove('selected'); t.setAttribute('aria-pressed', 'false'); });
     };
     reader.readAsDataURL(f);
   });
@@ -418,8 +424,9 @@
   document.getElementById('thumbGrid').addEventListener('click', e => {
     const el = e.target.closest('.thumb-opt');
     if (!el) return;
-    document.querySelectorAll('.thumb-opt').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.thumb-opt').forEach(t => { t.classList.remove('selected'); t.setAttribute('aria-pressed', 'false'); });
     el.classList.add('selected');
+    el.setAttribute('aria-pressed', 'true');
     selectedTint = el.dataset.tint;
     const idx = [...el.parentNode.children].indexOf(el);
     selectedTintClass = TINT_CLASSES[idx] || TINT_CLASSES[0];

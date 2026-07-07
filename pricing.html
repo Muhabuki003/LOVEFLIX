@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible,input:focus-visible,.faq-q:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
@@ -29,15 +31,15 @@
 
   .hero{padding:140px 24px 40px;text-align:center;max-width:840px;margin:0 auto;position:relative}
   .hero::before{content:'';position:absolute;inset:-100px 0 0 0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.18),transparent 60%);pointer-events:none;z-index:-1}
-  .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:16px}
+  .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:16px}
   h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,8vw,108px);letter-spacing:1px;line-height:.95;margin-bottom:18px}
   .sub{font-size:18px;color:var(--text-light);max-width:600px;margin:0 auto 32px;line-height:1.5}
 
   .toggle-wrap{display:inline-flex;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px;gap:4px;margin-bottom:60px}
   .toggle-btn{padding:9px 20px;border-radius:999px;background:none;border:none;color:var(--text-light);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
   .toggle-btn.active{background:#fff;color:#000}
-  .toggle-btn .save{font-size:10px;color:var(--red);margin-left:6px;letter-spacing:1px}
-  .toggle-btn.active .save{color:#e50914}
+  .toggle-btn .save{font-size:10px;color:#ff1a1a;margin-left:6px;letter-spacing:1px}
+  .toggle-btn.active .save{color:#ff1a1a}
 
   .plans{max-width:1200px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
   .plan{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px 32px;display:flex;flex-direction:column;position:relative;transition:transform .2s,border-color .2s}
@@ -54,7 +56,7 @@
   .features-list{list-style:none;display:grid;gap:10px;border-top:1px solid var(--border);padding-top:24px}
   .features-list li{font-size:14px;color:var(--text-light);padding-left:26px;position:relative;line-height:1.45}
   .features-list li::before{content:'';position:absolute;left:0;top:5px;width:16px;height:16px;background:rgba(229,9,20,0.15);border-radius:50%}
-  .features-list li::after{content:'✓';position:absolute;left:3px;top:3px;color:var(--red);font-size:11px;font-weight:700}
+  .features-list li::after{content:'✓';position:absolute;left:3px;top:3px;color:#ff1a1a;font-size:11px;font-weight:700}
   .features-list li.muted{color:var(--text-dim)}
   .features-list li.muted::before{background:rgba(255,255,255,0.05)}
   .features-list li.muted::after{content:'—';color:var(--text-dim);left:4px;top:4px}
@@ -65,7 +67,7 @@
   .compare-table{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;width:100%;border-collapse:collapse}
   .compare-table th,.compare-table td{padding:16px 20px;text-align:center;font-size:14px;border-bottom:1px solid var(--border)}
   .compare-table th{background:rgba(255,255,255,0.02);font-weight:600;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
-  .compare-table th.featured-col{color:var(--red)}
+  .compare-table th.featured-col{color:#ff1a1a}
   .compare-table td:first-child{text-align:left;font-size:14px;color:var(--text-light)}
   .compare-table .yes{color:#10b981;font-weight:700}
   .compare-table .no{color:var(--text-dim)}
@@ -75,10 +77,11 @@
   .faq-wrap{max-width:780px;margin:60px auto;padding:0 24px}
   .faq-item{border-bottom:1px solid var(--border);padding:20px 0;cursor:pointer}
   .faq-q{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:600}
-  .faq-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:20px;transition:transform .2s}
+  .faq-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#ff1a1a;font-size:20px;transition:transform .2s}
   .faq-item.open .faq-icon{transform:rotate(45deg)}
   .faq-a{font-size:14px;color:var(--text-light);line-height:1.6;max-height:0;overflow:hidden;transition:max-height .25s,padding .25s}
   .faq-item.open .faq-a{padding-top:14px;max-height:200px}
+  .faq-q{background:none;border:none;width:100%;text-align:left;color:inherit;font-family:inherit;cursor:pointer}
 
   /* CTA */
   .cta{margin:80px 24px 60px;max-width:1200px;margin-left:auto;margin-right:auto;background:linear-gradient(135deg,#5a0a23 0%,#1a0712 100%);border-radius:16px;padding:60px 48px;text-align:center;border:1px solid rgba(229,9,20,0.3)}
@@ -106,6 +109,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <header class="hero">
   <div class="eyebrow">Pricing</div>
   <h1>Cheaper than dinner.<br>Lasts longer.</h1>
@@ -180,11 +184,11 @@
 
 <div class="faq-wrap">
   <h2 class="compare-title" style="font-size:36px;margin-bottom:20px">Common questions</h2>
-  <div class="faq-item"><div class="faq-q">Can I cancel any time? <span class="faq-icon">+</span></div><div class="faq-a">Yes — cancel from your dashboard. You'll keep access until the end of your billing period and can export everything before you go.</div></div>
-  <div class="faq-item"><div class="faq-q">Who can see my videos? <span class="faq-icon">+</span></div><div class="faq-a">Only the people you give the link AND password to. Your site is private by default; videos never appear in search or any public feed.</div></div>
-  <div class="faq-item"><div class="faq-q">What happens after my free trial? <span class="faq-icon">+</span></div><div class="faq-a">Your site goes into a read-only state for 30 days while you decide. Nothing is deleted — pick up exactly where you left off when you're ready.</div></div>
-  <div class="faq-item"><div class="faq-q">Can I switch plans later? <span class="faq-icon">+</span></div><div class="faq-a">Up or down, any time. Upgrades are prorated; downgrades take effect at the next billing cycle.</div></div>
-  <div class="faq-item"><div class="faq-q">Do you have a gift option? <span class="faq-icon">+</span></div><div class="faq-a">Yes! Pre-pay any plan as a gift and we'll send a beautifully designed reveal card on the day of your choosing.</div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a-1" id="faq-q-1">Can I cancel any time? <span class="faq-icon" aria-hidden="true">+</span></button><div class="faq-a" id="faq-a-1" role="region" aria-labelledby="faq-q-1">Yes — cancel from your dashboard. You'll keep access until the end of your billing period and can export everything before you go.</div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" id="faq-q-2">Who can see my videos? <span class="faq-icon" aria-hidden="true">+</span></button><div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-q-2">Only the people you give the link AND password to. Your site is private by default; videos never appear in search or any public feed.</div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a-3" id="faq-q-3">What happens after my free trial? <span class="faq-icon" aria-hidden="true">+</span></button><div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-q-3">Your site goes into a read-only state for 30 days while you decide. Nothing is deleted — pick up exactly where you left off when you're ready.</div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a-4" id="faq-q-4">Can I switch plans later? <span class="faq-icon" aria-hidden="true">+</span></button><div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-q-4">Up or down, any time. Upgrades are prorated; downgrades take effect at the next billing cycle.</div></div>
+  <div class="faq-item"><button class="faq-q" aria-expanded="false" aria-controls="faq-a-5" id="faq-q-5">Do you have a gift option? <span class="faq-icon" aria-hidden="true">+</span></button><div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">Yes! Pre-pay any plan as a gift and we'll send a beautifully designed reveal card on the day of your choosing.</div></div>
 </div>
 
 <div class="cta">
@@ -192,6 +196,7 @@
   <p>The free trial doesn't ask for a card. Just start.</p>
   <a href="/checkout?plan=sweetheart" class="btn btn-primary btn-lg">Start your LoveFlix →</a>
 </div>
+</main>
 
 <footer>© 2026 LoveFlix · made with ♥</footer>
 
@@ -229,7 +234,11 @@
 
   // faq
   document.querySelectorAll('.faq-item').forEach(item => {
-    item.addEventListener('click', () => item.classList.toggle('open'));
+    const btn = item.querySelector('.faq-q');
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
   });
 
   try {

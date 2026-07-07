@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){location.replace('/waitlist.html')}}catch(e){location.replace('/waitlist.html')}})();</script><!-- LF_GATE_END -->
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);}}catch(e){}})();</script>
@@ -90,26 +90,29 @@
     outline: none; transition: background 0.15s;
     caret-color: #fff;
   }
-  .form-group input:focus { background: #454545; outline: 2px solid rgba(255,255,255,0.15); outline-offset: -2px; }
+  .form-group input:focus { background: #454545; outline: 2px solid rgba(255,255,255,0.85); outline-offset: -2px; }
   .form-group label {
     position: absolute; left: 16px; top: 50%;
     transform: translateY(-50%);
-    font-size: 16px; color: #8c8c8c;
+    font-size: 16px; color: #c0c0c0;
     pointer-events: none; transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease;
     transform-origin: left top;
   }
   .form-group input:focus + label,
   .form-group input:not(:placeholder-shown) + label {
-    top: 8px; transform: translateY(0) scale(0.75); color: #8c8c8c;
+    top: 8px; transform: translateY(0) scale(0.75); color: #c0c0c0;
   }
   .form-group input::placeholder { color: transparent; }
 
   .show-pw {
     position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; padding: 0; margin: 0;
+    font-family: inherit;
     color: #aaa; font-size: 13px; cursor: pointer;
     user-select: none; font-weight: 500; letter-spacing: 0.3px;
   }
   .show-pw:hover { color: #fff; }
+  .show-pw:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
   .btn-signin {
     width: 100%; height: 50px;
@@ -168,11 +171,11 @@
   .need-help { font-size: 13px; color: #b3b3b3; text-decoration: none; transition: color 0.15s; }
   .need-help:hover { color: #fff; text-decoration: underline; }
 
-  .signup-row { font-size: 15px; color: #737373; margin-bottom: 16px; }
+  .signup-row { font-size: 15px; color: #b3b3b3; margin-bottom: 16px; }
   .signup-row a { color: #fff; text-decoration: none; font-weight: 500; }
   .signup-row a:hover { text-decoration: underline; }
 
-  .recaptcha-note { font-size: 12px; color: #737373; line-height: 1.5; }
+  .recaptcha-note { font-size: 12px; color: #b3b3b3; line-height: 1.5; }
   .recaptcha-note a { color: #0071eb; text-decoration: none; }
   .recaptcha-note a:hover { text-decoration: underline; }
 
@@ -189,9 +192,9 @@
     background: rgba(0,0,0,0.75);
     padding: 20px 48px; z-index: 10;
   }
-  footer p { font-size: 13px; color: #737373; margin-bottom: 12px; }
+  footer p { font-size: 13px; color: #b3b3b3; margin-bottom: 12px; }
   .footer-links { display: flex; flex-wrap: wrap; gap: 8px 24px; }
-  .footer-links a { font-size: 12px; color: #737373; text-decoration: none; }
+  .footer-links a { font-size: 12px; color: #b3b3b3; text-decoration: none; }
   .footer-links a:hover { text-decoration: underline; color: #fff; }
 
   @keyframes shimmer { to { left: 100%; } }
@@ -213,11 +216,11 @@
   <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
 </nav>
 
-<div class="page">
+<main class="page" id="main-content">
   <div class="login-card">
     <h1>Sign In</h1>
 
-    <div class="error-msg" id="errorMsg"></div>
+    <div class="error-msg" id="errorMsg" role="alert" aria-live="polite"></div>
 
     <div class="form-group">
       <input type="email" id="emailInput" placeholder=" " autocomplete="email">
@@ -227,7 +230,7 @@
     <div class="form-group">
       <input type="password" id="pwInput" placeholder=" " autocomplete="current-password">
       <label for="pwInput">Password</label>
-      <span class="show-pw" id="showPw" onclick="togglePw()">SHOW</span>
+      <button type="button" class="show-pw" id="showPw" onclick="togglePw()" aria-label="Show password">SHOW</button>
     </div>
 
     <button class="btn-signin" id="signinBtn" type="button">Sign In</button>
@@ -263,7 +266,7 @@
 
     <p class="recaptcha-note">This page is protected and only accessible to members. <a href="about.html">Learn more.</a></p>
   </div>
-</div>
+</main>
 
 <footer>
   <p>Questions? Visit loveflix.app/help</p>
@@ -311,6 +314,7 @@
     const btn = document.getElementById('showPw');
     input.type = input.type === 'password' ? 'text' : 'password';
     btn.textContent = input.type === 'password' ? 'SHOW' : 'HIDE';
+    btn.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password');
   }
 
   function showErr(msg, tone) {

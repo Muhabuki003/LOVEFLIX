@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
@@ -108,7 +110,7 @@
 
   /* love note panel */
   .love-note{background:linear-gradient(135deg,rgba(229,9,20,0.15),rgba(168,85,247,0.1));border:1px solid rgba(229,9,20,0.3);border-radius:8px;padding:24px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-  .love-note .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:8px}
+  .love-note .eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:8px}
   .love-note .t{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1.1;margin-bottom:6px}
   .love-note .s{font-size:13px;color:var(--text-light)}
 
@@ -152,17 +154,17 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
     </div>
     <div class="side-eyebrow">Manage</div>
-    <a href="admin.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
-    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
-    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
-    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
-    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <a href="admin.html" class="side-link active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
 
     <div class="side-eyebrow" style="margin-top:18px">Live Site</div>
-    <a href="home.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>View Home</a>
-    <a href="browse.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4z"/></svg>Browse Library</a>
+    <a href="home.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>View Home</a>
+    <a href="browse.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4z"/></svg>Browse Library</a>
     <a href="loveconnect.html" class="side-link" style="color:#ff8aa6;position:relative">
-      <svg viewBox="0 0 24 24" style="fill:#ff5f8f"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
+      <svg viewBox="0 0 24 24" style="fill:#ff5f8f" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>
       LoveConnect
       <span style="margin-left:auto;font-size:9px;letter-spacing:1.5px;font-weight:700;background:rgba(255,95,143,0.18);color:#ff5f8f;border:1px solid rgba(255,95,143,0.3);padding:2px 6px;border-radius:999px;text-transform:uppercase">New</span>
     </a>
@@ -176,7 +178,7 @@
     </div>
   </aside>
 
-  <main>
+  <main id="main-content">
     <div class="page-head">
       <div>
         <h1 class="page-title">Dashboard</h1>
@@ -184,11 +186,11 @@
       </div>
       <div class="head-actions">
         <button class="btn btn-ghost" onclick="location.href='home.html'">
-          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>
           Preview Site
         </button>
         <button class="btn btn-primary" onclick="location.href='admin_upload.html'">
-          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           New Upload
         </button>
       </div>
@@ -197,25 +199,25 @@
     <!-- stats -->
     <div class="stats">
       <div class="stat">
-        <div class="icon" style="color:var(--red)"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="icon" style="color:var(--red)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
         <div class="label">Total Videos</div>
         <div class="num" id="statVideos">—</div>
         <div class="delta" id="statVideosDelta">&nbsp;</div>
       </div>
       <div class="stat">
-        <div class="icon" style="color:#a855f7"><svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 4l7.5 13H4.5L12 6z" /></svg></div>
+        <div class="icon" style="color:#a855f7"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L1 21h22L12 2zm0 4l7.5 13H4.5L12 6z" /></svg></div>
         <div class="label">Total Watch Time</div>
         <div class="num" id="statWatch">—</div>
         <div class="delta">&nbsp;</div>
       </div>
       <div class="stat">
-        <div class="icon" style="color:#3a7bff"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
+        <div class="icon" style="color:#3a7bff"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
         <div class="label">Favorites</div>
         <div class="num" id="statFavs">—</div>
         <div class="delta">&nbsp;</div>
       </div>
       <div class="stat">
-        <div class="icon" style="color:#10b981"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H5V8h14v13z"/></svg></div>
+        <div class="icon" style="color:#10b981"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H5V8h14v13z"/></svg></div>
         <div class="label">Days Together</div>
         <div class="num" id="statDays">—</div>
         <div class="delta">▲ +1 every day</div>
@@ -224,14 +226,14 @@
 
     <!-- storage usage -->
     <div class="stat" style="margin-bottom:30px;padding:22px 24px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#b3b3b3;margin-bottom:6px">
         <span style="letter-spacing:2px;text-transform:uppercase;font-size:11px">Storage Used</span>
         <span id="storageText">— / —</span>
       </div>
       <div style="height:4px;background:#2a2a2a;border-radius:2px">
         <div id="storageFill" style="height:100%;background:#e50914;border-radius:2px;width:0%;transition:width 0.4s"></div>
       </div>
-      <div style="font-size:11px;color:#555;margin-top:5px" id="storageTier"></div>
+      <div style="font-size:11px;color:#b3b3b3;margin-top:5px" id="storageTier"></div>
     </div>
 
     <!-- love note -->
@@ -242,7 +244,7 @@
         <div class="s">Currently shown on the home hero · last updated 2 days ago</div>
       </div>
       <button class="btn btn-ghost" onclick="location.href='admin_settings.html'">
-        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg>
         Edit
       </button>
     </div>
@@ -263,27 +265,27 @@
         <div class="panel-head"><div class="panel-title">Quick Actions</div></div>
         <div class="quick">
           <button class="quick-btn" onclick="location.href='loveconnect.html'">
-            <div class="quick-icon" style="--qbg:rgba(255,95,143,0.15);--qfg:#ff5f8f"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(255,95,143,0.15);--qfg:#ff5f8f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
             <div class="quick-body"><div class="t">LoveConnect</div><div class="s">Live map · distance · video call</div></div>
           </button>
           <button class="quick-btn" onclick="location.href='admin_upload.html'">
-            <div class="quick-icon" style="--qbg:rgba(229,9,20,0.15);--qfg:#e50914"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(229,9,20,0.15);--qfg:#e50914"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
             <div class="quick-body"><div class="t">Upload a Video</div><div class="s">Drop in a new memory</div></div>
           </button>
           <button class="quick-btn" onclick="location.href='admin_videos.html'">
-            <div class="quick-icon" style="--qbg:rgba(168,85,247,0.15);--qfg:#a855f7"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(168,85,247,0.15);--qfg:#a855f7"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></div>
             <div class="quick-body"><div class="t">Edit a Video</div><div class="s">Update titles, thumbs, dates</div></div>
           </button>
           <button class="quick-btn" onclick="location.href='admin_settings.html'">
-            <div class="quick-icon" style="--qbg:rgba(58,123,255,0.15);--qfg:#3a7bff"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(58,123,255,0.15);--qfg:#3a7bff"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
             <div class="quick-body"><div class="t">Update Profile Photos</div><div class="s">Change avatars on the home screen</div></div>
           </button>
           <button class="quick-btn">
-            <div class="quick-icon" style="--qbg:rgba(16,185,129,0.15);--qfg:#10b981"><svg viewBox="0 0 24 24"><path d="M21 6h-3.17L16 4h-6v2h5.12l1.83 2H21v12H5v-9H3v9c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM8 14c0 2.76 2.24 5 5 5s5-2.24 5-5-2.24-5-5-5-5 2.24-5 5z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(16,185,129,0.15);--qfg:#10b981"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 6h-3.17L16 4h-6v2h5.12l1.83 2H21v12H5v-9H3v9c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM8 14c0 2.76 2.24 5 5 5s5-2.24 5-5-2.24-5-5-5-5 2.24-5 5z"/></svg></div>
             <div class="quick-body"><div class="t">Replace Hero Banner</div><div class="s">Pick a new featured video</div></div>
           </button>
           <button class="quick-btn">
-            <div class="quick-icon" style="--qbg:rgba(245,158,11,0.15);--qfg:#f59e0b"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></div>
+            <div class="quick-icon" style="--qbg:rgba(245,158,11,0.15);--qfg:#f59e0b"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></div>
             <div class="quick-body"><div class="t">Add a New Row</div><div class="s">Curate a new collection</div></div>
           </button>
         </div>
@@ -433,7 +435,7 @@
           </div>
           <div class="up-cat">${escapeHtml(v.category || 'Moments')}</div>
           ${status}
-          <button class="up-action" onclick="location.href='admin_videos.html'"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
+          <button class="up-action" aria-label="Edit ${escapeHtml(v.title || 'video')}" onclick="location.href='admin_videos.html'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"/></svg></button>
         </div>`;
     }).join('');
   }

@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[role="button"]:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0e0e0e;--panel:#181818;--panel-2:#1f1f1f;--red:#e50914;--brand-accent:var(--red);--text-dim:#8a8a8a;--text-light:#cfcfcf;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
@@ -39,7 +41,7 @@
   .field{margin-bottom:16px}
   .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
   .field input,.field textarea{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:11px 14px;color:#fff;font:inherit;font-size:14px;transition:border-color .15s}
-  .field input:focus,.field textarea:focus{outline:none;border-color:#666}
+  .field input:focus,.field textarea:focus{border-color:#666}
   .field textarea{min-height:100px;resize:vertical}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
@@ -59,7 +61,7 @@
 
   /* color presets */
   .colors{display:flex;gap:12px;flex-wrap:wrap}
-  .color-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+  .color-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;background:none;border:none;color:inherit;font:inherit;padding:0}
   .color-swatch{width:48px;height:48px;border-radius:8px;border:2px solid transparent;position:relative;transition:transform .15s,border-color .15s}
   .color-swatch:hover{transform:scale(1.08)}
   .color-swatch.selected{border-color:#fff}
@@ -91,7 +93,7 @@
 
   /* privacy select */
   .field select{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:11px 14px;color:#fff;font:inherit;font-size:14px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a8a8a' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
-  .field select:focus{outline:none;border-color:#666}
+  .field select:focus{border-color:#666}
 
   /* preview card */
   .preview-card{background:#141414;border:1px solid var(--border);border-radius:8px;overflow:hidden;position:sticky;top:20px}
@@ -157,7 +159,7 @@
   .modal-box h3{font-size:18px;font-weight:700;color:#fca5a5;margin-bottom:8px}
   .modal-box p{font-size:14px;color:var(--text-light);margin-bottom:20px;line-height:1.5}
   .modal-box .modal-input{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:12px 14px;color:#fff;font:inherit;font-size:16px;text-align:center;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;transition:border-color .15s,box-shadow .15s}
-  .modal-box .modal-input:focus{outline:none;border-color:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,0.15)}
+  .modal-box .modal-input:focus{border-color:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,0.15)}
   .modal-box .modal-hint{font-size:11px;color:var(--text-dim);margin-bottom:16px;letter-spacing:.5px}
   .modal-actions{display:flex;gap:10px;justify-content:center}
   .modal-actions .btn{min-width:100px;justify-content:center}
@@ -172,21 +174,21 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
     </div>
     <div class="side-eyebrow">Manage</div>
-    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
-    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
-    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
-    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
-    <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
-    <a href="/settings/billing" class="side-link"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Billing</a>
-    <button class="side-link" onclick="LoveFlix.signOut()" style="color:#fca5a5;background:none;border:none;width:100%;text-align:left;cursor:pointer"><svg viewBox="0 0 24 24" style="fill:currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Sign Out</button>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
+    <a href="admin_settings.html" class="side-link active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <a href="/settings/billing" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Billing</a>
+    <button class="side-link" onclick="LoveFlix.signOut()" style="color:#fca5a5;background:none;border:none;width:100%;text-align:left;cursor:pointer"><svg viewBox="0 0 24 24" style="fill:currentColor" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>Sign Out</button>
     <div class="side-foot"><div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin</div></div></div>
   </aside>
 
-  <main>
+  <main id="main-content">
     <div class="crumbs"><a href="admin.html" style="color:var(--text-dim)">Dashboard</a> › Site Settings</div>
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px">
       <h1 class="page-title" style="margin-bottom:0">Site Settings</h1>
-      <div class="save-status" id="saveStatus">
+      <div class="save-status" id="saveStatus" role="status" aria-live="polite">
         <!-- status injected by JS -->
       </div>
     </div>
@@ -205,7 +207,7 @@
               <div class="locked-header">
                 <label for="name1">Partner 1 Name</label>
                 <span class="locked-label" id="name1-lock-badge" style="display:none">
-                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                   Locked
                 </span>
               </div>
@@ -213,7 +215,7 @@
                 <input id="name1" type="text" placeholder="My Love" autocomplete="off">
                 <div class="lock-badge" id="name1-lock-icon" style="display:none">
                   <div class="lock-tooltip">
-                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                     <div class="tip">This information was set during signup and cannot be changed.</div>
                   </div>
                 </div>
@@ -223,7 +225,7 @@
               <div class="locked-header">
                 <label for="name2">Partner 2 Name (you)</label>
                 <span class="locked-label" id="name2-lock-badge" style="display:none">
-                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                   Locked
                 </span>
               </div>
@@ -231,7 +233,7 @@
                 <input id="name2" type="text" placeholder="You" autocomplete="off">
                 <div class="lock-badge" id="name2-lock-icon" style="display:none">
                   <div class="lock-tooltip">
-                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                     <div class="tip">This information was set during signup and cannot be changed.</div>
                   </div>
                 </div>
@@ -243,7 +245,7 @@
             <div class="locked-header">
               <label for="anniversary">Anniversary Date</label>
               <span class="locked-label" id="anniversary-lock-badge" style="display:none">
-                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                 Locked
               </span>
             </div>
@@ -251,7 +253,7 @@
               <input id="anniversary" type="date">
               <div class="lock-badge" id="anniversary-lock-icon" style="display:none">
                 <div class="lock-tooltip">
-                  <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                   <div class="tip">This information was set during signup and cannot be changed.</div>
                 </div>
               </div>
@@ -270,7 +272,7 @@
         <div class="panel">
           <h2>Site Identity</h2>
           <p class="desc">Tagline shown across your private site.</p>
-          <div class="field"><label>Site Tagline</label><input id="tagline" type="text" value="A private streaming service of two."></div>
+          <div class="field"><label for="tagline">Site Tagline</label><input id="tagline" type="text" value="A private streaming service of two."></div>
         </div>
 
         <!-- Profile Photos -->
@@ -295,7 +297,7 @@
           <input type="file" id="av2File" accept="image/*" hidden>
           <div style="margin-top:16px">
             <button class="btn btn-primary" id="savePhotosBtn" style="font-size:12px;padding:9px 18px">
-              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
               Save Photos
             </button>
           </div>
@@ -306,34 +308,34 @@
           <h2>Brand Accent Color</h2>
           <p class="desc">Choose from seven preset colors. Your selection applies site-wide instantly.</p>
           <div class="colors" id="colors">
-            <div class="color-item" data-c="#e50914">
-              <div class="color-swatch selected" style="background:#e50914" data-c="#e50914"></div>
-              <div class="color-name">Crimson</div>
-            </div>
-            <div class="color-item" data-c="#f59e0b">
-              <div class="color-swatch" style="background:#f59e0b" data-c="#f59e0b"></div>
-              <div class="color-name">Warm Gold</div>
-            </div>
-            <div class="color-item" data-c="#1d4ed8">
-              <div class="color-swatch" style="background:#1d4ed8" data-c="#1d4ed8"></div>
-              <div class="color-name">Deep Navy</div>
-            </div>
-            <div class="color-item" data-c="#fb7185">
-              <div class="color-swatch" style="background:#fb7185" data-c="#fb7185"></div>
-              <div class="color-name">Soft Rose</div>
-            </div>
-            <div class="color-item" data-c="#059669">
-              <div class="color-swatch" style="background:#059669" data-c="#059669"></div>
-              <div class="color-name">Forest Green</div>
-            </div>
-            <div class="color-item" data-c="#8b5cf6">
-              <div class="color-swatch" style="background:#8b5cf6" data-c="#8b5cf6"></div>
-              <div class="color-name">Lavender</div>
-            </div>
-            <div class="color-item" data-c="#64748b">
-              <div class="color-swatch" style="background:#64748b" data-c="#64748b"></div>
-              <div class="color-name">Slate Gray</div>
-            </div>
+            <button type="button" class="color-item" data-c="#e50914" aria-pressed="true">
+              <span class="color-swatch selected" style="background:#e50914" data-c="#e50914" aria-hidden="true"></span>
+              <span class="color-name">Crimson</span>
+            </button>
+            <button type="button" class="color-item" data-c="#f59e0b" aria-pressed="false">
+              <span class="color-swatch" style="background:#f59e0b" data-c="#f59e0b" aria-hidden="true"></span>
+              <span class="color-name">Warm Gold</span>
+            </button>
+            <button type="button" class="color-item" data-c="#1d4ed8" aria-pressed="false">
+              <span class="color-swatch" style="background:#1d4ed8" data-c="#1d4ed8" aria-hidden="true"></span>
+              <span class="color-name">Deep Navy</span>
+            </button>
+            <button type="button" class="color-item" data-c="#fb7185" aria-pressed="false">
+              <span class="color-swatch" style="background:#fb7185" data-c="#fb7185" aria-hidden="true"></span>
+              <span class="color-name">Soft Rose</span>
+            </button>
+            <button type="button" class="color-item" data-c="#059669" aria-pressed="false">
+              <span class="color-swatch" style="background:#059669" data-c="#059669" aria-hidden="true"></span>
+              <span class="color-name">Forest Green</span>
+            </button>
+            <button type="button" class="color-item" data-c="#8b5cf6" aria-pressed="false">
+              <span class="color-swatch" style="background:#8b5cf6" data-c="#8b5cf6" aria-hidden="true"></span>
+              <span class="color-name">Lavender</span>
+            </button>
+            <button type="button" class="color-item" data-c="#64748b" aria-pressed="false">
+              <span class="color-swatch" style="background:#64748b" data-c="#64748b" aria-hidden="true"></span>
+              <span class="color-name">Slate Gray</span>
+            </button>
           </div>
         </div>
 
@@ -341,8 +343,8 @@
         <div class="panel">
           <h2>Featured Love Note</h2>
           <p class="desc">Shown on the home page hero. Make it good.</p>
-          <div class="field"><label>Love Note</label><textarea id="loveNote">Every day with you is a new episode.</textarea></div>
-          <div class="field"><label>Attribution (optional)</label><input id="attr" type="text" placeholder="— Your Name, Day 1"></div>
+          <div class="field"><label for="loveNote">Love Note</label><textarea id="loveNote">Every day with you is a new episode.</textarea></div>
+          <div class="field"><label for="attr">Attribution (optional)</label><input id="attr" type="text" placeholder="— Your Name, Day 1"></div>
         </div>
 
         <!-- Account Preferences -->
@@ -356,7 +358,7 @@
               <div class="toggle-sub">Get notified when your partner adds a video or sends a love note.</div>
             </div>
             <label class="toggle">
-              <input type="checkbox" id="notificationsToggle" checked>
+              <input type="checkbox" id="notificationsToggle" checked aria-label="Email Notifications">
               <div class="toggle-track"></div>
               <div class="toggle-thumb"></div>
             </label>
@@ -368,14 +370,14 @@
               <div class="toggle-sub">Play animation at the start of each video.</div>
             </div>
             <label class="toggle">
-              <input type="checkbox" id="introAnimToggle" checked>
+              <input type="checkbox" id="introAnimToggle" checked aria-label="Intro Animation">
               <div class="toggle-track"></div>
               <div class="toggle-thumb"></div>
             </label>
           </div>
 
           <div class="field" style="margin-top:16px">
-            <label>Privacy Level</label>
+            <label for="privacyLevel">Privacy Level</label>
             <select id="privacyLevel">
               <option value="private">Private — only the two of you</option>
               <option value="friends">Friends — anyone with the link</option>
@@ -393,7 +395,7 @@
             <span id="partnerStatusText" style="font-size:13px;color:var(--text-dim)">Checking partner status…</span>
           </div>
           <a href="invite.html" class="btn btn-ghost" id="inviteLink" style="display:none">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
             Invite Partner
           </a>
           <div id="partnerJoined" class="partner-joined" style="display:none">
@@ -435,13 +437,14 @@
 </div>
 
 <!-- ── Delete Site Confirmation Modal ── -->
-<div class="modal-overlay" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalDesc" onclick="if(event.target===this)closeDeleteModal()">
   <div class="modal-box">
-    <div class="icon">⚠️</div>
-    <h3>Delete Site Forever?</h3>
-    <p>This will permanently delete your LoveFlix site, all videos, settings, and partner data. <strong style="color:#fca5a5">This cannot be undone.</strong></p>
-    <div class="modal-hint">Type <strong>DELETE</strong> to confirm</div>
-    <input type="text" class="modal-input" id="deleteInput" placeholder="DELETE" maxlength="6" autocomplete="off" oninput="onDeleteInput()" onkeydown="if(event.key==='Enter')confirmDelete()">
+    <div class="icon" aria-hidden="true">⚠️</div>
+    <h3 id="deleteModalTitle">Delete Site Forever?</h3>
+    <p id="deleteModalDesc">This will permanently delete your LoveFlix site, all videos, settings, and partner data. <strong style="color:#fca5a5">This cannot be undone.</strong></p>
+    <div class="modal-hint" id="deleteInputHint">Type <strong>DELETE</strong> to confirm</div>
+    <label for="deleteInput" class="sr-only">Type DELETE to confirm site deletion</label>
+    <input type="text" class="modal-input" id="deleteInput" placeholder="DELETE" maxlength="6" autocomplete="off" aria-describedby="deleteInputHint" oninput="onDeleteInput()" onkeydown="if(event.key==='Enter')confirmDelete()">
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
       <button class="btn btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()" disabled style="opacity:0.4">Delete</button>
@@ -449,8 +452,8 @@
   </div>
 </div>
 
-<div class="saved-toast" id="toast">
-  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+<div class="saved-toast" id="toast" role="status" aria-live="polite">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
   <span id="toastText">Saved</span>
 </div>
 
@@ -487,9 +490,9 @@
     const el = document.getElementById('saveStatus');
     if (!el) return;
     const icons = {
-      saving: '<svg class="spin" viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>',
-      saved:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
-      error:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+      saving: '<svg class="spin" viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>',
+      saved:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+      error:  '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
     };
     el.className = 'save-status ' + state;
     el.innerHTML = (icons[state] || '') + '<span>' + (label || state) + '</span>';
@@ -606,7 +609,10 @@
 
     // Select matching color swatch
     colorsEl.querySelectorAll('.color-swatch').forEach(sw => {
-      sw.classList.toggle('selected', sw.dataset.c === accent);
+      const isSel = sw.dataset.c === accent;
+      sw.classList.toggle('selected', isSel);
+      const btn = sw.closest('.color-item');
+      if (btn) btn.setAttribute('aria-pressed', String(isSel));
     });
 
     // Notifications and privacy
@@ -637,7 +643,10 @@
       // Apply stored preferences if present
       if (s.brand_accent_color) {
         colorsEl.querySelectorAll('.color-swatch').forEach(sw => {
-          sw.classList.toggle('selected', sw.dataset.c === s.brand_accent_color);
+          const isSel = sw.dataset.c === s.brand_accent_color;
+          sw.classList.toggle('selected', isSel);
+          const btn = sw.closest('.color-item');
+          if (btn) btn.setAttribute('aria-pressed', String(isSel));
         });
         applyPreviewColor(s.brand_accent_color);
         // Merge into local settings for brand color injection
@@ -809,8 +818,10 @@
     if (!item) return;
     const c = item.dataset.c;
     if (!c) return;
+    colorsEl.querySelectorAll('.color-item').forEach(ci => ci.setAttribute('aria-pressed', 'false'));
     colorsEl.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('selected'));
     item.querySelector('.color-swatch').classList.add('selected');
+    item.setAttribute('aria-pressed', 'true');
     applyPreviewColor(c);
     saveColorNow(c);
   });
@@ -1018,16 +1029,37 @@
 
   // ── Delete Site Confirmation ───────────────────────────────────────────────
 
+  let _deleteModalLastFocus = null;
+  function _deleteModalFocusable() {
+    return Array.from(document.getElementById('deleteModal').querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+    ));
+  }
+  function _deleteModalKeyHandler(e) {
+    if (!document.getElementById('deleteModal').classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeDeleteModal(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = _deleteModalFocusable();
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
   function showDeleteModal() {
+    _deleteModalLastFocus = document.activeElement;
     document.getElementById('deleteModal').classList.add('open');
     document.getElementById('deleteInput').value = '';
     document.getElementById('deleteConfirmBtn').disabled = true;
     document.getElementById('deleteConfirmBtn').style.opacity = '0.4';
+    document.addEventListener('keydown', _deleteModalKeyHandler);
     setTimeout(function(){ document.getElementById('deleteInput').focus(); }, 100);
   }
 
   function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('open');
+    document.removeEventListener('keydown', _deleteModalKeyHandler);
+    if (_deleteModalLastFocus) { _deleteModalLastFocus.focus(); _deleteModalLastFocus = null; }
   }
 
   function onDeleteInput() {

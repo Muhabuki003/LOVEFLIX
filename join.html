@@ -42,9 +42,10 @@
 
   .form-group{position:relative;margin-bottom:14px}
   .form-group input{width:100%;height:54px;background:#222;border:1px solid #333;border-radius:4px;padding:20px 16px 6px;font-size:15px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s,background .15s;caret-color:#fff}
-  .form-group input:focus{background:#2a2a2a;border-color:#666}
-  .form-group label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;color:#6b6b6b;pointer-events:none;transition:top .15s ease,transform .15s ease,font-size .15s ease;transform-origin:left top}
-  .form-group input:focus+label,.form-group input:not(:placeholder-shown)+label{top:8px;transform:translateY(0) scale(.74);color:#8c8c8c}
+  .form-group input:focus{background:#2a2a2a;border-color:#666;box-shadow:0 0 0 3px rgba(255,255,255,0.12)}
+  .form-group input:focus-visible{outline:2px solid #fff;outline-offset:1px}
+  .form-group label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;color:#c0c0c0;pointer-events:none;transition:top .15s ease,transform .15s ease,font-size .15s ease;transform-origin:left top}
+  .form-group input:focus+label,.form-group input:not(:placeholder-shown)+label{top:8px;transform:translateY(0) scale(.74);color:#c0c0c0}
   .form-group input::placeholder{color:transparent}
 
   .btn-join{width:100%;height:50px;background:#e50914;color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-top:6px;transition:background .15s,transform .1s}
@@ -56,7 +57,7 @@
   .error-msg{background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:14px;display:none;line-height:1.4}
   .error-msg.show{display:block}
 
-  .terms-note{font-size:11px;color:#555;margin-top:14px;line-height:1.5;text-align:center}
+  .terms-note{font-size:11px;color:#a3a3a3;margin-top:14px;line-height:1.5;text-align:center}
 
   /* success state */
   .suc-ring{width:100px;height:100px;border-radius:50%;border:1.5px solid rgba(255,95,143,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;position:relative}
@@ -82,30 +83,30 @@
 <div class="bg-overlay"></div>
 
 <nav>
-  <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
+  <span class="nf-logo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</span>
 </nav>
 
-<div class="page">
+<main class="page" id="main-content">
   <div class="card">
 
     <!-- Loading skeleton -->
     <div class="state active" id="stateLoading">
-      <div style="text-align:center;color:#555;font-size:13px;padding:40px 0">Checking your invite…</div>
+      <div style="text-align:center;color:#a3a3a3;font-size:13px;padding:40px 0">Checking your invite…</div>
     </div>
 
     <!-- Error state -->
     <div class="state" id="stateError">
-      <div class="err-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-      <div class="err-title" id="errTitle">Link Not Valid</div>
+      <div class="err-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+      <h1 class="err-title" id="errTitle">Link Not Valid</h1>
       <div class="err-sub" id="errSub">This invite link has expired or already been used. Contact your partner to get a new one.</div>
     </div>
 
     <!-- Signup form -->
     <div class="state" id="stateSignup">
-      <div class="eyebrow">You're invited ♥</div>
+      <div class="eyebrow">You're invited <span aria-hidden="true">♥</span></div>
       <p class="invite-from" id="inviteFrom">Your partner has created a private streaming site for you.</p>
       <h1>Create your account</h1>
-      <div class="error-msg" id="errMsg"></div>
+      <div class="error-msg" id="errMsg" role="alert" aria-live="polite"></div>
       <div class="form-group">
         <input type="text" id="nameInput" placeholder=" " autocomplete="name">
         <label for="nameInput">Your display name</label>
@@ -124,7 +125,7 @@
 
     <!-- Success state -->
     <div class="state" id="stateSuccess">
-      <div class="suc-ring">
+      <div class="suc-ring" aria-hidden="true">
         <svg class="suc-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>
       </div>
       <div class="suc-eyebrow">You're in</div>
@@ -134,7 +135,7 @@
     </div>
 
   </div>
-</div>
+</main>
 
 <script>
 (async function() {

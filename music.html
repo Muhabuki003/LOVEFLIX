@@ -18,6 +18,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
 ::selection{background:var(--red);color:#fff}
+.skip-link{position:absolute;left:8px;top:-48px;z-index:2000;background:#e50914;color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:top .15s ease}
+.skip-link:focus{top:8px}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,[role="slider"]:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .app{display:grid;grid-template-columns:240px 1fr 340px;grid-template-rows:64px 1fr 96px;grid-template-areas:"nav nav nav" "sidebar main queue" "player player player";height:100vh;width:100vw}
 nav.topnav{grid-area:nav;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(10,10,10,0.85);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--border);z-index:30}
 .nav-left{display:flex;align-items:center;gap:32px}
@@ -60,8 +64,9 @@ aside.sidebar{grid-area:sidebar;background:#0a0a0a;border-right:1px solid var(--
 .lf-modal-backdrop.open{opacity:1;pointer-events:all}
 .lf-modal{background:var(--panel);border:1px solid var(--border-strong);border-radius:14px;padding:28px 24px;width:340px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,.7)}
 .lf-modal h3{font-size:18px;font-weight:600;margin-bottom:16px;color:#fff}
-.lf-modal input{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-2);color:#fff;font-size:14px;font-family:var(--sans);outline:none;margin-bottom:14px}
+.lf-modal input{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-2);color:#fff;font-size:14px;font-family:var(--sans);margin-bottom:14px}
 .lf-modal input:focus{border-color:var(--gold)}
+.lf-modal input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .lf-modal-btns{display:flex;gap:8px;justify-content:flex-end}
 .lf-modal-btns button{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13.5px;font-family:var(--sans);font-weight:500}
 .lf-btn-primary{background:var(--red);color:#fff}
@@ -84,7 +89,8 @@ main.content{grid-area:main;overflow-y:auto;padding:0;background:linear-gradient
 .search-bar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;padding:11px 14px;transition:border-color .15s,background .15s;max-width:520px}
 .search-bar:focus-within{border-color:var(--border-strong);background:rgba(255,255,255,0.08)}
 .search-bar svg{width:16px;height:16px;fill:var(--text-dim);flex-shrink:0}
-.search-bar input{background:none;border:none;outline:none;color:#fff;font:inherit;font-size:14px;flex:1;letter-spacing:.2px}
+.search-bar input{background:none;border:none;color:#fff;font:inherit;font-size:14px;flex:1;letter-spacing:.2px}
+.search-bar input:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:2px}
 .search-bar input::placeholder{color:var(--text-dim)}
 .search-bar kbd{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);padding:2px 6px;border-radius:3px}
 .section{margin-top:8px}
@@ -133,7 +139,7 @@ main.content{grid-area:main;overflow-y:auto;padding:0;background:linear-gradient
 .track-row:last-child{border-bottom:none}
 .track-row:hover{background:rgba(255,255,255,0.04)}
 .track-row.playing{background:rgba(229,9,20,0.08)}
-.track-row.playing .track-title{color:var(--red)}
+.track-row.playing .track-title{color:#ff1a1a}
 .track-num{font-size:13px;color:var(--text-dim);text-align:center;font-variant-numeric:tabular-nums}
 .track-row:hover .track-num{display:none}
 .track-row:hover .track-num + .num-hover{display:flex}
@@ -195,7 +201,7 @@ aside.queue{grid-area:queue;background:#0a0a0a;border-left:1px solid var(--borde
 .queue-remove:hover{background:rgba(229,9,20,0.18);color:#fff}
 .queue-remove svg{width:12px;height:12px;fill:currentColor}
 .queue-item.current{background:rgba(229,9,20,0.1)}
-.queue-item.current .queue-tname{color:var(--red)}
+.queue-item.current .queue-tname{color:#ff1a1a}
 .queue-empty{text-align:center;color:var(--text-dim);font-size:12px;padding:30px 20px;line-height:1.6}
 footer.player{grid-area:player;background:rgba(15,15,15,0.78);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border-top:1px solid var(--border);padding:0 24px;display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;gap:24px;z-index:40;position:relative}
 footer.player::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(229,9,20,0.04) 0%,transparent 60%)}
@@ -271,7 +277,7 @@ footer.player::before{content:'';position:absolute;inset:0;pointer-events:none;b
 .m-tabbar{display:none;position:fixed;left:0;right:0;bottom:0;background:rgba(8,8,8,0.92);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-top:1px solid var(--border);padding:8px 4px calc(8px + env(safe-area-inset-bottom)) 4px;z-index:55;justify-content:space-around;align-items:center}
 .m-tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px;font-size:10px;color:var(--text-dim);flex:1;letter-spacing:.2px;transition:color .12s}
 .m-tab svg{width:22px;height:22px;fill:currentColor}
-.m-tab.active{color:var(--red)}
+.m-tab.active{color:#ff1a1a}
 .m-tab:active{transform:scale(0.95)}
 .m-fullscreen{position:fixed;inset:0;background:linear-gradient(180deg,#1a0710 0%,#0a0a0a 60%);z-index:200;transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overflow:hidden}
 .m-fullscreen.open{transform:translateY(0)}
@@ -483,6 +489,7 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 <base target="_blank">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 <div class="app">
 <nav class="topnav">
 <div class="nav-left">
@@ -496,36 +503,37 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </div>
 </div>
 <div class="nav-right">
-<div class="sync-pill" id="syncPill"><span class="sync-dot"></span><span><strong style="font-weight:600;color:#fff" id="syncName">Adrien</strong> is listening</span></div>
-<button class="ctrl-btn small" title="Notifications"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 003-3H9a3 3 0 003 3z"></path></svg></button>
-<button class="ctrl-btn small" id="musicSettingsBtn" title="Music settings"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg></button>
-<div class="nav-avatar">M</div>
+<div class="sync-pill" id="syncPill"><span class="sync-dot" aria-hidden="true"></span><span><strong style="font-weight:600;color:#fff" id="syncName">Adrien</strong> is listening</span></div>
+<button class="ctrl-btn small" title="Notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 003-3H9a3 3 0 003 3z"></path></svg></button>
+<button class="ctrl-btn small" id="musicSettingsBtn" title="Music settings" aria-label="Music settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg></button>
+<div class="nav-avatar" aria-hidden="true">M</div>
 </div>
 </nav>
-<aside class="sidebar">
+<aside class="sidebar" aria-label="Music library">
 <div class="side-section">
-<div class="side-label">Library</div>
-<div class="side-item active" data-nav="listen"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>Listen Now</div>
-<div class="side-item" data-nav="radio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>Radio</div>
-<div class="side-item" data-nav="recent"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h10v4H4z"></path></svg>Recently Played</div>
-<div class="side-item" data-nav="loved"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>Loved Songs</div>
+<div class="side-label" id="libraryLabel">Library</div>
+<div class="side-item active" data-nav="listen" role="button" tabindex="0" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>Listen Now</div>
+<div class="side-item" data-nav="radio" role="button" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>Radio</div>
+<div class="side-item" data-nav="recent" role="button" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h10v4H4z"></path></svg>Recently Played</div>
+<div class="side-item" data-nav="loved" role="button" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>Loved Songs</div>
 </div>
 <div class="side-section">
 <div class="side-label">Our Playlists</div>
 <div id="sidebarPlaylists"><div style="padding:8px 12px;font-size:12.5px;color:var(--text-dim)">Loading playlists...</div></div>
-<button class="new-pl-btn" id="newPlaylistBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>New Playlist</button>
+<button class="new-pl-btn" id="newPlaylistBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>New Playlist</button>
 </div>
 <div class="couple-tag">
 <div class="couple-tag-label">Listening together</div>
 <div class="couple-tag-name" id="coupleTagName">Mira <em>&amp;</em> Adrien</div>
 </div>
 </aside>
-<main class="content">
+<main class="content" id="main-content">
 <div class="search-wrap">
 <div class="search-bar">
-<svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+<label for="searchInput" class="sr-only">Search songs, artists, albums</label>
 <input id="searchInput" type="text" placeholder="Search songs, artists, albums..." autocomplete="off">
-<kbd>⌘ K</kbd>
+<kbd aria-hidden="true">⌘ K</kbd>
 </div>
 </div>
 <div class="content-inner">
@@ -535,20 +543,20 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 <div class="m-avatar">M</div>
 </div>
 <div class="listen-hero">
-<div class="hero-art art-1"><div class="hero-art-mono">Q</div></div>
+<div class="hero-art art-1"><div class="hero-art-mono" aria-hidden="true">Q</div></div>
 <div class="hero-info">
 <div class="label">Made for you both</div>
 <div class="title">Quiet Mornings <em>vol. ii</em></div>
 <div class="desc">A slow-brew mix Adrien started Tuesday at 7:14am. Lo-fi piano, soft folk, and the kind of jazz that pairs with toast.</div>
-<div class="meta"><span>32 tracks</span><span class="meta-dot"></span><span>1 hr 48 min</span><span class="meta-dot"></span><span>Updated 2 days ago</span></div>
+<div class="meta"><span>32 tracks</span><span class="meta-dot" aria-hidden="true"></span><span>1 hr 48 min</span><span class="meta-dot" aria-hidden="true"></span><span>Updated 2 days ago</span></div>
 </div>
-<button class="hero-play" id="heroPlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
+<button class="hero-play" id="heroPlay" aria-label="Play Quiet Mornings vol. ii"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
 </div>
 <div class="section">
 <div class="sec-head"><div><div class="sec-title">Listen <em>Now</em></div><div class="sec-sub">Editorial picks for couples</div></div><div class="sec-more">See all →</div></div>
 <div class="feature-rail">
-<div class="feature-card" data-playlist="slow-sundays"><div class="fc-bg art-5"></div><div class="art-mono" style="opacity:.45;font-size:120px">M</div><div class="fc-overlay"></div><div class="fc-content"><div class="fc-label">Couple's station</div><div class="fc-title">Music for Slow Sundays</div><div class="fc-desc">Soft tempo, low BPM, all heart — perfect for staying in.</div></div></div>
-<div class="feature-card" data-playlist="golden-hour"><div class="fc-bg art-4"></div><div class="art-mono" style="opacity:.45;font-size:120px">G</div><div class="fc-overlay"></div><div class="fc-content"><div class="fc-label">From the gold mix</div><div class="fc-title">Golden Hour, On Repeat</div><div class="fc-desc">Indie folk, French soul, the kind of songs Adrien sends at 6pm.</div></div></div>
+<div class="feature-card" data-playlist="slow-sundays" role="button" tabindex="0" aria-label="Play Music for Slow Sundays"><div class="fc-bg art-5"></div><div class="art-mono" style="opacity:.45;font-size:120px" aria-hidden="true">M</div><div class="fc-overlay"></div><div class="fc-content"><div class="fc-label">Couple's station</div><div class="fc-title">Music for Slow Sundays</div><div class="fc-desc">Soft tempo, low BPM, all heart — perfect for staying in.</div></div></div>
+<div class="feature-card" data-playlist="golden-hour" role="button" tabindex="0" aria-label="Play Golden Hour, On Repeat"><div class="fc-bg art-4"></div><div class="art-mono" style="opacity:.45;font-size:120px" aria-hidden="true">G</div><div class="fc-overlay"></div><div class="fc-content"><div class="fc-label">From the gold mix</div><div class="fc-title">Golden Hour, On Repeat</div><div class="fc-desc">Indie folk, French soul, the kind of songs Adrien sends at 6pm.</div></div></div>
 </div>
 </div>
 <div class="section">
@@ -582,35 +590,35 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </aside>
 <footer class="player">
 <div class="now-playing">
-<div class="np-art" id="npArt"><div class="art-mono small" id="npArtMono">Q</div></div>
+<div class="np-art" id="npArt"><div class="art-mono small" id="npArtMono" aria-hidden="true">Q</div></div>
 <div class="np-info">
 <div class="np-title" id="npTitle">Tides (Reprise)</div>
 <div class="np-artist" id="npArtist">Laura Misch · Quiet Mornings vol. ii</div>
 </div>
-<button class="np-fav active" id="favBtn"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg></button>
+<button class="np-fav active" id="favBtn" aria-pressed="true" aria-label="Remove from Loved Songs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg></button>
 </div>
 <div class="controls">
 <div class="control-row">
-<button class="ctrl-btn small" id="shuffleBtn"><svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg></button>
-<button class="ctrl-btn" id="prevBtn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
-<button class="play-btn" id="playBtn"><svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
-<button class="ctrl-btn" id="nextBtn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
-<button class="ctrl-btn small active" id="repeatBtn"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg></button>
+<button class="ctrl-btn small" id="shuffleBtn" aria-pressed="false" aria-label="Shuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg></button>
+<button class="ctrl-btn" id="prevBtn" aria-label="Previous track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
+<button class="play-btn" id="playBtn" aria-pressed="false" aria-label="Play"><svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
+<button class="ctrl-btn" id="nextBtn" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
+<button class="ctrl-btn small active" id="repeatBtn" aria-pressed="true" aria-label="Repeat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg></button>
 </div>
 <div class="seek-row">
 <span class="time" id="curTime">0:00</span>
-<div class="seek" id="seek"><div class="seek-track"><div class="seek-buffer" id="seekBuffer" style="width:0%"></div><div class="seek-fill" id="seekFill" style="width:0%"></div><div class="seek-thumb" id="seekThumb" style="left:0%"></div></div></div>
+<div class="seek" id="seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 3:42"><div class="seek-track"><div class="seek-buffer" id="seekBuffer" style="width:0%"></div><div class="seek-fill" id="seekFill" style="width:0%"></div><div class="seek-thumb" id="seekThumb" style="left:0%"></div></div></div>
 <span class="time right" id="durTime">3:42</span>
 </div>
 </div>
 <div class="right-cluster">
-<button class="ctrl-btn small" title="Lyrics"><svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg></button>
-<button class="ctrl-btn small" title="Devices"><svg viewBox="0 0 24 24"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg></button>
-<button class="ctrl-btn small active" title="Queue"><svg viewBox="0 0 24 24"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg></button>
-<button class="ctrl-btn small active" id="syncToggle" title="Sync with partner"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></button>
+<button class="ctrl-btn small" title="Lyrics" aria-label="Lyrics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg></button>
+<button class="ctrl-btn small" title="Devices" aria-label="Devices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg></button>
+<button class="ctrl-btn small active" title="Queue" aria-label="Queue" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg></button>
+<button class="ctrl-btn small active" id="syncToggle" title="Sync with partner" aria-pressed="true" aria-label="Sync with partner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></button>
 <div class="volume">
-<button class="ctrl-btn small" id="muteBtn"><svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"></path></svg></button>
-<div class="vol-bar" id="volBar"><div class="vol-track"><div class="vol-fill" id="volFill" style="width:72%"></div><div class="vol-thumb" id="volThumb" style="left:72%"></div></div></div>
+<button class="ctrl-btn small" id="muteBtn" aria-pressed="false" aria-label="Mute"><svg id="volIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"></path></svg></button>
+<div class="vol-bar" id="volBar" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72"><div class="vol-track"><div class="vol-fill" id="volFill" style="width:72%"></div><div class="vol-thumb" id="volThumb" style="left:72%"></div></div></div>
 </div>
 </div>
 <div class="attribution">Full songs via <span>YouTube</span></div>
@@ -618,75 +626,75 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </div>
 
 <div id="ytPlayerContainer">
-<div class="yt-player-header"><span id="ytPlayerTitle">Now Playing</span><button id="ytMinimize">−</button><button id="ytClose">×</button></div>
+<div class="yt-player-header"><span id="ytPlayerTitle">Now Playing</span><button id="ytMinimize" aria-label="Minimize video">−</button><button id="ytClose" aria-label="Close video">×</button></div>
 <div id="ytPlayer"></div>
-<div class="yt-click-play" id="ytClickPlay">
+<div class="yt-click-play" id="ytClickPlay" role="button" tabindex="0" aria-label="Click to start listening">
   <div class="yt-click-play-content">
-    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
     <div>Click to start listening</div>
   </div>
 </div>
 </div>
 
 <div class="m-miniplayer" id="mMini">
-<div class="m-mini-art" id="mMiniArt"><div class="art-mono small" id="mMiniArtMono">T</div></div>
+<div class="m-mini-art" id="mMiniArt"><div class="art-mono small" id="mMiniArtMono" aria-hidden="true">T</div></div>
 <div class="m-mini-info"><div class="m-mini-title" id="mMiniTitle">Tides (Reprise)</div><div class="m-mini-artist" id="mMiniArtist">Laura Misch</div></div>
-<button class="m-mini-btn play-icon" data-mini-play=""><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></button>
-<button class="m-mini-btn pause-icon" data-mini-play=""><svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
-<button class="m-mini-btn" data-mini-next=""><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
+<button class="m-mini-btn play-icon" data-mini-play="" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+<button class="m-mini-btn pause-icon" data-mini-play="" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
+<button class="m-mini-btn" data-mini-next="" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
 <div class="m-mini-progress"><span id="mMiniProgress"></span></div>
 </div>
 
-<nav class="m-tabbar" id="mTabbar">
-<button class="m-tab active" data-tab="listen"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>Listen Now</button>
-<button class="m-tab" data-tab="browse"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"></path></svg>Browse</button>
-<button class="m-tab" data-tab="radio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>Radio</button>
-<button class="m-tab" data-tab="search"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>Search</button>
-<button class="m-tab" data-tab="library"><svg viewBox="0 0 24 24"><path d="M4 3h2v18H4zm4 0h2v18H8zm5 0l5 18 1.93-.52L13 2.5 13 3z"></path></svg>Library</button>
+<nav class="m-tabbar" id="mTabbar" aria-label="Music sections">
+<button class="m-tab active" data-tab="listen" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"></path></svg>Listen Now</button>
+<button class="m-tab" data-tab="browse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"></path></svg>Browse</button>
+<button class="m-tab" data-tab="radio"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"></path></svg>Radio</button>
+<button class="m-tab" data-tab="search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>Search</button>
+<button class="m-tab" data-tab="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h2v18H4zm4 0h2v18H8zm5 0l5 18 1.93-.52L13 2.5 13 3z"></path></svg>Library</button>
 </nav>
 
-<div class="m-fullscreen" id="mFullscreen">
+<div class="m-fullscreen" id="mFullscreen" role="dialog" aria-modal="true" aria-label="Now playing">
 <div class="m-fs-header">
-<div class="m-fs-handle"></div>
-<button class="m-fs-close" id="mFsClose"><svg viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z" transform="rotate(180 12 12)"></path></svg></button>
+<div class="m-fs-handle" aria-hidden="true"></div>
+<button class="m-fs-close" id="mFsClose" aria-label="Close full-screen player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14l5-5 5 5z" transform="rotate(180 12 12)"></path></svg></button>
 <div class="m-fs-context"><div class="eyebrow">From the album</div><div class="album" id="mFsAlbum">Quiet Mornings vol. ii</div></div>
-<button class="m-fs-menu">⋯</button>
+<button class="m-fs-menu" aria-label="More options">⋯</button>
 </div>
 <div class="m-fs-body">
-<div class="m-fs-art" id="mFsArt"><div class="art-mono" id="mFsArtMono">T</div></div>
+<div class="m-fs-art" id="mFsArt"><div class="art-mono" id="mFsArtMono" aria-hidden="true">T</div></div>
 <div class="m-fs-info">
 <div class="m-fs-info-text"><div class="m-fs-title" id="mFsTitle">Tides (Reprise)</div><div class="m-fs-artist" id="mFsArtist">Laura Misch</div></div>
-<button class="m-fs-fav active" id="mFsFav"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg></button>
+<button class="m-fs-fav active" id="mFsFav" aria-pressed="true" aria-label="Remove from Loved Songs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg></button>
 </div>
 <div class="m-fs-seek-wrap">
-<div class="m-fs-seek" id="mFsSeek"><div class="seek-track"><div class="seek-fill" id="mFsSeekFill" style="width:0%"></div><div class="seek-thumb" id="mFsSeekThumb" style="left:0%"></div></div></div>
+<div class="m-fs-seek" id="mFsSeek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="seek-track"><div class="seek-fill" id="mFsSeekFill" style="width:0%"></div><div class="seek-thumb" id="mFsSeekThumb" style="left:0%"></div></div></div>
 <div class="m-fs-times"><span id="mFsCurTime">0:00</span><span id="mFsDurTime">3:42</span></div>
 </div>
 <div class="m-fs-controls">
-<button class="m-fs-ctrl small active"><svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg></button>
-<button class="m-fs-ctrl" data-mini-prev=""><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
-<button class="m-fs-play" data-mini-play=""><svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
-<button class="m-fs-ctrl" data-mini-next=""><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
-<button class="m-fs-ctrl small active"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg></button>
+<button class="m-fs-ctrl small active" id="mFsShuffleBtn" aria-pressed="false" aria-label="Shuffle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path></svg></button>
+<button class="m-fs-ctrl" data-mini-prev="" aria-label="Previous track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg></button>
+<button class="m-fs-play" data-mini-play="" aria-label="Play"><svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg><svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"></path></svg></button>
+<button class="m-fs-ctrl" data-mini-next="" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg></button>
+<button class="m-fs-ctrl small active" id="mFsRepeatBtn" aria-pressed="true" aria-label="Repeat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path></svg></button>
 </div>
 <div class="m-fs-volume">
-<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"></path></svg>
-<div class="m-fs-vol-bar" id="mFsVolBar"><div class="vol-track"><div class="vol-fill" id="mFsVolFill" style="width:72%"></div><div class="vol-thumb" id="mFsVolThumb" style="left:72%"></div></div></div>
-<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zm-2.5-9.04v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06a9 9 0 000-17.62z"></path></svg>
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"></path></svg>
+<div class="m-fs-vol-bar" id="mFsVolBar" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72"><div class="vol-track"><div class="vol-fill" id="mFsVolFill" style="width:72%"></div><div class="vol-thumb" id="mFsVolThumb" style="left:72%"></div></div></div>
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zm-2.5-9.04v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06a9 9 0 000-17.62z"></path></svg>
 </div>
 <div class="m-fs-actions">
-<button class="m-fs-action"><svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg>Lyrics</button>
-<button class="m-fs-action"><svg viewBox="0 0 24 24"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg>Devices</button>
-<button class="m-fs-action active" id="mFsQueueBtn"><svg viewBox="0 0 24 24"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg>Queue</button>
+<button class="m-fs-action" aria-label="Lyrics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v2H4zm0 4h12v2H4zm0 4h16v2H4zm0 4h10v2H4z"></path></svg>Lyrics</button>
+<button class="m-fs-action" aria-label="Devices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h14v10H3zm17 4h2v8h-9v-2h7V9z"></path></svg>Devices</button>
+<button class="m-fs-action active" id="mFsQueueBtn" aria-expanded="false" aria-controls="mQueueSheet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h13v2H3zm0 5h13v2H3zm0 5h9v2H3zm16-7l-4 3v8h4z"></path></svg>Queue</button>
 </div>
-<div class="m-fs-sync"><span class="dot"></span><span><strong style="font-weight:600;color:#fff">Adrien</strong> is listening with you</span></div>
+<div class="m-fs-sync"><span class="dot" aria-hidden="true"></span><span><strong style="font-weight:600;color:#fff">Adrien</strong> is listening with you</span></div>
 <div class="m-fs-attr">Full songs via <span>YouTube</span></div>
 </div>
 </div>
 
-<div class="m-queue-sheet" id="mQueueSheet">
+<div class="m-queue-sheet" id="mQueueSheet" role="dialog" aria-modal="true" aria-label="Queue">
 <div class="m-qs-head">
-<div class="m-qs-handle"></div>
+<div class="m-qs-handle" aria-hidden="true"></div>
 <div class="m-qs-titles">
 <div class="m-qs-eyebrow">Our Queue · Synced</div>
 <div class="m-qs-title">Our <em>Playlist</em></div>
@@ -697,14 +705,14 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 <div class="m-qs-list" id="mQueueList"></div>
 </div>
 
-<div class="toast" id="toast">
-<div class="toast-avatar">A</div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+<div class="toast-avatar" aria-hidden="true">A</div>
 <div class="toast-text"><strong>Adrien paused the music</strong><small>Sync paused at 1:23 · Tides (Reprise)</small></div>
 </div>
 
 <div class="lf-modal-backdrop" id="musicSettingsModal">
-<div class="lf-modal mc-modal">
-<h3>Music Settings</h3>
+<div class="lf-modal mc-modal" role="dialog" aria-modal="true" aria-labelledby="musicSettingsTitle">
+<h3 id="musicSettingsTitle">Music Settings</h3>
 <div class="mc-section-label">Music Connectors</div>
 <div class="mc-intro">Pick where your music plays from. Whichever provider each of you is on, LoveFlix keeps listening together, playback, and shared playlists in sync.</div>
 <div id="connectorList"></div>
@@ -716,8 +724,9 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </div>
 
 <div class="lf-modal-backdrop" id="newPlaylistModal">
-<div class="lf-modal">
-<h3>New Shared Playlist</h3>
+<div class="lf-modal" role="dialog" aria-modal="true" aria-labelledby="newPlaylistTitle">
+<h3 id="newPlaylistTitle">New Shared Playlist</h3>
+<label for="newPlaylistName" class="sr-only">Playlist name</label>
 <input type="text" id="newPlaylistName" placeholder="Give it a name..." maxlength="80">
 <div class="lf-modal-btns">
 <button class="lf-btn-cancel" id="cancelNewPlaylist">Cancel</button>
@@ -727,8 +736,8 @@ main.content{background:linear-gradient(180deg,#131313 0%,#0b0b0b 400px);padding
 </div>
 
 <div class="lf-modal-backdrop" id="saveToPlaylistModal">
-<div class="lf-modal">
-<h3>Save to Playlist</h3>
+<div class="lf-modal" role="dialog" aria-modal="true" aria-labelledby="saveToPlaylistTitle">
+<h3 id="saveToPlaylistTitle">Save to Playlist</h3>
 <div id="playlistChoices" style="max-height:240px;overflow-y:auto;margin-bottom:12px"></div>
 <div class="lf-modal-btns">
 <button class="lf-btn-cancel" id="cancelSaveToPlaylist">Cancel</button>
@@ -1015,8 +1024,10 @@ function setVol(v) {
   if (player) player.setVolume(volume);
   $('#volFill').style.width = (volume*100) + '%';
   $('#volThumb').style.left = (volume*100) + '%';
+  $('#volBar').setAttribute('aria-valuenow', Math.round(volume*100));
   const mvf = $('#mFsVolFill'); if (mvf) mvf.style.width = (volume*100)+'%';
   const mvt = $('#mFsVolThumb'); if (mvt) mvt.style.left = (volume*100)+'%';
+  const mvb = $('#mFsVolBar'); if (mvb) mvb.setAttribute('aria-valuenow', Math.round(volume*100));
   isMuted = volume === 0;
   updateMuteIcon();
 }
@@ -1039,7 +1050,10 @@ function updateMuteIcon() {
 }
 
 function updatePlayBtn() {
-  $('#playBtn').classList.toggle('playing', isPlaying);
+  const btn = $('#playBtn');
+  btn.classList.toggle('playing', isPlaying);
+  btn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+  btn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
   $('#mMini').classList.toggle('playing', isPlaying);
   $('#mFullscreen').classList.toggle('playing', isPlaying);
 }
@@ -1070,9 +1084,14 @@ function updateSeek() {
   $('#seekFill').style.width = pct + '%';
   $('#seekThumb').style.left = pct + '%';
   $('#curTime').textContent = fmtTime(position);
+  const seekEl = $('#seek');
+  seekEl.setAttribute('aria-valuenow', Math.round(pct));
+  seekEl.setAttribute('aria-valuetext', fmtTime(position) + ' of ' + fmtTime(dur));
   $('#mFsSeekFill').style.width = pct + '%';
   $('#mFsSeekThumb').style.left = pct + '%';
   $('#mFsCurTime').textContent = fmtTime(position);
+  const mFsSeekEl = $('#mFsSeek');
+  if (mFsSeekEl) { mFsSeekEl.setAttribute('aria-valuenow', Math.round(pct)); mFsSeekEl.setAttribute('aria-valuetext', fmtTime(position) + ' of ' + fmtTime(dur)); }
   const mp = $('#mMiniProgress'); if (mp) mp.style.width = pct + '%';
 }
 
@@ -1099,26 +1118,33 @@ function trackArtCell(t, cls){
 
 function renderTrackList(container, list, withNum=true){
   container.innerHTML = list.map((t, i) =>`
-    <div class="track-row ${t.id === (QUEUE[currentIdx] && QUEUE[currentIdx].id) ? 'playing' : ''}" data-id="${t.id}">
+    <div class="track-row ${t.id === (QUEUE[currentIdx] && QUEUE[currentIdx].id) ? 'playing' : ''}" data-id="${t.id}" role="button" tabindex="0" aria-label="Play ${escapeHtml(t.title)} by ${escapeHtml(t.artist)}">
       <div style="position:relative;display:flex;align-items:center;justify-content:center">
         <span class="track-num">${withNum ? (i+1) : ''}</span>
-        <span class="num-hover"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="num-hover" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
       </div>
       ${trackArtCell(t, 'track-art')}
       <div><div class="track-title">${escapeHtml(t.title)}</div><div class="track-artist">${escapeHtml(t.artist)}</div></div>
       <div class="track-artist" style="font-size:12.5px">${escapeHtml(t.album || '')}</div>
       <div class="track-dur">${fmtTime(t.dur)}</div>
-      <button class="track-save" data-save="${t.id}" title="Save to playlist"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
-      <button class="track-add" data-add="${t.id}" title="Add to queue"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
+      <button class="track-save" data-save="${t.id}" title="Save to playlist" aria-label="Save ${escapeHtml(t.title)} to playlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5A5.5 5.5 0 017.5 3c1.74 0 3.41.81 4.5 2.09A6 6 0 0116.5 3 5.5 5.5 0 0122 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+      <button class="track-add" data-add="${t.id}" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg></button>
     </div>
   `).join('');
   const findTrack = (id) => list.find(x => x.id === id) || TRACKS.find(x => x.id === id);
+  const activateRow = (row) => {
+    const idx = QUEUE.findIndex(q => q.id === row.dataset.id);
+    if (idx !== -1) { currentIdx = idx; loadTrack(currentIdx); }
+    else { const t = findTrack(row.dataset.id); if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); } }
+  };
   container.querySelectorAll('.track-row').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('[data-add]') || e.target.closest('[data-save]')) return;
-      const idx = QUEUE.findIndex(q => q.id === row.dataset.id);
-      if (idx !== -1) { currentIdx = idx; loadTrack(currentIdx); }
-      else { const t = findTrack(row.dataset.id); if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); } }
+      activateRow(row);
+    });
+    row.addEventListener('keydown', (e) => {
+      if (e.target.closest('[data-add]') || e.target.closest('[data-save]')) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateRow(row); }
     });
   });
   container.querySelectorAll('[data-add]').forEach(btn => {
@@ -1131,17 +1157,19 @@ function renderTrackList(container, list, withNum=true){
 
 function renderRail(container, list){
   container.innerHTML = list.map(a=>`
-    <div class="album-card">
-      <div class="album-art ${a.art}"><div class="art-mono">${escapeHtml(a.mono)}</div><button class="play-hover"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+    <div class="album-card" role="button" tabindex="0" aria-label="Play ${escapeHtml(a.title)} by ${escapeHtml(a.artist)}">
+      <div class="album-art ${a.art}"><div class="art-mono" aria-hidden="true">${escapeHtml(a.mono)}</div><button class="play-hover" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
       <div class="album-title">${escapeHtml(a.title)}</div>
       <div class="album-artist">${escapeHtml(a.artist)}</div>
     </div>
   `).join('');
+  const activateCard = (i) => {
+    const t = TRACKS.find(tr => tr.title === list[i].title);
+    if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); showToast('Now playing: ' + t.title); }
+  };
   container.querySelectorAll('.album-card').forEach((card, i) => {
-    card.addEventListener('click', () => {
-      const t = TRACKS.find(tr => tr.title === list[i].title);
-      if (t) { QUEUE.push(t); currentIdx = QUEUE.length - 1; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); showToast('Now playing: ' + t.title); }
-    });
+    card.addEventListener('click', () => activateCard(i));
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateCard(i); } });
   });
 }
 
@@ -1154,12 +1182,12 @@ function renderQueue(){
   const mc = $('#mQsCount'); if (mc) mc.textContent = `${QUEUE.length} tracks`;
   let html = '';
   if (cur) {
-    html += `<div class="queue-section-label"><span class="now-bars"><span></span><span></span><span></span></span>Now Playing</div>
-    <div class="queue-item current" data-qidx="${currentIdx}"><div class="drag-handle">⋮⋮</div>${trackArtCell(cur, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(cur.title)}</div><div class="queue-tartist">${escapeHtml(cur.artist)}</div></div><button class="queue-remove" data-remove="${currentIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`;
+    html += `<div class="queue-section-label"><span class="now-bars" aria-hidden="true"><span></span><span></span><span></span></span>Now Playing</div>
+    <div class="queue-item current" data-qidx="${currentIdx}" role="button" tabindex="0" aria-label="Now playing ${escapeHtml(cur.title)} by ${escapeHtml(cur.artist)}"><div class="drag-handle" aria-hidden="true">⋮⋮</div>${trackArtCell(cur, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(cur.title)}</div><div class="queue-tartist">${escapeHtml(cur.artist)}</div></div><button class="queue-remove" data-remove="${currentIdx}" aria-label="Remove ${escapeHtml(cur.title)} from queue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H5v-2h14z"/></svg></button></div>`;
   }
   if (upcoming.length) {
     html += `<div class="queue-section-label">Up Next</div>`;
-    upcoming.forEach((t, i) => { const realIdx = currentIdx + 1 + i; html += `<div class="queue-item" draggable="true" data-qidx="${realIdx}"><div class="drag-handle">⋮⋮</div>${trackArtCell(t, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(t.title)}</div><div class="queue-tartist">${escapeHtml(t.artist)}</div></div><button class="queue-remove" data-remove="${realIdx}"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14z"/></svg></button></div>`; });
+    upcoming.forEach((t, i) => { const realIdx = currentIdx + 1 + i; html += `<div class="queue-item" draggable="true" data-qidx="${realIdx}" role="button" tabindex="0" aria-label="Play ${escapeHtml(t.title)} by ${escapeHtml(t.artist)}"><div class="drag-handle" aria-hidden="true">⋮⋮</div>${trackArtCell(t, 'queue-art')}<div class="queue-info"><div class="queue-tname">${escapeHtml(t.title)}</div><div class="queue-tartist">${escapeHtml(t.artist)}</div></div><button class="queue-remove" data-remove="${realIdx}" aria-label="Remove ${escapeHtml(t.title)} from queue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H5v-2h14z"/></svg></button></div>`; });
   } else { html += `<div class="queue-empty">No upcoming tracks.<br>Add some from search or your library.</div>`; }
   list.innerHTML = html;
   if (mList) mList.innerHTML = html;
@@ -1171,8 +1199,13 @@ function wireQueue(container) {
   container.querySelectorAll('[data-remove]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); const idx = +btn.dataset.remove; if (idx === currentIdx) { QUEUE.splice(idx,1); if (currentIdx >= QUEUE.length) currentIdx = Math.max(0, QUEUE.length-1); } else if (idx < currentIdx) { QUEUE.splice(idx,1); currentIdx--; } else { QUEUE.splice(idx,1); } renderQueue(); if (QUEUE.length === 0) { isPlaying = false; updatePlayBtn(); } });
   });
+  const activateItem = (item) => { const idx = +item.dataset.qidx; currentIdx = idx; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); };
   container.querySelectorAll('.queue-item').forEach(item => {
-    item.addEventListener('click', (e) => { if (e.target.closest('[data-remove]') || e.target.closest('.drag-handle')) return; const idx = +item.dataset.qidx; currentIdx = idx; loadTrack(currentIdx); isPlaying = true; updatePlayBtn(); });
+    item.addEventListener('click', (e) => { if (e.target.closest('[data-remove]') || e.target.closest('.drag-handle')) return; activateItem(item); });
+    item.addEventListener('keydown', (e) => {
+      if (e.target.closest('[data-remove]')) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateItem(item); }
+    });
   });
 }
 
@@ -1233,17 +1266,35 @@ function renderSearchResults(q, results) {
 $('#playBtn').addEventListener('click', togglePlay);
 $('#nextBtn').addEventListener('click', nextTrack);
 $('#prevBtn').addEventListener('click', prevTrack);
-$('#favBtn').addEventListener('click', () => { $('#favBtn').classList.toggle('active'); });
+function toggleFav(btn) {
+  const active = btn.classList.toggle('active');
+  btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  btn.setAttribute('aria-label', active ? 'Remove from Loved Songs' : 'Add to Loved Songs');
+}
+$('#favBtn').addEventListener('click', () => toggleFav($('#favBtn')));
 $('#syncToggle').addEventListener('click', () => {
   syncMode = syncMode === 'following' ? 'independent' : 'following';
-  $('#syncToggle').classList.toggle('active', syncMode === 'following');
-  showToast(syncMode === 'following' ? 'Synced with ' + partnerName : 'Listening independently');
-  if (syncMode === 'following') { startSync(); pushSyncState(); }
+  const on = syncMode === 'following';
+  $('#syncToggle').classList.toggle('active', on);
+  $('#syncToggle').setAttribute('aria-pressed', on ? 'true' : 'false');
+  showToast(on ? 'Synced with ' + partnerName : 'Listening independently');
+  if (on) { startSync(); pushSyncState(); }
   else { LoveFlixMusic.sync.stop(); }
 });
-$('#shuffleBtn').addEventListener('click', () => { shuffleOn = !shuffleOn; $('#shuffleBtn').classList.toggle('active', shuffleOn); showToast(shuffleOn ? 'Shuffle on' : 'Shuffle off'); });
-$('#repeatBtn').addEventListener('click', () => { repeatOn = !repeatOn; $('#repeatBtn').classList.toggle('active', repeatOn); showToast(repeatOn ? 'Repeat on' : 'Repeat off'); });
-$('#muteBtn').addEventListener('click', toggleMute);
+function setShuffle(on) {
+  shuffleOn = on;
+  [$('#shuffleBtn'), $('#mFsShuffleBtn')].forEach(b => { if (b) { b.classList.toggle('active', shuffleOn); b.setAttribute('aria-pressed', shuffleOn ? 'true' : 'false'); } });
+}
+function setRepeat(on) {
+  repeatOn = on;
+  [$('#repeatBtn'), $('#mFsRepeatBtn')].forEach(b => { if (b) { b.classList.toggle('active', repeatOn); b.setAttribute('aria-pressed', repeatOn ? 'true' : 'false'); } });
+}
+$('#shuffleBtn').addEventListener('click', () => { setShuffle(!shuffleOn); showToast(shuffleOn ? 'Shuffle on' : 'Shuffle off'); });
+$('#repeatBtn').addEventListener('click', () => { setRepeat(!repeatOn); showToast(repeatOn ? 'Repeat on' : 'Repeat off'); });
+const mFsShuffleBtn = $('#mFsShuffleBtn'), mFsRepeatBtn = $('#mFsRepeatBtn');
+if (mFsShuffleBtn) mFsShuffleBtn.addEventListener('click', () => { setShuffle(!shuffleOn); showToast(shuffleOn ? 'Shuffle on' : 'Shuffle off'); });
+if (mFsRepeatBtn) mFsRepeatBtn.addEventListener('click', () => { setRepeat(!repeatOn); showToast(repeatOn ? 'Repeat on' : 'Repeat off'); });
+$('#muteBtn').addEventListener('click', () => { toggleMute(); const b = $('#muteBtn'); b.setAttribute('aria-pressed', isMuted ? 'true' : 'false'); b.setAttribute('aria-label', isMuted ? 'Unmute' : 'Mute'); });
 $('#heroPlay').addEventListener('click', () => { currentIdx = 0; loadTrack(0); isPlaying = true; updatePlayBtn(); });
 
 // Seek
@@ -1253,6 +1304,14 @@ function pctFromEvent(el, e) { const r = el.getBoundingClientRect(); return Math
 seek.addEventListener('mousedown', (e) => { seekDrag = true; seek.classList.add('dragging'); seekTo(pctFromEvent(seek, e)); });
 window.addEventListener('mousemove', (e) => { if (!seekDrag) return; seekTo(pctFromEvent(seek, e)); });
 window.addEventListener('mouseup', () => { if (seekDrag) { seekDrag = false; seek.classList.remove('dragging'); } });
+seek.addEventListener('keydown', (e) => {
+  const t = QUEUE[currentIdx];
+  const dur = (player && player.getDuration()) || (t && t.dur) || 180;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); seekTo(Math.min(1, (position + 5) / dur)); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); seekTo(Math.max(0, (position - 5) / dur)); }
+  else if (e.key === 'Home') { e.preventDefault(); seekTo(0); }
+  else if (e.key === 'End') { e.preventDefault(); seekTo(1); }
+});
 
 // Volume
 const volBar = $('#volBar');
@@ -1260,6 +1319,12 @@ let volDrag = false;
 volBar.addEventListener('mousedown', (e) => { volDrag = true; setVol(pctFromEvent(volBar, e)); });
 window.addEventListener('mousemove', (e) => { if (volDrag) setVol(pctFromEvent(volBar, e)); });
 window.addEventListener('mouseup', () => { volDrag = false; });
+volBar.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setVol(volume + 0.05); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setVol(volume - 0.05); }
+  else if (e.key === 'Home') { e.preventDefault(); setVol(0); }
+  else if (e.key === 'End') { e.preventDefault(); setVol(1); }
+});
 
 // Mobile
 const mFs = $('#mFullscreen');
@@ -1267,11 +1332,11 @@ const mQs = $('#mQueueSheet');
 document.querySelectorAll('[data-mini-play]').forEach(b => { b.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); }); });
 document.querySelectorAll('[data-mini-next]').forEach(b => { b.addEventListener('click', (e) => { e.stopPropagation(); nextTrack(); }); });
 document.querySelectorAll('[data-mini-prev]').forEach(b => { b.addEventListener('click', (e) => { e.stopPropagation(); prevTrack(); }); });
-$('#mMini').addEventListener('click', (e) => { if (e.target.closest('button')) return; mFs.classList.add('open'); });
-$('#mFsClose').addEventListener('click', () => { mFs.classList.remove('open'); });
-$('#mFsFav').addEventListener('click', () => { $('#mFsFav').classList.toggle('active'); });
-$('#mFsQueueBtn').addEventListener('click', () => { mQs.classList.add('open'); });
-$('#mQsClose').addEventListener('click', () => { mQs.classList.remove('open'); });
+$('#mMini').addEventListener('click', (e) => { if (e.target.closest('button')) return; openDialog(mFs); });
+$('#mFsClose').addEventListener('click', () => { closeDialog(mFs); });
+$('#mFsFav').addEventListener('click', () => toggleFav($('#mFsFav')));
+$('#mFsQueueBtn').addEventListener('click', () => { openDialog(mQs); $('#mFsQueueBtn').setAttribute('aria-expanded', 'true'); });
+$('#mQsClose').addEventListener('click', () => { closeDialog(mQs); $('#mFsQueueBtn').setAttribute('aria-expanded', 'false'); });
 
 // Mobile seek
 const mFsSeek = $('#mFsSeek');
@@ -1308,12 +1373,14 @@ $('#ytClose').addEventListener('click', () => { document.getElementById('ytPlaye
 // Click-to-play overlay
 const ytClickPlay = document.getElementById('ytClickPlay');
 if (ytClickPlay) {
-  ytClickPlay.addEventListener('click', () => {
+  const activateClickPlay = () => {
     ytClickPlay.classList.add('hidden');
     if (!isPlaying) {
       togglePlay();
     }
-  });
+  };
+  ytClickPlay.addEventListener('click', activateClickPlay);
+  ytClickPlay.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateClickPlay(); } });
 }
 
 // Hide overlay when playing starts
@@ -1340,24 +1407,29 @@ function showToast(msg) {
 
 // Sidebar nav
 document.querySelectorAll('.side-item[data-nav]').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.side-item').forEach(x => x.classList.remove('active'));
+  const activate = () => {
+    document.querySelectorAll('.side-item').forEach(x => { x.classList.remove('active'); x.removeAttribute('aria-current'); });
     item.classList.add('active');
+    item.setAttribute('aria-current', 'true');
     const nav = item.dataset.nav;
     if (nav === 'listen') { searchView.classList.add('hidden'); defaultView.classList.remove('hidden'); }
     if (nav === 'radio') { showToast('Radio stations loading...'); }
     if (nav === 'recent') { showToast('Recently played loaded'); }
     if (nav === 'loved') { showToast('Your loved songs'); }
-  });
+  };
+  item.addEventListener('click', activate);
+  item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
 });
 
 // Feature cards
 document.querySelectorAll('.feature-card').forEach(card => {
-  card.addEventListener('click', () => {
+  const activate = () => {
     const playlist = card.dataset.playlist;
     if (playlist === 'slow-sundays') { QUEUE = [TRACKS[0], TRACKS[1], TRACKS[2], TRACKS[3], TRACKS[4]]; currentIdx = 0; loadTrack(0); isPlaying = true; updatePlayBtn(); showToast('Playing: Music for Slow Sundays'); }
     if (playlist === 'golden-hour') { QUEUE = [TRACKS[10], TRACKS[11], TRACKS[12], TRACKS[13], TRACKS[14]]; currentIdx = 0; loadTrack(0); isPlaying = true; updatePlayBtn(); showToast('Playing: Golden Hour Mix'); }
-  });
+  };
+  card.addEventListener('click', activate);
+  card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
 });
 
 // ── SHARED PLAYLISTS ──
@@ -1398,17 +1470,16 @@ function renderSidebarPlaylists() {
   const el = document.getElementById('sidebarPlaylists');
   if (!playlists.length) { el.innerHTML = '<div style="padding:4px 12px 8px;font-size:12px;color:var(--text-dim)">No playlists yet</div>'; return; }
   el.innerHTML = playlists.map((pl, i) => `
-    <div class="playlist-row" data-plid="${pl.id}">
-      <div class="playlist-art ${pl.art || ART_CLASSES[i % ART_CLASSES.length]}"><span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span></div>
+    <div class="playlist-row" data-plid="${pl.id}" role="button" tabindex="0" aria-label="Open playlist ${escapeHtml(pl.name)}, ${pl.song_count || 0} songs">
+      <div class="playlist-art ${pl.art || ART_CLASSES[i % ART_CLASSES.length]}" aria-hidden="true"><span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span></div>
       <div class="playlist-name">${escapeHtml(pl.name)}</div>
-      <div style="font-size:11px;color:var(--text-dim);flex-shrink:0">${pl.song_count || 0}</div>
+      <div style="font-size:11px;color:var(--text-dim);flex-shrink:0" aria-hidden="true">${pl.song_count || 0}</div>
     </div>
   `).join('');
   el.querySelectorAll('.playlist-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const pl = playlists.find(p => String(p.id) === row.dataset.plid);
-      if (pl) openPlaylist(pl);
-    });
+    const activate = () => { const pl = playlists.find(p => String(p.id) === row.dataset.plid); if (pl) openPlaylist(pl); };
+    row.addEventListener('click', activate);
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
   });
 }
 

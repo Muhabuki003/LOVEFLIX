@@ -8,6 +8,10 @@
     <style>
         /* ── Reset & Base ── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        .skip-link{position:absolute;left:8px;top:-48px;z-index:2000;background:#e50914;color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:top .15s ease}
+        .skip-link:focus{top:8px}
+        a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             background: #141414;
@@ -115,17 +119,16 @@
             border-radius: 8px;
             background: #222;
             color: #e5e5e5;
-            outline: none;
             transition: border-color 0.25s, box-shadow 0.25s;
         }
         .search-wrap input:focus {
             border-color: #e50914;
             box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
         }
-        .search-wrap input::placeholder { color: #777; }
+        .search-wrap input::placeholder { color: #888; }
         .search-hint {
             font-size: 0.8rem;
-            color: #666;
+            color: #999;
             margin-top: 10px;
         }
 
@@ -235,7 +238,7 @@
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 0.85rem;
-            color: #e50914;
+            color: #ff1a1a;
         }
 
         /* ── No Results ── */
@@ -254,7 +257,7 @@
             background: #0d0d0d;
             border-top: 1px solid #222;
             padding: 40px 4% 30px;
-            color: #666;
+            color: #999;
             font-size: 0.82rem;
         }
         .help-footer-inner {
@@ -275,7 +278,7 @@
         }
         .help-footer-col a {
             display: block;
-            color: #666;
+            color: #999;
             text-decoration: none;
             margin-bottom: 8px;
             transition: color 0.2s;
@@ -293,11 +296,11 @@
             gap: 12px;
         }
         .help-footer-bottom .logo-small {
-            color: #e50914;
+            color: #ff1a1a;
             font-weight: 700;
             font-size: 1.1rem;
         }
-        .help-footer-bottom p { color: #555; font-size: 0.78rem; }
+        .help-footer-bottom p { color: #999; font-size: 0.78rem; }
 
         /* ── Responsive ── */
         @media (max-width: 640px) {
@@ -323,6 +326,8 @@
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 <!-- ══════════ NAVBAR ══════════ -->
 <nav class="navbar">
     <a href="home.html" class="navbar-brand">
@@ -342,16 +347,17 @@
     <h1>How can <span>we help</span> you?</h1>
     <p>Find answers, tips, and guides for everything LoveFlix.</p>
     <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" id="helpSearch" placeholder="Search for help..." autocomplete="off">
-        <div class="search-hint">Type to filter topics — e.g. "sign up", "password", "buffering"</div>
+        <label for="helpSearch" class="sr-only">Search help topics</label>
+        <input type="text" id="helpSearch" placeholder="Search for help..." autocomplete="off" aria-describedby="searchHint">
+        <div class="search-hint" id="searchHint">Type to filter topics — e.g. "sign up", "password", "buffering"</div>
     </div>
 </section>
 
 <!-- ══════════ MAIN CONTENT ══════════ -->
-<main class="help-content" id="helpContent">
+<main class="help-content" id="main-content">
 
     <!-- no results placeholder -->
     <div class="no-results" id="noResults">
@@ -367,7 +373,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I sign up for LoveFlix?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -387,7 +393,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I invite my partner?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -407,7 +413,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 First login — what should I do?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -432,7 +438,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I reset my password?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -452,7 +458,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I manage my subscription?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -471,7 +477,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I cancel my subscription?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -491,7 +497,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I update my payment method?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -516,7 +522,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I upload a video?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -536,7 +542,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How does "Watch Together" work?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -556,7 +562,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How do I manage "My List"?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -580,7 +586,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How does the Chat work?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -600,7 +606,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 What is LoveConnect location sharing?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -620,7 +626,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 How does Music Sync work?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -640,7 +646,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 What is the Story Timeline?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -665,7 +671,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 Video keeps buffering — what can I do?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -685,7 +691,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 The app keeps crashing — how to fix?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -705,7 +711,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 I can't sign in — what's wrong?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -725,7 +731,7 @@
         <div class="accordion-item">
             <button class="accordion-header">
                 My partner can't see my content — why?
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="accordion-body">
                 <div class="accordion-body-inner">
@@ -781,19 +787,35 @@
         const accordionItems = document.querySelectorAll('.accordion-item');
 
         // ── Accordion toggle ──
-        accordionItems.forEach(function(item) {
+        function setExpanded(item, expanded) {
+            item.classList.toggle('active', expanded);
             const header = item.querySelector('.accordion-header');
+            if (header) header.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+
+        accordionItems.forEach(function(item, idx) {
+            const header = item.querySelector('.accordion-header');
+            const body = item.querySelector('.accordion-body');
+            const headerId = 'acc-header-' + idx;
+            const bodyId = 'acc-body-' + idx;
+            header.id = headerId;
+            body.id = bodyId;
+            header.setAttribute('aria-expanded', 'false');
+            header.setAttribute('aria-controls', bodyId);
+            body.setAttribute('role', 'region');
+            body.setAttribute('aria-labelledby', headerId);
+
             header.addEventListener('click', function() {
                 // Close siblings in the same section
                 const section = item.closest('.help-section');
                 if (section) {
                     section.querySelectorAll('.accordion-item.active').forEach(function(sibling) {
                         if (sibling !== item) {
-                            sibling.classList.remove('active');
+                            setExpanded(sibling, false);
                         }
                     });
                 }
-                item.classList.toggle('active');
+                setExpanded(item, !item.classList.contains('active'));
             });
         });
 
@@ -817,14 +839,10 @@
                         item.style.display = '';
                         sectionHasMatch = true;
                         // Auto-open items that match on non-empty search
-                        if (query !== '') {
-                            item.classList.add('active');
-                        } else {
-                            item.classList.remove('active');
-                        }
+                        setExpanded(item, query !== '');
                     } else {
                         item.style.display = 'none';
-                        item.classList.remove('active');
+                        setExpanded(item, false);
                     }
                 });
 

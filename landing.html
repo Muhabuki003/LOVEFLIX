@@ -71,7 +71,7 @@
   .feat-art{aspect-ratio:4/3;border-radius:12px;background:var(--c,linear-gradient(135deg,#ff5f8f,#5a0a23));position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;color:rgba(255,255,255,0.85);text-shadow:0 4px 24px rgba(0,0,0,0.5)}
   .feat-art::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.4))}
   .feat-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px}
-  .feat h2{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:1px;line-height:1;margin-bottom:18px}
+  .feat h3{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:1px;line-height:1;margin-bottom:18px}
   .feat p{font-size:16px;color:var(--text-light);line-height:1.6;margin-bottom:20px}
   .feat ul{list-style:none;display:grid;gap:8px}
   .feat ul li{font-size:14px;color:var(--text-light);padding-left:24px;position:relative}
@@ -115,7 +115,7 @@
 <body>
 
 <nav>
-  <a href="/landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <a href="/landing.html" class="nf-logo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</a>
   <div class="nav-links">
     <a href="#how">How It Works</a>
     <a href="#features">Features</a>
@@ -129,6 +129,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <header class="hero">
   <div class="hero-content">
     <div class="hero-eyebrow">♥ A streaming service of two</div>
@@ -137,7 +138,7 @@
     <div class="hero-actions">
       <a href="onboarding.html" class="btn btn-primary btn-lg">Start Your Site — Free for 14 days</a>
       <a href="home.html" class="btn btn-ghost btn-lg">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
         See a demo
       </a>
     </div>
@@ -151,7 +152,7 @@
         <div style="display:flex;gap:8px"><span class="btn btn-primary" style="background:#fff;color:#000;font-size:12px;padding:8px 16px">▶ Play</span><span class="btn btn-ghost" style="font-size:12px;padding:8px 16px">More Info</span></div>
       </div>
     </div>
-    <div class="hero-trust">★★★★★ &nbsp; 2,400+ couples · trusted with their memories</div>
+    <div class="hero-trust"><span aria-hidden="true">★★★★★</span> &nbsp; 2,400+ couples · trusted with their memories</div>
   </div>
 </header>
 
@@ -165,19 +166,19 @@
       <div class="step-num">01</div>
       <h3>Pick a name &amp; theme</h3>
       <p>Tell us who you are and who you're making it for. Choose your accent color, upload profile photos, set your anniversary date.</p>
-      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+      <div class="step-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
       <h3>Upload your moments</h3>
       <p>Drag in videos, photos, voice notes. Tag them by trip, anniversary, birthday. We build the rows automatically.</p>
-      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
+      <div class="step-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5z"/></svg></div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
       <h3>Share the link. Watch the face.</h3>
       <p>Send them the invite. They sign in. They see "Who's Watching?" with their name. They cry. Probably.</p>
-      <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
+      <div class="step-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg></div>
     </div>
   </div>
 </section>
@@ -191,7 +192,7 @@
     <div class="feat-art" style="--c:linear-gradient(135deg,#ff5f8f,#5a0a23)">Who's Watching?</div>
     <div>
       <div class="feat-eyebrow">Profile Selector</div>
-      <h2>Their name. On the screen. Like Netflix.</h2>
+      <h3>Their name. On the screen. Like Netflix.</h3>
       <p>The "Who's Watching?" page that opens with their name in big white letters. Plus a hidden admin profile for you, locked with a PIN.</p>
       <ul>
         <li>Two profiles · custom names &amp; gradient avatars</li>
@@ -205,7 +206,7 @@
     <div class="feat-art" style="--c:linear-gradient(135deg,#a855f7,#2e1065)">Continue Watching</div>
     <div>
       <div class="feat-eyebrow">Smart Rows</div>
-      <h2>Continue Watching, Our Story, Favorites.</h2>
+      <h3>Continue Watching, Our Story, Favorites.</h3>
       <p>Auto-organized rows by category and tag. Hover cards expand. Progress bars track where they left off. They'll spend hours here.</p>
       <ul>
         <li>Hero banner + 4 themed content rows</li>
@@ -219,7 +220,7 @@
     <div class="feat-art" style="--c:linear-gradient(135deg,#0ea5e9,#082f49)">Custom Player</div>
     <div>
       <div class="feat-eyebrow">Real Player</div>
-      <h2>Fullscreen, scrubbable, next-up cards.</h2>
+      <h3>Fullscreen, scrubbable, next-up cards.</h3>
       <p>Not a YouTube embed. A proper player with scrubber, keyboard shortcuts, and a next-up card 12 seconds from the end — just like the real thing.</p>
       <ul>
         <li>4K · HDR · keyboard shortcuts</li>
@@ -235,7 +236,7 @@
     </div>
     <div>
       <div class="feat-eyebrow">LoveConnect — New</div>
-      <h2>Know where she is.<br>Always.</h2>
+      <h3>Know where she is.<br>Always.</h3>
       <p>A live world map places both of you as glowing pins — wherever you are on Earth. See the distance in real time, the timezone gap, and call with one tap. Distance is just a number.</p>
       <ul>
         <li>Live map · real-time location pins for both partners</li>
@@ -254,7 +255,7 @@
 
   <div class="quotes">
     <div class="quote">
-      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <div class="quote-stars" role="img" aria-label="5 out of 5 stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
       <p>I gave her loveflix.us/sarah for our 5th anniversary. She saw "Who's Watching, Sarah?" and just lost it. Best 12 dollars I ever spent.</p>
       <div class="quote-by">
         <div class="quote-av" style="--c:linear-gradient(135deg,#3a7bff,#1e3a8a)">M</div>
@@ -262,7 +263,7 @@
       </div>
     </div>
     <div class="quote">
-      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <div class="quote-stars" role="img" aria-label="5 out of 5 stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
       <p>The hover effect on the cards. The little Bebas Neue logo. The zoom-out title screen. It felt EXACTLY like the real thing. Twelve out of ten.</p>
       <div class="quote-by">
         <div class="quote-av" style="--c:linear-gradient(135deg,#ff5f8f,#8f1d4a)">L</div>
@@ -270,7 +271,7 @@
       </div>
     </div>
     <div class="quote">
-      <div class="quote-stars"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
+      <div class="quote-stars" role="img" aria-label="5 out of 5 stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></div>
       <p>We've kept adding to it for 11 months. It's our love diary now. The "Continue Watching" row alone makes me grin every time I open it.</p>
       <div class="quote-by">
         <div class="quote-av" style="--c:linear-gradient(135deg,#10b981,#064e3b)">P</div>
@@ -285,11 +286,12 @@
   <p>14-day free trial. No credit card. Cancel anytime.</p>
   <a href="onboarding.html" class="btn btn-primary btn-lg">Start Your LoveFlix →</a>
 </div>
+</main>
 
 <footer>
   <div class="ft-grid">
     <div>
-      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart">♥</span>FLIX</div>
+      <div class="nf-logo" style="font-size:30px;margin-bottom:14px">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</div>
       <p style="line-height:1.6;max-width:320px">A private streaming service of two. Made with way too much love by people who really like Netflix.</p>
     </div>
     <div>
@@ -315,7 +317,7 @@
     </div>
   </div>
   <div class="ft-bot">
-    <span>© 2026 LoveFlix · made with ♥</span>
+    <span>© 2026 LoveFlix · made with <span aria-hidden="true">♥</span></span>
     <span>loveflix.us</span>
   </div>
 </footer>

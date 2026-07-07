@@ -453,7 +453,7 @@
     <button class="signout-btn" onclick="LoveFlix.signOut()">Sign Out</button>
   </nav>
 
-  <main class="selector-page" id="selectorPage">
+  <main class="selector-page" id="main-content">
     <h1 class="selector-title">Our Space</h1>
 
     <!-- Desktop: [Her] [Buttons] [His] in a row.
@@ -491,7 +491,7 @@
   <!-- New message notification toast -->
   <div id="msg-toast" role="alert" aria-live="polite">
     <div class="toast-row">
-      <div class="toast-icon">💬</div>
+      <div class="toast-icon" aria-hidden="true">💬</div>
       <div class="toast-body">
         <div class="toast-title" id="toast-title">New message</div>
         <div class="toast-msg" id="toast-msg"></div>
@@ -759,7 +759,7 @@
   // Grant admin session flag so admin.html recognises the navigation intent.
   document.getElementById('adminBtn').addEventListener('click', function(e) {
     e.preventDefault();
-    document.getElementById('selectorPage').classList.add('fade-out');
+    document.getElementById('main-content').classList.add('fade-out');
     try { sessionStorage.setItem('loveflix_admin_authed', '1'); } catch (_) {}
     setTimeout(function() { window.location.href = 'admin.html'; }, 280);
   });
