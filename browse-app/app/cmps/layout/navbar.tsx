@@ -40,6 +40,8 @@ export const Navbar = () => {
       <Button
         variant='ghost'
         size='icon'
+        aria-label='About'
+        aria-pressed={aboutOpen}
         onClick={toggleAboutOpen}
         onPointerDown={(event) => {
           if (aboutOpen) {
@@ -57,6 +59,8 @@ export const Navbar = () => {
         <Button
           variant='ghost'
           size='icon'
+          aria-label='Settings'
+          aria-pressed={settingsOpen}
           onClick={toggleSettingsOpen}
           onPointerDown={(event) => {
             if (settingsOpen) {
@@ -74,6 +78,8 @@ export const Navbar = () => {
           <Button
             variant='ghost'
             size='icon'
+            aria-label='Favorites'
+            aria-pressed={favoritesOpen}
             onClick={toggleFavoritesOpen}
             onPointerDown={(event) => {
               if (favoritesOpen) {
@@ -113,6 +119,7 @@ export const Navbar = () => {
           href={config.sourceCodeUrl}
           target='_blank'
           rel='noreferrer noopener noreferer'
+          aria-label='View source on GitHub'
         >
           <GithubIcon />
         </a>

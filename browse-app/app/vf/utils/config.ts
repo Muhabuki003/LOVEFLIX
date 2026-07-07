@@ -105,6 +105,8 @@ export const getVoroforceConfig = (state: StoreState) => {
 
   if (LOVEFLIX_ENABLED) applyLoveflixConfig(config)
 
+  applyReducedMotionConfig(config)
+
   // Apply adaptive quality settings if available
   const qualityLevel = state.qualityLevel
   if (qualityLevel) {
@@ -176,6 +178,50 @@ const applyLoveflixConfig = (config: typeof baseConfig) => {
       layerIndex: number,
     ) => labelForIndex(layerIndex)
   }
+}
+
+type ControlsMotionConfig = {
+  maxSpeed?: number
+  ease?: number
+  easePinned?: number
+  zoom?: { max?: number }
+  autoFocusCenter?: { random?: boolean }
+}
+
+// Respect prefers-reduced-motion (WCAG 2.3.3): soften — not eliminate — the
+// camera/pointer-driven motion for users who've asked the OS to reduce
+// motion. This only tunes existing numeric knobs the preset/mode system
+// already exposes (maxSpeed/ease control how fast+bouncy the camera follows
+// pointer/keyboard focus; zoom.max caps the auto-zoom-on-select travel;
+// autoFocusCenter.random disables the small random jitter applied to the
+// initial auto-focused cell). It intentionally does NOT touch the
+// force-simulation/rendering pipeline in voroforce/ — the continuous
+// per-cell "breathing"/jitter motion inherent to the voronoi simulation
+// itself is a deeper engine change and out of scope here.
+//
+// `controls.default` is what voroforce/controls/controls.js actually reads
+// on every mode change (see app/vf/integrations/controls.ts
+// updateControlsByMode), while the top-level `controls.*` fields are what's
+// read on first init — both must be set for the softened values to stick.
+const applyReducedMotionConfig = (config: typeof baseConfig) => {
+  if (typeof window === 'undefined' || !window.matchMedia) return
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  const controlsConfig = config.controls as ControlsMotionConfig & {
+    default?: ControlsMotionConfig
+  }
+
+  const soften = (target?: ControlsMotionConfig) => {
+    if (!target) return
+    target.maxSpeed = Math.min(target.maxSpeed ?? 10, 3)
+    target.ease = Math.min(target.ease ?? 0.15, 0.06)
+    target.easePinned = Math.min(target.easePinned ?? 0.15, 0.06)
+    if (target.zoom) target.zoom.max = Math.min(target.zoom.max ?? 1.5, 1.15)
+    if (target.autoFocusCenter) target.autoFocusCenter.random = false
+  }
+
+  soften(controlsConfig)
+  soften(controlsConfig.default)
 }
 
 const processVoroforceStageConfigUniforms = (

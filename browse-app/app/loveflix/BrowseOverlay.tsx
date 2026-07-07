@@ -46,6 +46,11 @@ export function BrowseOverlay() {
 
   return (
     <div
+      // See BrowseAccessibleNav.tsx for why: the WebGL engine's Space/Enter
+      // handler listens on `window` with no target check, so without this a
+      // keyboard "Retry" press here would also re-trigger cell selection
+      // (and an unrelated /player.html navigation) in the 3D grid underneath.
+      onKeyDown={(e) => e.stopPropagation()}
       style={{
         position: 'fixed',
         inset: 0,

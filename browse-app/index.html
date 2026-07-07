@@ -32,9 +32,25 @@
     <div
       id="voroforce"
       class="pointer-events-auto fixed inset-x-0 top-0 h-dvh w-screen"
+      role="application"
+      aria-label="Browse — 3D video grid"
+      aria-describedby="voroforce-instructions"
     >
-      <canvas class="h-full w-full pointer-events-none"></canvas>
+      <canvas class="h-full w-full pointer-events-none" aria-hidden="true"></canvas>
     </div>
+    <!--
+      This 3D grid is a visual, WebGL-only surface and is not fully operable
+      by screen readers. A "Switch to list view" button (reachable via Tab)
+      provides the same videos as a standard, fully accessible list — see
+      app/loveflix/BrowseAccessibleNav.tsx.
+    -->
+    <p id="voroforce-instructions" class="sr-only">
+      This is a visual 3D grid of your videos. If a tile is focused, arrow
+      keys move to a neighboring tile, and Enter or Space opens the focused
+      video. Scroll or pinch to zoom in and out. A "Switch to list view"
+      button, reachable by tab, provides the same videos as a standard
+      accessible list.
+    </p>
     <script type="module" src="/app/main.tsx"></script>
   </body>
 </html>
