@@ -47,6 +47,8 @@
     st.id = 'lola-style';
     st.textContent = [
       '.lola-root{--lo-red:#e50914;--lo-rose:#ff5f8f;--lo-panel:rgba(18,18,18,0.94);--lo-border:rgba(255,255,255,0.09);--lo-border-s:rgba(255,255,255,0.16);--lo-text:#f4f4f4;--lo-dim:#8a8a8a;--lo-light:#cfcfcf;--lo-green:#10b981;--lo-launch:60px;--lo-gap:24px;font-family:"Inter",system-ui,sans-serif}',
+      '.lo-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}',
+      '.lola-close:focus-visible,.lola-send:focus-visible,.lola-chip:focus-visible,.lola-go:focus-visible,.lola-spot-card:focus-visible,.lo-view:focus-visible,.lola-field input:focus-visible,#lolaLogo:focus-visible{outline:2px solid #fff;outline-offset:2px}',
       // panel
       '.lola-panel{position:fixed;right:var(--lo-gap);bottom:calc(var(--lo-gap) + var(--lo-launch) + 14px);width:380px;height:560px;max-height:calc(100vh - 2*var(--lo-gap));max-width:calc(100vw - 2*var(--lo-gap));z-index:2147483000;display:flex;flex-direction:column;background:var(--lo-panel);-webkit-backdrop-filter:blur(26px) saturate(1.2);backdrop-filter:blur(26px) saturate(1.2);border:1px solid var(--lo-border);border-radius:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,0.8),0 0 0 1px rgba(0,0,0,0.4);overflow:hidden;opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:transform .34s cubic-bezier(.2,.9,.25,1),opacity .24s ease}',
       '.lola-panel.lola-open{opacity:1;transform:none;pointer-events:auto}',
@@ -156,20 +158,20 @@
   var root = document.createElement('div');
   root.className = 'lola-root';
   root.innerHTML =
-    '<section class="lola-panel" id="lolaPanel" aria-label="Chat with Lola">' +
+    '<section class="lola-panel" id="lolaPanel" role="dialog" aria-modal="true" aria-label="Chat with Lola">' +
       '<div class="lola-resize" id="lolaResize" aria-hidden="true"></div>' +
       '<header class="lola-head" id="lolaHead">' +
-        '<div class="lola-badge"><span class="lo-heart">♥</span><span class="lo-dot"></span></div>' +
+        '<div class="lola-badge" aria-hidden="true"><span class="lo-heart">♥</span><span class="lo-dot"></span></div>' +
         '<div class="lola-id"><div class="lo-nm">LOLA <span class="lo-tag">AI</span></div>' +
         '<div class="lo-st"><b>Online</b> · your LOVEFLIX concierge</div></div>' +
         '<button class="lola-close" id="lolaClose" aria-label="Close chat"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>' +
       '</header>' +
-      '<div class="lola-body" id="lolaBody">' +
+      '<div class="lola-body" id="lolaBody" role="log" aria-live="polite" aria-relevant="additions">' +
         '<div class="lola-day">Today</div>' +
         '<div class="lola-typing" id="lolaTyping" aria-hidden="true"><i></i><i></i><i></i></div>' +
       '</div>' +
       '<div class="lola-input">' +
-        '<label class="lola-field"><input id="lolaField" type="text" placeholder="Message Lola…" autocomplete="off"></label>' +
+        '<label class="lola-field" for="lolaField"><span class="lo-sr-only">Message Lola</span><input id="lolaField" type="text" placeholder="Message Lola…" autocomplete="off" aria-label="Message Lola"></label>' +
         '<button class="lola-send" id="lolaSend" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-7-8-3z"></path></svg></button>' +
       '</div>' +
     '</section>' +
@@ -610,9 +612,24 @@
   field.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(field.value); });
 
   // ── Open / close ──────────────────────────────────────────────────────────
+  var lastFocused = null;
+  function focusablesIn(el) {
+    return Array.prototype.slice.call(
+      el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter(function (n) { return !n.disabled && n.offsetParent !== null; });
+  }
+  function trapTab(e) {
+    if (e.key !== 'Tab' || !isOpen) return;
+    var items = focusablesIn(panel);
+    if (!items.length) return;
+    var first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
   function open() {
     if (isOpen) return;
     isOpen = true;
+    lastFocused = document.activeElement;
     panel.classList.add('lola-open');
     if (logo) logo.classList.add('lola-active');
     greet();
@@ -623,11 +640,13 @@
     isOpen = false;
     panel.classList.remove('lola-open');
     if (logo) logo.classList.remove('lola-active');
+    try { if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus(); } catch (e) {}
   }
   function toggle() { isOpen ? close() : open(); }
 
   document.getElementById('lolaClose').addEventListener('click', close);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  document.addEventListener('keydown', trapTab, true);
 
   window.Lola = { open: open, close: close, toggle: toggle };
 

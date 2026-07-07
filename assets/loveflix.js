@@ -883,7 +883,7 @@
       '@keyframes lf-toast-in{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}',
       '#lf-msg-toast .lf-toast-row{display:flex;align-items:flex-start;gap:10px}',
       '#lf-msg-toast .lf-toast-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#ff5f8f,#c9184a);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;font-family:\'Fraunces\',serif}',
-      '#lf-msg-toast .lf-toast-body{flex:1;min-width:0}',
+      '#lf-msg-toast .lf-toast-body{flex:1;min-width:0;display:block;color:inherit;text-decoration:none}',
       '#lf-msg-toast .lf-toast-sender{font-size:13px;font-weight:600;color:#fff;margin-bottom:2px}',
       '#lf-msg-toast .lf-toast-text{font-size:12.5px;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
       '#lf-msg-toast .lf-toast-close{background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;align-self:flex-start;transition:color .15s}',
@@ -898,20 +898,23 @@
     _ensureNotifStyles();
     const el = document.createElement('div');
     el.id = 'lf-msg-toast';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
     el.innerHTML =
       '<div class="lf-toast-row">' +
-        '<div class="lf-toast-avatar">♥</div>' +
-        '<div class="lf-toast-body">' +
+        '<div class="lf-toast-avatar" aria-hidden="true">♥</div>' +
+        '<a class="lf-toast-body" href="/chat.html" id="lf-toast-link">' +
           '<div class="lf-toast-sender" id="lf-toast-sender"></div>' +
           '<div class="lf-toast-text" id="lf-toast-text"></div>' +
-        '</div>' +
-        '<button class="lf-toast-close" id="lf-toast-close-btn">×</button>' +
+        '</a>' +
+        '<button class="lf-toast-close" id="lf-toast-close-btn" aria-label="Dismiss notification"><span aria-hidden="true">×</span></button>' +
       '</div>';
     document.body.appendChild(el);
 
     // Click anywhere on the toast (except close button) → open chat
     el.addEventListener('click', function (e) {
       if (e.target.closest && e.target.closest('.lf-toast-close')) return;
+      if (e.target.closest && e.target.closest('#lf-toast-link')) return;
       location.href = '/chat.html';
     });
 

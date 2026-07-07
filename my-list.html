@@ -43,7 +43,7 @@
   .card-body{padding:14px 14px 16px}
   .card-title{font-size:14px;font-weight:600;margin-bottom:6px;line-height:1.3}
   .card-meta{font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .card-cat{color:var(--red);font-weight:600;letter-spacing:1px;text-transform:uppercase;font-size:10px}
+  .card-cat{color:#ff1a1a;font-weight:600;letter-spacing:1px;text-transform:uppercase;font-size:10px}
 
   /* tints */
   .t-rose{--thumb:linear-gradient(135deg,#ff7aa2,#5a0a23)}
@@ -95,7 +95,7 @@
 
 <div id="site-nav"></div>
 
-<main class="page">
+<main class="page" id="main-content">
   <div class="page-head">
     <div>
       <h1 class="page-title">My List</h1>
@@ -110,7 +110,7 @@
     <div class="empty-title">Nothing saved yet</div>
     <p class="empty-sub">Start hearting videos you love and they'll show up here — your personal collection of the moments that matter most.</p>
     <a href="browse.html" class="empty-cta">
-      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#fff"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#fff" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
       Browse Videos
     </a>
   </div>
@@ -149,7 +149,7 @@
   let VIDEOS = [];
 
   function heartFilledSvg() {
-    return '<svg viewBox="0 0 24 24" style="fill:#e50914"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>';
+    return '<svg viewBox="0 0 24 24" style="fill:#e50914" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C1 8.5 2.7 5 6.2 5c2 0 3.4 1.1 4.3 2.4C11.4 6.1 12.8 5 14.8 5c3.5 0 5.2 3.5 3.8 6.7C19.5 16.4 12 21 12 21z"/></svg>';
   }
 
   function render() {
@@ -170,7 +170,7 @@
       const cat = v.category || 'Moments';
       const date = v.date || '';
       return `
-      <article class="card ${tintClass}" data-id="${escapeHtml(v.id)}">
+      <article class="card ${tintClass}" data-id="${escapeHtml(v.id)}" role="button" tabindex="0" aria-label="Play ${escapeHtml(v.title || 'Untitled')}">
         <div class="card-thumb" ${thumbStyle}>
           <span class="card-thumb-date">${escapeHtml(date)}</span>
           <button class="card-thumb-fav" data-vid="${escapeHtml(v.id)}" title="Remove from My List" aria-label="Remove from My List">
@@ -203,6 +203,16 @@
     }
     const card = e.target.closest('.card');
     if (card) {
+      location.href = `player.html?id=${encodeURIComponent(card.dataset.id)}`;
+    }
+  });
+
+  grid.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.closest('.card-thumb-fav')) return;
+    const card = e.target.closest('.card');
+    if (card) {
+      e.preventDefault();
       location.href = `player.html?id=${encodeURIComponent(card.dataset.id)}`;
     }
   });

@@ -221,78 +221,78 @@
     + '</style>';
 
   // ─── HTML (identical to original) ────────────────────────────────────────────
-  var INC_HTML = '<div id="lf-inc-overlay">'
-    + '<div id="lf-inc-av">M</div>'
-    + '<div id="lf-inc-name">Incoming Call</div>'
+  var INC_HTML = '<div id="lf-inc-overlay" role="dialog" aria-modal="true" aria-label="Incoming call">'
+    + '<div id="lf-inc-av" aria-hidden="true">M</div>'
+    + '<div id="lf-inc-name" role="alert">Incoming Call</div>'
     + '<div id="lf-inc-sub">LoveConnect · Encrypted</div>'
     + '<div class="lf-inc-actions">'
-    + '<button class="lf-inc-btn lf-inc-decline" id="lf-inc-dec" title="Decline">'
-    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    + '<button class="lf-inc-btn lf-inc-decline" id="lf-inc-dec" title="Decline" aria-label="Decline call">'
+    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
     + '</button>'
-    + '<button class="lf-inc-btn lf-inc-accept" id="lf-inc-acc" title="Accept">'
-    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
+    + '<button class="lf-inc-btn lf-inc-accept" id="lf-inc-acc" title="Accept" aria-label="Accept call">'
+    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
     + '</button>'
     + '</div>'
     + '</div>';
 
-  var VID_HTML = '<div id="lf-video-wrap">'
+  var VID_HTML = '<div id="lf-video-wrap" role="dialog" aria-modal="true" aria-label="Video call">'
     + '<video id="lf-remote-vid" autoplay playsinline></video>'
     + '<div id="lf-no-vid">'
-    +   '<div id="lf-no-vid-av">M</div>'
+    +   '<div id="lf-no-vid-av" aria-hidden="true">M</div>'
     +   '<div id="lf-no-vid-name">Connecting...</div>'
     + '</div>'
     + '<div id="lf-vid-drag">'
     +   '<span id="lf-vid-label">On call</span>'
-    +   '<div id="lf-vid-drag-dots"><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span></div>'
-    +   '<button id="lf-vid-fs" title="Fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>'
-    +   '<button id="lf-vid-min" title="Minimize">&#8722;</button>'
+    +   '<div id="lf-vid-drag-dots" aria-hidden="true"><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span><span class="lf-drag-dot"></span></div>'
+    +   '<button id="lf-vid-fs" title="Fullscreen" aria-label="Toggle fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>'
+    +   '<button id="lf-vid-min" title="Minimize" aria-label="Minimize video call">&#8722;</button>'
     + '</div>'
     + '<div id="lf-my-video"><video id="lf-local-vid" autoplay playsinline muted></video></div>'
     + '<div id="lf-vid-controls">'
-    +   '<button class="lf-vbtn" id="lf-vid-mute" title="Mute">'
-    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
+    +   '<button class="lf-vbtn" id="lf-vid-mute" title="Mute" aria-label="Mute microphone" aria-pressed="false">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
     +   '</button>'
-    +   '<button class="lf-vbtn lf-danger" id="lf-vid-hang" title="End call">'
-    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    +   '<button class="lf-vbtn lf-danger" id="lf-vid-hang" title="End call" aria-label="End call">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
     +   '</button>'
-    +   '<button class="lf-vbtn" id="lf-vid-cam" title="Toggle camera">'
-    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
+    +   '<button class="lf-vbtn" id="lf-vid-cam" title="Toggle camera" aria-label="Toggle camera" aria-pressed="true">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
     +   '</button>'
-    +   '<button class="lf-vbtn" id="lf-vid-share" title="Share screen">'
-    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h3l-1 1v2h12v-2l-1-1h3c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H4V5h16v11z"/></svg>'
+    +   '<button class="lf-vbtn" id="lf-vid-share" title="Share screen" aria-label="Share screen">'
+    +     '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h3l-1 1v2h12v-2l-1-1h3c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 13H4V5h16v11z"/></svg>'
     +   '</button>'
     + '</div>'
-    + '<div id="lf-vid-resize">'
+    + '<div id="lf-vid-resize" aria-hidden="true">'
     +   '<svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,.6)"><path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM14 22H12V20H14V22ZM22 14H20V12H22V14Z"/></svg>'
     + '</div>'
     + '</div>'
-    + '<div id="lf-share-overlay">'
+    + '<div id="lf-share-overlay" role="region" aria-label="Screen share">'
     +   '<video id="lf-share-vid" autoplay playsinline></video>'
     +   '<div id="lf-share-bar">'
     +     '<span id="lf-share-label">&#128250; Sharing screen</span>'
-    +     '<button id="lf-share-close"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>'
+    +     '<button id="lf-share-close" aria-label="Close screen share"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>'
     +   '</div>'
     +   '<div id="lf-share-pip"><video id="lf-share-pip-vid" autoplay playsinline></video></div>'
     + '</div>';
 
-  var BAR_HTML = '<div id="lf-call-bar">'
-    + '<div class="lf-cb-pulse"></div>'
+  var BAR_HTML = '<div id="lf-call-bar" role="region" aria-label="Ongoing call">'
+    + '<div class="lf-cb-pulse" aria-hidden="true"></div>'
     + '<div class="lf-cb-info">'
     +   '<div class="lf-cb-title" id="lf-cb-title">On call</div>'
     +   '<div class="lf-cb-sub" id="lf-cb-sub">00:00</div>'
     + '</div>'
     + '<div class="lf-cb-actions">'
-    +   '<button class="lf-cb-btn" id="lf-cb-restore" title="Show video" style="display:none">'
-    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
+    +   '<button class="lf-cb-btn" id="lf-cb-restore" title="Show video" aria-label="Show video" style="display:none">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
     +   '</button>'
-    +   '<button class="lf-cb-btn" id="lf-cb-mute" title="Mute">'
-    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
+    +   '<button class="lf-cb-btn" id="lf-cb-mute" title="Mute" aria-label="Mute microphone" aria-pressed="false">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>'
     +   '</button>'
-    +   '<button class="lf-cb-btn lf-danger" id="lf-cb-hang" title="End call">'
-    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
+    +   '<button class="lf-cb-btn lf-danger" id="lf-cb-hang" title="End call" aria-label="End call">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>'
     +   '</button>'
-    +   '<button class="lf-cb-btn lf-accept" id="lf-cb-acc" style="display:none" title="Accept">'
-    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
+    +   '<button class="lf-cb-btn lf-accept" id="lf-cb-acc" style="display:none" title="Accept" aria-label="Accept call">'
+    +     '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>'
     +   '</button>'
     + '</div>'
     + '</div>';
@@ -801,15 +801,15 @@
     if (!_room) return;
     _muted = !_muted;
     _room.localParticipant.setMicrophoneEnabled(!_muted);
-    var bm = _el('lf-cb-mute');  if (bm) bm.classList.toggle('lf-muted', _muted);
-    var vm = _el('lf-vid-mute'); if (vm) vm.classList.toggle('lf-muted', _muted);
+    var bm = _el('lf-cb-mute');  if (bm) { bm.classList.toggle('lf-muted', _muted); bm.setAttribute('aria-pressed', String(_muted)); bm.setAttribute('aria-label', _muted ? 'Unmute microphone' : 'Mute microphone'); }
+    var vm = _el('lf-vid-mute'); if (vm) { vm.classList.toggle('lf-muted', _muted); vm.setAttribute('aria-pressed', String(_muted)); vm.setAttribute('aria-label', _muted ? 'Unmute microphone' : 'Mute microphone'); }
   }
 
   function toggleCamera() {
     if (!_room) return;
     _camOff = !_camOff;
     _room.localParticipant.setCameraEnabled(!_camOff);
-    var vc = _el('lf-vid-cam'); if (vc) vc.classList.toggle('lf-muted', _camOff);
+    var vc = _el('lf-vid-cam'); if (vc) { vc.classList.toggle('lf-muted', _camOff); vc.setAttribute('aria-pressed', String(!_camOff)); }
     var my = _el('lf-my-video'); if (my) my.style.opacity = _camOff ? '0' : '1';
   }
 

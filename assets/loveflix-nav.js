@@ -18,6 +18,9 @@
     var s = document.createElement('style');
     s.id = 'lf-nav-style';
     s.textContent = [
+      '.lf-skip-link{position:absolute;left:8px;top:-48px;z-index:100;background:#e50914;color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:top .15s ease}',
+      '.lf-skip-link:focus{top:8px}',
+      'a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}',
       'nav.lf-topnav{position:fixed;top:0;left:0;right:0;padding:18px 48px;z-index:50;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,0.92);-webkit-backdrop-filter:saturate(140%) blur(16px);backdrop-filter:saturate(140%) blur(16px);transition:background .25s ease}',
       'nav.lf-topnav.lf-hero{background:linear-gradient(to bottom,rgba(0,0,0,0.85),rgba(0,0,0,0.2) 70%,transparent)}',
       'nav.lf-topnav.lf-hero.lf-scrolled{background:rgba(10,10,10,0.92)}',
@@ -49,23 +52,39 @@
   var nav = document.createElement('nav');
   nav.className = 'lf-topnav';
   nav.id = 'lf-topnav';
+  nav.setAttribute('aria-label', 'Primary');
   nav.innerHTML =
     '<div class="lf-nav-left">' +
-      '<a href="home.html" class="lf-nf-logo" aria-label="LoveFlix home">LOVE<span class="lf-heart">♥</span>FLIX</a>' +
+      '<a href="home.html" class="lf-nf-logo" aria-label="LoveFlix home">LOVE<span class="lf-heart" aria-hidden="true">♥</span>FLIX</a>' +
       '<div class="lf-nav-links">' + links + '</div>' +
     '</div>' +
     '<div class="lf-nav-right">' +
-      '<button class="lf-icon-btn lf-lola-btn" id="lf-lolaBtn" aria-label="Chat with Lola, your LOVEFLIX AI" title="Chat with Lola ♥"><img src="assets/lola-logo.png" alt="Lola AI" /></button>' +
-      '<button class="lf-icon-btn" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>' +
-      '<button class="lf-icon-btn" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg></button>' +
-      '<a href="whos_watching.html" class="lf-nav-avatar" id="lf-navAvatar" title="Switch profile">M</a>' +
+      '<button class="lf-icon-btn lf-lola-btn" id="lf-lolaBtn" aria-label="Chat with Lola, your LOVEFLIX AI" title="Chat with Lola ♥"><img src="assets/lola-logo.png" alt="" /></button>' +
+      '<button class="lf-icon-btn" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>' +
+      '<button class="lf-icon-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg></button>' +
+      '<a href="whos_watching.html" class="lf-nav-avatar" id="lf-navAvatar" aria-label="Switch profile" title="Switch profile"><span aria-hidden="true">M</span></a>' +
     '</div>';
+
+  var skip = document.createElement('a');
+  skip.className = 'lf-skip-link';
+  skip.href = '#main-content';
+  skip.textContent = 'Skip to main content';
+  skip.addEventListener('click', function (e) {
+    var target = document.getElementById('main-content') || document.querySelector('main, [role="main"]');
+    if (target) {
+      e.preventDefault();
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      target.focus();
+      target.scrollIntoView();
+    }
+  });
+  document.body.insertBefore(skip, document.body.firstChild);
 
   var placeholder = document.getElementById('site-nav');
   if (placeholder) {
     placeholder.parentNode.replaceChild(nav, placeholder);
   } else {
-    document.body.insertBefore(nav, document.body.firstChild);
+    document.body.insertBefore(nav, skip.nextSibling);
   }
 
   // Hero pages: transparent nav that becomes solid on scroll
