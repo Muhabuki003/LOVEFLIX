@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible,input:focus-visible+.slider{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -39,12 +41,12 @@
   .cookie-info{flex:1}
   .cookie-info h3{font-size:17px;font-weight:700;margin-bottom:4px}
   .cookie-info .badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:999px;margin-bottom:6px}
-  .badge-essential{background:rgba(229,9,20,0.15);color:var(--red)}
+  .badge-essential{background:rgba(229,9,20,0.15);color:#ff1a1a}
   .badge-analytics{background:rgba(59,130,246,0.15);color:#60a5fa}
   .badge-functional{background:rgba(16,185,129,0.15);color:#34d399}
   .badge-advertising{background:rgba(163,163,163,0.15);color:var(--text-dim)}
   .cookie-info p{font-size:13px;color:var(--text-dim);line-height:1.55;margin-top:6px}
-  .cookie-info .always-on{font-size:12px;color:var(--red);font-weight:600;margin-top:4px;display:inline-block}
+  .cookie-info .always-on{font-size:12px;color:#ff1a1a;font-weight:600;margin-top:4px;display:inline-block}
 
   /* Toggle switch */
   .toggle-wrap{flex-shrink:0;padding-top:2px}
@@ -99,6 +101,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <div class="page-header">
   <h1>Cookie Preferences</h1>
   <p>LoveFlix uses cookies and similar technologies to keep your account secure, improve your experience, and understand how you interact with the service. Choose which categories you'd like to allow.</p>
@@ -120,8 +123,8 @@
       </div>
       <div class="toggle-wrap">
         <label class="toggle">
-          <input type="checkbox" checked disabled>
-          <span class="slider"></span>
+          <input type="checkbox" checked disabled aria-label="Strictly Necessary cookies (always active, cannot be disabled)">
+          <span class="slider" aria-hidden="true"></span>
         </label>
       </div>
     </div>
@@ -140,8 +143,8 @@
       </div>
       <div class="toggle-wrap">
         <label class="toggle">
-          <input type="checkbox" id="toggle-analytics" checked>
-          <span class="slider"></span>
+          <input type="checkbox" id="toggle-analytics" checked aria-label="Analytics &amp; Product Insights cookies">
+          <span class="slider" aria-hidden="true"></span>
         </label>
       </div>
     </div>
@@ -160,8 +163,8 @@
       </div>
       <div class="toggle-wrap">
         <label class="toggle">
-          <input type="checkbox" id="toggle-functional" checked>
-          <span class="slider"></span>
+          <input type="checkbox" id="toggle-functional" checked aria-label="Preferences &amp; Personalisation cookies">
+          <span class="slider" aria-hidden="true"></span>
         </label>
       </div>
     </div>
@@ -180,8 +183,8 @@
       </div>
       <div class="toggle-wrap">
         <label class="toggle">
-          <input type="checkbox" id="toggle-advertising">
-          <span class="slider"></span>
+          <input type="checkbox" id="toggle-advertising" aria-label="Advertising &amp; Targeting cookies">
+          <span class="slider" aria-hidden="true"></span>
         </label>
       </div>
     </div>
@@ -193,9 +196,10 @@
   </div>
 
 </div>
+</main>
 
 <!-- Toast -->
-<div class="toast" id="toast">✓ Your cookie preferences have been saved.</div>
+<div class="toast" id="toast" role="status" aria-live="polite">✓ Your cookie preferences have been saved.</div>
 
 <footer>
   <div class="ft-grid">

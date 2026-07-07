@@ -128,11 +128,11 @@
       <div style="font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:6px">Creator Studio</div>
     </div>
     <div class="side-eyebrow">Manage</div>
-    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
-    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
-    <a href="admin_videos.html" class="side-link active"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
-    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
-    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
+    <a href="admin.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="admin_upload.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload Video</a>
+    <a href="admin_videos.html" class="side-link active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>Manage Videos</a>
+    <a href="/editor/index.html" class="side-link" id="nav-editor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2v12h16V6H4zm3 2l6 4-6 4V8z"/></svg>Video Editor</a>
+    <a href="admin_settings.html" class="side-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.03 7.03 0 00-1.69-.98l-.38-2.65A.488.488 0 0014 2h-4a.488.488 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>Site Settings</a>
     <div class="side-foot"><div class="av" id="sideAvatar">Y</div><div><div style="color:#fff;font-weight:500;font-size:13px" id="sideAdminName">You</div><div>Admin · <span id="sideUrl">loveflix.us</span></div></div></div>
   </aside>
 
@@ -259,21 +259,21 @@
       const idLabel = String(v.id).slice(0, 8);
       return `
       <tr data-id="${escapeHtml(v.id)}">
-        <td><div class="grip"><svg viewBox="0 0 24 24"><path d="M9 4h2v2H9zM9 9h2v2H9zM9 14h2v2H9zM9 19h2v2H9zM13 4h2v2h-2zM13 9h2v2h-2zM13 14h2v2h-2zM13 19h2v2h-2z"/></svg></div></td>
+        <td><div class="grip" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h2v2H9zM9 9h2v2H9zM9 14h2v2H9zM9 19h2v2H9zM13 4h2v2h-2zM13 9h2v2h-2zM13 14h2v2h-2zM13 19h2v2h-2z"/></svg></div></td>
         <td>
           <div style="display:flex;align-items:center;gap:14px">
-            <div class="v-thumb ${tintClass}" ${thumbStyle}>${thumbLabel}</div>
+            <div class="v-thumb ${tintClass}" ${thumbStyle} aria-hidden="true">${thumbLabel}</div>
             <div><div class="v-name">${escapeHtml(v.title || 'Untitled')}</div><div class="v-sub">ID ${idLabel}</div></div>
           </div>
         </td>
         <td><span class="cat-chip">${escapeHtml(v.category || '—')}</span></td>
         <td style="color:var(--text-light)">${escapeHtml(v.date || '—')}</td>
         <td style="color:var(--text-light);font-variant-numeric:tabular-nums">${fmtDur(v.duration_seconds)}</td>
-        <td><div class="toggle ${v.is_published ? 'on' : ''}" data-id="${escapeHtml(v.id)}"></div></td>
+        <td><button type="button" class="toggle ${v.is_published ? 'on' : ''}" data-id="${escapeHtml(v.id)}" role="switch" aria-checked="${v.is_published ? 'true' : 'false'}" aria-label="Published: ${escapeHtml(v.title || 'video')}"></button></td>
         <td>
           <div class="actions-cell">
-            <button class="icon-btn" title="Preview" data-play="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-            <button class="icon-btn danger" title="Delete" data-del="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+            <button class="icon-btn" title="Preview" aria-label="Preview ${escapeHtml(v.title || 'video')}" data-play="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="icon-btn danger" title="Delete" aria-label="Delete ${escapeHtml(v.title || 'video')}" data-del="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
           </div>
         </td>
       </tr>
@@ -339,6 +339,7 @@
           body: JSON.stringify({ is_published: newPublished })
         });
         video.is_published = newPublished;
+        toggle.setAttribute('aria-checked', String(newPublished));
         render();
       } catch (err) { alert('Toggle failed: ' + err.message); }
       return;

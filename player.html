@@ -21,6 +21,9 @@
   }
   body.cursor-hidden { cursor: none; }
   body.cursor-hidden .ui { pointer-events: none; opacity: 0; }
+  .skip-link{position:absolute;left:8px;top:-48px;z-index:9998;background:#e50914;color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:top .15s ease}
+  .skip-link:focus{top:8px}
+  a:focus-visible,button:focus-visible,[tabindex]:focus-visible,[role="slider"]:focus-visible{outline:3px solid #fff;outline-offset:2px}
 
   .stage { position: fixed; inset: 0; background: #000; }
   #videoEl {
@@ -180,7 +183,7 @@
   }
   .next-up-body { padding: 18px 20px 20px; }
   .next-up-eyebrow {
-    font-size: 11px; color: var(--red); letter-spacing: 3px; text-transform: uppercase;
+    font-size: 11px; color: #ff1a1a; letter-spacing: 3px; text-transform: uppercase;
     font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
   }
   .next-up-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
@@ -569,22 +572,29 @@
   </div>
 </div>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<main id="main-content" aria-label="Video player">
 <div class="stage" id="stage">
+  <!-- Captions: the video API does not currently expose a subtitle/caption URL
+       field, so no <track kind="captions"> is wired up here. Adding one
+       requires a captioning content pipeline (generation + storage of a
+       .vtt file per video) — tracked separately, not invented here. -->
   <video id="videoEl" playsinline preload="metadata"></video>
   <audio id="lf-intro-audio" src="/LOVEFLIXAUDIO.mp3" preload="auto"></audio>
   <div class="placeholder">
     <div class="nf-logo">LOVE<span class="heart">♥</span>FLIX</div>
     <div class="msg">Select a video to play 💕</div>
   </div>
-  <div class="paused-badge" id="pausedBadge">
+  <div class="paused-badge" id="pausedBadge" aria-hidden="true">
     <svg viewBox="0 0 24 24"><path d="M8 5h3v14H8zM13 5h3v14h-3z"/></svg>
   </div>
 </div>
 
 <div class="ui">
   <header class="topbar">
-    <button class="back-btn" onclick="location.href='home.html'" aria-label="Back">
-      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
+    <button class="back-btn" onclick="location.href='home.html'" aria-label="Back to Home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>
     </button>
     <div>
       <div class="topbar-eyebrow" id="topEyebrow">LoveFlix Original</div>
@@ -595,7 +605,7 @@
   <footer class="controls">
     <div class="scrub">
       <span id="curTime">00:00</span>
-      <div class="scrub-track" id="scrubTrack">
+      <div class="scrub-track" id="scrubTrack" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="00:00 of 00:00">
         <div class="scrub-fill" id="scrubFill"></div>
       </div>
       <span id="totalTime">00:00</span>
@@ -604,28 +614,29 @@
     <div class="ctrl-row">
       <div class="ctrl-left">
         <button class="ctrl-btn" id="prevBtn" disabled>
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
           <span class="ctrl-tooltip">Previous</span>
         </button>
         <button class="ctrl-btn play" id="playBtn">
-          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="playIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           <span class="ctrl-tooltip" id="playTip">Play (k)</span>
         </button>
         <button class="ctrl-btn" id="nextBtn" disabled>
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
           <span class="ctrl-tooltip">Next</span>
         </button>
         <button class="ctrl-btn" id="back10">
-          <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z" transform="rotate(180 12 12)"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z" transform="rotate(180 12 12)"/></svg>
           <span class="ctrl-tooltip">Back 10s</span>
         </button>
         <button class="ctrl-btn" id="fwd10">
-          <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8.01-8z"/></svg>
           <span class="ctrl-tooltip">Forward 10s</span>
         </button>
         <div class="vol-wrap">
           <button class="ctrl-btn" id="muteBtn">
-            <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
+            <svg id="volIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
+            <span class="ctrl-tooltip" id="muteTip">Mute</span>
           </button>
           <div class="vol-track"><div class="vol-fill" id="volFill"></div></div>
         </div>
@@ -638,11 +649,11 @@
 
       <div class="ctrl-right">
         <button class="ctrl-btn toggle" id="autoplayBtn" title="Autoplay next">
-          <svg viewBox="0 0 24 24"><path d="M3 5v14l8-7zm9 0v14l8-7z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5v14l8-7zm9 0v14l8-7z"/></svg>
           <span class="ctrl-tooltip" id="autoplayTip">Autoplay: On</span>
         </button>
         <button class="ctrl-btn" id="fsBtn">
-          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
           <span class="ctrl-tooltip">Fullscreen</span>
         </button>
       </div>
@@ -650,8 +661,8 @@
   </footer>
 </div>
 
-<aside class="next-up" id="nextUp">
-  <div class="next-up-thumb" id="nextThumb">
+<aside class="next-up" id="nextUp" aria-live="polite">
+  <div class="next-up-thumb" id="nextThumb" aria-hidden="true">
     <div class="next-up-thumb-text" id="nextThumbText">Up Next</div>
   </div>
   <div class="next-up-body">
@@ -660,13 +671,14 @@
     <div class="next-up-desc" id="nextDesc"></div>
     <div class="next-up-actions">
       <button class="next-btn primary" id="playNext">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
         Play Next
       </button>
       <button class="next-btn ghost" id="cancelNext">Cancel</button>
     </div>
   </div>
 </aside>
+</main>
 
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
@@ -882,7 +894,11 @@
     const d = video.duration || 0;
     const c = video.currentTime || 0;
     cur.textContent = fmt(c);
-    if (d > 0) fill.style.width = ((c / d) * 100) + '%';
+    if (d > 0) {
+      fill.style.width = ((c / d) * 100) + '%';
+      track.setAttribute('aria-valuenow', Math.round((c / d) * 100));
+    }
+    track.setAttribute('aria-valuetext', fmt(c) + ' of ' + fmt(d));
     saveProgress(false);
 
     if (!nextVideo) return;
@@ -917,13 +933,23 @@
     const p = (e.clientX - r.left) / r.width;
     video.currentTime = Math.max(0, Math.min(video.duration, p * video.duration));
   });
+  // ArrowLeft/ArrowRight are already handled by the document-level keyboard
+  // handler below (±10s, works regardless of focus). Home/End are slider-only.
+  track.addEventListener('keydown', e => {
+    if (!isFinite(video.duration) || video.duration <= 0) return;
+    if (e.key === 'Home') { e.preventDefault(); video.currentTime = 0; }
+    else if (e.key === 'End') { e.preventDefault(); video.currentTime = video.duration; }
+  });
 
   document.getElementById('back10').addEventListener('click', () => { video.currentTime = Math.max(0, video.currentTime - 10); });
   document.getElementById('fwd10').addEventListener('click', () => { video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); });
 
   // Volume
+  const muteTip = document.getElementById('muteTip');
   function paintVol() {
     volFill.style.width = (video.muted ? 0 : video.volume) * 100 + '%';
+    muteBtn.setAttribute('aria-pressed', video.muted ? 'true' : 'false');
+    if (muteTip) muteTip.textContent = video.muted ? 'Unmute' : 'Mute';
   }
   muteBtn.addEventListener('click', () => { video.muted = !video.muted; paintVol(); });
   video.addEventListener('volumechange', paintVol);

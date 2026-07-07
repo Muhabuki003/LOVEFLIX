@@ -870,6 +870,35 @@ const $$ = (s, p=document) => [...p.querySelectorAll(s)];
 const fmtTime = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s/60), r = (s%60).toString().padStart(2,'0'); return `${m}:${r}`; };
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c)); }
 
+// ── DIALOG HELPERS (focus trap + Escape + return focus) ──
+function getFocusable(container) {
+  return [...container.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+    .filter(el => el.offsetParent !== null);
+}
+function openDialog(backdropOrDialog) {
+  const dialog = backdropOrDialog.matches('[role="dialog"]') ? backdropOrDialog : (backdropOrDialog.querySelector('[role="dialog"]') || backdropOrDialog);
+  backdropOrDialog._returnFocus = document.activeElement;
+  backdropOrDialog.classList.add('open');
+  const focusables = getFocusable(dialog);
+  (focusables[0] || dialog).focus();
+  function trap(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeDialog(backdropOrDialog); return; }
+    if (e.key !== 'Tab') return;
+    const items = getFocusable(dialog);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+  backdropOrDialog._trapHandler = trap;
+  backdropOrDialog.addEventListener('keydown', trap);
+}
+function closeDialog(backdropOrDialog) {
+  backdropOrDialog.classList.remove('open');
+  if (backdropOrDialog._trapHandler) { backdropOrDialog.removeEventListener('keydown', backdropOrDialog._trapHandler); backdropOrDialog._trapHandler = null; }
+  if (backdropOrDialog._returnFocus && typeof backdropOrDialog._returnFocus.focus === 'function') backdropOrDialog._returnFocus.focus();
+}
+
 // ── PLAYER (LoveFlixPlayer abstraction — Spotify / Apple Music / YouTube) ──
 
 // Convert a page/queue track into the provider-agnostic model the abstraction
@@ -1345,6 +1374,14 @@ function mSetSeek(e) { const touch = e.touches ? e.touches[0] : e; const r = mFs
 ['mousedown','touchstart'].forEach(ev => { mFsSeek.addEventListener(ev, (e)=>{ mSeekDrag=true; mSetSeek(e); }, {passive:true}); });
 ['mousemove','touchmove'].forEach(ev => { window.addEventListener(ev, (e)=>{ if(mSeekDrag) mSetSeek(e); }, {passive:true}); });
 ['mouseup','touchend','touchcancel'].forEach(ev => { window.addEventListener(ev, ()=>{ mSeekDrag=false; }); });
+mFsSeek.addEventListener('keydown', (e) => {
+  const t = QUEUE[currentIdx];
+  const dur = (player && player.getDuration()) || (t && t.dur) || 180;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); seekTo(Math.min(1, (position + 5) / dur)); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); seekTo(Math.max(0, (position - 5) / dur)); }
+  else if (e.key === 'Home') { e.preventDefault(); seekTo(0); }
+  else if (e.key === 'End') { e.preventDefault(); seekTo(1); }
+});
 
 // Mobile volume
 const mFsVol = $('#mFsVolBar');
@@ -1353,6 +1390,12 @@ function mSetVol(e) { const touch = e.touches ? e.touches[0] : e; const r = mFsV
 ['mousedown','touchstart'].forEach(ev => { mFsVol.addEventListener(ev, (e)=>{ mVolDrag=true; mSetVol(e); }, {passive:true}); });
 ['mousemove','touchmove'].forEach(ev => { window.addEventListener(ev, (e)=>{ if(mVolDrag) mSetVol(e); }, {passive:true}); });
 ['mouseup','touchend','touchcancel'].forEach(ev => { window.addEventListener(ev, ()=>{ mVolDrag=false; }); });
+mFsVol.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setVol(volume + 0.05); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setVol(volume - 0.05); }
+  else if (e.key === 'Home') { e.preventDefault(); setVol(0); }
+  else if (e.key === 'End') { e.preventDefault(); setVol(1); }
+});
 
 // Mobile tabs
 document.querySelectorAll('.m-tab').forEach(t => {
@@ -1511,15 +1554,15 @@ let pendingSaveTrack = null;
 function openSaveToPlaylist(t) {
   pendingSaveTrack = t;
   const el = document.getElementById('playlistChoices');
-  el.innerHTML = playlists.map(pl => `<button class="pl-choice" data-choose="${pl.id}"><div class="playlist-art ${pl.art || 'art-1'}" style="width:24px;height:24px"><span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span></div>${escapeHtml(pl.name)}</button>`).join('') || '<div style="font-size:12.5px;color:var(--text-dim);padding:8px 4px">No playlists yet — create one first.</div>';
+  el.innerHTML = playlists.map(pl => `<button class="pl-choice" data-choose="${pl.id}"><div class="playlist-art ${pl.art || 'art-1'}" style="width:24px;height:24px" aria-hidden="true"><span style="font-family:var(--serif);font-style:italic">${escapeHtml(pl.name[0]||'P')}</span></div>${escapeHtml(pl.name)}</button>`).join('') || '<div style="font-size:12.5px;color:var(--text-dim);padding:8px 4px">No playlists yet — create one first.</div>';
   el.querySelectorAll('[data-choose]').forEach(btn => btn.addEventListener('click', () => saveTrackToPlaylist(btn.dataset.choose)));
-  document.getElementById('saveToPlaylistModal').classList.add('open');
+  openDialog(document.getElementById('saveToPlaylistModal'));
 }
 
 async function saveTrackToPlaylist(plId) {
   const pl = playlists.find(p => String(p.id) === String(plId));
   const t = pendingSaveTrack;
-  document.getElementById('saveToPlaylistModal').classList.remove('open');
+  closeDialog(document.getElementById('saveToPlaylistModal'));
   if (!pl || !t) return;
   const song = { title: t.title, artist: t.artist || '', isrc: t.isrc || null, youtube_id: t.youtubeId || null, artwork_url: t.artworkUrl || '', duration: t.dur || 180 };
   if (playlistsRemote) {
@@ -1534,15 +1577,14 @@ async function saveTrackToPlaylist(plId) {
   renderSidebarPlaylists();
   showToast('Saved to "' + pl.name + '"');
 }
-document.getElementById('cancelSaveToPlaylist').addEventListener('click', () => { document.getElementById('saveToPlaylistModal').classList.remove('open'); });
+document.getElementById('cancelSaveToPlaylist').addEventListener('click', () => { closeDialog(document.getElementById('saveToPlaylistModal')); });
 
 // New playlist modal
 document.getElementById('newPlaylistBtn').addEventListener('click', () => {
   document.getElementById('newPlaylistName').value = '';
-  document.getElementById('newPlaylistModal').classList.add('open');
-  setTimeout(() => document.getElementById('newPlaylistName').focus(), 80);
+  openDialog(document.getElementById('newPlaylistModal'));
 });
-document.getElementById('cancelNewPlaylist').addEventListener('click', () => { document.getElementById('newPlaylistModal').classList.remove('open'); });
+document.getElementById('cancelNewPlaylist').addEventListener('click', () => { closeDialog(document.getElementById('newPlaylistModal')); });
 document.getElementById('confirmNewPlaylist').addEventListener('click', async () => {
   const name = document.getElementById('newPlaylistName').value.trim();
   if (!name) return;
@@ -1556,17 +1598,16 @@ document.getElementById('confirmNewPlaylist').addEventListener('click', async ()
     saveLocalPlaylists();
   }
   renderSidebarPlaylists();
-  document.getElementById('newPlaylistModal').classList.remove('open');
+  closeDialog(document.getElementById('newPlaylistModal'));
   showToast('Playlist "' + name + '" created!');
 });
 document.getElementById('newPlaylistName').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('confirmNewPlaylist').click();
-  if (e.key === 'Escape') document.getElementById('cancelNewPlaylist').click();
 });
 
 // Close modals on backdrop click
 ['newPlaylistModal','saveToPlaylistModal','musicSettingsModal'].forEach(id => {
-  document.getElementById(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+  document.getElementById(id).addEventListener('click', (e) => { if (e.target === e.currentTarget) closeDialog(e.currentTarget); });
 });
 
 // ── MUSIC CONNECTORS (settings) ──
@@ -1764,10 +1805,10 @@ updatePlayBtn();
 
 document.getElementById('musicSettingsBtn').addEventListener('click', () => {
   renderConnectors();
-  document.getElementById('musicSettingsModal').classList.add('open');
+  openDialog(document.getElementById('musicSettingsModal'));
 });
 document.getElementById('closeMusicSettings').addEventListener('click', () => {
-  document.getElementById('musicSettingsModal').classList.remove('open');
+  closeDialog(document.getElementById('musicSettingsModal'));
 });
 
 (async function initMusic() {
