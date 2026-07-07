@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){location.replace('/waitlist.html')}}catch(e){location.replace('/waitlist.html')}})();</script><!-- LF_GATE_END -->
 
@@ -343,10 +343,30 @@
       0%   { background-color: rgba(228,9,19,0.5); }
       100% { background-color: rgba(228,9,19,0); }
     }
+
+    #intro-skip {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 20;
+      font: 500 11px/1 'Inter', system-ui, sans-serif;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.7);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+    }
+    #intro-skip:hover, #intro-skip:focus-visible { color: #fff; border-color: rgba(255,255,255,.6); }
+    #intro-skip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   </style>
 </head>
 <body>
-  <div id="container">
+  <main id="main-content">
+  <div id="container" aria-hidden="true">
     <netflixintro letter="L">
 
       <div class="helper-1">
@@ -395,21 +415,34 @@
 
     </netflixintro>
   </div>
+  </main>
 
+  <button type="button" id="intro-skip" aria-label="Skip intro and stop audio">Skip</button>
   <audio id="lf-intro-audio" src="/LOVEFLIXAUDIO.mp3" preload="auto"></audio>
   <script>
     (function(){
       var a = document.getElementById('lf-intro-audio');
-      if (a) { 
-        a.currentTime = 0;
-        a.volume = 1; 
-        var p = a.play(); 
-        if (p && p.catch) p.catch(function(){}); 
+      var skip = document.getElementById('intro-skip');
+      var done = false;
+
+      function proceed() {
+        if (done) return;
+        done = true;
+        try { a && a.pause(); } catch(e){}
+        window.location.replace('whos_watching.html');
       }
+
+      if (a) {
+        a.currentTime = 0;
+        a.volume = 1;
+        var p = a.play();
+        if (p && p.catch) p.catch(function(){});
+      }
+
+      skip && skip.addEventListener('click', proceed);
+
+      setTimeout(proceed, 4200);
     })();
-    setTimeout(() => {
-      window.location.replace('whos_watching.html');
-    }, 4200);
   </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){location.replace('/waitlist.html')}}catch(e){location.replace('/waitlist.html')}})();</script><!-- LF_GATE_END -->
 <script>(function(){try{var s=JSON.parse(localStorage.getItem('loveflix_settings')||'{}');var h=s.accentColor||s.brand_accent_color||'';if(/^#[0-9a-fA-F]{6}$/.test(h)){document.documentElement.style.setProperty('--brand-accent',h);document.documentElement.style.setProperty('--red',h);}}catch(e){}})();</script>
@@ -264,28 +264,28 @@
 <div class="bg-overlay"></div>
 
 <nav>
-  <span class="nf-logo">LOVE<span class="heart">♥</span>FLIX</span>
+  <span class="nf-logo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</span>
   <button class="signout-btn" onclick="LoveFlix.signOut()">Sign Out</button>
 </nav>
 
 <!-- PROFILE SELECTOR -->
-<div class="selector-page" id="selectorPage">
+<main class="selector-page" id="main-content">
   <h1>Who's watching?</h1>
 
   <div class="profiles-row">
 
     <!-- HER PROFILE -->
-    <div class="profile-card" onclick="selectHer()">
+    <div class="profile-card" id="herCard" onclick="selectHer()" role="button" tabindex="0" aria-label="Watch as My Love">
       <div class="profile-avatar her-avatar">
-        <span class="emoji-bg">🌸</span>
+        <span class="emoji-bg" aria-hidden="true">🌸</span>
       </div>
       <span class="profile-name" id="herName">My Love</span>
     </div>
 
     <!-- HIS PROFILE (ADMIN) -->
-    <div class="profile-card" onclick="selectHim()">
+    <div class="profile-card" id="hisCard" onclick="selectHim()" role="button" tabindex="0" aria-label="Watch as You — Admin, PIN required">
       <div class="profile-avatar his-avatar">
-        <span class="initials" id="hisInitial">Y</span>
+        <span class="initials" id="hisInitial" aria-hidden="true">Y</span>
       </div>
       <span class="profile-name" id="hisName">You</span>
     </div>
@@ -293,11 +293,11 @@
   </div>
 
   <button class="manage-btn">Manage Profiles</button>
-</div>
+</main>
 
 <!-- PIN OVERLAY -->
-<div class="pin-overlay" id="pinOverlay">
-  <h2>Enter your PIN</h2>
+<div class="pin-overlay" id="pinOverlay" role="dialog" aria-modal="true" aria-labelledby="pinOverlayTitle" aria-hidden="true">
+  <h2 id="pinOverlayTitle">Enter your PIN</h2>
   <p>Admin access — LoveFlix Studio</p>
 
   <div class="pin-dots" id="pinDots">
@@ -308,18 +308,18 @@
   </div>
 
   <div class="pin-grid" id="pinGrid">
-    <button class="pin-key" onclick="pinPress('1')">1</button>
-    <button class="pin-key" onclick="pinPress('2')">2</button>
-    <button class="pin-key" onclick="pinPress('3')">3</button>
-    <button class="pin-key" onclick="pinPress('4')">4</button>
-    <button class="pin-key" onclick="pinPress('5')">5</button>
-    <button class="pin-key" onclick="pinPress('6')">6</button>
-    <button class="pin-key" onclick="pinPress('7')">7</button>
-    <button class="pin-key" onclick="pinPress('8')">8</button>
-    <button class="pin-key" onclick="pinPress('9')">9</button>
-    <button class="pin-key empty"></button>
-    <button class="pin-key" onclick="pinPress('0')">0</button>
-    <button class="pin-key del" onclick="pinDelete()">⌫</button>
+    <button class="pin-key" onclick="pinPress('1')" aria-label="1">1</button>
+    <button class="pin-key" onclick="pinPress('2')" aria-label="2">2</button>
+    <button class="pin-key" onclick="pinPress('3')" aria-label="3">3</button>
+    <button class="pin-key" onclick="pinPress('4')" aria-label="4">4</button>
+    <button class="pin-key" onclick="pinPress('5')" aria-label="5">5</button>
+    <button class="pin-key" onclick="pinPress('6')" aria-label="6">6</button>
+    <button class="pin-key" onclick="pinPress('7')" aria-label="7">7</button>
+    <button class="pin-key" onclick="pinPress('8')" aria-label="8">8</button>
+    <button class="pin-key" onclick="pinPress('9')" aria-label="9">9</button>
+    <button class="pin-key empty" disabled tabindex="-1" aria-hidden="true"></button>
+    <button class="pin-key" onclick="pinPress('0')" aria-label="0">0</button>
+    <button class="pin-key del" onclick="pinDelete()" aria-label="Delete last digit">⌫</button>
   </div>
 
   <div class="pin-error-msg" id="pinError"></div>
@@ -327,7 +327,7 @@
 </div>
 
 <!-- SUCCESS / LOADING SCREEN -->
-<div class="success-screen" id="successScreen">
+<div class="success-screen" id="successScreen" role="status" aria-live="polite">
   <p class="welcome-text">Welcome back,</p>
   <p class="welcome-name" id="successName">Her Name</p>
   <div class="loading-bar-wrap">
@@ -348,19 +348,43 @@
     showSuccess(name, false);
   }
 
+  let pinOpener = null;
+  function getPinFocusable() {
+    return Array.from(document.getElementById('pinOverlay').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.disabled && el.offsetParent !== null);
+  }
+  function pinTrapTab(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = getPinFocusable();
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
   function selectHim() {
-    document.getElementById('pinOverlay').classList.add('show');
+    pinOpener = document.activeElement;
+    const overlay = document.getElementById('pinOverlay');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
     pinValue = '';
     pinLocked = false;
     updateDots();
     document.getElementById('pinError').textContent = '';
+    overlay.addEventListener('keydown', pinTrapTab);
+    const focusable = getPinFocusable();
+    if (focusable.length) focusable[0].focus();
   }
 
   function closePin() {
-    document.getElementById('pinOverlay').classList.remove('show');
+    const overlay = document.getElementById('pinOverlay');
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.removeEventListener('keydown', pinTrapTab);
     pinValue = '';
     updateDots();
     document.getElementById('pinError').textContent = '';
+    if (pinOpener && typeof pinOpener.focus === 'function') pinOpener.focus();
   }
 
   function pinPress(num) {
@@ -442,10 +466,20 @@
     document.getElementById('herName').textContent = partnerName;
     document.getElementById('hisName').textContent = adminName;
     document.getElementById('hisInitial').textContent = (adminName[0] || '?').toUpperCase();
+    document.getElementById('herCard').setAttribute('aria-label', 'Watch as ' + partnerName);
+    document.getElementById('hisCard').setAttribute('aria-label', 'Watch as ' + adminName + ' — Admin, PIN required');
   }
   paintProfileNames(LoveFlix.getSettings());
   LoveFlix.ensureSettingsReady().then(paintProfileNames).catch(() => {});
   window.addEventListener('loveflix:settings-changed', () => paintProfileNames(LoveFlix.getSettings()));
+
+  // Keyboard support for the profile-card divs (Enter/Space activates, mirroring click)
+  document.getElementById('herCard').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); selectHer(); }
+  });
+  document.getElementById('hisCard').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); selectHim(); }
+  });
 </script>
 </body>
 </html>
