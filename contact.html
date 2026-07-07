@@ -7,6 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .req-mark{color:#ff1a1a}
   :root{--bg:#141414;--panel:#1a1a1a;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;display:flex;flex-direction:column}
@@ -36,7 +39,7 @@
   .form-group{margin-bottom:24px}
   .form-group label{display:block;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:8px}
   .form-group input,.form-group select,.form-group textarea{width:100%;background:#0f0f0f;border:1px solid var(--border);border-radius:6px;padding:14px 16px;font-size:15px;color:#fff;transition:border-color .2s}
-  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--red)}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red)}
   .form-group textarea{resize:vertical;min-height:140px}
   .form-group select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23a3a3a3'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:44px;cursor:pointer}
   .form-group select option{background:#141414;color:#fff}
@@ -99,20 +102,21 @@
   <p class="sub">We'd love to hear from you — questions, ideas, or just to say hi.</p>
 </div>
 
-<main>
+<main id="main-content">
   <div class="contact-card">
+    <p class="sr-only">Fields marked with an asterisk are required.</p>
     <form id="contactForm">
       <div class="form-group">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" placeholder="Your name" required>
+        <label for="name">Name <span class="req-mark" aria-hidden="true">*</span><span class="sr-only"> required</span></label>
+        <input type="text" id="name" name="name" placeholder="Your name" required aria-required="true">
       </div>
       <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        <label for="email">Email <span class="req-mark" aria-hidden="true">*</span><span class="sr-only"> required</span></label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required aria-required="true">
       </div>
       <div class="form-group">
-        <label for="subject">Subject</label>
-        <select id="subject" name="subject" required>
+        <label for="subject">Subject <span class="req-mark" aria-hidden="true">*</span><span class="sr-only"> required</span></label>
+        <select id="subject" name="subject" required aria-required="true">
           <option value="" disabled selected>Select a topic</option>
           <option value="General">General</option>
           <option value="Billing">Billing</option>
@@ -122,16 +126,16 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="message">Message</label>
-        <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required></textarea>
+        <label for="message">Message <span class="req-mark" aria-hidden="true">*</span><span class="sr-only"> required</span></label>
+        <textarea id="message" name="message" placeholder="Tell us what's on your mind..." required aria-required="true"></textarea>
       </div>
       <div class="submit-row">
         <button type="submit" class="btn-submit">Send Message →</button>
       </div>
     </form>
 
-    <div class="success-msg" id="successMsg">
-      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <div class="success-msg" id="successMsg" role="status" aria-live="polite" tabindex="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
       <p>Thanks! We'll get back to you within 24 hours 💕</p>
     </div>
 
@@ -200,9 +204,10 @@
       e.preventDefault();
       success.classList.add('show');
       form.reset();
-      // Scroll to show success message
+      // Scroll to show success message and move focus for keyboard/screen-reader users
       setTimeout(function() {
         success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        success.focus();
       }, 100);
     });
   })();
