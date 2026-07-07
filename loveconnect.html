@@ -1137,17 +1137,17 @@
   Directions to <span class="dir-fab-name" id="dir-fab-name">My Love</span>
 </button>
 
-<div id="dir-panel" class="dir-panel" role="dialog" aria-label="Directions">
-  <div class="dir-handle"></div>
-  <button id="dir-cancel" class="dir-cancel">✕</button>
+<div id="dir-panel" class="dir-panel" role="dialog" aria-modal="true" aria-label="Directions">
+  <div class="dir-handle" aria-hidden="true"></div>
+  <button id="dir-cancel" class="dir-cancel" aria-label="Close directions panel">✕</button>
   <div id="dir-content" class="dir-content"></div>
 </div>
 
 <!-- FLIGHTS — independent FAB + slide-up panel (no connection to directions) -->
 <button id="flights-fab" class="flights-fab" aria-label="Flights to partner">✈ Flights</button>
-<div id="flights-panel" class="flights-panel" role="dialog" aria-label="Flights">
-  <div class="flights-handle"></div>
-  <button class="flights-close" aria-label="Close">✕</button>
+<div id="flights-panel" class="flights-panel" role="dialog" aria-modal="true" aria-label="Flights">
+  <div class="flights-handle" aria-hidden="true"></div>
+  <button class="flights-close" aria-label="Close flights panel">✕</button>
   <div class="flights-body"></div>
 </div>
 
