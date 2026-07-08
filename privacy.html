@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#141414;--panel:#1a1a1a;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -32,7 +34,7 @@
   .privacy-header{padding:100px 24px 40px;text-align:center;position:relative;overflow:hidden}
   .privacy-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center top,rgba(229,9,20,0.2),transparent 60%);pointer-events:none}
   .privacy-header > *{position:relative;z-index:1}
-  .privacy-header .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px}
+  .privacy-header .eyebrow{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:14px}
   .privacy-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,72px);letter-spacing:1px;line-height:1;margin-bottom:16px}
   .privacy-header p{font-size:15px;color:var(--text-light);max-width:600px;margin:0 auto;line-height:1.5}
   .privacy-header .last-updated{font-size:13px;color:var(--text-dim);margin-top:12px}
@@ -46,7 +48,7 @@
   .privacy-section ul,.privacy-section ol{padding-left:22px;margin-bottom:16px}
   .privacy-section li{margin-bottom:8px}
   .privacy-section li strong{color:#fff}
-  .privacy-section a{color:var(--red)}
+  .privacy-section a{color:#ff1a1a}
   .privacy-section a:hover{text-decoration:underline}
   .privacy-section .highlight-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:20px 0}
   .privacy-section .highlight-box p:last-child{margin-bottom:0}
@@ -90,6 +92,7 @@
   </div>
 </nav>
 
+<main id="main-content">
 <header class="privacy-header">
   <div class="eyebrow">♥ Privacy &amp; Trust</div>
   <h1>Privacy Policy</h1>
@@ -276,6 +279,7 @@
   </div>
 
 </div>
+</main>
 
 <footer>
   <div class="ft-questions">

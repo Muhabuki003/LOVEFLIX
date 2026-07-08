@@ -8,6 +8,8 @@
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    a:focus-visible, button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     html { scroll-behavior: smooth; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -145,7 +147,7 @@
     }
     #story .quote {
       font-size: 1.3rem;
-      color: #e50914;
+      color: #ff1a1a;
       font-weight: 600;
       text-align: center;
       max-width: 600px;
@@ -261,7 +263,7 @@
       color: #fff;
       font-style: normal;
     }
-    .creator-card .signature span { color: #e50914; }
+    .creator-card .signature span { color: #ff1a1a; }
 
     /* ── Footer ── */
     footer {
@@ -285,10 +287,10 @@
     }
     footer .footer-links a:hover { color: #fff; }
     footer .copy {
-      color: #555;
+      color: #b3b3b3;
       font-size: 0.8rem;
     }
-    footer .copy .heart { color: #e50914; }
+    footer .copy .heart { color: #ff1a1a; }
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
@@ -312,6 +314,7 @@
     </div>
   </nav>
 
+  <main id="main-content">
   <!-- ════════════ Hero ════════════ -->
   <section class="hero" id="top">
     <div class="heart-icon">💕</div>
@@ -440,6 +443,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- ════════════ Footer ════════════ -->
   <footer>

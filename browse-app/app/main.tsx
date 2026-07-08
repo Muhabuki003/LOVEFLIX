@@ -5,6 +5,7 @@ import ErrorBoundary from './cmps/common/error-boundary'
 import { ThemeProvider } from './cmps/layout'
 import { FilmPreview } from './cmps/views/film'
 import config from './config'
+import { BrowseAccessibleNav } from './loveflix/BrowseAccessibleNav'
 import { BrowseOverlay } from './loveflix/BrowseOverlay'
 import { bootstrapLoveflix } from './loveflix/bootstrap'
 import { LOVEFLIX_ENABLED } from './loveflix/loveflix'
@@ -28,6 +29,9 @@ const renderLoveflix = () => {
               Film.fromLoveflix() maps the video's fields into this card. */}
           <FilmPreview />
           <BrowseOverlay />
+          {/* Accessible parallel navigation path for the WebGL grid — see
+              app/loveflix/BrowseAccessibleNav.tsx for rationale. */}
+          <BrowseAccessibleNav />
         </ThemeProvider>
         <Voroforce />
       </ErrorBoundary>

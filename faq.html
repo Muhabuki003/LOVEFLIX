@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  a:focus-visible,button:focus-visible{outline:2px solid #fff;outline-offset:2px}
   :root{--bg:#0a0a0a;--panel:#141414;--red:#e50914;--text-dim:#a3a3a3;--text-light:#d4d4d4;--border:#262626}
   html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -41,22 +43,21 @@
   .faq-cat-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
   .faq-cat-icon{width:32px;height:32px;border-radius:6px;background:rgba(229,9,20,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .faq-cat-icon svg{width:16px;height:16px;fill:var(--red)}
-  .faq-cat-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700}
+  .faq-cat-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin:0}
 
   /* Accordion */
   .faq-item{border-bottom:1px solid var(--border)}
   .faq-item:last-child{border-bottom:none}
-  .faq-q{padding:18px 16px 18px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;transition:color .15s;position:relative}
+  .faq-q-heading{margin:0}
+  .faq-q{padding:18px 52px 18px 0;display:block;cursor:pointer;user-select:none;transition:color .15s;position:relative;width:100%;background:none;border:none;font:inherit;text-align:left;font-size:15px;font-weight:500;color:var(--text-light);line-height:1.45}
   .faq-q:hover{color:#fff}
-  .faq-q h3{font-size:15px;font-weight:500;color:var(--text-light);line-height:1.45;padding-right:36px;transition:color .15s}
-  .faq-q:hover h3{color:#fff}
-  .faq-q.active h3{color:#fff}
+  .faq-q.active{color:#fff}
   .faq-toggle{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .25s ease;color:var(--text-dim);font-size:18px;font-weight:300;position:absolute;right:0;top:18px}
   .faq-q.active .faq-toggle{transform:rotate(45deg);color:var(--red)}
   .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;padding:0 0 0 0}
   .faq-a.open{max-height:500px;padding:0 0 20px 0}
   .faq-a-inner{font-size:14px;color:var(--text-dim);line-height:1.65;padding-right:24px}
-  .faq-a-inner a{color:var(--red);text-decoration:underline}
+  .faq-a-inner a{color:#ff1a1a;text-decoration:underline}
   .faq-a-inner a:hover{color:#ff3b3b}
 
   /* Still need help */
@@ -105,53 +106,42 @@
   </div>
 </header>
 
+<main id="main-content">
 <section class="faq-section">
 
   <!-- Category 1: Account & Setup -->
   <div class="faq-category">
     <div class="faq-cat-header">
       <div class="faq-cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       </div>
-      <span class="faq-cat-label">Account &amp; Setup</span>
+      <h2 class="faq-cat-label">Account &amp; Setup</h2>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How do I sign up for LoveFlix?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-1" id="faq-q-1">How do I sign up for LoveFlix?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-1" role="region" aria-labelledby="faq-q-1">
         <div class="faq-a-inner">Click "Get Started" on the homepage, choose your subscription plan, and create your site. You'll pick a LoveFlix URL, upload a profile photo, and set your anniversary date. Your 14-day free trial begins immediately — no credit card required.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How do I invite my partner to join?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-2" id="faq-q-2">How do I invite my partner to join?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-2" role="region" aria-labelledby="faq-q-2">
         <div class="faq-a-inner">After creating your LoveFlix, go to your Creator Dashboard and click "Invite Partner." Enter their email and they'll receive an invite link. Once they accept, they get their own profile on the "Who's Watching?" screen — complete with their name and a custom avatar gradient.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Can I have multiple profiles?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-3" id="faq-q-3">Can I have multiple profiles?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-3" role="region" aria-labelledby="faq-q-3">
         <div class="faq-a-inner">Yes! LoveFlix comes with two profiles by default — one for you and one for your partner. You also get a hidden Creator profile protected by a 4-digit PIN, where you can manage uploads, settings, and analytics. Additional profiles can be added from the dashboard.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Can I change my LoveFlix URL after signing up?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-4" id="faq-q-4">Can I change my LoveFlix URL after signing up?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-4" role="region" aria-labelledby="faq-q-4">
         <div class="faq-a-inner">Yes, you can change your URL once every 30 days from the Creator Dashboard under "Site Settings." Your old URL will redirect to the new one for 7 days so your partner doesn't lose access.</div>
       </div>
     </div>
@@ -161,47 +151,35 @@
   <div class="faq-category">
     <div class="faq-cat-header">
       <div class="faq-cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
       </div>
-      <span class="faq-cat-label">Subscription &amp; Billing</span>
+      <h2 class="faq-cat-label">Subscription &amp; Billing</h2>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How much does LoveFlix cost?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-5" id="faq-q-5">How much does LoveFlix cost?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-5" role="region" aria-labelledby="faq-q-5">
         <div class="faq-a-inner">LoveFlix starts at <strong>$12/month</strong> for the Standard plan, which includes 50GB of storage, HD streaming, and full access to all features. The <strong>Premium plan ($19/month)</strong> bumps storage to 200GB with 4K HDR streaming, unlimited uploads, and priority support. All plans include a 14-day free trial.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>What payment methods do you accept?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-6" id="faq-q-6">What payment methods do you accept?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-6" role="region" aria-labelledby="faq-q-6">
         <div class="faq-a-inner">We accept all major credit and debit cards (Visa, Mastercard, American Express, Discover), as well as PayPal. Payment is processed securely through Stripe. We never store your full card details on our servers.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Can I cancel my subscription?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-7" id="faq-q-7">Can I cancel my subscription?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-7" role="region" aria-labelledby="faq-q-7">
         <div class="faq-a-inner">Yes, anytime from the Creator Dashboard under "Billing." When you cancel, you'll retain access until the end of your current billing period. After that, your site will be paused but not deleted — you can resubscribe and pick up where you left off within 90 days.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>What is your refund policy?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-8" id="faq-q-8">What is your refund policy?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-8" role="region" aria-labelledby="faq-q-8">
         <div class="faq-a-inner">We offer a full refund within the first 7 days of any paid subscription — no questions asked. After 7 days, refunds are handled on a case-by-case basis. Contact us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> and we'll make it right.</div>
       </div>
     </div>
@@ -211,57 +189,42 @@
   <div class="faq-category">
     <div class="faq-cat-header">
       <div class="faq-cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8h2v8H9zm4 0h2v8h-2z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8h2v8H9zm4 0h2v8h-2z"/></svg>
       </div>
-      <span class="faq-cat-label">Content &amp; Features</span>
+      <h2 class="faq-cat-label">Content &amp; Features</h2>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How do I upload videos and photos?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-9" id="faq-q-9">How do I upload videos and photos?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-9" role="region" aria-labelledby="faq-q-9">
         <div class="faq-a-inner">From the Creator Dashboard, click "Upload" and drag your files into the upload zone. You can tag content by category (Trip, Anniversary, Birthday, Everyday, etc.) and add titles and descriptions. Supported formats include MP4, MOV, AVI, JPEG, PNG, and HEIC. Files are transcoded automatically for smooth streaming.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Can we watch together from different locations?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-10" id="faq-q-10">Can we watch together from different locations?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-10" role="region" aria-labelledby="faq-q-10">
         <div class="faq-a-inner">Yes! LoveFlix includes a built-in Sync Watch feature. Start a video and click the "Watch Together" button to generate a shareable link. Both of you can watch in perfect sync with real-time play/pause/seek coordination — like Netflix Party, but for your private content.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>What is the Chat feature?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-11" id="faq-q-11">What is the Chat feature?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-11" role="region" aria-labelledby="faq-q-11">
         <div class="faq-a-inner">The LoveFlix Chat is a private, encrypted messaging inbox built right into your streaming site. Leave each other voice notes, send reaction emojis, or drop a text while browsing your content together. It's accessible from any page via the floating chat icon in the corner.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>What is LoveConnect?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-12" id="faq-q-12">What is LoveConnect?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-12" role="region" aria-labelledby="faq-q-12">
         <div class="faq-a-inner">LoveConnect is a live interactive world map that shows both partners' locations as glowing pins in real time. See the distance between you, the timezone difference, and start a one-tap encrypted video call — all from the LoveConnect screen. Think of it as "distance is just a number," visualized.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Can I add music or voice notes?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-13" id="faq-q-13">Can I add music or voice notes?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-13" role="region" aria-labelledby="faq-q-13">
         <div class="faq-a-inner">Absolutely! You can upload voice notes (MP3, M4A, WAV) and they'll appear in their own row — "Voice Notes from [Name]." You can also set a site-wide soundtrack that plays when your partner opens LoveFlix. It's the little things that hit hardest.</div>
       </div>
     </div>
@@ -271,37 +234,28 @@
   <div class="faq-category">
     <div class="faq-cat-header">
       <div class="faq-cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
       </div>
-      <span class="faq-cat-label">Privacy &amp; Security</span>
+      <h2 class="faq-cat-label">Privacy &amp; Security</h2>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Is my content private?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-14" id="faq-q-14">Is my content private?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-14" role="region" aria-labelledby="faq-q-14">
         <div class="faq-a-inner">Yes. Every LoveFlix site is fully private. Only you and your invited partner can sign in and view the content. Your site is served over HTTPS, all media is stored with AES-256 encryption at rest, and we never share or sell your data. Even we can't browse your videos.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How do I reset my password?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-15" id="faq-q-15">How do I reset my password?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-15" role="region" aria-labelledby="faq-q-15">
         <div class="faq-a-inner">On the sign-in screen, click "Forgot Password." Enter your email address and we'll send a password reset link. If you're the creator and have forgotten your PIN too, contact us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> with your account email and we'll verify your identity.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How does the Gate Access work?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-16" id="faq-q-16">How does the Gate Access work?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-16" role="region" aria-labelledby="faq-q-16">
         <div class="faq-a-inner">Your LoveFlix site is protected behind a custom Gate Access page. Before anyone sees the "Who's Watching?" screen, they must enter a secret unlock code — set by you in the dashboard. You can change it anytime, and each partner can have their own code. It's your private sanctuary.</div>
       </div>
     </div>
@@ -311,47 +265,35 @@
   <div class="faq-category">
     <div class="faq-cat-header">
       <div class="faq-cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
       </div>
-      <span class="faq-cat-label">Troubleshooting</span>
+      <h2 class="faq-cat-label">Troubleshooting</h2>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>Why won't my video play?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-17" id="faq-q-17">Why won't my video play?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-17" role="region" aria-labelledby="faq-q-17">
         <div class="faq-a-inner">First, check that your file format is supported (MP4 with H.264 is recommended). If the video shows a black screen, try refreshing the page or clearing your browser cache. Still stuck? Your video may still be transcoding — larger files can take 2-5 minutes to process after upload. Contact us if the issue persists.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>LoveFlix isn't loading on my phone — what do I do?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-18" id="faq-q-18">LoveFlix isn't loading on my phone — what do I do?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-18" role="region" aria-labelledby="faq-q-18">
         <div class="faq-a-inner">Make sure you're using the latest version of Chrome, Safari, or Firefox. If the page loads but looks broken, try switching from Wi-Fi to mobile data (or vice versa). For the best experience on iOS, add LoveFlix to your Home Screen — Safari will prompt you when you visit your site.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>How do I contact support?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-19" id="faq-q-19">How do I contact support?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-19" role="region" aria-labelledby="faq-q-19">
         <div class="faq-a-inner">We're here to help! Email us at <a href="mailto:support@loveflix.com">support@loveflix.com</a> and we'll respond within 24 hours (usually much faster). Premium plan members get priority support with a guaranteed 4-hour response time. You can also reach out via the in-app chat from your Creator Dashboard.</div>
       </div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">
-        <h3>My partner's invite link expired — what now?</h3>
-        <span class="faq-toggle">+</span>
-      </div>
-      <div class="faq-a">
+      <h3 class="faq-q-heading"><button type="button" class="faq-q" onclick="toggleFaq(this)" aria-expanded="false" aria-controls="faq-a-20" id="faq-q-20">My partner's invite link expired — what now?<span class="faq-toggle" aria-hidden="true">+</span></button></h3>
+      <div class="faq-a" id="faq-a-20" role="region" aria-labelledby="faq-q-20">
         <div class="faq-a-inner">No worries! Invite links expire after 48 hours for security. Simply go to your Creator Dashboard, click "Invite Partner" again, and a fresh link will be generated. You can also copy the invite link manually and send it however you like — just don't post it publicly.</div>
       </div>
     </div>
@@ -366,6 +308,7 @@
   </div>
 
 </section>
+</main>
 
 <footer>
   <div class="ft-grid">
@@ -401,12 +344,12 @@
 </footer>
 
 <script>
-function toggleFaq(el) {
-  // Toggle active class on the clicked question
-  el.classList.toggle('active');
+function toggleFaq(btn) {
+  var item = btn.closest('.faq-item');
+  if (!item) return;
 
-  // Find the answer div (next sibling)
-  var answer = el.nextElementSibling;
+  // Find the answer panel within this item
+  var answer = item.querySelector('.faq-a');
   if (!answer) return;
 
   // Check if it has the 'open' class
@@ -417,18 +360,20 @@ function toggleFaq(el) {
   for (var i = 0; i < allAnswers.length; i++) {
     if (allAnswers[i] !== answer) {
       allAnswers[i].classList.remove('open');
-      // Also remove active class from its preceding question
-      var prevQ = allAnswers[i].previousElementSibling;
-      if (prevQ) prevQ.classList.remove('active');
+      // Also remove active state from its question button
+      var prevItem = allAnswers[i].closest('.faq-item');
+      var prevBtn = prevItem && prevItem.querySelector('.faq-q');
+      if (prevBtn) {
+        prevBtn.classList.remove('active');
+        prevBtn.setAttribute('aria-expanded', 'false');
+      }
     }
   }
 
-  // Toggle this answer
-  if (isOpen) {
-    answer.classList.remove('open');
-  } else {
-    answer.classList.add('open');
-  }
+  // Toggle this question/answer pair
+  btn.classList.toggle('active', !isOpen);
+  btn.setAttribute('aria-expanded', String(!isOpen));
+  answer.classList.toggle('open', !isOpen);
 }
 </script>
 

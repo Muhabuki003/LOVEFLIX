@@ -31,7 +31,7 @@
   main{min-height:calc(100vh - 100px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 80px;position:relative}
   .wrap{width:100%;max-width:520px;text-align:center;position:relative;z-index:2}
 
-  .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);padding:8px 14px;border-radius:999px;margin-bottom:28px;opacity:0;transform:translateY(8px);animation:rise 1s .1s cubic-bezier(.2,.7,.2,1) forwards}
+  .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff1a1a;font-weight:700;background:rgba(229,9,20,0.1);border:1px solid rgba(229,9,20,0.3);padding:8px 14px;border-radius:999px;margin-bottom:28px;opacity:0;transform:translateY(8px);animation:rise 1s .1s cubic-bezier(.2,.7,.2,1) forwards}
 
   h1.title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,9vw,96px);letter-spacing:1px;line-height:.95;margin-bottom:20px;opacity:0;transform:translateY(10px);animation:rise 1s .3s cubic-bezier(.2,.7,.2,1) forwards}
   h1.title .accent{background:linear-gradient(135deg,#ff5f8f,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -47,10 +47,12 @@
 
   form{display:grid;gap:12px;text-align:left;opacity:0;transform:translateY(10px);animation:rise 1.1s .7s cubic-bezier(.2,.7,.2,1) forwards}
   .field{position:relative}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .field input{width:100%;padding:15px 18px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:#fff;font:400 15px/1.2 'Inter',sans-serif;border-radius:6px;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-appearance:none}
-  .field input::placeholder{color:#6e6e6e}
+  .field input::placeholder{color:#999}
   .field input:hover{border-color:#3a3a3a}
-  .field input:focus{border-color:var(--red);background:rgba(229,9,20,0.05);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+  .field input:focus{border-color:var(--red);background:rgba(229,9,20,0.05);box-shadow:0 0 0 3px rgba(229,9,20,0.3)}
+  .field input:focus-visible{outline:2px solid #fff;outline-offset:1px}
   .field input:-webkit-autofill{-webkit-text-fill-color:#fff;-webkit-box-shadow:0 0 0 1000px #1a0608 inset;caret-color:#fff}
   .field.invalid input{border-color:#ff5566;box-shadow:0 0 0 3px rgba(255,85,102,0.12)}
 
@@ -73,7 +75,7 @@
   .modal h2{font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:1px;line-height:1;margin-bottom:14px}
   .modal h2 .accent{background:linear-gradient(135deg,#ff5f8f,#e50914);-webkit-background-clip:text;background-clip:text;color:transparent}
   .modal p{color:var(--text-light);font-size:15px;line-height:1.55;margin:0 auto 22px;max-width:360px}
-  .modal .check-row{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:24px}
+  .modal .check-row{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:24px}
   .modal .check-row svg{width:14px;height:14px;fill:var(--red)}
   .modal .close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:transparent;color:#a3a3a3;cursor:pointer;display:grid;place-items:center;font-size:18px;line-height:1;transition:color .2s,border-color .2s}
   .modal .close:hover{color:#fff;border-color:rgba(255,255,255,.35)}
@@ -81,7 +83,7 @@
   @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 28px rgba(229,9,20,0.35)}50%{transform:scale(1.06);box-shadow:0 0 40px rgba(229,9,20,0.55)}}
   @keyframes rise{to{opacity:1;transform:translateY(0)}}
 
-  .legal{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11px;color:#5a5a5a;letter-spacing:.16em;text-transform:uppercase}
+  .legal{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11px;color:#a3a3a3;letter-spacing:.16em;text-transform:uppercase}
 
   @media (max-width:640px){
     nav{padding:32px 20px 16px}
@@ -301,7 +303,8 @@
 @media (max-width:640px){#early-access-btn{display:inline-flex}}
 .gate-form{display:grid;gap:14px;text-align:left;margin-top:6px}
 .gate-form input{width:100%;padding:15px 18px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:#fff;font:400 15px/1.2 'Inter',sans-serif;border-radius:6px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;text-align:center;letter-spacing:.1em}
-.gate-form input:focus{border-color:var(--red);background:rgba(229,9,20,0.05);box-shadow:0 0 0 3px rgba(229,9,20,0.15)}
+.gate-form input:focus{border-color:var(--red);background:rgba(229,9,20,0.05);box-shadow:0 0 0 3px rgba(229,9,20,0.3)}
+.gate-form input:focus-visible{outline:2px solid #fff;outline-offset:1px}
 .gate-form .error{margin:0}
 </style>
 <base target="_blank">
@@ -345,10 +348,10 @@
   <div class="vignette" aria-hidden="true"></div>
 
   <nav>
-    <a href="/waitlist.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+    <a href="/waitlist.html" class="nf-logo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</a>
   </nav>
 
-  <main>
+  <main id="main-content">
     <div class="wrap">
       <div id="form-block">
         <div class="eyebrow">♥ A streaming service of two</div>
@@ -376,9 +379,9 @@
         </div>
 
         <form id="waitlist-form" novalidate action="javascript:void(0);" onsubmit="return false;">
-          <div class="field"><input id="name" name="name" type="text" autocomplete="name" placeholder="Full name" required></div>
-          <div class="field"><input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required></div>
-          <div class="field"><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required></div>
+          <div class="field"><label class="sr-only" for="name">Full name</label><input id="name" name="name" type="text" autocomplete="name" placeholder="Full name" required></div>
+          <div class="field"><label class="sr-only" for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required></div>
+          <div class="field"><label class="sr-only" for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required></div>
           <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">Join the Waitlist</button>
           <div class="error" id="error" role="alert" aria-live="polite"></div>
           <div class="foot">Be first to know when we launch.</div>
@@ -495,20 +498,40 @@
     if (!phoneRe.test(data.phone)) { setInvalid('phone', true); return 'Please enter a valid phone number.'; }
     return null;
   }
+
+  let modalOpener = null;
+  function getFocusable(container) {
+    return Array.from(container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.disabled && el.offsetParent !== null);
+  }
+  function trapTab(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = getFocusable(modalEl.querySelector('.modal'));
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
   function showModal() {
+    modalOpener = document.activeElement;
     modalEl.classList.add('show');
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    const focusable = getFocusable(modalEl.querySelector('.modal'));
+    if (focusable.length) focusable[0].focus();
+    modalEl.addEventListener('keydown', trapTab);
   }
   function hideModal() {
     modalEl.classList.remove('show');
     modalEl.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    modalEl.removeEventListener('keydown', trapTab);
+    if (modalOpener && typeof modalOpener.focus === 'function') modalOpener.focus();
   }
   modalClose && modalClose.addEventListener('click', hideModal);
   modalOk && modalOk.addEventListener('click', hideModal);
   modalEl && modalEl.addEventListener('click', (e) => { if (e.target === modalEl) hideModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalEl.classList.contains('show')) hideModal(); });
 
   let _client = null;
   function getClient() {
@@ -681,11 +704,26 @@
   var errorEl = document.getElementById('gate-error');
   if (!modal || !form) return;
 
+  var gateOpener = null;
+  function gateFocusable() {
+    return Array.prototype.slice.call(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+      .filter(function(el){ return !el.disabled && el.offsetParent !== null; });
+  }
+  function gateTrapTab(e){
+    if (e.key !== 'Tab') return;
+    var focusable = gateFocusable();
+    if (!focusable.length) return;
+    var first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
   function open(){
+    gateOpener = document.activeElement;
     modal.classList.add('show');
     modal.setAttribute('aria-hidden','false');
     document.body.style.overflow = 'hidden';
     errorEl.textContent = '';
+    modal.addEventListener('keydown', gateTrapTab);
     setTimeout(function(){ input && input.focus(); }, 60);
   }
   function close(){
@@ -693,6 +731,8 @@
     modal.setAttribute('aria-hidden','true');
     document.body.style.overflow = '';
     if (input) input.value = '';
+    modal.removeEventListener('keydown', gateTrapTab);
+    if (gateOpener && typeof gateOpener.focus === 'function') gateOpener.focus();
   }
 
   openBtn && openBtn.addEventListener('click', open);

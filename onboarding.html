@@ -40,19 +40,21 @@
   /* main */
   main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
   .step-card{width:100%;max-width:680px}
-  .step-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:14px;text-align:center}
+  .step-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:14px;text-align:center}
   .step-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,5vw,64px);letter-spacing:1px;line-height:1;margin-bottom:14px;text-align:center}
   .step-sub{font-size:16px;color:var(--text-light);text-align:center;margin-bottom:40px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5}
 
   .field{margin-bottom:18px}
   .field label{display:block;font-size:11px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:500}
   .field input,.field select{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px 16px;color:#fff;font:inherit;font-size:15px;transition:border-color .15s}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--red)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.25)}
+  .field input:focus-visible,.field select:focus-visible{outline:2px solid #fff;outline-offset:1px}
   .field-hint{font-size:12px;color:var(--text-dim);margin-top:6px}
   .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
   .url-field{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
-  .url-field:focus-within{border-color:var(--red)}
+  .url-field:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,0.25)}
+  .url-field input:focus-visible{outline:2px solid #fff;outline-offset:1px}
   .url-field .prefix{padding:14px 16px;background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:15px;font-family:monospace;border-right:1px solid var(--border)}
   .url-field input{border:none;background:none;flex:1;padding:14px 16px;color:#fff;font:inherit;font-size:15px;outline:none}
 
@@ -78,7 +80,7 @@
   .upload-tile .av-pic.her{background:linear-gradient(135deg,#ff5f8f,#8f1d4a)}
   .upload-tile .av-pic.him{background:linear-gradient(135deg,#3a7bff,#1e3a8a)}
   .upload-tile .av-name{font-size:14px;font-weight:600;margin-bottom:4px}
-  .upload-tile .av-cta{font-size:11px;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+  .upload-tile .av-cta{font-size:11px;color:#ff1a1a;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
 
   /* plan cards (step 4) */
   .plan-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
@@ -115,7 +117,7 @@
 <script src="assets/loveflix.js"></script>
 
 <div class="top">
-  <a href="landing.html" class="nf-logo">LOVE<span class="heart">♥</span>FLIX</a>
+  <a href="landing.html" class="nf-logo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</a>
   <div class="top-right">
     <div class="save-status"><div class="dot"></div>Draft saved</div>
     <a href="loveflix_login_screen.html" class="btn-link" style="cursor:pointer">Save &amp; exit</a>
@@ -123,16 +125,16 @@
 </div>
 
 <div class="progress-wrap">
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-step active" data-step="1"><div class="dot"><span>1</span></div><div class="label">Account</div></div>
-    <div class="progress-step" data-step="2"><div class="dot"><span>2</span></div><div class="label">Couple</div></div>
-    <div class="progress-step" data-step="3"><div class="dot"><span>3</span></div><div class="label">Theme</div></div>
-    <div class="progress-step" data-step="4"><div class="dot"><span>4</span></div><div class="label">Plan</div></div>
-    <div class="progress-step" data-step="5"><div class="dot"><span>5</span></div><div class="label">Done</div></div>
+  <div class="progress-bar" id="progressBar" role="group" aria-label="Onboarding progress">
+    <div class="progress-step active" data-step="1" role="button" tabindex="0" aria-current="step"><div class="dot"><span>1</span></div><div class="label">Account</div></div>
+    <div class="progress-step" data-step="2" role="button" tabindex="0"><div class="dot"><span>2</span></div><div class="label">Couple</div></div>
+    <div class="progress-step" data-step="3" role="button" tabindex="0"><div class="dot"><span>3</span></div><div class="label">Theme</div></div>
+    <div class="progress-step" data-step="4" role="button" tabindex="0"><div class="dot"><span>4</span></div><div class="label">Plan</div></div>
+    <div class="progress-step" data-step="5" role="button" tabindex="0"><div class="dot"><span>5</span></div><div class="label">Done</div></div>
   </div>
 </div>
 
-<main>
+<main id="main-content">
 
   <!-- STEP 1: Account -->
   <div class="step-card" data-pane="1">
@@ -140,23 +142,23 @@
     <h1 class="step-title">Make your account.</h1>
     <p class="step-sub">First the boring bit. We'll use this to send you the link to your site.</p>
     <div class="field">
-      <label>Your name</label>
+      <label for="adminName">Your name</label>
       <input type="text" id="adminName" placeholder="e.g. Buki">
     </div>
     <div class="field">
-      <label>Email</label>
+      <label for="signupEmail">Email</label>
       <input type="email" id="signupEmail" placeholder="you@email.com">
     </div>
     <div class="field-grid">
-      <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="Min 8 characters"></div>
-      <div class="field"><label>Confirm password</label><input type="password" id="signupPasswordConfirm"></div>
+      <div class="field"><label for="signupPassword">Password</label><input type="password" id="signupPassword" placeholder="Min 8 characters"></div>
+      <div class="field"><label for="signupPasswordConfirm">Confirm password</label><input type="password" id="signupPasswordConfirm"></div>
     </div>
     <div class="field">
-      <label>Admin passcode</label>
-      <input type="password" id="adminPasscode" placeholder="4-digit PIN to access your profile" maxlength="4" inputmode="numeric" pattern="[0-9]{4}">
-      <div class="field-hint" style="margin-top:6px;font-size:12px;color:#888">You'll enter this PIN each time you access your admin profile.</div>
+      <label for="adminPasscode">Admin passcode</label>
+      <input type="password" id="adminPasscode" placeholder="4-digit PIN to access your profile" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" aria-describedby="adminPasscodeHint">
+      <div class="field-hint" id="adminPasscodeHint" style="margin-top:6px;font-size:12px;color:#888">You'll enter this PIN each time you access your admin profile.</div>
     </div>
-    <div id="signupError" class="error-msg" style="background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:14px;margin-bottom:16px;display:none;line-height:1.4"></div>
+    <div id="signupError" class="error-msg" role="alert" aria-live="polite" style="background:#e87c03;color:#fff;padding:10px 14px;border-radius:4px;font-size:14px;margin-bottom:16px;display:none;line-height:1.4"></div>
     <div class="field-hint" style="text-align:center;margin-top:20px">By continuing you agree to our Terms &amp; Privacy.</div>
     <div class="step-nav">
       <a href="loveflix_login_screen.html" class="btn-link">Already have an account? Sign in</a>
@@ -170,14 +172,14 @@
     <h1 class="step-title">Who's it for?</h1>
     <p class="step-sub">Tell us your names so we can put theirs in lights.</p>
     <div class="field-grid">
-      <div class="field"><label>Their name (the surprise-ee)</label><input type="text" id="theirName" placeholder="My Love" value="My Love"></div>
-      <div class="field"><label>Your name (you again)</label><input type="text" id="adminName2" placeholder="Your name"></div>
+      <div class="field"><label for="theirName">Their name (the surprise-ee)</label><input type="text" id="theirName" placeholder="My Love" value="My Love"></div>
+      <div class="field"><label for="adminName2">Your name (you again)</label><input type="text" id="adminName2" placeholder="Your name"></div>
     </div>
-    <div class="field"><label>Anniversary date</label><input type="date" id="anniversaryDate"></div>
+    <div class="field"><label for="anniversaryDate">Anniversary date</label><input type="date" id="anniversaryDate"></div>
     <p class="step-sub" style="margin-top:34px;margin-bottom:20px">Add profile photos (optional — you can skip and use the gradient avatars).</p>
     <div class="uploads">
-      <div class="upload-tile"><div class="av-pic her" id="herInitial">M</div><div class="av-name">Their Photo</div><div class="av-cta">+ Upload</div></div>
-      <div class="upload-tile"><div class="av-pic him" id="hisInitial">B</div><div class="av-name">Your Photo</div><div class="av-cta">+ Upload</div></div>
+      <div class="upload-tile" role="button" tabindex="0" aria-label="Upload their photo"><div class="av-pic her" id="herInitial" aria-hidden="true">M</div><div class="av-name">Their Photo</div><div class="av-cta">+ Upload</div></div>
+      <div class="upload-tile" role="button" tabindex="0" aria-label="Upload your photo"><div class="av-pic him" id="hisInitial" aria-hidden="true">B</div><div class="av-name">Your Photo</div><div class="av-cta">+ Upload</div></div>
     </div>
     <div class="step-nav">
       <button class="btn btn-ghost" onclick="goNext(1)">← Back</button>
@@ -190,20 +192,20 @@
     <div class="step-eyebrow">Step 3 of 4</div>
     <h1 class="step-title">Pick a vibe.</h1>
     <p class="step-sub">Pick your accent color and theme. You can change all of this later in settings.</p>
-    <div class="field"><label>Your accent color</label></div>
-    <div class="colors" id="colors">
-      <div class="color selected" data-c="#e50914" style="background:#e50914"></div>
-      <div class="color" data-c="#ec4899" style="background:#ec4899"></div>
-      <div class="color" data-c="#a855f7" style="background:#a855f7"></div>
-      <div class="color" data-c="#3b82f6" style="background:#3b82f6"></div>
-      <div class="color" data-c="#10b981" style="background:#10b981"></div>
-      <div class="color" data-c="#f59e0b" style="background:#f59e0b"></div>
-      <div class="color" data-c="#fb7185" style="background:#fb7185"></div>
+    <div class="field"><label id="colorsLabel">Your accent color</label></div>
+    <div class="colors" id="colors" role="group" aria-labelledby="colorsLabel">
+      <div class="color selected" data-c="#e50914" style="background:#e50914" role="button" tabindex="0" aria-pressed="true" aria-label="Red accent color"></div>
+      <div class="color" data-c="#ec4899" style="background:#ec4899" role="button" tabindex="0" aria-pressed="false" aria-label="Pink accent color"></div>
+      <div class="color" data-c="#a855f7" style="background:#a855f7" role="button" tabindex="0" aria-pressed="false" aria-label="Purple accent color"></div>
+      <div class="color" data-c="#3b82f6" style="background:#3b82f6" role="button" tabindex="0" aria-pressed="false" aria-label="Blue accent color"></div>
+      <div class="color" data-c="#10b981" style="background:#10b981" role="button" tabindex="0" aria-pressed="false" aria-label="Green accent color"></div>
+      <div class="color" data-c="#f59e0b" style="background:#f59e0b" role="button" tabindex="0" aria-pressed="false" aria-label="Amber accent color"></div>
+      <div class="color" data-c="#fb7185" style="background:#fb7185" role="button" tabindex="0" aria-pressed="false" aria-label="Rose accent color"></div>
     </div>
     <div class="preview-chip">
       <div>
         <div class="chip-label">Preview</div>
-        <div class="chip-logo" id="chipLogo">LOVE<span class="heart">♥</span>FLIX</div>
+        <div class="chip-logo" id="chipLogo">LOVE<span class="heart" aria-hidden="true">♥</span>FLIX</div>
       </div>
     </div>
     <div class="step-nav">
@@ -217,10 +219,10 @@
     <div class="step-eyebrow">Step 4 of 4</div>
     <h1 class="step-title">Pick a plan.</h1>
     <p class="step-sub">All plans include a 14-day free trial. No card needed today.</p>
-    <div class="plan-cards" id="planCards">
-      <div class="plan-card" data-plan="crush"><div class="pname">Crush</div><div class="pprice">$6</div><div class="pper">/ month</div><div class="pdesc">25 videos · 1080p</div></div>
-      <div class="plan-card selected" data-plan="sweetheart"><div class="pname">Sweetheart ★</div><div class="pprice">$12</div><div class="pper">/ month</div><div class="pdesc">Unlimited · 4K HDR</div></div>
-      <div class="plan-card" data-plan="forever"><div class="pname">Forever</div><div class="pprice">$24</div><div class="pper">/ month</div><div class="pdesc">All features · concierge</div></div>
+    <div class="plan-cards" id="planCards" role="group" aria-label="Choose a plan">
+      <div class="plan-card" data-plan="crush" role="button" tabindex="0" aria-pressed="false"><div class="pname">Crush</div><div class="pprice">$6</div><div class="pper">/ month</div><div class="pdesc">25 videos · 1080p</div></div>
+      <div class="plan-card selected" data-plan="sweetheart" role="button" tabindex="0" aria-pressed="true"><div class="pname">Sweetheart <span aria-hidden="true">★</span></div><div class="pprice">$12</div><div class="pper">/ month</div><div class="pdesc">Unlimited · 4K HDR</div></div>
+      <div class="plan-card" data-plan="forever" role="button" tabindex="0" aria-pressed="false"><div class="pname">Forever</div><div class="pprice">$24</div><div class="pper">/ month</div><div class="pdesc">All features · concierge</div></div>
     </div>
     <div class="field-hint" style="text-align:center;margin-bottom:8px">Free for 14 days, then your selected plan. Cancel any time before.</div>
     <div class="step-nav">
@@ -233,7 +235,7 @@
   <div class="step-card hidden" data-pane="5">
     <div class="success-card">
       <div class="success-pulse">
-        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
       </div>
       <div class="step-eyebrow">Welcome to LoveFlix</div>
       <h1 class="step-title">Your site is live.</h1>
@@ -326,8 +328,9 @@
     document.querySelectorAll('.progress-step').forEach(s => {
       const n = parseInt(s.dataset.step, 10);
       s.classList.remove('active','done');
+      s.removeAttribute('aria-current');
       if (n < step) s.classList.add('done');
-      else if (n === step) s.classList.add('active');
+      else if (n === step) { s.classList.add('active'); s.setAttribute('aria-current', 'step'); }
     });
     window.scrollTo({top:0,behavior:'smooth'});
   }
@@ -335,19 +338,41 @@
   // color picker (step 3)
   const colors = document.getElementById('colors');
   const chipLogo = document.getElementById('chipLogo');
+  function selectColor(c) {
+    colors.querySelectorAll('.color').forEach(x => { x.classList.remove('selected'); x.setAttribute('aria-pressed', 'false'); });
+    c.classList.add('selected');
+    c.setAttribute('aria-pressed', 'true');
+    chipLogo.style.color = c.dataset.c;
+  }
   colors.addEventListener('click', e => {
     const c = e.target.closest('.color'); if (!c) return;
-    colors.querySelectorAll('.color').forEach(x => x.classList.remove('selected'));
-    c.classList.add('selected');
-    chipLogo.style.color = c.dataset.c;
+    selectColor(c);
+  });
+  colors.addEventListener('keydown', e => {
+    const c = e.target.closest('.color'); if (!c) return;
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      selectColor(c);
+    }
   });
 
   // plan picker (step 4)
   const planCards = document.getElementById('planCards');
+  function selectPlan(card) {
+    planCards.querySelectorAll('.plan-card').forEach(c => { c.classList.remove('selected'); c.setAttribute('aria-pressed', 'false'); });
+    card.classList.add('selected');
+    card.setAttribute('aria-pressed', 'true');
+  }
   planCards.addEventListener('click', e => {
     const card = e.target.closest('.plan-card'); if (!card) return;
-    planCards.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
+    selectPlan(card);
+  });
+  planCards.addEventListener('keydown', e => {
+    const card = e.target.closest('.plan-card'); if (!card) return;
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      selectPlan(card);
+    }
   });
 
   // sync initials and slug (step 2)
@@ -373,6 +398,12 @@
     const fileInput = i === 0 ? herFileInput : himFileInput;
     tile.style.cursor = 'pointer';
     tile.addEventListener('click', () => fileInput.click());
+    tile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -388,6 +419,12 @@
   // progress dots are clickable
   document.querySelectorAll('.progress-step').forEach(s => {
     s.addEventListener('click', () => goNext(parseInt(s.dataset.step,10)));
+    s.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        goNext(parseInt(s.dataset.step,10));
+      }
+    });
   });
 
   // signup handler (step 1)

@@ -34,6 +34,10 @@
     overflow:hidden;
   }
   a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip-link{position:absolute;left:8px;top:-48px;z-index:99999;background:var(--red,#e50914);color:#fff;padding:12px 18px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:top .15s ease}
+  .skip-link:focus{top:8px}
+  a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,[role="slider"]:focus-visible,[role="button"]:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
   /* MAP CANVAS */
   #map{position:fixed;inset:0;background:#0a0a0a;transition:opacity .6s cubic-bezier(.4,0,.2,1), filter .6s cubic-bezier(.4,0,.2,1)}
@@ -199,6 +203,8 @@
   .section-h{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin:14px 0 10px}
 
   .lc-empty{font-size:12.5px;color:var(--text-dim);padding:14px;text-align:center;line-height:1.5;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:10px}
+
+  #callList, #journeyList{list-style:none;margin:0;padding:0}
 
   .call-row{
     display:flex;align-items:center;gap:12px;
@@ -763,14 +769,19 @@
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<main id="main-content" aria-label="LoveConnect — live map, calls, and location sharing">
+<h1 class="sr-only">LoveConnect</h1>
+
 <!-- DUAL-MAP DOM: MapLibre (permanent base, z-1) + Google Maps (navigation-only
      overlay, z-3). Both are full-bleed and stacked; visibility is driven purely
      by opacity / pointer-events (never display:none, which would break either
      map instance). The cinematic crimson→black wipe between them is handled by
      TransitionManager below. -->
-<div id="map"></div>
-<div id="gmap-nav"><div class="gmap-inner" id="gmap-inner"></div></div>
-<div class="vignette"></div>
+<div id="map" role="region" aria-label="Live map showing your and your partner's locations"></div>
+<div id="gmap-nav" role="region" aria-label="Turn-by-turn navigation map to your partner"><div class="gmap-inner" id="gmap-inner"></div></div>
+<div class="vignette" aria-hidden="true"></div>
 
 <!-- TOP NAV -->
 <header class="topbar">
@@ -855,17 +866,17 @@
         </div>
       </div>
 
-      <div class="section-h">Recent calls</div>
-      <div id="callList">
-        <div class="lc-empty">Loading…</div>
-      </div>
+      <div class="section-h" id="recentCallsLabel">Recent calls</div>
+      <ul id="callList" aria-labelledby="recentCallsLabel">
+        <li class="lc-empty">Loading…</li>
+      </ul>
     </div>
 
     <div class="tab-pane" data-pane="journeys">
-      <div class="section-h">Places you've been together</div>
-      <div id="journeyList">
-        <div class="lc-empty">Loading…</div>
-      </div>
+      <div class="section-h" id="journeysLabel">Places you've been together</div>
+      <ul id="journeyList" aria-labelledby="journeysLabel">
+        <li class="lc-empty">Loading…</li>
+      </ul>
     </div>
 
     <div class="tab-pane" data-pane="music">
@@ -1100,21 +1111,21 @@
 </div>
 
 <!-- CALL MODAL -->
-<div class="call-overlay" id="callOverlay">
+<div class="call-overlay" id="callOverlay" role="dialog" aria-modal="true" aria-label="Incoming call">
   <div class="call-card">
     <div class="calling-eyebrow">LoveConnect · Encrypted</div>
     <div class="calling-av">M</div>
     <div class="calling-name">Calling My Love</div>
     <div class="calling-status">Connecting<span class="dots"></span></div>
     <div class="call-actions">
-      <button class="call-action mute" title="Mute">
-        <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>
+      <button class="call-action mute" title="Mute" aria-label="Mute" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5.91-3a.9.9 0 00-.91.91A4.96 4.96 0 0112 17a4.96 4.96 0 01-5-5.09.91.91 0 10-1.82 0A6.78 6.78 0 0011 18.71V21a1 1 0 002 0v-2.29a6.78 6.78 0 005.82-6.8.91.91 0 00-.91-.91z"/></svg>
       </button>
-      <button class="call-action decline" id="declineBtn" title="End call">
-        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>
+      <button class="call-action decline" id="declineBtn" title="End call" aria-label="End call">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z" transform="rotate(135 12 12)"/></svg>
       </button>
-      <button class="call-action video" title="Video">
-        <svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+      <button class="call-action video" title="Video" aria-label="Toggle video" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
       </button>
     </div>
   </div>
@@ -1126,22 +1137,23 @@
   Directions to <span class="dir-fab-name" id="dir-fab-name">My Love</span>
 </button>
 
-<div id="dir-panel" class="dir-panel" role="dialog" aria-label="Directions">
-  <div class="dir-handle"></div>
-  <button id="dir-cancel" class="dir-cancel">✕</button>
+<div id="dir-panel" class="dir-panel" role="dialog" aria-modal="true" aria-label="Directions">
+  <div class="dir-handle" aria-hidden="true"></div>
+  <button id="dir-cancel" class="dir-cancel" aria-label="Close directions panel">✕</button>
   <div id="dir-content" class="dir-content"></div>
 </div>
 
 <!-- FLIGHTS — independent FAB + slide-up panel (no connection to directions) -->
 <button id="flights-fab" class="flights-fab" aria-label="Flights to partner">✈ Flights</button>
-<div id="flights-panel" class="flights-panel" role="dialog" aria-label="Flights">
-  <div class="flights-handle"></div>
-  <button class="flights-close" aria-label="Close">✕</button>
+<div id="flights-panel" class="flights-panel" role="dialog" aria-modal="true" aria-label="Flights">
+  <div class="flights-handle" aria-hidden="true"></div>
+  <button class="flights-close" aria-label="Close flights panel">✕</button>
   <div class="flights-body"></div>
 </div>
 
 <!-- shared non-blocking toast -->
 <div id="dir-toast" class="dir-toast" role="status" aria-live="polite"></div>
+</main>
 <script src="assets/loveflix.js"></script>
 <script src="assets/loveflix-call.js"></script>
 <script>
@@ -1871,7 +1883,7 @@ function initGoogleMaps() {
     const list = document.getElementById('callList');
     if (!list) return;
     if (!rows.length) {
-      list.innerHTML = `<div class="lc-empty">No calls yet — tap "Call ${_escapeHtml(HER.name)}" to start your first LoveConnect call.</div>`;
+      list.innerHTML = `<li class="lc-empty">No calls yet — tap "Call ${_escapeHtml(HER.name)}" to start your first LoveConnect call.</li>`;
       return;
     }
     list.innerHTML = rows.slice(0, 15).map(r => {
@@ -1884,9 +1896,9 @@ function initGoogleMaps() {
       const len  = answered ? _fmtCallLen(r.duration_seconds) : '—';
       const icon = answered ? _PHONE_SVG : _MISS_SVG;
       const cls  = answered ? 'call-icon' : 'call-icon miss';
-      return `<div class="call-row"><div class="${cls}">${icon}</div>`
+      return `<li class="call-row"><div class="${cls}" aria-hidden="true">${icon}</div>`
            + `<div class="call-info"><div class="who">${who}</div><div class="when">${when}</div></div>`
-           + `<div class="call-len">${len}</div></div>`;
+           + `<div class="call-len">${len}</div></li>`;
     }).join('');
   }
 
@@ -1960,14 +1972,14 @@ function initGoogleMaps() {
     const list = document.getElementById('journeyList');
     if (list) {
       if (!trips.length) {
-        list.innerHTML = '<div class="lc-empty">No trips yet — upload a video in the <strong>Trips</strong> category and it shows up here.</div>';
+        list.innerHTML = '<li class="lc-empty">No trips yet — upload a video in the <strong>Trips</strong> category and it shows up here.</li>';
       } else {
         list.innerHTML = trips.map((v, i) => {
           const tint = _TRIP_TINTS[i % _TRIP_TINTS.length];
-          return `<div class="journey-row">`
-               + `<div class="journey-pin" style="--c:${tint}">${_escapeHtml(_tripInitials(v.title))}</div>`
+          return `<li class="journey-row">`
+               + `<div class="journey-pin" style="--c:${tint}" aria-hidden="true">${_escapeHtml(_tripInitials(v.title))}</div>`
                + `<div class="journey-info"><div class="place">${_escapeHtml(v.title || 'Untitled trip')}</div>`
-               + `<div class="when">${_escapeHtml(_fmtTripDate(v.date))}</div></div></div>`;
+               + `<div class="when">${_escapeHtml(_fmtTripDate(v.date))}</div></div></li>`;
         }).join('');
       }
     }
@@ -2703,7 +2715,7 @@ function initGoogleMaps() {
       const esc = s => String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));
       listEl.innerHTML = plays.slice(0, 5).map(p => `
         <a href="music.html" style="display:flex;align-items:center;gap:10px;padding:7px 0;text-decoration:none;color:inherit;border-bottom:1px solid rgba(255,255,255,.05)">
-          <div style="width:28px;height:28px;border-radius:4px;background:linear-gradient(135deg,#7a1632,#240611);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,.7);flex-shrink:0">${esc(p.title[0]||'♪')}</div>
+          <div style="width:28px;height:28px;border-radius:4px;background:linear-gradient(135deg,#7a1632,#240611);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,.7);flex-shrink:0" aria-hidden="true">${esc(p.title[0]||'♪')}</div>
           <div style="overflow:hidden;flex:1">
             <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.title)}</div>
             <div style="font-size:11px;color:var(--text-dim)">${esc(p.artist||'')}</div>
