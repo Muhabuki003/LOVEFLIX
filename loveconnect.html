@@ -107,7 +107,7 @@
   }
   .couple-eyebrow{
     font-size:10px;letter-spacing:3px;text-transform:uppercase;
-    color:var(--red);font-weight:700;margin-bottom:10px;
+    color:#ff1a1a;font-weight:700;margin-bottom:10px;
     display:flex;align-items:center;gap:8px;
   }
   .couple-eyebrow .live{
@@ -340,7 +340,7 @@
     box-shadow:0 20px 50px rgba(0,0,0,0.5) !important;
   }
   .maplibregl-popup-tip{border-top-color:rgba(20,20,20,0.78) !important;border-bottom-color:rgba(20,20,20,0.78) !important}
-  .popup-eyebrow{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:4px}
+  .popup-eyebrow{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:4px}
   .popup-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;line-height:1;margin-bottom:4px}
   .popup-meta{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace}
 
@@ -362,7 +362,7 @@
     transform:translateY(8px);transition:transform .35s cubic-bezier(.2,.8,.2,1)
   }
   .call-overlay.active .call-card{transform:translateY(0)}
-  .call-card .calling-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:18px}
+  .call-card .calling-eyebrow{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#ff1a1a;font-weight:700;margin-bottom:18px}
   .call-card .calling-av{
     width:140px;height:140px;border-radius:50%;
     background:radial-gradient(circle at 30% 25%,#ffb3c7,transparent 55%),linear-gradient(135deg,#ff5f8f,#8f1d4a);
@@ -377,7 +377,7 @@
   }
   .calling-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1.5px;line-height:1;margin-bottom:6px}
   .calling-status{font-size:13px;color:var(--text-dim);margin-bottom:30px}
-  .calling-status .dots::after{content:'';animation:dots 1.4s steps(4,end) infinite;display:inline-block;width:1ch;text-align:left;color:var(--red)}
+  .calling-status .dots::after{content:'';animation:dots 1.4s steps(4,end) infinite;display:inline-block;width:1ch;text-align:left;color:#ff1a1a}
   @keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
   .call-actions{display:flex;gap:18px;justify-content:center}
   .call-action{
@@ -417,7 +417,7 @@
       pointer-events:none;
     }
     .m-top > *{pointer-events:auto}
-    .m-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);letter-spacing:2px;line-height:1}
+    .m-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#ff1a1a;letter-spacing:2px;line-height:1}
     .m-logo .heart{color:#fff;font-size:15px;margin:0 1px;display:inline-block;transform:translateY(-1px)}
     .m-top-right{display:flex;align-items:center;gap:8px}
     .m-status-dot{
@@ -624,7 +624,7 @@
   .dir-flight-card .leg{flex:1; min-width:0}
   .dir-flight-card .city{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.5px; color:#e9c87a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .dir-flight-card .iata{font-size:11px; color:var(--text-dim); margin-top:2px}
-  .dir-flight-card .arrow{color:#e50914; font-size:20px; flex-shrink:0}
+  .dir-flight-card .arrow{color:#ff1a1a; font-size:20px; flex-shrink:0}
   .dir-arrived{display:flex; align-items:center; gap:14px; margin-top:6px}
   .dir-arrived .heart{font-size:40px; line-height:1; filter:drop-shadow(0 0 12px rgba(229,9,20,.6))}
 
@@ -634,7 +634,7 @@
   .dir-turn-icon{font-size:30px; line-height:1; color:#fff; width:34px; text-align:center; flex-shrink:0}
   .dir-turn-body{flex:1; min-width:0}
   .dir-turn-text{font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.5px; color:#fff; line-height:1.1}
-  .dir-turn-dist{font-family:'DM Sans','Inter',sans-serif; font-size:16px; color:#e50914; margin-top:2px}
+  .dir-turn-dist{font-family:'DM Sans','Inter',sans-serif; font-size:16px; color:#ff1a1a; margin-top:2px}
   .dir-stat-row{display:flex; gap:24px; margin-top:14px}
   .dir-stat-row .dir-metric{flex:1}
   .dir-cancel-full{display:block; width:100%; margin-top:16px; padding:13px; border:none; border-radius:12px;
@@ -796,14 +796,14 @@
   <div class="top-right">
     <div class="pill" id="onlinePill"><span class="dot" id="onlineDot"></span> <span id="onlineText">Both online</span></div>
     <div class="pill" id="syncPill" title="Realtime sync">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#10b981"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3" stroke="#10b981" stroke-width="1.5"/></svg>
+      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#10b981"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3" stroke="#10b981" stroke-width="1.5"/></svg>
       <span id="syncedAgo">Synced 2s ago</span>
     </div>
     <button class="icon-btn" title="Settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7 7 0 00-1.69-.98l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7 7 0 00-1.69-.98l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
     </button>
     <button class="icon-btn close" title="Close" aria-label="Close" onclick="location.href='admin.html'">
-      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
     </button>
   </div>
 </header>
@@ -827,7 +827,7 @@
     </div>
   </div>
   <a href="/chat.html" style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#fff;text-decoration:none;font-size:13px;font-weight:500;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.09)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <div>
       <div>Messages</div>
       <div style="font-size:11px;color:var(--text-dim);margin-top:1px">Private chat with your person</div>
@@ -837,8 +837,8 @@
 </aside>
 
 <!-- Revolve orbit badge -->
-<div class="revolve-badge" id="revolveBadge" role="status" aria-live="polite">
-  <svg class="revolve-orbit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<div class="revolve-badge" id="revolveBadge" role="status" aria-live="polite" inert>
+  <svg aria-hidden="true" class="revolve-orbit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/>
     <circle cx="19.5" cy="9.5" r="1.5" fill="currentColor" stroke="none"/>
   </svg>
@@ -847,19 +847,19 @@
 </div>
 
 <!-- RIGHT DRAWER -->
-<aside class="drawer">
-  <div class="drawer-tabs">
-    <button class="drawer-tab active" data-tab="calls">Calls</button>
-    <button class="drawer-tab" data-tab="journeys">Journeys</button>
-    <button class="drawer-tab" data-tab="stats">Stats</button>
-    <button class="drawer-tab" data-tab="music">Music</button>
+<aside class="drawer" aria-label="Couple details">
+  <div class="drawer-tabs" role="tablist" aria-label="Couple details sections">
+    <button class="drawer-tab active" data-tab="calls" role="tab" aria-selected="true" id="tab-calls" aria-controls="pane-calls">Calls</button>
+    <button class="drawer-tab" data-tab="journeys" role="tab" aria-selected="false" id="tab-journeys" aria-controls="pane-journeys">Journeys</button>
+    <button class="drawer-tab" data-tab="stats" role="tab" aria-selected="false" id="tab-stats" aria-controls="pane-stats">Stats</button>
+    <button class="drawer-tab" data-tab="music" role="tab" aria-selected="false" id="tab-music" aria-controls="pane-music">Music</button>
   </div>
   <div class="drawer-body">
 
-    <div class="tab-pane active" data-pane="calls">
+    <div class="tab-pane active" data-pane="calls" id="pane-calls" role="tabpanel" aria-labelledby="tab-calls">
       <div class="section-h">Up next</div>
       <div class="schedule-cta">
-        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
         <div>
           <div class="t">No calls scheduled</div>
           <div class="s">Schedule a call with your partner</div>
@@ -872,20 +872,20 @@
       </ul>
     </div>
 
-    <div class="tab-pane" data-pane="journeys">
+    <div class="tab-pane" data-pane="journeys" id="pane-journeys" role="tabpanel" aria-labelledby="tab-journeys">
       <div class="section-h" id="journeysLabel">Places you've been together</div>
       <ul id="journeyList" aria-labelledby="journeysLabel">
         <li class="lc-empty">Loading…</li>
       </ul>
     </div>
 
-    <div class="tab-pane" data-pane="music">
+    <div class="tab-pane" data-pane="music" id="pane-music" role="tabpanel" aria-labelledby="tab-music">
       <div class="section-h">Our Music</div>
 
       <!-- CTA buttons -->
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <a href="music.html" style="display:inline-flex;align-items:center;gap:6px;background:var(--red,#e50914);color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;text-decoration:none;transition:filter .2s" onmouseover="this.style.filter='brightness(1.12)'" onmouseout="this.style.filter=''">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
           Open Player
         </a>
         <a href="music.html" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
@@ -898,10 +898,11 @@
 
       <!-- Quick search -->
       <div style="display:flex;gap:6px;margin-bottom:16px">
+        <label for="lcMusicSearch" class="sr-only">Search a song</label>
         <input type="text" id="lcMusicSearch" placeholder="Search a song…"
-          style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#fff;padding:9px 12px;font:inherit;font-size:13px;outline:none"
+          style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#fff;padding:9px 12px;font:inherit;font-size:13px"
           onfocus="this.style.borderColor='var(--red,#e50914)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-        <button onclick="var q=document.getElementById('lcMusicSearch').value.trim();location.href=q?'music.html?q='+encodeURIComponent(q):'music.html'"
+        <button aria-label="Search" onclick="var q=document.getElementById('lcMusicSearch').value.trim();location.href=q?'music.html?q='+encodeURIComponent(q):'music.html'"
           style="background:var(--red,#e50914);border:none;color:#fff;border-radius:7px;padding:9px 14px;font-size:15px;cursor:pointer">›</button>
       </div>
 
@@ -922,7 +923,7 @@
       </a>
     </div>
 
-    <div class="tab-pane" data-pane="stats">
+    <div class="tab-pane" data-pane="stats" id="pane-stats" role="tabpanel" aria-labelledby="tab-stats">
       <div class="section-h">Since you met</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px">
@@ -963,15 +964,15 @@
 <!-- CONTROLS -->
 <div class="controls-stack">
   <div class="ctrl-grp">
-    <button id="zoomIn" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-    <button id="zoomOut" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>
+    <button id="zoomIn" title="Zoom in" aria-label="Zoom in"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
+    <button id="zoomOut" title="Zoom out" aria-label="Zoom out"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></button>
   </div>
   <div class="ctrl-grp">
     <button id="fitBoth" title="Frame both of us" aria-label="Frame both">
-      <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
     </button>
     <button id="globeBtn" title="Spin to globe view" aria-label="Globe">
-      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26z"/></svg>
     </button>
   </div>
 </div>
@@ -994,7 +995,7 @@
     <div class="stat-sub" id="lastSeen">—</div>
   </div>
   <button class="call-btn" id="callBtn">
-    <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
     Call My Love
   </button>
 </div>
@@ -1007,13 +1008,13 @@
     <div class="m-top-right">
       <div class="m-status-dot" title="Both online"></div>
       <button class="m-icon-btn" id="mMenuBtn" aria-label="Menu">
-        <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
       </button>
     </div>
   </header>
 
   <button class="m-recenter" id="mRecenterBtn" aria-label="Recenter on both">
-    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
   </button>
 
   <div class="m-nowbar" id="mNowbar">
@@ -1026,15 +1027,15 @@
       <div class="m-nowbar-sub">Loading…</div>
     </button>
     <button class="m-nowbar-expand" id="mExpandSheet2" aria-label="Expand details">
-      <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
     </button>
     <button class="m-call-fab" id="mCallBtn" aria-label="Call">
-      <svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>
     </button>
   </div>
 
   <div class="m-sheet-scrim" id="mSheetScrim"></div>
-  <div class="m-sheet" id="mSheet" role="dialog" aria-label="LoveConnect details">
+  <div class="m-sheet" id="mSheet" role="dialog" aria-label="LoveConnect details" inert>
     <div class="m-sheet-handle"></div>
 
     <div class="m-sheet-header">
@@ -1057,52 +1058,52 @@
       <div class="cell"><div class="l">Last seen</div><div class="v" id="mLastSeenVal">—<span class="unit">s</span></div><div class="s">—</div></div>
     </div>
 
-    <div class="m-sheet-tabs">
-      <button class="drawer-tab active" data-mtab="calls">Calls</button>
-      <button class="drawer-tab" data-mtab="journeys">Journeys</button>
-      <button class="drawer-tab" data-mtab="stats">Stats</button>
-      <button class="drawer-tab" data-mtab="music">Music</button>
+    <div class="m-sheet-tabs" role="tablist" aria-label="Couple details sections">
+      <button class="drawer-tab active" data-mtab="calls" role="tab" aria-selected="true" id="mtab-calls">Calls</button>
+      <button class="drawer-tab" data-mtab="journeys" role="tab" aria-selected="false" id="mtab-journeys">Journeys</button>
+      <button class="drawer-tab" data-mtab="stats" role="tab" aria-selected="false" id="mtab-stats">Stats</button>
+      <button class="drawer-tab" data-mtab="music" role="tab" aria-selected="false" id="mtab-music">Music</button>
     </div>
 
     <div class="m-sheet-body" id="mSheetBody"></div>
   </div>
 
   <div class="m-menu-scrim" id="mMenuScrim"></div>
-  <div class="m-menu" id="mMenu" role="menu">
+  <div class="m-menu" id="mMenu" role="menu" inert>
     <div class="m-menu-section">
       <div class="m-menu-label">View</div>
       <button class="m-menu-item" id="mMenuRecenter">
-        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
         Recenter on both
       </button>
       <button class="m-menu-item" id="mMenuGlobe">
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.93 7H16a14.5 14.5 0 00-1.16-3.85A8 8 0 0118.93 9zM12 4.04A12.5 12.5 0 0113.92 9h-3.84A12.5 12.5 0 0112 4.04zM4.26 14a8 8 0 010-4h3.38a17.2 17.2 0 000 4H4.26z"/></svg>
         Globe view
       </button>
     </div>
     <div class="m-menu-section">
       <div class="m-menu-label">LoveConnect</div>
       <button class="m-menu-item" id="mMenuDetails">
-        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
         Couple details
         <span class="meta">4 tabs</span>
       </button>
       <a class="m-menu-item" href="schedule-call.html">
-        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
         Schedule a call
       </a>
       <a class="m-menu-item" href="settings_billing.html">
-        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7 7 0 00-1.69-.98l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7 7 0 00-1.69-.98l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65c-.61.25-1.17.58-1.69.98l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.64L4.57 11c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.25.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
         Privacy &amp; settings
       </a>
     </div>
     <div class="m-menu-section">
       <a class="m-menu-item" href="admin.html">
-        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
         Back to Studio
       </a>
       <a class="m-menu-item danger" href="admin.html">
-        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         Close LoveConnect
       </a>
     </div>
@@ -1111,7 +1112,7 @@
 </div>
 
 <!-- CALL MODAL -->
-<div class="call-overlay" id="callOverlay" role="dialog" aria-modal="true" aria-label="Incoming call">
+<div class="call-overlay" id="callOverlay" role="dialog" aria-modal="true" aria-label="Incoming call" inert>
   <div class="call-card">
     <div class="calling-eyebrow">LoveConnect · Encrypted</div>
     <div class="calling-av">M</div>
@@ -1133,11 +1134,11 @@
 
 <!-- DIRECTIONS TO PARTNER — FAB + slide-up panel (additive feature) -->
 <button id="dir-fab" class="dir-fab" aria-label="Directions to partner">
-  <svg viewBox="0 0 24 24"><path d="M21.71 11.29l-9-9a1 1 0 00-1.42 0l-9 9a1 1 0 000 1.42l9 9a1 1 0 001.42 0l9-9a1 1 0 000-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 011-1h5V7.5l3.5 3.5z"/></svg>
+  <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M21.71 11.29l-9-9a1 1 0 00-1.42 0l-9 9a1 1 0 000 1.42l9 9a1 1 0 001.42 0l9-9a1 1 0 000-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 011-1h5V7.5l3.5 3.5z"/></svg>
   Directions to <span class="dir-fab-name" id="dir-fab-name">My Love</span>
 </button>
 
-<div id="dir-panel" class="dir-panel" role="dialog" aria-modal="true" aria-label="Directions">
+<div id="dir-panel" class="dir-panel" role="dialog" aria-modal="true" aria-label="Directions" inert>
   <div class="dir-handle" aria-hidden="true"></div>
   <button id="dir-cancel" class="dir-cancel" aria-label="Close directions panel">✕</button>
   <div id="dir-content" class="dir-content"></div>
@@ -1145,7 +1146,7 @@
 
 <!-- FLIGHTS — independent FAB + slide-up panel (no connection to directions) -->
 <button id="flights-fab" class="flights-fab" aria-label="Flights to partner">✈ Flights</button>
-<div id="flights-panel" class="flights-panel" role="dialog" aria-modal="true" aria-label="Flights">
+<div id="flights-panel" class="flights-panel" role="dialog" aria-modal="true" aria-label="Flights" inert>
   <div class="flights-handle" aria-hidden="true"></div>
   <button class="flights-close" aria-label="Close flights panel">✕</button>
   <div class="flights-body"></div>
@@ -1501,6 +1502,7 @@ function initGoogleMaps() {
     if (badge) {
       badge.querySelector('.revolve-name').textContent = person.name;
       badge.classList.add('active');
+      badge.removeAttribute('inert');
     }
 
     // Begin continuous bearing rotation after the flyTo settles
@@ -1532,7 +1534,7 @@ function initGoogleMaps() {
     }
 
     const badge = document.getElementById('revolveBadge');
-    if (badge) badge.classList.remove('active');
+    if (badge) { badge.classList.remove('active'); badge.setAttribute('inert', ''); }
   }
 
   // ── "Go to Spot" cinematic sequence (Lola date-suggestion cards) ───────────
@@ -1852,8 +1854,8 @@ function initGoogleMaps() {
   }
 
   // ---------- CALL HISTORY ----------
-  const _PHONE_SVG = '<svg viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>';
-  const _MISS_SVG  = '<svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>';
+  const _PHONE_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 00-1.02.24l-2.2 2.2a15.04 15.04 0 01-6.59-6.59l2.2-2.21a1 1 0 00.25-1.01A11.36 11.36 0 018.5 4a1 1 0 00-1-1H4a1 1 0 00-1 1c0 9.39 7.61 17 17 17a1 1 0 001-1v-3.5a1 1 0 00-1-1z"/></svg>';
+  const _MISS_SVG  = '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85a1 1 0 01-1.41-.04L.29 13.08a1 1 0 010-1.41C3.34 8.77 7.46 7 12 7s8.66 1.77 11.71 4.67a1 1 0 010 1.41l-2.48 2.45a1 1 0 01-1.41.04 11.66 11.66 0 00-2.66-1.85c-.33-.16-.56-.51-.56-.9v-3.1A15.7 15.7 0 0012 9z"/></svg>';
 
   function _fmtCallLen(sec) {
     sec = parseInt(sec, 10) || 0;
@@ -2202,8 +2204,16 @@ function initGoogleMaps() {
     }
 
     // ---- panel helpers ----
-    function openPanel(){ PANEL.classList.add('open'); }
-    function closePanel(){ PANEL.classList.remove('open'); }
+    function openPanel(){
+      PANEL.classList.add('open');
+      PANEL.removeAttribute('inert');
+      setTimeout(() => { if (CANCEL) CANCEL.focus(); }, 50);
+    }
+    function closePanel(){
+      PANEL.classList.remove('open');
+      if (FAB && document.activeElement && PANEL.contains(document.activeElement)) FAB.focus();
+      PANEL.setAttribute('inert', '');
+    }
     function setContent(html){ CONTENT.innerHTML=html; const c=CONTENT.querySelector('[data-cancel]'); if(c) c.addEventListener('click', cancelNav); }
 
     // ---- Cinematic transition between MapLibre (globe) and Google Maps (nav) ----
@@ -2612,9 +2622,17 @@ function initGoogleMaps() {
       }catch(_){ return ''; }
     }
     function fBody(){ return FPANEL ? FPANEL.querySelector('.flights-body') : null; }
+    function closeFlightsPanel(){
+      if (!FPANEL) return;
+      FPANEL.classList.remove('open');
+      if (FFAB && document.activeElement && FPANEL.contains(document.activeElement)) FFAB.focus();
+      FPANEL.setAttribute('inert', '');
+    }
     async function startFlights(){
       if(!FPANEL) return;
       FPANEL.classList.add('open');
+      FPANEL.removeAttribute('inert');
+      setTimeout(() => { const fc = FPANEL.querySelector('.flights-close'); if (fc) fc.focus(); }, 50);
       const body=fBody(); if(!body) return;
       body.innerHTML=`<div class="dir-label">Flights to</div><div class="dir-title">${esc(HER.name)}</div><div class="dir-sub">Finding your cities…</div>`;
       const me=await resolveUserCoords();
@@ -2640,15 +2658,23 @@ function initGoogleMaps() {
     FAB.addEventListener('click', startNav);
     if(CANCEL) CANCEL.addEventListener('click', cancelNav);
     if(FFAB) FFAB.addEventListener('click', startFlights);
-    if(FPANEL){ const fc=FPANEL.querySelector('.flights-close'); if(fc) fc.addEventListener('click', ()=>FPANEL.classList.remove('open')); }
+    if(FPANEL){ const fc=FPANEL.querySelector('.flights-close'); if(fc) fc.addEventListener('click', closeFlightsPanel); }
+
+    // Escape closes whichever slide-up panel is open, and returns focus to its trigger.
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (PANEL.classList.contains('open')) { cancelNav(); }
+      else if (FPANEL && FPANEL.classList.contains('open')) { closeFlightsPanel(); }
+    });
   })();
 
   // ---------- DRAWER TABS ----------
   document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(t => {
     t.addEventListener('click', () => {
-      document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.drawer-tabs .drawer-tab').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
       document.querySelectorAll('.drawer-body .tab-pane').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
+      t.setAttribute('aria-selected', 'true');
       const pane = document.querySelector(`.drawer-body [data-pane="${t.dataset.tab}"]`);
       if (pane) pane.classList.add('active');
     });
@@ -2732,7 +2758,12 @@ function initGoogleMaps() {
     if (isMobile()) {
       const sheetBody = document.getElementById('mSheetBody');
       if (sheetBody) {
-        document.querySelectorAll('.drawer-body .tab-pane').forEach(p => sheetBody.appendChild(p));
+        document.querySelectorAll('.drawer-body .tab-pane').forEach(p => {
+          // Re-point at the mobile sheet's own tab buttons (mtab-*) since the
+          // pane is being moved out from under the desktop tablist.
+          if (p.dataset.pane) p.setAttribute('aria-labelledby', 'mtab-' + p.dataset.pane);
+          sheetBody.appendChild(p);
+        });
       }
     }
 
@@ -2743,17 +2774,27 @@ function initGoogleMaps() {
 
     function openSheet() {
       mSheet.classList.add('open');
+      mSheet.removeAttribute('inert');
       mSheetScrim.classList.add('open');
       mNowbar.classList.add('hidden');
+      setTimeout(() => { const first = mSheet.querySelector('.m-sheet-tabs .drawer-tab'); if (first) first.focus(); }, 50);
     }
     function closeSheet() {
       mSheet.classList.remove('open');
       mSheetScrim.classList.remove('open');
       mNowbar.classList.remove('hidden');
+      if (document.activeElement && mSheet.contains(document.activeElement)) {
+        const trigger = document.getElementById('mExpandSheet2') || document.getElementById('mExpandSheet');
+        if (trigger) trigger.focus();
+      }
+      mSheet.setAttribute('inert', '');
     }
     document.getElementById('mExpandSheet').addEventListener('click', openSheet);
     document.getElementById('mExpandSheet2').addEventListener('click', openSheet);
     mSheetScrim.addEventListener('click', closeSheet);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && mSheet.classList.contains('open')) closeSheet();
+    });
 
     let dragStartY = null;
     const handleArea = mSheet.querySelector('.m-sheet-handle');
@@ -2779,9 +2820,10 @@ function initGoogleMaps() {
 
     document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(t => {
       t.addEventListener('click', () => {
-        document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.m-sheet-tabs .drawer-tab').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
         document.querySelectorAll('#mSheetBody .tab-pane').forEach(x => x.classList.remove('active'));
         t.classList.add('active');
+        t.setAttribute('aria-selected', 'true');
         const target = document.querySelector(`#mSheetBody [data-pane="${t.dataset.mtab}"]`);
         if (target) target.classList.add('active');
       });
@@ -2792,13 +2834,25 @@ function initGoogleMaps() {
 
     const mMenu      = document.getElementById('mMenu');
     const mMenuScrim = document.getElementById('mMenuScrim');
-    function openMenu()  { mMenu.classList.add('open');    mMenuScrim.classList.add('open'); }
-    function closeMenu() { mMenu.classList.remove('open'); mMenuScrim.classList.remove('open'); }
+    function openMenu()  {
+      mMenu.classList.add('open');
+      mMenu.removeAttribute('inert');
+      mMenuScrim.classList.add('open');
+      setTimeout(() => { const first = mMenu.querySelector('.m-menu-item'); if (first) first.focus(); }, 50);
+    }
+    function closeMenu() {
+      mMenu.classList.remove('open');
+      mMenuScrim.classList.remove('open');
+      mMenu.setAttribute('inert', '');
+    }
     document.getElementById('mMenuBtn').addEventListener('click', e => {
       e.stopPropagation();
       mMenu.classList.contains('open') ? closeMenu() : openMenu();
     });
     mMenuScrim.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && mMenu.classList.contains('open')) { closeMenu(); document.getElementById('mMenuBtn').focus(); }
+    });
     document.getElementById('mMenuRecenter').addEventListener('click', () => { closeMenu(); fitBoth(); });
     document.getElementById('mMenuGlobe').addEventListener('click', () => {
       closeMenu();
