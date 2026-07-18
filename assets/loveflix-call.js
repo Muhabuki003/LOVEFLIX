@@ -528,7 +528,16 @@
     });
 
     // ── Connect + publish local tracks ──────────────────────────────────────
-    await _room.connect(data.url, data.token);
+    try {
+      await _room.connect(data.url, data.token);
+    } catch (err) {
+      var msg = String((err && err.message) || err);
+      console.error('[LoveCall] signal connection to ' + data.url + ' failed:', err);
+      if (/websocket|could not establish|signal/i.test(msg)) {
+        throw new Error('Call server unreachable — check that the LiveKit server behind ' + data.url + ' is up and LIVEKIT_URL is correct');
+      }
+      throw err;
+    }
 
     // Unblock audio playback (browser autoplay policy requires a user-gesture ancestor)
     try { await _room.startAudio(); } catch(_) {}

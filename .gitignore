@@ -1,1 +1,3 @@
 node_modules/
+livekit/.env
+livekit/redis-data/

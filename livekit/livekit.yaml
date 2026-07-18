@@ -1,9 +1,14 @@
 port: 7880
 rtc:
-  port_range_start: 7881
-  port_range_end: 7882
+  # TCP fallback for clients behind UDP-blocking firewalls
+  tcp_port: 7881
+  # UDP media ports — must match the range published in docker-compose.yml
+  port_range_start: 50000
+  port_range_end: 50100
+  # Discover the server's public IP via STUN and advertise it in ICE
+  # candidates. node_ip must NOT be set alongside this — advertising
+  # 0.0.0.0 gives clients an unroutable candidate and media never flows.
   use_external_ip: true
-  node_ip: "0.0.0.0"
 
 logging:
   level: info
@@ -11,5 +16,10 @@ logging:
 redis:
   address: redis:6379
 
-keys:
-  84oNPD5duoAjdo_TX6wX6Q: VzjHY0K6MCaShmEoR6h7qracPs2tMYI7bQ9WVtl_6YM
+# API keys are NOT stored in this file — they are injected through the
+# LIVEKIT_KEYS environment variable in docker-compose.yml (loaded from
+# ./.env, see .env.example). The pair that used to be committed here must
+# be rotated: generate a new one with
+#   docker run --rm livekit/livekit-server generate-keys
+# then update ./.env AND the LIVEKIT_API_KEY / LIVEKIT_API_SECRET secrets
+# in Cloudflare Pages to match.
