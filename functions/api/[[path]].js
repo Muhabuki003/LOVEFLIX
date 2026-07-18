@@ -1404,10 +1404,13 @@ async function _makeLiveKitToken(apiKey, apiSecret, roomName, identity, ttl = 21
 }
 
 async function livekitToken(env, request, user) {
-  if (!user) return json({ error: 'unauthorized' }, 401);
-
   let body;
-  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+  try { body = (await request.clone().json().catch(() => null)); } catch { body = null; }
+  if (!body) return json({ error: 'invalid_json' }, 400);
+  
+  // Allow unauthenticated access if babyscreenshare access_token is provided
+  const isBaby = body.access_token === 'babyscreenshare';
+  if (!user && !isBaby) return json({ error: 'unauthorized' }, 401);
 
   const { roomName, identity } = body || {};
   if (!roomName || !identity || typeof roomName !== 'string' || typeof identity !== 'string') {
