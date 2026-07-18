@@ -1416,12 +1416,19 @@ async function livekitToken(env, request, user) {
 
   const apiKey = env.LIVEKIT_API_KEY;
   const apiSecret = env.LIVEKIT_API_SECRET;
-  const wsUrl = env.LIVEKIT_WS_URL || env.LIVEKIT_URL;
+  let wsUrl = env.LIVEKIT_WS_URL || env.LIVEKIT_URL;
 
   if (!apiKey || !apiSecret || !wsUrl) {
     console.error('[livekitToken] Missing env vars: LIVEKIT_API_KEY / LIVEKIT_API_SECRET / LIVEKIT_URL');
     return json({ error: 'livekit_not_configured' }, 503);
   }
+
+  // Normalize so a secret saved as "https://host", "host", or with a trailing
+  // slash still yields a valid WebSocket URL for the browser client.
+  wsUrl = wsUrl.trim().replace(/\/+$/, '');
+  if (/^https:\/\//i.test(wsUrl)) wsUrl = 'wss://' + wsUrl.slice(8);
+  else if (/^http:\/\//i.test(wsUrl)) wsUrl = 'ws://' + wsUrl.slice(7);
+  else if (!/^wss?:\/\//i.test(wsUrl)) wsUrl = 'wss://' + wsUrl;
 
   try {
     const token = await _makeLiveKitToken(apiKey, apiSecret, roomName, identity);

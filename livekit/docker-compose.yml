@@ -1,12 +1,32 @@
 version: "3.9"
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - livekit-server
+
   livekit-server:
     image: livekit/livekit-server:latest
     restart: unless-stopped
     ports:
       - "7880:7880"
       - "7881:7881"
-      - "7882:7882/udp"
+      - "50000-50100:50000-50100/udp"
+    environment:
+      # API key pair — set in ./.env (see .env.example). Must match the
+      # LIVEKIT_API_KEY / LIVEKIT_API_SECRET secrets in Cloudflare Pages.
+      - "LIVEKIT_KEYS=${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
     volumes:
       - ./livekit.yaml:/livekit.yaml:ro
     command: --config /livekit.yaml
@@ -22,3 +42,7 @@ services:
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - ./redis-data:/data
+
+volumes:
+  caddy-data:
+  caddy-config:
