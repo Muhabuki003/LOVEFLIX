@@ -47,7 +47,7 @@
   h2 {
     font-size: 20px;
     font-weight: 600;
-    color: #e50914;
+    color: #ff1a1a;
     margin-top: 40px;
     margin-bottom: 14px;
   }
@@ -68,7 +68,8 @@
   ul { padding-left: 20px; }
   li { margin-bottom: 6px; }
 
-  a { color: #e50914; text-decoration: none; }
+  a { color: #ff1a1a; text-decoration: none; }
+  a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   a:hover { text-decoration: underline; }
 
   /* Keyboard shortcuts table */
@@ -137,16 +138,18 @@
   <p class="subtitle">LoveFlix is committed to making our platform accessible to everyone, regardless of ability.</p>
 
   <h2>Our Commitment</h2>
-  <p>We continuously work to improve the accessibility of our service in line with the Web Content Accessibility Guidelines (WCAG) 2.2 at Level AA. Our goal is to ensure that all users — including those who rely on screen readers, keyboard navigation, voice control, or assistive technologies — can enjoy LoveFlix together with their partner.</p>
+  <p>We continuously work to conform our service to the Web Content Accessibility Guidelines (WCAG) 2.1 at Level AA, and are working toward 2.2. Our goal is to ensure that all users — including those who rely on screen readers, keyboard navigation, voice control, or assistive technologies — can enjoy LoveFlix together with their partner. This statement reflects the current state of the site and is updated as we make further improvements; it is not a claim of perfect, zero-defect conformance.</p>
 
   <h2>ARIA Support</h2>
   <p>LoveFlix uses Accessible Rich Internet Applications (ARIA) attributes throughout the platform to improve compatibility with screen readers and other assistive technologies:</p>
   <ul>
+    <li><strong>Skip link</strong> — A "Skip to main content" link is the first focusable element on every page, letting keyboard users bypass repeated navigation</li>
     <li><strong>aria-label</strong> — Applied to icon-only buttons and controls so their purpose is announced by screen readers</li>
     <li><strong>aria-hidden</strong> — Used on decorative elements and background visuals to reduce noise for assistive technology users</li>
-    <li><strong>role</strong> attributes — Navigation, banner, main, and complementary landmarks are explicitly declared for efficient page navigation</li>
-    <li><strong>aria-live</strong> — Dynamic content regions (notifications, streaming status) announce changes without disrupting the user</li>
-    <li><strong>aria-expanded</strong> — Expandable sections and menus communicate their open/closed state</li>
+    <li><strong>Landmarks</strong> — Navigation, main content, and footer regions are marked up with semantic <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, and <code>&lt;footer&gt;</code>/<code>role</code> attributes for efficient page navigation</li>
+    <li><strong>aria-live</strong> / <strong>role="status"</strong> / <strong>role="log"</strong> — Dynamic content regions (chat notifications, call status, form errors) announce changes without disrupting the user</li>
+    <li><strong>aria-expanded</strong> — Expandable sections (FAQ accordions, menus) communicate their open/closed state</li>
+    <li><strong>role="dialog"</strong> with focus trapping — Modals and overlays keep keyboard focus contained while open and return it to the triggering control on close</li>
   </ul>
 
   <h2>Keyboard Shortcuts</h2>
@@ -172,8 +175,12 @@
         <td>Close modals, dropdowns, and overlays</td>
       </tr>
       <tr>
+        <td><kbd>Tab</kbd> / <kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+        <td>Move between video cards in a row; each row also has visible, focusable "scroll left/right" buttons</td>
+      </tr>
+      <tr>
         <td><kbd>Arrow Keys</kbd></td>
-        <td>Navigate carousels, list items, and video suggestions</td>
+        <td>Seek video playback (player), move focus between form choices (e.g. time-slot pickers), and pan the Browse 3D grid</td>
       </tr>
       <tr>
         <td><kbd>F</kbd></td>
@@ -194,10 +201,17 @@
   <ul>
     <li>All form inputs have associated <code>&lt;label&gt;</code> elements</li>
     <li>Images include descriptive <code>alt</code> text or are marked as decorative with <code>alt=""</code></li>
-    <li>Video content supports closed captions and subtitles where available</li>
     <li>Text can be resized up to 200% without loss of content or functionality</li>
-    <li>Colour contrast ratios meet or exceed WCAG AA requirements</li>
+    <li>Colour contrast ratios are targeted to meet or exceed WCAG AA requirements (4.5:1 for normal text, 3:1 for large text and UI components)</li>
     <li>Interactive elements are focusable and display visible focus indicators</li>
+  </ul>
+
+  <h2>Known Limitations</h2>
+  <p>We aim to be direct about where LoveFlix currently falls short of full accessibility, rather than overstate our conformance:</p>
+  <ul>
+    <li><strong>Closed captions:</strong> uploaded videos do not currently support closed captions or subtitle tracks. If you need a transcript or captions for a specific video, contact us below and we'll do our best to help.</li>
+    <li><strong>3D Browse view:</strong> the "Browse" page's interactive 3D grid is a WebGL visualization that isn't fully readable by screen readers. Use the <strong>"Switch to list view"</strong> button (reachable via Tab, top-left of the Browse page) for a standard, fully accessible list of the same content.</li>
+    <li>We test primarily with modern screen readers (VoiceOver, NVDA) and keyboard-only navigation; if you use other assistive technology and hit a barrier, please tell us.</li>
   </ul>
 
   <h2>Report an Accessibility Issue</h2>
