@@ -1,19 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Lola — LOVEFLIX AI relationship concierge.
+// Lola — LOVEFLIX AI relationship concierge (STRIPPED SKELETON).
 //
-// A self-contained floating widget that can be dropped onto any signed-in page.
-// It renders a draggable / resizable launcher + chat panel and talks to the
-// existing /api/ai endpoint in "concierge" mode (DeepSeek, keyed by the
-// DEEPSEEK_API_KEY Cloudflare secret). No build step, no dependencies.
+// This is the rebuild base: pure UI shell + the one retained functional piece
+// (the location-button handoff to LoveConnect). All of the AI brain has been
+// removed to be rebuilt from the ground up:
+//   - REMOVED: /api/couple-stats + /api/ai "concierge" calls
+//   - REMOVED: couple-context loader (names, days together, videos, music)
+//   - REMOVED: partner location/timezone fetch + midpoint computation
+//   - REMOVED: action cards (two-pane date spots, flights, playlist draft)
+//   - REMOVED: star ratings / Google Places enrichment UI
+//   - KEPT:    launcher (drag + persist), panel (open/close/drag/resize/persist)
+//   - KEPT:    chat shell (input, send, message bubbles, typing indicator)
+//   - KEPT:    the "Go to Spot" location-button handoff to /loveconnect.html
+//   - KEPT:    window.Lola API (open/close/toggle) — home.html + nav.js depend on it
+//   - KEPT:    WCAG a11y (focus trap, sr-only label, aria roles, live region)
 //
-// Public API (window.Lola):
-//   Lola.open()    — open the chat panel
-//   Lola.close()   — close it
-//   Lola.toggle()  — toggle
-//
-// Configuration (set window.LOLA_CONFIG before this script loads):
-//   { noLauncher: true }  — hide the floating launcher (used on pages that open
-//                           Lola from a nav button / grid box instead, e.g. home)
+// No build step, no dependencies. No model calls. Wire the rebuilt brain back
+// into send() when ready.
 // ─────────────────────────────────────────────────────────────────────────────
 (function () {
   'use strict';
@@ -23,8 +26,6 @@
   window.__lolaLoaded = true;
 
   var CFG = window.LOLA_CONFIG || {};
-  var API_AI    = '/api/ai';
-  var API_STATS = '/api/couple-stats';
   var LOGO      = '/assets/lola-logo.png';
   var LS_POS    = 'lola_launcher_pos';
   var LS_SIZE   = 'lola_panel_size';
@@ -41,14 +42,14 @@
 
   var isMobile = window.matchMedia('(max-width: 600px)').matches;
 
-  // ── Styles ─────────────────────────────────────────────────────────────────
+  // ── Styles (UI shell only) ─────────────────────────────────────────────────
   if (!document.getElementById('lola-style')) {
     var st = document.createElement('style');
     st.id = 'lola-style';
     st.textContent = [
       '.lola-root{--lo-red:#e50914;--lo-rose:#ff5f8f;--lo-panel:rgba(18,18,18,0.94);--lo-border:rgba(255,255,255,0.09);--lo-border-s:rgba(255,255,255,0.16);--lo-text:#f4f4f4;--lo-dim:#8a8a8a;--lo-light:#cfcfcf;--lo-green:#10b981;--lo-launch:60px;--lo-gap:24px;font-family:"Inter",system-ui,sans-serif}',
       '.lo-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}',
-      '.lola-close:focus-visible,.lola-send:focus-visible,.lola-chip:focus-visible,.lola-go:focus-visible,.lola-spot-card:focus-visible,.lo-view:focus-visible,.lola-field input:focus-visible,#lolaLogo:focus-visible{outline:2px solid #fff;outline-offset:2px}',
+      '.lola-close:focus-visible,.lola-send:focus-visible,.lola-chip:focus-visible,.lola-go:focus-visible,.lola-field input:focus-visible,#lolaLogo:focus-visible{outline:2px solid #fff;outline-offset:2px}',
       // panel
       '.lola-panel{position:fixed;right:var(--lo-gap);bottom:calc(var(--lo-gap) + var(--lo-launch) + 14px);width:380px;height:560px;max-height:calc(100vh - 2*var(--lo-gap));max-width:calc(100vw - 2*var(--lo-gap));z-index:2147483000;display:flex;flex-direction:column;background:var(--lo-panel);-webkit-backdrop-filter:blur(26px) saturate(1.2);backdrop-filter:blur(26px) saturate(1.2);border:1px solid var(--lo-border);border-radius:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,0.8),0 0 0 1px rgba(0,0,0,0.4);overflow:hidden;opacity:0;transform:translateY(12px) scale(.96);transform-origin:bottom right;pointer-events:none;transition:transform .34s cubic-bezier(.2,.9,.25,1),opacity .24s ease}',
       '.lola-panel.lola-open{opacity:1;transform:none;pointer-events:auto}',
@@ -80,7 +81,6 @@
       '.lola-msg.bot .lo-bubble{background:rgba(255,255,255,0.06);border:1px solid var(--lo-border);border-bottom-left-radius:5px;color:var(--lo-light)}',
       '.lola-msg.me{align-self:flex-end;align-items:flex-end}',
       '.lola-msg.me .lo-bubble{background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));color:#fff;border-bottom-right-radius:5px;font-weight:500}',
-      '.lola-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 2px 8px;animation:lolaRise .45s .1s both}',
       '.lola-chip{font-size:12px;font-weight:500;color:var(--lo-light);cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid var(--lo-border-s);padding:8px 13px;border-radius:999px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}',
       '.lola-chip:hover{background:rgba(229,9,20,0.16);border-color:rgba(229,9,20,0.5);color:#fff;transform:translateY(-1px)}',
       '.lola-chip .lo-ic{color:var(--lo-rose)}',
@@ -110,44 +110,15 @@
       '@keyframes lolaGlow{0%,100%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(229,9,20,.35))}50%{filter:drop-shadow(0 6px 12px rgba(0,0,0,.55)) drop-shadow(0 0 18px rgba(229,9,20,.75))}}',
       '.lola-tip{position:fixed;z-index:2147483001;background:#141414;border:1px solid var(--lo-border);color:var(--lo-light);font-size:12.5px;font-weight:500;white-space:nowrap;padding:9px 14px;border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .2s}',
       '.lola-tip b{color:#fff}',
-      // action cards
+      // action cards (kept for the retained location-button + future rebuild)
       '.lola-actions{display:flex;flex-direction:column;gap:10px;align-self:flex-start;width:100%;animation:lolaRise .4s both}',
       '.lola-card{background:rgba(255,255,255,0.05);border:1px solid var(--lo-border-s);border-radius:14px;padding:12px 13px}',
       '.lola-card .lo-cat{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--lo-rose)}',
       '.lola-card .lo-name{font-size:14px;font-weight:600;color:#fff;margin-top:3px}',
-      '.lola-card .lo-reason{font-size:12px;color:var(--lo-light);margin-top:4px;line-height:1.4}',
       '.lola-card .lo-addr{font-size:11px;color:var(--lo-dim);margin-top:4px}',
-      '.lola-card .lo-tracks{margin:8px 0 0;padding-left:16px;font-size:12px;color:var(--lo-light);line-height:1.6}',
-      '.lola-card .lo-tracks span{color:var(--lo-dim)}',
       '.lola-go{margin-top:10px;width:100%;cursor:pointer;border:none;border-radius:10px;padding:9px;font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--lo-rose),var(--lo-red));transition:filter .15s,transform .1s}',
       '.lola-go:hover{filter:brightness(1.08)}.lola-go:active{transform:scale(.97)}',
       '.lola-go:disabled{opacity:.7;cursor:default}',
-      // date-spot two-pane result
-      '.lola-spots{display:grid;grid-template-columns:40% 1fr;gap:10px;align-self:stretch;width:100%;animation:lolaRise .4s both}',
-      '.lola-spots-list{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow-y:auto;padding-right:2px}',
-      '.lola-spots-list::-webkit-scrollbar{width:5px}.lola-spots-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}',
-      '.lola-spot-card{display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;padding:0;border:1px solid transparent;border-radius:13px;background:none;transition:border-color .15s}',
-      '.lola-spot-card .lo-thumb{width:100%;height:92px;border-radius:11px;background-size:cover;background-position:center;background-color:#2a2120;display:flex;align-items:center;justify-content:center;overflow:hidden}',
-      '.lola-spot-card .lo-thumb span{font-family:"Bebas Neue",sans-serif;font-size:34px;color:rgba(255,255,255,.5)}',
-      '.lola-spot-card.on .lo-thumb{outline:2px solid var(--lo-red);outline-offset:1px}',
-      '.lola-spot-card .lo-sc-cat{font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--lo-rose);opacity:.85}',
-      '.lola-spot-card .lo-sc-name{font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:.6px;color:#fff;line-height:1.05}',
-      '.lola-spot-card .lo-rate{font-family:"Inter",sans-serif;font-size:11px;color:var(--lo-dim);letter-spacing:0}',
-      '.lo-stars{display:block;font-size:11px;color:#f5b301;letter-spacing:1px}',
-      '.lola-spots-feature{display:flex;flex-direction:column;gap:10px;min-width:0}',
-      '.lola-spots-feature .lo-hero{position:relative;width:100%;min-height:190px;flex:1;border-radius:14px;background-size:cover;background-position:center;background-color:#241a18;display:flex;align-items:center;justify-content:center;overflow:hidden}',
-      '.lola-spots-feature .lo-hero-ph{font-family:"Bebas Neue",sans-serif;font-size:64px;color:rgba(255,255,255,.4)}',
-      '.lo-view{position:absolute;left:12px;right:12px;bottom:12px;cursor:pointer;border:none;border-radius:11px;padding:11px;font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:2px;color:#fff;background:linear-gradient(135deg,rgba(255,95,143,.92),rgba(229,9,20,.92));-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:filter .15s,transform .1s}',
-      '.lo-view:hover{filter:brightness(1.08)}.lo-view:active{transform:scale(.98)}',
-      '.lola-spots-feature .lo-pick{background:rgba(255,255,255,.05);border:1px solid var(--lo-border-s);border-radius:14px;padding:13px}',
-      '.lo-pick-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}',
-      '.lo-pick-label{font-size:9px;font-weight:800;letter-spacing:1.4px;color:var(--lo-red)}',
-      '.lo-pick-name{font-family:"Bebas Neue",sans-serif;font-size:21px;letter-spacing:.8px;color:#fff;line-height:1.02}',
-      '.lo-pick-addr{font-size:9.5px;line-height:1.35;color:var(--lo-light);text-align:right;max-width:42%;text-transform:uppercase;letter-spacing:.5px}',
-      '.lo-pick-rating{display:flex;align-items:center;gap:7px;margin:7px 0 6px}',
-      '.lo-pick-rating span{font-size:11px;color:var(--lo-dim)}',
-      '.lo-pick-desc{font-size:12px;line-height:1.5;color:var(--lo-light)}',
-      '@media(max-width:600px){.lola-spots{grid-template-columns:1fr}.lola-spots-list{flex-direction:row;max-height:none;overflow-x:auto}.lola-spot-card{min-width:120px}}',
       // mobile
       '@media(max-width:600px){.lola-root{--lo-gap:12px}.lola-panel{right:0;left:0;bottom:0;top:auto;width:100vw;height:78vh;max-height:none;max-width:none;border-radius:22px 22px 0 0;transform-origin:bottom center}.lola-logo{top:14px;right:14px;bottom:auto;width:52px;height:52px}.lola-resize{display:none}.lola-head{cursor:default}.lola-tip{display:none}}',
     ].join('');
@@ -189,138 +160,7 @@
   var isOpen = false;
   var greeted = false;
 
-  // ── Couple context (mirrors the legacy concierge widget) ───────────────────
-  var coupleCtx = {};
-  var ctxReady = false;
-  var history = [];
-
-  function loadCoupleContext() {
-    var token = localStorage.getItem('loveflix_token');
-    var settings;
-    try {
-      settings = (window.LoveFlix && LoveFlix.getSettings) ? LoveFlix.getSettings()
-        : JSON.parse(localStorage.getItem('loveflix_settings') || '{}');
-    } catch (e) { settings = {}; }
-
-    var name1 = settings.adminName   || settings.partner_1_name || 'Partner 1';
-    var name2 = settings.partnerName || settings.partner_2_name || 'Partner 2';
-
-    coupleCtx = {
-      coupleName: name1 + ' & ' + name2,
-      name1: name1, name2: name2,
-      daysTogether: 'unknown', totalVideos: '?',
-      lastVideoUploaded: 'recently', musicGenres: 'your shared music',
-      city: settings.city || 'your city', nextFreeDay: 'soon',
-      recentDates: 'recent adventures', avgBudgetSpent: 'your usual range',
-      daysSinceLastUpload: null,
-    };
-
-    if (token) {
-      fetch(API_STATS, { headers: { Authorization: 'Bearer ' + token } })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (d) {
-          if (!d) return;
-          if (d.daysTogether != null) coupleCtx.daysTogether = d.daysTogether;
-          if (d.totalVideos != null) coupleCtx.totalVideos = d.totalVideos;
-          if (d.daysSinceLastUpload != null) coupleCtx.daysSinceLastUpload = d.daysSinceLastUpload;
-          if (d.partner1Name) coupleCtx.name1 = d.partner1Name;
-          if (d.partner2Name) coupleCtx.name2 = d.partner2Name;
-          if (d.partner1Name || d.partner2Name) coupleCtx.coupleName = coupleCtx.name1 + ' & ' + coupleCtx.name2;
-          if (d.lastUploadedAt) {
-            var dt = new Date(d.lastUploadedAt);
-            coupleCtx.lastVideoUploaded = dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-          }
-        })
-        .catch(function () {})
-        .then(function () { ctxReady = true; });
-    } else {
-      ctxReady = true;
-    }
-  }
-  loadCoupleContext();
-  loadLocations();
-  window.addEventListener('storage', function (e) {
-    if (e.key === 'loveflix_settings') loadCoupleContext();
-  });
-
-  // ── Both partners' locations + timezones (for halfway date ideas) ──────────
-  // Decode PostGIS WKB point hex → [lng, lat] (same routine the home orbit uses).
-  function parseWKB(hex) {
-    if (!hex || hex.length < 42) return null;
-    try {
-      var buf = new Uint8Array(hex.match(/../g).map(function (b) { return parseInt(b, 16); }));
-      var view = new DataView(buf.buffer);
-      var le = buf[0] === 1;
-      var type = view.getUint32(1, le);
-      var off = (type & 0x20000000) ? 9 : 5;
-      var lng = view.getFloat64(off, le);
-      var lat = view.getFloat64(off + 8, le);
-      return (isFinite(lng) && isFinite(lat)) ? [lng, lat] : null;
-    } catch (e) { return null; }
-  }
-  // Rough timezone from longitude (15° ≈ 1h). Good enough for "they're ~Nh ahead".
-  function approxTz(lng) {
-    if (lng == null || !isFinite(lng)) return null;
-    var off = Math.round(lng / 15);
-    return 'UTC' + (off >= 0 ? '+' + off : off);
-  }
-
-  function loadLocations() {
-    if (!window.LoveFlix || !LoveFlix.getToken) return;
-    var token = LoveFlix.getToken && LoveFlix.getToken();
-    var coupleId = LoveFlix.getCoupleId && LoveFlix.getCoupleId();
-    var userId = LoveFlix.getUserId && LoveFlix.getUserId();
-    if (!token || !coupleId || !userId) return;
-
-    // The current user's real IANA timezone, straight from the browser.
-    try { coupleCtx.yourTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
-
-    fetch(LoveFlix.SUPABASE_URL + '/rest/v1/couple_locations?couple_id=eq.' +
-      encodeURIComponent(coupleId) + '&select=user_id,location,city,updated_at&order=updated_at.desc', {
-      headers: { Authorization: 'Bearer ' + token, apikey: LoveFlix.SUPABASE_ANON_KEY },
-    })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .then(function (rows) {
-        if (!Array.isArray(rows)) return;
-        var you = null, partner = null;
-        rows.forEach(function (row) {
-          if (row.user_id === userId && !you) you = row;
-          else if (row.user_id !== userId && !partner) partner = row;
-        });
-        function pack(row) {
-          if (!row) return null;
-          var c = parseWKB(row.location);
-          return {
-            city: row.city || (c ? c[1].toFixed(2) + '°, ' + c[0].toFixed(2) + '°' : 'unknown'),
-            coords: c,
-            approxTimezone: c ? approxTz(c[0]) : null,
-          };
-        }
-        var y = pack(you), p = pack(partner);
-        if (y) {
-          coupleCtx.yourLocation = y.city;
-          if (!coupleCtx.yourTimezone && y.approxTimezone) coupleCtx.yourTimezone = y.approxTimezone + ' (approx)';
-        }
-        if (p) {
-          coupleCtx.partnerLocation = p.city;
-          coupleCtx.partnerTimezone = p.approxTimezone ? p.approxTimezone + ' (approx)' : null;
-        }
-        // Geographic midpoint → anchor for "meet halfway" date spots.
-        if (y && p && y.coords && p.coords) {
-          var mlng = (y.coords[0] + p.coords[0]) / 2;
-          var mlat = (y.coords[1] + p.coords[1]) / 2;
-          coupleCtx.midpoint = mlat.toFixed(3) + '°, ' + mlng.toFixed(3) + '°';
-          // crude great-circle-ish distance (km) so Lola knows if they're near or far
-          var dx = (p.coords[0] - y.coords[0]) * 111 * Math.cos(mlat * Math.PI / 180);
-          var dy = (p.coords[1] - y.coords[1]) * 111;
-          coupleCtx.distanceApartKm = Math.round(Math.sqrt(dx * dx + dy * dy));
-          coupleCtx.sameCity = coupleCtx.distanceApartKm < 30;
-        }
-      })
-      .catch(function () {});
-  }
-
-  // ── Messages ────────────────────────────────────────────────────────────
+  // ── Messages (chat shell only — no AI yet) ─────────────────────────────────
   function addMsg(html, who) {
     var m = document.createElement('div');
     m.className = 'lola-msg ' + who;
@@ -339,8 +179,8 @@
   function greet() {
     if (greeted) return;
     greeted = true;
-    var name = coupleCtx.name1 && coupleCtx.name1 !== 'Partner 1' ? (' ' + coupleCtx.name1) : '';
-    addMsg("Hey" + escapeHtml(name) + ", I’m Lola ♥ your LOVEFLIX relationship concierge. Tell me what you two are in the mood for and I’ll take care of the rest.", 'bot');
+    // Placeholder greeting — the rebuilt brain will make this personal.
+    addMsg("Hey, I’m Lola ♥ your LOVEFLIX relationship concierge. Tell me what you two are in the mood for and I’ll take care of the rest.", 'bot');
     var chips = document.createElement('div');
     chips.className = 'lola-chips';
     var opts = [
@@ -358,214 +198,25 @@
     bodyEl.insertBefore(chips, typing);
   }
 
+  // Send: echoes the message back locally (shell only). The rebuilt brain will
+  // POST to /api/ai concierge and render the reply + action cards here.
   function send(text) {
     text = (text || '').trim();
     if (!text) return;
     addMsg(escapeHtml(text), 'me');
-    history.push({ role: 'user', content: text });
     field.value = '';
+    bodyEl.scrollTop = bodyEl.scrollHeight;
     typing.classList.add('on');
-    bodyEl.scrollTop = bodyEl.scrollHeight;
-
-    var token = localStorage.getItem('loveflix_token');
-    var headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = 'Bearer ' + token;
-
-    fetch(API_AI, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ mode: 'concierge', coupleContext: coupleCtx, messages: history }),
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        typing.classList.remove('on');
-        var reply = (data && data.choices && data.choices[0] && data.choices[0].message &&
-          data.choices[0].message.content) || 'Something went wrong — try again!';
-        history.push({ role: 'assistant', content: reply });
-        if (history.length > 16) history = history.slice(-16);
-        var bubble = addMsg('', 'bot');
-        var actions = (data && data.lola && Array.isArray(data.lola.actions)) ? data.lola.actions : [];
-        typeWriter(escapeHtml(reply), bubble, function () { renderActions(actions); });
-      })
-      .catch(function () {
-        typing.classList.remove('on');
-        addMsg('Connection issue — try again in a moment.', 'bot');
-      });
+    // TODO(rebuild): call the model + render reply. Stripped brain offline.
+    setTimeout(function () {
+      typing.classList.remove('on');
+      addMsg('<b>Lola is being rebuilt.</b> Her brain returns shortly — hang tight ♥', 'bot');
+    }, 400);
   }
 
-  function typeWriter(text, el, done) {
-    var i = 0;
-    el.textContent = '';
-    var iv = setInterval(function () {
-      el.textContent += text[i++];
-      bodyEl.scrollTop = bodyEl.scrollHeight;
-      if (i >= text.length) { clearInterval(iv); if (typeof done === 'function') done(); }
-    }, 14);
-  }
-
-  // ── Action cards (Lola Knowledge Layer §4) ────────────────────────────────
-  // Renders the structured actions Lola returns: date spots (each with a
-  // "Go to Spot" button), a flights menu, and a playlist draft.
-  function renderActions(actions) {
-    if (!actions || !actions.length) return;
-    actions.forEach(function (a) {
-      if (!a || !a.type) return;
-      if (a.type === 'suggest_date_spots') renderDateSpots(a.payload);
-      else if (a.type === 'open_flights') renderFlights(a.payload);
-      else if (a.type === 'create_playlist_draft') renderPlaylistDraft(a.payload);
-    });
-    bodyEl.scrollTop = bodyEl.scrollHeight;
-  }
-
-  var CAT_LABEL = {
-    near_partner_a: 'Near you',
-    near_partner_b: 'Near your partner',
-    midpoint: 'Halfway',
-  };
-
-  // Render 0-5 stars from a numeric rating (e.g. 4.6 → ★★★★½).
-  function starsHtml(rating) {
-    var r = Math.max(0, Math.min(5, Number(rating) || 0));
-    var full = Math.floor(r), half = (r - full) >= 0.5;
-    var s = '';
-    for (var i = 0; i < full; i++) s += '★';
-    if (half && full < 5) { s += '★'; full++; } // round half up visually
-    for (var j = full; j < 5; j++) s += '☆';
-    return '<span class="lo-stars">' + s + '</span>';
-  }
-
-  function spotInitial(name) {
-    return escapeHtml((name || '?').trim().charAt(0).toUpperCase() || '?');
-  }
-
-  // Two-pane date-spot result (matches the LOLA in-chat design): a scrollable
-  // list of spots on the left, a large hero + "LOLA'S PICK" detail on the right.
-  function renderDateSpots(payload) {
-    var spots = (payload && Array.isArray(payload.spots)) ? payload.spots : [];
-    spots = spots.filter(function (s) { return s && s.name; });
-    if (!spots.length) return;
-
-    var wrap = document.createElement('div');
-    wrap.className = 'lola-spots';
-
-    var list = document.createElement('div');
-    list.className = 'lola-spots-list';
-
-    var feature = document.createElement('div');
-    feature.className = 'lola-spots-feature';
-
-    // Background image (or a gradient placeholder with the venue initial).
-    function bgFor(s) {
-      return s.image
-        ? 'background-image:url(\'' + String(s.image).replace(/'/g, '') + '\');'
-        : '';
-    }
-
-    spots.forEach(function (s, i) {
-      var card = document.createElement('button');
-      card.className = 'lola-spot-card';
-      card.setAttribute('data-i', i);
-      card.innerHTML =
-        '<div class="lo-thumb" style="' + bgFor(s) + '">' +
-          (s.image ? '' : '<span>' + spotInitial(s.name) + '</span>') +
-        '</div>' +
-        '<div class="lo-sc-meta">' +
-          '<div class="lo-sc-cat">' + escapeHtml(CAT_LABEL[s.category] || s.category || '') + '</div>' +
-          '<div class="lo-sc-name">' + escapeHtml(s.name) +
-            (s.rating ? ' <span class="lo-rate">(' + escapeHtml(String(s.rating)) + ')</span>' : '') +
-          '</div>' +
-          (s.rating ? starsHtml(s.rating) : '') +
-        '</div>';
-      card.addEventListener('click', function () {
-        Array.prototype.forEach.call(list.children, function (c) { c.classList.remove('on'); });
-        card.classList.add('on');
-        selectSpot(feature, s);
-      });
-      list.appendChild(card);
-    });
-
-    wrap.appendChild(list);
-    wrap.appendChild(feature);
-    bodyEl.insertBefore(wrap, typing);
-
-    // Select the first spot by default.
-    if (list.firstChild) list.firstChild.classList.add('on');
-    selectSpot(feature, spots[0]);
-  }
-
-  // Paint the feature pane (hero image + VIEW LOCATION + LOLA'S PICK card).
-  function selectSpot(feature, s) {
-    var hasGeo = (s.lat != null && s.lng != null);
-    var bg = s.image ? 'background-image:url(\'' + String(s.image).replace(/'/g, '') + '\');' : '';
-    feature.innerHTML =
-      '<div class="lo-hero" style="' + bg + '">' +
-        (s.image ? '' : '<span class="lo-hero-ph">' + spotInitial(s.name) + '</span>') +
-        (hasGeo ? '<button class="lo-view">VIEW LOCATION</button>' : '') +
-      '</div>' +
-      '<div class="lo-pick">' +
-        '<div class="lo-pick-top">' +
-          '<div class="lo-pick-id">' +
-            '<div class="lo-pick-label">LOLA’S PICK</div>' +
-            '<div class="lo-pick-name">' + escapeHtml(s.name) + '</div>' +
-          '</div>' +
-          (s.address ? '<div class="lo-pick-addr">' + escapeHtml(s.address) + '</div>' : '') +
-        '</div>' +
-        (s.rating ? '<div class="lo-pick-rating">' + starsHtml(s.rating) +
-          ' <span>' + escapeHtml(String(s.rating)) +
-          (s.rating_count ? ' · ' + Number(s.rating_count).toLocaleString() + ' reviews' : '') +
-          '</span></div>' : '') +
-        '<div class="lo-pick-desc">' + escapeHtml(s.description || s.reason || '') + '</div>' +
-      '</div>';
-    var view = feature.querySelector('.lo-view');
-    if (view) view.addEventListener('click', function () {
-      goToSpot({ lat: Number(s.lat), lng: Number(s.lng), name: s.name || 'Spot' });
-    });
-    bodyEl.scrollTop = bodyEl.scrollHeight;
-  }
-
-  function renderFlights(payload) {
-    payload = payload || {};
-    var wrap = document.createElement('div');
-    wrap.className = 'lola-actions';
-    var card = document.createElement('div');
-    card.className = 'lola-card';
-    card.innerHTML =
-      '<div class="lo-cat">Flights</div>' +
-      '<div class="lo-name">' + escapeHtml(payload.origin || 'You') + ' → ' + escapeHtml(payload.destination || 'Them') + '</div>';
-    var btn = document.createElement('button');
-    btn.className = 'lola-go';
-    btn.textContent = 'Open Flights →';
-    btn.addEventListener('click', function () { openFlights(payload); });
-    card.appendChild(btn);
-    wrap.appendChild(card);
-    bodyEl.insertBefore(wrap, typing);
-  }
-
-  function renderPlaylistDraft(payload) {
-    payload = payload || {};
-    var tracks = Array.isArray(payload.tracks) ? payload.tracks : [];
-    var wrap = document.createElement('div');
-    wrap.className = 'lola-actions';
-    var card = document.createElement('div');
-    card.className = 'lola-card';
-    var list = tracks.slice(0, 8).map(function (t) {
-      return '<li>' + escapeHtml(t.title || '') + (t.artist ? ' — <span>' + escapeHtml(t.artist) + '</span>' : '') + '</li>';
-    }).join('');
-    card.innerHTML =
-      '<div class="lo-cat">Playlist draft</div>' +
-      '<div class="lo-name">' + escapeHtml(payload.name || 'For us') + '</div>' +
-      '<ul class="lo-tracks">' + list + '</ul>';
-    var btn = document.createElement('button');
-    btn.className = 'lola-go';
-    btn.textContent = 'Save playlist →';
-    btn.addEventListener('click', function () { savePlaylistDraft(payload, btn); });
-    card.appendChild(btn);
-    wrap.appendChild(card);
-    bodyEl.insertBefore(wrap, typing);
-  }
-
-  // "Go to Spot": if a goToSpot() exists on the current page (LoveConnect map),
-  // drive it directly; otherwise hand off to LoveConnect with the spot in the URL.
+  // ── Retained functional feature: "Go to Spot" location button ─────────────
+  // If a goToSpot() exists on the current page (LoveConnect map), drive it
+  // directly; otherwise hand off to LoveConnect with the spot in the URL.
   function goToSpot(spot) {
     if (typeof window.goToSpot === 'function' && window.goToSpot !== goToSpot) {
       window.goToSpot(spot);
@@ -575,37 +226,6 @@
             '&spotLng=' + encodeURIComponent(spot.lng) +
             '&spotName=' + encodeURIComponent(spot.name || 'Spot');
     window.location.href = '/loveconnect.html?' + q;
-  }
-
-  function openFlights(payload) {
-    var q = 'from=' + encodeURIComponent(payload.origin || '') +
-            '&to=' + encodeURIComponent(payload.destination || '');
-    window.location.href = '/flights.html?' + q;
-  }
-
-  function savePlaylistDraft(payload, btn) {
-    var token = localStorage.getItem('loveflix_token');
-    if (!token) { btn.textContent = 'Sign in to save'; return; }
-    btn.disabled = true; btn.textContent = 'Saving…';
-    fetch('/api/music/playlists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ name: payload.name || 'For us' }),
-    })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (pl) {
-        var id = pl && (pl.id || (pl.playlist && pl.playlist.id));
-        if (!id) { btn.textContent = 'Saved ♥'; return; }
-        var tracks = Array.isArray(payload.tracks) ? payload.tracks.slice(0, 8) : [];
-        return Promise.all(tracks.map(function (t) {
-          return fetch('/api/music/playlists/' + id + '/songs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-            body: JSON.stringify({ title: t.title, artist: t.artist }),
-          }).catch(function () {});
-        })).then(function () { btn.textContent = 'Saved ♥'; });
-      })
-      .catch(function () { btn.disabled = false; btn.textContent = 'Try again'; });
   }
 
   document.getElementById('lolaSend').addEventListener('click', function () { send(field.value); });
@@ -768,4 +388,8 @@
     rz.addEventListener('pointerup', endRz);
     rz.addEventListener('pointercancel', endRz);
   }
+
+  // TODO(rebuild): restore the couple-context loader, live location sync, and
+  // the /api/ai concierge brain here. The goToSpot() helper above is ready to
+  // be driven by the rebuilt model's action cards.
 })();
