@@ -285,7 +285,27 @@
   const vTitle = document.getElementById('vTitle');
   const vDesc = document.getElementById('vDesc');
   const vCat = document.getElementById('vCat');
+  const vDate = document.getElementById('vDate');
   const previewBox = document.getElementById('previewBox');
+
+  // Default the date picker to today, formatted as the YYYY-MM-DD <input type="date"> expects.
+  (function initDateDefault() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    vDate.value = `${y}-${m}-${d}`;
+  })();
+
+  // Turn a "YYYY-MM-DD" <input type="date"> value into "Aug 2, 2026" for display.
+  // Parses the components directly rather than `new Date(str)` so the date can't
+  // shift a day backwards/forwards across timezones.
+  function formatDateInput(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+    if (!m) return '';
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
 
   let selectedFile = null;
   let selectedThumbFile = null;
@@ -458,13 +478,12 @@
 
   async function buildRecord(isDraft) {
     const now = new Date();
-    const monthShort = now.toLocaleString('en-US', { month: 'short' });
     const thumbnailUrl = await uploadThumbnailIfNeeded();
     return {
       title: vTitle.value.trim() || (selectedFile ? selectedFile.name.replace(/\.[^.]+$/, '') : 'Untitled'),
       description: vDesc.value.trim(),
       category: vCat.value || 'Moments',
-      date: `${monthShort} ${now.getDate()}, ${now.getFullYear()}`,
+      date: formatDateInput(vDate.value) || now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       thumbnail_url: thumbnailUrl,
       video_url: uploadedVideoUrl || '',
       duration_seconds: durationSeconds,
