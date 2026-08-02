@@ -565,6 +565,10 @@ async function updateVideo(env, id, request, user) {
     updates.category = sanitizeUserText(body.category, 100) || 'Moments';
     hasUpdates = true;
   }
+  if (typeof body.date === 'string') {
+    updates.date = sanitizeUserText(body.date, 50);
+    hasUpdates = true;
+  }
 
   if (!hasUpdates) return json({ error: 'no_updates' }, 400);
 

@@ -81,6 +81,17 @@
 
   .footer-row{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:12px;color:var(--text-dim);border-top:1px solid var(--border)}
 
+  /* ── Edit Date Modal ── */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+  .modal-overlay.open{opacity:1;pointer-events:auto}
+  .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:380px;width:90%}
+  .modal-box h3{font-size:17px;font-weight:700;color:#fff;margin-bottom:16px}
+  .modal-box label{display:block;font-size:12px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+  .modal-box input[type="date"]{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;color:#fff;font:inherit;font-size:14px;margin-bottom:20px;color-scheme:dark}
+  .modal-box input[type="date"]:focus{border-color:#666}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+  .modal-actions .btn{min-width:90px;justify-content:center}
+
   .t-rose{--thumb:linear-gradient(135deg,#ff7aa2,#5a0a23)}
   .t-blue{--thumb:linear-gradient(135deg,#3a7bff,#1e3a8a)}
   .t-blue2{--thumb:linear-gradient(135deg,#0ea5e9,#082f49)}
@@ -203,6 +214,19 @@
   </main>
 </div>
 
+<!-- ── Edit Date Modal ── -->
+<div class="modal-overlay" id="editDateModal" role="dialog" aria-modal="true" aria-labelledby="editDateModalTitle" onclick="if(event.target===this)closeEditDateModal()">
+  <div class="modal-box">
+    <h3 id="editDateModalTitle">Edit Date</h3>
+    <label for="editDateInput">Date recorded</label>
+    <input type="date" id="editDateInput" onkeydown="if(event.key==='Enter')saveEditDate()">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditDateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditDate()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script src="assets/loveflix.js"></script>
 <script>
   if (!LoveFlix.requireAuth()) throw new Error('redirecting');
@@ -273,6 +297,7 @@
         <td>
           <div class="actions-cell">
             <button class="icon-btn" title="Preview" aria-label="Preview ${escapeHtml(v.title || 'video')}" data-play="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="icon-btn" title="Edit date" aria-label="Edit date for ${escapeHtml(v.title || 'video')}" data-edit-date="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
             <button class="icon-btn danger" title="Delete" aria-label="Delete ${escapeHtml(v.title || 'video')}" data-del="${escapeHtml(v.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
           </div>
         </td>
@@ -327,6 +352,9 @@
     const play = e.target.closest('[data-play]');
     if (play) { location.href = `player.html?id=${encodeURIComponent(play.dataset.play)}`; return; }
 
+    const editDate = e.target.closest('[data-edit-date]');
+    if (editDate) { openEditDateModal(editDate.dataset.editDate); return; }
+
     const toggle = e.target.closest('.toggle');
     if (toggle) {
       const id = toggle.dataset.id;
@@ -356,6 +384,83 @@
       } catch (err) { alert('Delete failed: ' + err.message); }
     }
   });
+
+  /* ── Edit Date Modal ── */
+  let editingVideoId = null;
+  let _editDateModalLastFocus = null;
+
+  // Best-effort parse of the stored display date ("Aug 2, 2026") back into
+  // the YYYY-MM-DD the <input type="date"> needs. Falls back to blank.
+  function toDateInputValue(display) {
+    if (!display) return '';
+    const d = new Date(display);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  // Inverse of toDateInputValue — "YYYY-MM-DD" -> "Aug 2, 2026", parsed from
+  // the raw components so it can't drift a day across timezones.
+  function fromDateInputValue(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+    if (!m) return '';
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function _editDateModalFocusable() {
+    return Array.from(document.getElementById('editDateModal').querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+    ));
+  }
+  function _editDateModalKeyHandler(e) {
+    if (!document.getElementById('editDateModal').classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeEditDateModal(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = _editDateModalFocusable();
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  function openEditDateModal(id) {
+    const video = VIDEOS.find(v => v.id === id);
+    if (!video) return;
+    editingVideoId = id;
+    _editDateModalLastFocus = document.activeElement;
+    document.getElementById('editDateInput').value = toDateInputValue(video.date);
+    document.getElementById('editDateModal').classList.add('open');
+    document.addEventListener('keydown', _editDateModalKeyHandler);
+    setTimeout(() => document.getElementById('editDateInput').focus(), 100);
+  }
+
+  function closeEditDateModal() {
+    document.getElementById('editDateModal').classList.remove('open');
+    document.removeEventListener('keydown', _editDateModalKeyHandler);
+    editingVideoId = null;
+    if (_editDateModalLastFocus) { _editDateModalLastFocus.focus(); _editDateModalLastFocus = null; }
+  }
+
+  async function saveEditDate() {
+    if (!editingVideoId) return;
+    const inputValue = document.getElementById('editDateInput').value;
+    const display = fromDateInputValue(inputValue);
+    if (!display) { alert('Pick a valid date.'); return; }
+    const id = editingVideoId;
+    try {
+      await LoveFlix.api(`/api/videos/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ date: display })
+      });
+      const video = VIDEOS.find(v => v.id === id);
+      if (video) video.date = display;
+      closeEditDateModal();
+      render();
+    } catch (err) { alert('Could not save date: ' + err.message); }
+  }
 </script>
 <script>
   function paintSidebar(s) {
