@@ -394,6 +394,13 @@ export async function onRequest(context) {
     if (favMatch && method === 'POST')   return addFavorite(env, favMatch[1], user);
     if (favMatch && method === 'DELETE') return removeFavorite(env, favMatch[1], user);
 
+    // ── Date Ideas ───────────────────────────────────────────────────────
+    if (method === 'GET'  && path === '/api/date-ideas') return listDateIdeas(env, user);
+    if (method === 'POST' && path === '/api/date-ideas') return createDateIdea(env, request, user);
+    const dateIdeaMatch = path.match(/^\/api\/date-ideas\/([^/]+)$/);
+    if (dateIdeaMatch && method === 'PATCH')  return updateDateIdea(env, dateIdeaMatch[1], request, user);
+    if (dateIdeaMatch && method === 'DELETE') return deleteDateIdea(env, dateIdeaMatch[1], user);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -2644,4 +2651,88 @@ async function patchCoupleSettings(env, request, user) {
     ok: true,
     is_locked: updates.is_locked !== undefined ? !!updates.is_locked : isLocked,
   });
+}
+
+// ── Date Ideas ──────────────────────────────────────────────────────────────
+
+async function listDateIdeas(env, user) {
+  const coupleId = user.id;
+  const { results } = await env.DB.prepare(
+    `SELECT id, couple_id, title, notes, planned_date, category,
+            completed, completed_by, completed_at, created_by, created_at, updated_at
+       FROM date_ideas
+      WHERE couple_id = ?
+      ORDER BY completed ASC, created_at DESC`
+  ).bind(coupleId).all();
+  return json({ ideas: results });
+}
+
+async function createDateIdea(env, request, user) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+  const title = sanitizeUserText(body.title, 200);
+  if (!title) return json({ error: 'title_required' }, 400);
+  const notes = sanitizeUserText(body.notes || '', 1000);
+  const plannedDate = body.planned_date || null;
+  const category = sanitizeUserText(body.category || '', 50);
+  const id = crypto.randomUUID();
+  const coupleId = user.id;
+  const now = Math.floor(Date.now() / 1000);
+
+  await env.DB.prepare(
+    `INSERT INTO date_ideas (id, couple_id, title, notes, planned_date, category, completed, created_by, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`
+  ).bind(id, coupleId, title, notes, plannedDate, category, user.id, now, now).run();
+
+  return json({
+    ok: true,
+    idea: { id, couple_id: coupleId, title, notes, planned_date: plannedDate, category, completed: 0, completed_by: null, completed_at: null, created_by: user.id, created_at: now, updated_at: now }
+  }, 201);
+}
+
+async function updateDateIdea(env, id, request, user) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+
+  const existing = await env.DB.prepare(`SELECT * FROM date_ideas WHERE id = ?`).bind(id).first();
+  if (!existing) return json({ error: 'not_found' }, 404);
+  if (existing.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+
+  const now = Math.floor(Date.now() / 1000);
+  const updates = {};
+
+  if (body.title !== undefined) {
+    const t = sanitizeUserText(body.title, 200);
+    if (!t) return json({ error: 'title_required' }, 400);
+    updates.title = t;
+  }
+  if (body.notes !== undefined) updates.notes = sanitizeUserText(body.notes, 1000);
+  if (body.planned_date !== undefined) updates.planned_date = body.planned_date || null;
+  if (body.category !== undefined) updates.category = sanitizeUserText(body.category || '', 50);
+  if (body.completed !== undefined) {
+    updates.completed = body.completed ? 1 : 0;
+    updates.completed_by = body.completed ? user.id : null;
+    updates.completed_at = body.completed ? now : null;
+  }
+  updates.updated_at = now;
+
+  const keys = Object.keys(updates);
+  if (!keys.length) return json({ ok: true, idea: existing });
+
+  const setClauses = keys.map(k => `${k} = ?`).join(', ');
+  const values = keys.map(k => updates[k]);
+  await env.DB.prepare(`UPDATE date_ideas SET ${setClauses} WHERE id = ?`)
+    .bind(...values, id).run();
+
+  const updated = { ...existing, ...updates };
+  return json({ ok: true, idea: updated });
+}
+
+async function deleteDateIdea(env, id, user) {
+  const existing = await env.DB.prepare(`SELECT * FROM date_ideas WHERE id = ?`).bind(id).first();
+  if (!existing) return json({ error: 'not_found' }, 404);
+  if (existing.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+
+  await env.DB.prepare(`DELETE FROM date_ideas WHERE id = ?`).bind(id).run();
+  return json({ ok: true });
 }
