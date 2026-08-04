@@ -110,6 +110,24 @@ CREATE TABLE IF NOT EXISTS couple_settings (
   updated_at            INTEGER DEFAULT (strftime('%s','now'))
 );
 
+-- Shared date ideas for couples — both partners can add, edit, delete, and complete.
+CREATE TABLE IF NOT EXISTS date_ideas (
+  id            TEXT PRIMARY KEY,
+  couple_id     TEXT NOT NULL,
+  title         TEXT NOT NULL,
+  notes         TEXT DEFAULT '',
+  planned_date  TEXT,
+  category      TEXT DEFAULT '',
+  completed     INTEGER DEFAULT 0,
+  completed_by  TEXT,
+  completed_at  INTEGER,
+  created_by    TEXT NOT NULL,
+  created_at    INTEGER DEFAULT (strftime('%s','now')),
+  updated_at    INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_date_ideas_couple
+  ON date_ideas (couple_id, completed, created_at DESC);
+
 -- Default tenant so the app works out of the box.
 INSERT OR IGNORE INTO tenants (id, subdomain, couple_name, accent_color)
 VALUES ('default', 'app', 'LoveFlix', '#e50914');

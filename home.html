@@ -615,10 +615,10 @@
     padding: 28px 48px 8px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: 200px 170px 110px;
+    grid-template-rows: 200px 170px 110px auto;
     gap: 13px;
   }
-  @media (max-width: 1100px) { .bento { grid-template-rows: 180px 160px 110px; padding: 24px 24px 4px; } }
+  @media (max-width: 1100px) { .bento { grid-template-rows: 180px 160px 110px auto; padding: 24px 24px 4px; } }
   @media (max-width: 800px) {
     .bento {
       grid-template-columns: 1fr 1fr;
@@ -788,6 +788,201 @@
   .bt-link-lola .lola-grid-ic { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 0 6px rgba(229,9,20,0.5)); }
   .bt-link-lola .lola-grid-ic img { width: 100%; height: 100%; object-fit: contain; }
   .bt-link-lola:hover { background: rgba(229,9,20,.12); }
+
+  /* ── date ideas tile ── */
+  .bt-dates {
+    grid-column: 1 / span 4; grid-row: 4;
+    min-height: 200px; cursor: pointer;
+    background: linear-gradient(135deg, rgba(255,105,180,.08) 0%, rgba(229,9,20,.06) 50%, rgba(138,43,226,.04) 100%) !important;
+    border-color: rgba(255,105,180,.18) !important;
+  }
+  .bt-dates-inner { padding: 20px 24px; display: flex; flex-direction: column; height: 100%; gap: 14px; }
+  .bt-dates-head { display: flex; align-items: center; gap: 12px; }
+  .bt-dates-icon {
+    font-size: 26px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(255,105,180,.25), rgba(138,43,226,.2));
+    border-radius: 12px; flex-shrink: 0;
+  }
+  .bt-dates-title { font-size: 18px; font-weight: 700; }
+  .bt-dates-count { font-size: 13px; color: var(--text-dim); margin-left: auto; }
+  .bt-dates-preview { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; align-items: flex-start; }
+  .bt-dates-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+    font-size: 12.5px; font-weight: 500; color: var(--text-light);
+    white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bt-dates-pill.completed { text-decoration: line-through; opacity: .5; }
+  .bt-dates-pill .pill-check { font-size: 11px; }
+  .bt-dates-empty { color: var(--text-dim); font-size: 13px; font-style: italic; }
+  .bt-dates-open {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; color: var(--brand-accent, var(--red));
+    margin-top: auto; padding: 6px 0;
+  }
+
+  @media (max-width: 800px) {
+    .bento .bt-dates { grid-column: span 2; grid-row: auto; min-height: 180px; }
+  }
+
+  /* ── date ideas modal ── */
+  .dates-modal-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,.75); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    animation: dmFadeIn .2s ease;
+  }
+  @keyframes dmFadeIn { from{opacity:0} to{opacity:1} }
+  .dates-modal {
+    width: 90vw; max-width: 680px; max-height: 85vh;
+    background: #1a1a1f; border-radius: 20px; border: 1px solid rgba(255,255,255,.1);
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+    animation: dmSlideUp .25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes dmSlideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .dates-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 24px 16px; border-bottom: 1px solid rgba(255,255,255,.08);
+    flex-shrink: 0;
+  }
+  .dates-modal-header h2 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .dates-modal-close {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,.08); color: #fff; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .dates-modal-close:hover { background: rgba(255,255,255,.16); }
+
+  /* filter tabs */
+  .dates-filters {
+    display: flex; gap: 4px; padding: 12px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
+  }
+  .dates-filter-btn {
+    padding: 6px 16px; border-radius: 20px; border: none;
+    background: rgba(255,255,255,.05); color: var(--text-dim);
+    font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all .15s;
+  }
+  .dates-filter-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .dates-filter-btn.active { background: var(--brand-accent, #e50914); color: #fff; }
+  .dates-filter-count { font-size: 11px; margin-left: 4px; opacity: .7; }
+
+  /* add form */
+  .dates-add-bar {
+    padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,.06); flex-shrink: 0;
+  }
+  .dates-add-trigger {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 10px 16px; border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,.15); background: rgba(255,255,255,.03);
+    color: var(--text-dim); font-size: 14px; cursor: pointer; font-family: inherit;
+    transition: all .15s;
+  }
+  .dates-add-trigger:hover { border-color: rgba(255,255,255,.3); color: #fff; }
+  .dates-add-form {
+    display: none; flex-direction: column; gap: 10px; margin-top: 10px;
+    background: rgba(255,255,255,.04); border-radius: 12px; padding: 16px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .dates-add-form.open { display: flex; }
+  .dates-add-form input, .dates-add-form textarea {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
+    color: #fff; font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color .15s;
+  }
+  .dates-add-form input:focus, .dates-add-form textarea:focus { border-color: var(--brand-accent, #e50914); }
+  .dates-add-form textarea { resize: vertical; min-height: 60px; }
+  .dates-add-form input::placeholder, .dates-add-form textarea::placeholder { color: rgba(255,255,255,.3); }
+  .dates-add-row { display: flex; gap: 10px; }
+  .dates-add-row input { flex: 1; }
+  .dates-add-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .dates-btn {
+    padding: 8px 20px; border-radius: 10px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all .15s;
+  }
+  .dates-btn-primary { background: var(--brand-accent, #e50914); color: #fff; }
+  .dates-btn-primary:hover { filter: brightness(1.15); }
+  .dates-btn-ghost { background: rgba(255,255,255,.08); color: #fff; }
+  .dates-btn-ghost:hover { background: rgba(255,255,255,.14); }
+  .dates-btn-danger { background: rgba(255,59,48,.2); color: #ff3b30; }
+  .dates-btn-danger:hover { background: rgba(255,59,48,.3); }
+  .dates-btn-sm { padding: 5px 12px; font-size: 11.5px; border-radius: 8px; }
+
+  /* scroll list */
+  .dates-list-wrap {
+    flex: 1; overflow-y: auto; padding: 12px 24px 24px;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent;
+  }
+  .dates-list-wrap::-webkit-scrollbar { width: 5px; }
+  .dates-list-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 10px; }
+
+  /* date card */
+  .date-card {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 14px;
+    background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+    margin-bottom: 8px; transition: all .2s;
+    position: relative;
+  }
+  .date-card:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); }
+  .date-card.completed { opacity: .6; }
+  .date-card.completed .date-card-title { text-decoration: line-through; }
+  .date-card-check {
+    width: 28px; height: 28px; min-width: 28px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.25); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; margin-top: 2px; transition: all .2s;
+    flex-shrink: 0;
+  }
+  .date-card-check:hover { border-color: var(--brand-accent, #e50914); background: rgba(229,9,20,.15); }
+  .date-card-check.checked { background: #4ade80; border-color: #4ade80; }
+  .date-card-check.checked::after { content: '✓'; color: #000; font-size: 14px; font-weight: 700; }
+  .date-card-body { flex: 1; min-width: 0; }
+  .date-card-title { font-size: 15px; font-weight: 600; line-height: 1.3; word-break: break-word; }
+  .date-card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .date-card-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 6px;
+    background: rgba(255,105,180,.15); color: #ff85a1;
+    font-weight: 500;
+  }
+  .date-card-date { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+  .date-card-notes { font-size: 12.5px; color: var(--text-light); margin-top: 6px; line-height: 1.4; }
+  .date-card-actions { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity .15s; }
+  .date-card:hover .date-card-actions { opacity: 1; }
+  .date-card-action {
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    background: rgba(255,255,255,.06); color: var(--text-dim);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: all .15s;
+  }
+  .date-card-action:hover { background: rgba(255,255,255,.14); color: #fff; }
+  .date-card-action.delete:hover { background: rgba(255,59,48,.2); color: #ff3b30; }
+  .date-card-undo {
+    font-size: 11px; color: var(--brand-accent, #e50914); cursor: pointer;
+    font-weight: 600; background: none; border: none; padding: 0; font-family: inherit;
+    margin-left: 8px;
+  }
+  .date-card-undo:hover { text-decoration: underline; }
+
+  /* empty state */
+  .dates-empty-state {
+    text-align: center; padding: 48px 24px; color: var(--text-dim);
+  }
+  .dates-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .6; }
+  .dates-empty-msg { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+  .dates-empty-sub { font-size: 13px; }
+
+  /* section divider */
+  .dates-section-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text-dim); font-weight: 600; padding: 8px 0 6px; margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
@@ -1377,6 +1572,7 @@
     const bento = buildBentoSection(videos, settings);
     rowsWrap.appendChild(bento);
     loadBentoLiveData(bento); // fills live data async without blocking
+    loadBentoDateIdeas(bento); // fills date ideas preview + wires click
 
     // No videos message (inside bento context)
     if (!videos.length) {
@@ -1501,6 +1697,20 @@
           <a href="/our-story.html"     class="bt-link"><span>&#128214;</span><span>Our Story</span></a>
           <a href="/admin_upload.html"  class="bt-link"><span>&#43;</span><span>Upload</span></a>
           <a href="/admin.html"         class="bt-link"><span>&#9881;&#65039;</span><span>Studio</span></a>
+        </div>
+      </div>
+
+      <div class="bt bt-dates" id="bt-dates-tile" role="button" tabindex="0" aria-label="Open Our Date Ideas">
+        <div class="bt-dates-inner">
+          <div class="bt-dates-head">
+            <div class="bt-dates-icon">&#128150;</div>
+            <div class="bt-dates-title">Our Date Ideas</div>
+            <div class="bt-dates-count" id="bt-dates-count"></div>
+          </div>
+          <div class="bt-dates-preview" id="bt-dates-preview">
+            <span class="bt-dates-empty">Loading&hellip;</span>
+          </div>
+          <div class="bt-dates-open">Open &rarr;</div>
         </div>
       </div>
     `;
@@ -2194,6 +2404,413 @@
       cineStartLoop();
     }
   });
+
+  // ── Date Ideas ──────────────────────────────────────────────────────────
+
+  let dateIdeasCache = [];
+
+  async function loadBentoDateIdeas(bentoEl) {
+    if (!bentoEl) return;
+    const tile = bentoEl.querySelector('#bt-dates-tile');
+    if (!tile) return;
+
+    // Wire click to open modal
+    tile.addEventListener('click', () => openDateIdeasModal());
+    tile.addEventListener('keydown', e => { if (e.key === 'Enter') openDateIdeasModal(); });
+
+    try {
+      const data = await LoveFlix.api('/api/date-ideas');
+      dateIdeasCache = data.ideas || [];
+      renderBentoDatePreview(tile, dateIdeasCache);
+    } catch (_) {
+      const preview = tile.querySelector('#bt-dates-preview');
+      if (preview) preview.innerHTML = '<span class="bt-dates-empty">Couldn&rsquo;t load date ideas</span>';
+      const count = tile.querySelector('#bt-dates-count');
+      if (count) count.textContent = '';
+    }
+  }
+
+  function renderBentoDatePreview(tile, ideas) {
+    const preview = tile.querySelector('#bt-dates-preview');
+    const count = tile.querySelector('#bt-dates-count');
+    if (!preview || !count) return;
+
+    const todo = ideas.filter(i => !i.completed);
+    const done = ideas.filter(i => i.completed);
+
+    count.textContent = todo.length + ' to do · ' + done.length + ' done';
+
+    if (!ideas.length) {
+      preview.innerHTML = '<span class="bt-dates-empty">Your date list is empty. Add your first date idea and start making memories together.</span>';
+      return;
+    }
+
+    const showItems = todo.slice(0, 5);
+    if (!showItems.length) {
+      preview.innerHTML = '<span class="bt-dates-empty">All dates completed! 🎉</span>';
+      return;
+    }
+
+    preview.innerHTML = showItems.map(i => {
+      const checkIcon = i.completed ? '<span class="pill-check">✓</span>' : '';
+      const cls = i.completed ? ' bt-dates-pill completed' : ' bt-dates-pill';
+      return `<span class="${cls}">${checkIcon}${escHtml(i.title)}</span>`;
+    }).join('');
+    if (todo.length > 5) {
+      preview.innerHTML += `<span class="bt-dates-pill" style="opacity:.5">+${todo.length - 5} more</span>`;
+    }
+  }
+
+  function openDateIdeasModal() {
+    // Remove existing overlay if any
+    const existing = document.querySelector('.dates-modal-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'dates-modal-overlay';
+    overlay.innerHTML = `
+      <div class="dates-modal" role="dialog" aria-modal="true" aria-label="Our Date Ideas">
+        <div class="dates-modal-header">
+          <h2>&#128150; Our Date Ideas</h2>
+          <button class="dates-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="dates-filters" id="dates-filters">
+          <button class="dates-filter-btn active" data-filter="all">All<span class="dates-filter-count" id="filter-count-all"></span></button>
+          <button class="dates-filter-btn" data-filter="todo">To Do<span class="dates-filter-count" id="filter-count-todo"></span></button>
+          <button class="dates-filter-btn" data-filter="completed">Completed<span class="dates-filter-count" id="filter-count-completed"></span></button>
+        </div>
+        <div class="dates-add-bar">
+          <button class="dates-add-trigger" id="dates-add-trigger">
+            <span>+</span> Add a new date idea
+          </button>
+          <div class="dates-add-form" id="dates-add-form">
+            <input type="text" id="dates-add-title" placeholder="Date idea title *" maxlength="200">
+            <textarea id="dates-add-notes" placeholder="Notes (optional)" maxlength="1000"></textarea>
+            <div class="dates-add-row">
+              <input type="date" id="dates-add-date" placeholder="Planned date">
+              <input type="text" id="dates-add-category" placeholder="Category (e.g. Romantic, Adventure)" maxlength="50">
+            </div>
+            <div class="dates-add-actions">
+              <button class="dates-btn dates-btn-ghost" id="dates-add-cancel">Cancel</button>
+              <button class="dates-btn dates-btn-primary" id="dates-add-save">Add Idea</button>
+            </div>
+          </div>
+        </div>
+        <div class="dates-list-wrap" id="dates-list-wrap"></div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    overlay.querySelector('.dates-modal-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escHandler); }
+    });
+
+    // Add form toggle
+    const trigger = overlay.querySelector('#dates-add-trigger');
+    const form = overlay.querySelector('#dates-add-form');
+    trigger.addEventListener('click', () => form.classList.toggle('open'));
+    overlay.querySelector('#dates-add-cancel').addEventListener('click', () => {
+      form.classList.remove('open');
+      clearAddForm(overlay);
+    });
+
+    // Save handler
+    overlay.querySelector('#dates-add-save').addEventListener('click', () => saveNewIdea(overlay));
+
+    // Filter tabs
+    let currentFilter = 'all';
+    overlay.querySelectorAll('.dates-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.querySelectorAll('.dates-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderDateList(overlay, currentFilter);
+      });
+    });
+
+    renderDateList(overlay, currentFilter);
+  }
+
+  function clearAddForm(overlay) {
+    overlay.querySelector('#dates-add-title').value = '';
+    overlay.querySelector('#dates-add-notes').value = '';
+    overlay.querySelector('#dates-add-date').value = '';
+    overlay.querySelector('#dates-add-category').value = '';
+  }
+
+  async function saveNewIdea(overlay) {
+    const title = overlay.querySelector('#dates-add-title').value.trim();
+    if (!title) return;
+    const notes = overlay.querySelector('#dates-add-notes').value.trim();
+    const plannedDate = overlay.querySelector('#dates-add-date').value;
+    const category = overlay.querySelector('#dates-add-category').value.trim();
+
+    try {
+      const data = await LoveFlix.api('/api/date-ideas', {
+        method: 'POST',
+        body: JSON.stringify({ title, notes, planned_date: plannedDate || null, category }),
+      });
+      if (data.ok) {
+        dateIdeasCache.unshift(data.idea);
+        clearAddForm(overlay);
+        overlay.querySelector('#dates-add-form').classList.remove('open');
+        const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+        renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+        // Update bento preview
+        const tile = document.querySelector('#bt-dates-tile');
+        if (tile) renderBentoDatePreview(tile, dateIdeasCache);
+      }
+    } catch (e) {
+      console.error('Failed to save date idea', e);
+    }
+  }
+
+  function renderDateList(overlay, filter) {
+    const wrap = overlay.querySelector('#dates-list-wrap');
+    const todo = dateIdeasCache.filter(i => !i.completed);
+    const done = dateIdeasCache.filter(i => i.completed);
+
+    // Update filter counts
+    const allEl = overlay.querySelector('#filter-count-all');
+    const todoEl = overlay.querySelector('#filter-count-todo');
+    const doneEl = overlay.querySelector('#filter-count-completed');
+    if (allEl) allEl.textContent = dateIdeasCache.length;
+    if (todoEl) todoEl.textContent = todo.length;
+    if (doneEl) doneEl.textContent = done.length;
+
+    let items;
+    if (filter === 'todo') items = todo;
+    else if (filter === 'completed') items = done;
+    else items = dateIdeasCache;
+
+    if (!items.length) {
+      if (filter === 'todo') {
+        wrap.innerHTML = `<div class="dates-empty-state">
+          <div class="dates-empty-icon">&#128150;</div>
+          <div class="dates-empty-msg">Your date list is empty.</div>
+          <div class="dates-empty-sub">Add your first date idea and start making memories together.</div>
+        </div>`;
+      } else if (filter === 'completed') {
+        wrap.innerHTML = `<div class="dates-empty-state">
+          <div class="dates-empty-icon">&#10024;</div>
+          <div class="dates-empty-msg">Nothing completed yet.</div>
+          <div class="dates-empty-sub">Check off a date idea to see it here!</div>
+        </div>`;
+      } else {
+        wrap.innerHTML = `<div class="dates-empty-state">
+          <div class="dates-empty-icon">&#128150;</div>
+          <div class="dates-empty-msg">Your date list is empty.</div>
+          <div class="dates-empty-sub">Add your first date idea and start making memories together.</div>
+        </div>`;
+      }
+      return;
+    }
+
+    // Group completed at bottom when showing 'all'
+    let displayItems = items;
+    let showCompletedSection = false;
+    if (filter === 'all') {
+      const todos = items.filter(i => !i.completed);
+      const dones = items.filter(i => i.completed);
+      displayItems = todos;
+      showCompletedSection = dones.length > 0;
+    }
+
+    let html = '';
+    if (showCompletedSection && displayItems.length) {
+      html += '<div class="dates-section-label">To Do</div>';
+    }
+    html += displayItems.map(i => renderDateCard(i)).join('');
+
+    if (showCompletedSection) {
+      const dones = items.filter(i => i.completed);
+      html += '<div class="dates-section-label" style="margin-top:12px">Completed</div>';
+      html += dones.map(i => renderDateCard(i)).join('');
+    }
+
+    wrap.innerHTML = html;
+
+    // Wire up card interactions
+    wireDateCards(overlay);
+  }
+
+  function renderDateCard(idea) {
+    const completed = idea.completed ? ' completed' : '';
+    const checked = idea.completed ? ' checked' : '';
+    const title = escHtml(idea.title);
+    const notes = idea.notes ? `<div class="date-card-notes">${escHtml(idea.notes)}</div>` : '';
+    const category = idea.category ? `<span class="date-card-tag">${escHtml(idea.category)}</span>` : '';
+    const planDate = idea.planned_date
+      ? `<span class="date-card-date">&#128197; ${formatDate(idea.planned_date)}</span>`
+      : '';
+    const undoBtn = idea.completed
+      ? `<button class="date-card-undo" data-id="${idea.id}" data-action="undo">Undo</button>`
+      : '';
+
+    return `
+      <div class="date-card${completed}" data-id="${idea.id}">
+        <button class="date-card-check${checked}" data-id="${idea.id}" data-action="toggle" aria-label="${idea.completed ? 'Mark incomplete' : 'Mark complete'}"></button>
+        <div class="date-card-body">
+          <div class="date-card-title">${title}${undoBtn}</div>
+          <div class="date-card-meta">${category}${planDate}</div>
+          ${notes}
+        </div>
+        <div class="date-card-actions">
+          <button class="date-card-action" data-id="${idea.id}" data-action="edit" title="Edit">&#9998;</button>
+          <button class="date-card-action delete" data-id="${idea.id}" data-action="delete" title="Delete">&#128465;</button>
+        </div>
+      </div>`;
+  }
+
+  function wireDateCards(overlay) {
+    overlay.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const idea = dateIdeasCache.find(i => i.id === id);
+        if (!idea) return;
+        try {
+          const data = await LoveFlix.api(`/api/date-ideas/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ completed: !idea.completed }),
+          });
+          if (data.ok) {
+            Object.assign(idea, data.idea);
+            const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+            renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+            const tile = document.querySelector('#bt-dates-tile');
+            if (tile) renderBentoDatePreview(tile, dateIdeasCache);
+          }
+        } catch (e) { console.error('Toggle failed', e); }
+      });
+    });
+
+    overlay.querySelectorAll('[data-action="undo"]').forEach(btn => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const idea = dateIdeasCache.find(i => i.id === id);
+        if (!idea) return;
+        try {
+          const data = await LoveFlix.api(`/api/date-ideas/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ completed: false }),
+          });
+          if (data.ok) {
+            Object.assign(idea, data.idea);
+            const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+            renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+            const tile = document.querySelector('#bt-dates-tile');
+            if (tile) renderBentoDatePreview(tile, dateIdeasCache);
+          }
+        } catch (e) { console.error('Undo failed', e); }
+      });
+    });
+
+    overlay.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const idea = dateIdeasCache.find(i => i.id === id);
+        if (!idea) return;
+        showEditForm(overlay, idea);
+      });
+    });
+
+    overlay.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = '1';
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        if (!confirm('Delete this date idea?')) return;
+        try {
+          const data = await LoveFlix.api(`/api/date-ideas/${id}`, { method: 'DELETE' });
+          if (data.ok) {
+            dateIdeasCache = dateIdeasCache.filter(i => i.id !== id);
+            const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+            renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+            const tile = document.querySelector('#bt-dates-tile');
+            if (tile) renderBentoDatePreview(tile, dateIdeasCache);
+          }
+        } catch (e) { console.error('Delete failed', e); }
+      });
+    });
+  }
+
+  function showEditForm(overlay, idea) {
+    // Replace the specific card with an inline edit form
+    const card = overlay.querySelector(`.date-card[data-id="${idea.id}"]`);
+    if (!card) return;
+
+    card.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <input type="text" id="edit-title-${idea.id}" value="${escAttr(idea.title)}" maxlength="200"
+          style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:14px;font-family:inherit;outline:none">
+        <textarea id="edit-notes-${idea.id}" maxlength="1000"
+          style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;min-height:50px">${escHtml(idea.notes || '')}</textarea>
+        <div style="display:flex;gap:8px">
+          <input type="date" id="edit-date-${idea.id}" value="${idea.planned_date || ''}"
+            style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:inherit;outline:none">
+          <input type="text" id="edit-cat-${idea.id}" value="${escAttr(idea.category || '')}" placeholder="Category" maxlength="50"
+            style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div class="dates-add-actions">
+          <button class="dates-btn dates-btn-ghost dates-btn-sm cancel-edit" data-id="${idea.id}">Cancel</button>
+          <button class="dates-btn dates-btn-primary dates-btn-sm save-edit" data-id="${idea.id}">Save</button>
+        </div>
+      </div>`;
+
+    card.querySelector('.cancel-edit').addEventListener('click', () => {
+      const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+      renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+    });
+
+    card.querySelector('.save-edit').addEventListener('click', async () => {
+      const title = card.querySelector(`#edit-title-${idea.id}`).value.trim();
+      if (!title) return;
+      const notes = card.querySelector(`#edit-notes-${idea.id}`).value.trim();
+      const plannedDate = card.querySelector(`#edit-date-${idea.id}`).value;
+      const category = card.querySelector(`#edit-cat-${idea.id}`).value.trim();
+
+      try {
+        const data = await LoveFlix.api(`/api/date-ideas/${idea.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ title, notes, planned_date: plannedDate || null, category }),
+        });
+        if (data.ok) {
+          Object.assign(idea, data.idea);
+          const activeFilter = overlay.querySelector('.dates-filter-btn.active');
+          renderDateList(overlay, activeFilter ? activeFilter.dataset.filter : 'all');
+          const tile = document.querySelector('#bt-dates-tile');
+          if (tile) renderBentoDatePreview(tile, dateIdeasCache);
+        }
+      } catch (e) { console.error('Edit failed', e); }
+    });
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    try {
+      return new Date(d + 'T00:00:00').toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return d; }
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
   loadHome();
 </script>
