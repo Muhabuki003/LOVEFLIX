@@ -1,12 +1,15 @@
 {$DOMAIN} {
-    # LiveKit signaling is WebSocket-based; Caddy proxies WS upgrades
-    # automatically. "livekit-server" resolves on the docker-compose network.
-    reverse_proxy livekit-server:7880 {
-        header_up Host {host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+    reverse_proxy /rtc/* livekit-server:7880
+    reverse_proxy /rtc livekit-server:7880
+    reverse_proxy livekit-server:7880
+    reverse_proxy /token* 172.17.0.1:7890
+    log {
+        output stdout
     }
+}
 
+lazusai.com, www.lazusai.com {
+    reverse_proxy 172.20.0.1:2027
     log {
         output stdout
     }

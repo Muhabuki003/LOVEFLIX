@@ -403,6 +403,9 @@ export async function onRequest(context) {
     if (dateIdeaMatch && method === 'PATCH')  return updateDateIdea(env, dateIdeaMatch[1], request, user);
     if (dateIdeaMatch && method === 'DELETE') return deleteDateIdea(env, dateIdeaMatch[1], user);
 
+    // One-shot: migrate date_ideas table
+    if (method === 'GET' && path === '/api/migrate-dates') return migrateDateIdeasTable(env);
+
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
     const message = err && err.message ? err.message : String(err);
@@ -2737,4 +2740,39 @@ async function deleteDateIdea(env, id, user) {
 
   await env.DB.prepare(`DELETE FROM date_ideas WHERE id = ?`).bind(id).run();
   return json({ ok: true });
+}
+
+// ── One-shot migration helpers ──────────────────────────────────────────────
+
+async function migrateDateIdeasTable(env) {
+  const results = [];
+  const migrations = [
+    `CREATE TABLE IF NOT EXISTS date_ideas (
+      id            TEXT PRIMARY KEY,
+      couple_id     TEXT NOT NULL,
+      title         TEXT NOT NULL,
+      notes         TEXT DEFAULT '',
+      planned_date  TEXT,
+      category      TEXT DEFAULT '',
+      completed     INTEGER DEFAULT 0,
+      completed_by  TEXT,
+      completed_at  INTEGER,
+      created_by    TEXT NOT NULL,
+      created_at    INTEGER DEFAULT (strftime('%s','now')),
+      updated_at    INTEGER DEFAULT (strftime('%s','now'))
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_date_ideas_couple
+       ON date_ideas (couple_id, completed, created_at DESC)`,
+  ];
+
+  for (const sql of migrations) {
+    try {
+      await env.DB.prepare(sql).run();
+      results.push({ sql: sql.slice(0, 80) + '...', ok: true });
+    } catch (err) {
+      results.push({ sql: sql.slice(0, 80) + '...', ok: false, error: err.message });
+    }
+  }
+
+  return json({ migrations: results });
 }
