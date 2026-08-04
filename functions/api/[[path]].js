@@ -42,8 +42,6 @@ const PUBLIC_ROUTES = new Set([
   // meant to ship to MusicKit JS in the browser).
   'GET /api/music/spotify-config',
   'GET /api/music/apple-config',
-  // One-shot migration endpoints
-  'GET /api/migrate-dates',
   // AI chat is intentionally NOT in PUBLIC_ROUTES — it calls DeepSeek at cost.
   // Unauthenticated landing-page users are allowed through by the auth block
   // below (user will be null) but are subject to IP rate limiting.
@@ -402,9 +400,6 @@ export async function onRequest(context) {
     const dateIdeaMatch = path.match(/^\/api\/date-ideas\/([^/]+)$/);
     if (dateIdeaMatch && method === 'PATCH')  return updateDateIdea(env, dateIdeaMatch[1], request, user);
     if (dateIdeaMatch && method === 'DELETE') return deleteDateIdea(env, dateIdeaMatch[1], user);
-
-    // One-shot: migrate date_ideas table
-    if (method === 'GET' && path === '/api/migrate-dates') return migrateDateIdeasTable(env);
 
     return json({ error: 'not_found', path }, 404);
   } catch (err) {
