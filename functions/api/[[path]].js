@@ -42,6 +42,8 @@ const PUBLIC_ROUTES = new Set([
   // meant to ship to MusicKit JS in the browser).
   'GET /api/music/spotify-config',
   'GET /api/music/apple-config',
+  // One-shot migration endpoints
+  'GET /api/migrate-dates',
   // AI chat is intentionally NOT in PUBLIC_ROUTES — it calls DeepSeek at cost.
   // Unauthenticated landing-page users are allowed through by the auth block
   // below (user will be null) but are subject to IP rate limiting.
