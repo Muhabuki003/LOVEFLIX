@@ -1,7 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){location.replace('/waitlist.html')}}catch(e){location.replace('/waitlist.html')}})();</script><!-- LF_GATE_END -->
+<!-- LF_GATE_START --><script>(function(){try{var u=new URL(location.href);var k=u.searchParams.get('unlock');if(k){u.searchParams.delete('unlock');fetch('/api/unlock?code='+encodeURIComponent(k)).then(function(r){return r.json()}).then(function(d){if(d.ok){setTimeout(function(){location=u.pathname+(u.search?u.search:'')+u.hash},100)}else{location.replace('/waitlist.html')}}).catch(function(){location.replace('/waitlist.html')});return}var c=document.cookie.match(/(?:^|;\s*)lf_unlock=([^;]*)/);if(!c||c[1]!=='1'){ /* public landing — allow viewing, gate only the CTAs */ }}catch(e){}})();
+// CTA gate: Get Started / Sign In / Sign up only work after the secret password (lf_unlock cookie).
+// Without it, any auth CTA bounces back to the waitlist.
+(function(){
+  var isUnlocked = function(){ return /(?:^|;\s*)lf_unlock=1/.test(document.cookie); };
+  var AUTH_HREFS = ['onboarding.html','loveflix_login_screen.html'];
+  document.addEventListener('click', function(e){
+    if (isUnlocked()) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (AUTH_HREFS.indexOf(href) !== -1 || /(onboarding|loveflix_login_screen)\.html/.test(href)) {
+      e.preventDefault();
+      window.location.href = '/waitlist.html';
+    }
+  });
+})();</script><!-- LF_GATE_END -->
 
 <meta charset="UTF-8">
 <script src="/assets/posthog.js" defer></script>
