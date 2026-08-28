@@ -112,6 +112,9 @@ function validateInviteUrl(raw, reqOrigin) {
 }
 
 const ALLOWED_ORIGINS = new Set([
+  'https://loveflix.us',
+  'https://www.loveflix.us',
+  'https://loveflix-eac.pages.dev',
   'https://loveflix.so',
   'https://www.loveflix.so',
   'http://localhost:3000',
@@ -119,7 +122,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 function corsHeaders(requestOrigin) {
-  const origin = ALLOWED_ORIGINS.has(requestOrigin) ? requestOrigin : 'https://loveflix.so';
+  const origin = ALLOWED_ORIGINS.has(requestOrigin) ? requestOrigin : 'https://loveflix.us';
   return {
     'access-control-allow-origin': origin,
     'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
@@ -283,7 +286,7 @@ export async function onRequest(context) {
     const videoIdMatch = path.match(/^\/api\/videos\/([^/]+)$/);
     if (videoIdMatch && method === 'DELETE') return deleteVideo(env, videoIdMatch[1], user);
     if (videoIdMatch && method === 'PATCH') return updateVideo(env, videoIdMatch[1], request, user);
-    if (videoIdMatch && method === 'GET') return getVideo(env, videoIdMatch[1]);
+    if (videoIdMatch && method === 'GET') return getVideo(env, videoIdMatch[1], user);
 
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
     if (method === 'PUT' && path === '/api/upload-object') return uploadObject(env, request, url, user);
@@ -464,7 +467,7 @@ async function listVideos(env, url, user, request) {
   return json({ videos: results || [] });
 }
 
-async function getVideo(env, id) {
+async function getVideo(env, id, user) {
   const row = await env.DB.prepare(
     `SELECT id, tenant_id, title, description, date, category,
             thumbnail_url, video_url, duration_seconds, is_published,
@@ -472,6 +475,11 @@ async function getVideo(env, id) {
        FROM videos WHERE id = ?`
   ).bind(id).first();
   if (!row) return json({ error: 'not_found' }, 404);
+  // Security: a single video is couple-private. Require auth and verify the
+  // caller belongs to the video's tenant before returning its (public-R2) URL.
+  if (!user) return json({ error: 'unauthorized' }, 401);
+  const allowed = await verifyTenantAccess(env, user, row.tenant_id);
+  if (!allowed) return json({ error: 'forbidden' }, 403);
   return json({ video: row });
 }
 
@@ -1418,10 +1426,8 @@ async function livekitToken(env, request, user) {
   let body;
   try { body = (await request.clone().json().catch(() => null)); } catch { body = null; }
   if (!body) return json({ error: 'invalid_json' }, 400);
-  
-  // Allow unauthenticated access if babyscreenshare access_token is provided
-  const isBaby = body.access_token === 'babyscreenshare';
-  if (!user && !isBaby) return json({ error: 'unauthorized' }, 401);
+
+  if (!user) return json({ error: 'unauthorized' }, 401);
 
   const { roomName, identity } = body || {};
   if (!roomName || !identity || typeof roomName !== 'string' || typeof identity !== 'string') {
@@ -2742,39 +2748,4 @@ async function deleteDateIdea(env, id, user) {
 
   await env.DB.prepare(`DELETE FROM date_ideas WHERE id = ?`).bind(id).run();
   return json({ ok: true });
-}
-
-// ── One-shot migration helpers ──────────────────────────────────────────────
-
-async function migrateDateIdeasTable(env) {
-  const results = [];
-  const migrations = [
-    `CREATE TABLE IF NOT EXISTS date_ideas (
-      id            TEXT PRIMARY KEY,
-      couple_id     TEXT NOT NULL,
-      title         TEXT NOT NULL,
-      notes         TEXT DEFAULT '',
-      planned_date  TEXT,
-      category      TEXT DEFAULT '',
-      completed     INTEGER DEFAULT 0,
-      completed_by  TEXT,
-      completed_at  INTEGER,
-      created_by    TEXT NOT NULL,
-      created_at    INTEGER DEFAULT (strftime('%s','now')),
-      updated_at    INTEGER DEFAULT (strftime('%s','now'))
-    )`,
-    `CREATE INDEX IF NOT EXISTS idx_date_ideas_couple
-       ON date_ideas (couple_id, completed, created_at DESC)`,
-  ];
-
-  for (const sql of migrations) {
-    try {
-      await env.DB.prepare(sql).run();
-      results.push({ sql: sql.slice(0, 80) + '...', ok: true });
-    } catch (err) {
-      results.push({ sql: sql.slice(0, 80) + '...', ok: false, error: err.message });
-    }
-  }
-
-  return json({ migrations: results });
 }
