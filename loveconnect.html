@@ -1999,7 +1999,7 @@ function initGoogleMaps() {
 
   function updateCoupleCard() {
     const title = document.querySelector('.couple-title');
-    if (title) title.innerHTML = `${HIM.name} &amp; ${HER.name}`;
+    if (title) title.innerHTML = `${_escapeHtml(HIM.name)} &amp; ${_escapeHtml(HER.name)}`;
 
     const onlineText = document.getElementById('onlineText');
     const onlineDot  = document.getElementById('onlineDot');
@@ -2048,7 +2048,7 @@ function initGoogleMaps() {
       if (av) av.innerHTML = HIM.initial + himDot;
       const n = rows[1].querySelector('.n');
       if (n) {
-        n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+        n.innerHTML = `${_escapeHtml(HIM.name)} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
         n.classList.add('revolve-trigger');
         n.title = 'Click to orbit';
         n.onclick = () => startRevolve(HIM);
@@ -2069,7 +2069,7 @@ function initGoogleMaps() {
     if (callingAv) callingAv.textContent = HER.initial;
 
     const mTitle = document.querySelector('.m-couple-title');
-    if (mTitle) mTitle.innerHTML = `<span class="live">LIVE</span> ${HIM.name} &amp; ${HER.name}`;
+    if (mTitle) mTitle.innerHTML = `<span class="live">LIVE</span> ${_escapeHtml(HIM.name)} &amp; ${_escapeHtml(HER.name)}`;
     const mCards = document.querySelectorAll('.m-couple-rows .m-couple-card');
     if (mCards[0]) {
       const av = mCards[0].querySelector('.av');
@@ -2094,7 +2094,7 @@ function initGoogleMaps() {
       if (av) av.innerHTML = HIM.initial + himDot;
       const n = mCards[1].querySelector('.n');
       if (n) {
-        n.innerHTML = `${HIM.name} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
+        n.innerHTML = `${_escapeHtml(HIM.name)} <span style="color:var(--text-dim);font-weight:400">(you)</span>`;
         n.classList.add('revolve-trigger');
         n.title = 'Tap to orbit';
         n.onclick = () => startRevolve(HIM);

@@ -45,7 +45,10 @@ DEFAULT_TENANT_ID = "a9c77b1cff6d48f28930ed068bbba95e"
 # POSTHOG_PROJECT_API_KEY` if you'd rather keep it out of the repo). The
 # client SDK loads this via GET /api/posthog-config; when unset, analytics
 # silently no-op so staging/local dev stays clean.
-POSTHOG_PROJECT_API_KEY = "phx_CR9n4bWYPQKJPPyCiAL4eDUCEGix399HQgaesiCfKocQswqS"
+# ⚠️ SECURITY: do NOT commit a PostHog personal (`phx_`) key. Use a public
+# project (`phc_`) key instead, and set it via `wrangler pages secret put
+# POSTHOG_PROJECT_API_KEY` (or a phc_ value below) so it stays out of the repo.
+POSTHOG_PROJECT_API_KEY = ""
 POSTHOG_HOST = "https://us.i.posthog.com"
 
 # ---- Stripe (public keys — safe to commit) ----
