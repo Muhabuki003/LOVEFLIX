@@ -307,6 +307,12 @@ export async function onRequest(context) {
     if (method === 'GET'   && path === '/api/couple/settings') return getCoupleSettings(env, user);
     if (method === 'PATCH' && path === '/api/couple/settings') return patchCoupleSettings(env, request, user);
 
+    // ── Couple photo album (home page "Our Countdown | Our Photos") ──────
+    // Shared: keyed by the couple tenant id (user.id), same as date_ideas.
+    if (method === 'GET'    && path === '/api/couple/photos') return listCouplePhotos(env, user);
+    if (method === 'POST'   && path === '/api/couple/photos') return createCouplePhoto(env, request, user);
+    if (method === 'DELETE' && path === '/api/couple/photos') return deleteCouplePhoto(env, url, user);
+
     if (method === 'POST' && path === '/api/create-checkout-session') return createCheckoutSession(env, request, url);
     if (method === 'POST' && path === '/api/create-subscription-intent') return createSubscriptionIntent(env, request);
     if (method === 'POST' && path === '/api/activate-subscription') return activateSubscription(env, request);
@@ -2747,5 +2753,64 @@ async function deleteDateIdea(env, id, user) {
   if (existing.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
 
   await env.DB.prepare(`DELETE FROM date_ideas WHERE id = ?`).bind(id).run();
+  return json({ ok: true });
+}
+
+// ── Couple photos (shared album, keyed by the couple tenant id) ─────────────
+
+async function listCouplePhotos(env, user) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, url, caption, uploaded_by, created_at
+       FROM couple_photos
+      WHERE couple_id = ?
+      ORDER BY created_at ASC`
+  ).bind(user.id).all();
+  return json({ photos: results || [] });
+}
+
+async function createCouplePhoto(env, request, user) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+
+  const photoUrl = typeof body.url === 'string' ? body.url.trim() : '';
+  const base = env.R2_PUBLIC_URL ? String(env.R2_PUBLIC_URL).replace(/\/$/, '') : '';
+  const urlOk = base
+    ? photoUrl.startsWith(`${base}/`)
+    : /^https:\/\//i.test(photoUrl);
+  if (!photoUrl || !urlOk) return json({ error: 'invalid_url' }, 400);
+
+  const caption = sanitizeUserText(body.caption || '', 200);
+  const id = crypto.randomUUID();
+  const now = Math.floor(Date.now() / 1000);
+
+  await env.DB.prepare(
+    `INSERT INTO couple_photos (id, couple_id, url, caption, uploaded_by, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(id, user.id, photoUrl, caption, user.id, now).run();
+
+  return json({
+    ok: true,
+    photo: { id, url: photoUrl, caption, uploaded_by: user.id, created_at: now },
+  }, 201);
+}
+
+async function deleteCouplePhoto(env, url, user) {
+  const id = url.searchParams.get('id');
+  if (!id) return json({ error: 'id_required' }, 400);
+
+  const row = await env.DB.prepare(
+    'SELECT id, couple_id, url FROM couple_photos WHERE id = ?'
+  ).bind(id).first();
+  if (!row) return json({ error: 'not_found' }, 404);
+  if (row.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+
+  await env.DB.prepare('DELETE FROM couple_photos WHERE id = ?').bind(id).run();
+
+  // Best-effort R2 cleanup — the row is already gone, so never fail on this.
+  const base = env.R2_PUBLIC_URL ? String(env.R2_PUBLIC_URL).replace(/\/$/, '') : '';
+  if (env.VIDEOS && base && row.url && row.url.startsWith(`${base}/`)) {
+    try { await env.VIDEOS.delete(row.url.slice(base.length + 1)); } catch (_) {}
+  }
+
   return json({ ok: true });
 }
