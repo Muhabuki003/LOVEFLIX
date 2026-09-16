@@ -3058,10 +3058,111 @@
 
   const lfAnniv = {
     root: null, refs: null, photos: [], anniversary: '', index: 0,
+    // `paused` is legacy hover/drag state. It is still reset on mount+teardown so a
+    // rebuild can never leave the slideshow stuck off, but nothing sets it true any
+    // more and it does NOT gate rotation (see lf-auto-rotate below).
     paused: false, touchHold: null, uploading: false,
-    timer: null, slideTimer: null, photoPoll: null, setPoll: null,
+    timer: null, photoPoll: null, setPoll: null, autoT: null,
+    order: [], pinId: '', pinPos: -1,
     onVisible: null, swipe: null,
   };
+
+  // ── lf-auto-rotate ────────────────────────────────────────────────────
+  // The slideshow rotates on its own forever, unattended. This is a
+  // self-rescheduling setTimeout chain (lfScheduleAuto → lfAutoTick → …), NOT a
+  // fixed setInterval, so every slide change — automatic or manual — restarts a
+  // full window. That means a photo the user picked stays on screen for a whole
+  // interval instead of a fraction of one. Hovering / resting the pointer on the
+  // frame (or tapping on touch) NEVER pauses rotation.
+  const LF_AUTO_MS = 5000;
+
+  function lfScheduleAuto() {
+    if (lfAnniv.autoT) { clearTimeout(lfAnniv.autoT); lfAnniv.autoT = null; }
+    lfAnniv.autoT = setTimeout(lfAutoTick, LF_AUTO_MS);
+  }
+
+  function lfAutoTick() {
+    lfAnniv.autoT = null;
+    try {
+      if (!lfAnniv.root) return;                        // unmounted — stop quietly
+      // Hidden tab or upload in flight: skip this tick but keep the chain alive,
+      // so rotation resumes by itself the moment the tab is visible again / the
+      // upload finishes.
+      if (document.hidden || lfAnniv.uploading) { lfScheduleAuto(); return; }
+      if (lfVisiblePhotos().length > 1) lfStep(1);   // next photo in the shuffled order
+      lfScheduleAuto();
+    } catch (e) {
+      // A rotation error must never break the section.
+      lfScheduleAuto();
+    }
+  }
+
+  // ── lf-random-order ───────────────────────────────────────────────────
+  // Photos are STORED oldest-first (GET /api/couple/photos stays ORDER BY
+  // created_at ASC) and neither the API nor the stored data changes — the random
+  // order is a client-side display concern only. The slideshow shuffles on every
+  // render, re-shuffles on every full pass, and keeps the on-screen photo on screen
+  // (matched by id) across sync refetches.
+  function lfShuffle(arr) {
+    const a = Array.prototype.slice.call(arr || []);       // copy — never mutates the caller
+    try {
+      // Fisher–Yates
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+    } catch (e) { /* a shuffle failure must never break the section */ }
+    return a;
+  }
+
+  // A display order for n photos — always a permutation of 0…n-1, so no photo is
+  // ever dropped or shown twice in a pass.
+  //   opts.pin / opts.pinPos  keep one photo in place (the one on screen when a
+  //                           sync refetch re-renders) and shuffle the rest around it
+  //   opts.avoidFirst         keeps that photo out of position 0, so a new pass never
+  //                           opens with the photo that just left the screen
+  function lfBuildOrder(n, opts) {
+    opts = opts || {};
+    const base = [];
+    for (let i = 0; i < n; i++) base.push(i);
+    let ord = lfShuffle(base);
+    try {
+      if (n > 1) {
+        if (opts.avoidFirst != null && ord[0] === opts.avoidFirst) {
+          const last = ord.length - 1;
+          ord[0] = ord[last];
+          ord[last] = opts.avoidFirst;
+        }
+        if (opts.pin != null) {
+          let want = Math.trunc(opts.pinPos == null ? 0 : opts.pinPos);
+          if (!isFinite(want) || want < 0) want = 0;
+          if (want > n - 1) want = n - 1;
+          const k = ord.indexOf(opts.pin);
+          if (k >= 0 && k !== want) { const t = ord[want]; ord[want] = ord[k]; ord[k] = t; }
+        }
+      }
+    } catch (e) { /* fall back to the plain shuffled order */ }
+    if (ord.length !== n) ord = base;                      // paranoia: never a short/duplicated list
+    return ord;
+  }
+
+  // Step one photo along the display order, wrapping forever. Used by prev/next,
+  // swipe, ArrowLeft/Right and the auto tick, so every index stays valid for the
+  // dots too.
+  function lfStep(delta) {
+    const n = lfVisiblePhotos().length;
+    if (n < 1) return;
+    if (lfAnniv.order.length !== n) lfAnniv.order = lfBuildOrder(n, { pin: lfAnniv.index, pinPos: -1 });
+    const pos = lfAnniv.order.indexOf(lfAnniv.index);
+    const cur = pos < 0 ? 0 : pos;
+    const nextPos = ((cur + delta) % n + n) % n;
+    if (delta > 0 && cur === n - 1) {
+      // Full pass completed → fresh shuffle for the next pass (never opening on the
+      // photo that was just on screen).
+      lfAnniv.order = lfBuildOrder(n, { avoidFirst: lfAnniv.index });
+    }
+    lfShowSlide(lfAnniv.order[nextPos]);
+  }
 
   // JSON helper — uses the shared LoveFlix client (adds auth + x-tenant-id),
   // with a plain fetch fallback so the section still works standalone.
@@ -3125,7 +3226,7 @@
               '<input type="file" id="lf-ps-file" class="lf-file" accept="image/*" multiple hidden>' +
             '</div>' +
           '</div>' +
-          '<div class="lf-stage" id="lf-ps-stage" tabindex="0" role="group" aria-label="Our photos slideshow">' +
+          '<div class="lf-stage" id="lf-ps-stage" data-auto="1" data-shuffle="1" tabindex="0" role="group" aria-label="Our photos slideshow">' +
             '<div id="lf-ps-slides"></div>' +
             '<button type="button" class="lf-nav prev" id="lf-ps-prev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>' +
             '<button type="button" class="lf-nav next" id="lf-ps-next" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>' +
@@ -3276,27 +3377,52 @@
       if (count) count.textContent = '';
       if (del) del.hidden = true;
       lfAnniv.index = 0;
+      lfAnniv.order = [];
+      lfAnniv.pinId = '';
+      lfAnniv.pinPos = -1;
+      lfScheduleAuto();          // keep the rotation chain armed (zero photos = no-op tick)
       return;
     }
 
     if (empty) empty.hidden = true;
     if (del) del.hidden = false;
-    if (lfAnniv.index < 0 || lfAnniv.index >= photos.length) lfAnniv.index = 0;
+    const n = photos.length;
+    if (lfAnniv.index < 0 || lfAnniv.index >= n) lfAnniv.index = 0;
+
+    // lf-random-order: shuffle the display order on every render. If the photo that
+    // was on screen is still in the set (a sync refetch — matched by id, never by
+    // index) it STAYS on screen with the rest shuffled around it; otherwise start on
+    // a random photo instead of always the oldest upload.
+    const pinIdx = lfAnniv.pinId ? photos.map(function (p) { return p.id; }).indexOf(lfAnniv.pinId) : -1;
+    if (pinIdx >= 0) {
+      lfAnniv.index = pinIdx;
+      lfAnniv.order = lfBuildOrder(n, { pin: pinIdx, pinPos: lfAnniv.pinPos });
+    } else {
+      lfAnniv.order = lfBuildOrder(n, {});
+      lfAnniv.index = lfAnniv.order[Math.floor(Math.random() * n) % n];
+    }
+    lfAnniv.pinId = '';            // consumed by this render
+    lfAnniv.pinPos = -1;
 
     let html = '';
-    for (let i = 0; i < photos.length; i++) {
+    for (let k = 0; k < lfAnniv.order.length; k++) {
+      const i = lfAnniv.order[k];
       const p = photos[i];
+      if (!p) continue;
       const alt = p.caption ? p.caption : ('Photo ' + (i + 1));
       html += '<img class="lf-slide' + (i === lfAnniv.index ? ' on' : '') + '" data-i="' + i + '"' +
         ' src="' + escAttr(lfSafeUrl(p.url)) + '" alt="' + escAttr(alt) + '"' +
-        ' loading="' + (i === 0 ? 'eager' : 'lazy') + '" draggable="false">';
+        ' loading="' + (k === 0 ? 'eager' : 'lazy') + '" draggable="false">';
     }
     slides.innerHTML = html;
 
     let dotsHtml = '';
-    for (let i = 0; i < photos.length; i++) {
+    for (let k = 0; k < lfAnniv.order.length; k++) {
+      const i = lfAnniv.order[k];
+      // Dots follow the shuffled order 1:1 — data-i stays the photo index the
+      // slideshow uses, so a dot click jumps to exactly that photo.
       dotsHtml += '<button type="button" class="lf-dot' + (i === lfAnniv.index ? ' on' : '') + '" data-i="' + i +
-        '" aria-label="Go to photo ' + (i + 1) + '"></button>';
+        '" aria-label="Go to photo ' + (k + 1) + '"></button>';
     }
     dots.innerHTML = dotsHtml;
     dots.querySelectorAll('.lf-dot').forEach(function (b) {
@@ -3304,6 +3430,7 @@
     });
 
     if (count) count.textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
+    lfScheduleAuto();            // re-render re-arms the rotation chain
   }
 
   function lfShowSlide(i) {
@@ -3325,6 +3452,9 @@
         if (el.classList) el.classList.toggle('on', on); else el.className = on ? 'lf-dot on' : 'lf-dot';
       });
     }
+    // Any jump — arrows, dot click, swipe, ArrowLeft/Right — restarts the full
+    // ~5s auto window from this moment so the chosen photo stays a whole interval.
+    lfScheduleAuto();
   }
 
   // ── upload pipeline (reuses the existing /api/upload-url + R2 flow) ────
@@ -3431,10 +3561,17 @@
       const data = await lfApi('/api/couple/photos');
       const list = data && Array.isArray(data.photos) ? data.photos : [];
       const before = lfSyncSig();
-      const currentId = (lfAnniv.photos[lfAnniv.index] || {}).id;
+      const current = lfAnniv.photos[lfAnniv.index] || {};
+      const currentId = current.id;
+      const currentPos = lfAnniv.order.indexOf(lfAnniv.index);
       lfAnniv.photos = list;
       const keep = list.map(function (p) { return p.id; }).indexOf(currentId);
       lfAnniv.index = keep >= 0 ? keep : Math.min(lfAnniv.index, Math.max(0, lfVisiblePhotos().length - 1));
+      // lf-random-order: whatever was on screen stays on screen across a sync
+      // refetch — matched by photo id (never by index), then the rest is re-shuffled
+      // around it. A photo the partner deleted simply has nothing to preserve.
+      lfAnniv.pinId = (keep >= 0 && currentId) ? currentId : '';
+      lfAnniv.pinPos = keep >= 0 ? currentPos : -1;
       if (force || lfSyncSig() !== before) renderPhotos();
     } catch (e) {
       // Leave the last good state on screen — never throw.
@@ -3481,18 +3618,20 @@
 
     const prev = sec.querySelector('#lf-ps-prev');
     const next = sec.querySelector('#lf-ps-next');
-    if (prev) prev.addEventListener('click', function () { lfShowSlide(lfAnniv.index - 1); });
-    if (next) next.addEventListener('click', function () { lfShowSlide(lfAnniv.index + 1); });
+    // Steps walk the SHUFFLED display order (lf-random-order), so prev/next are
+    // order-adjacent and every jump stays a valid photo index.
+    if (prev) prev.addEventListener('click', function () { lfStep(-1); });
+    if (next) next.addEventListener('click', function () { lfStep(1); });
 
     const del = sec.querySelector('#lf-ps-del');
     if (del) del.addEventListener('click', lfDeleteCurrent);
 
     const stage = sec.querySelector('#lf-ps-stage');
     if (stage) {
-      stage.addEventListener('mouseenter', function () { lfAnniv.paused = true; });
-      stage.addEventListener('mouseleave', function () { lfAnniv.paused = false; });
+      // Hover / pointer-over deliberately has NO pause listener any more: the
+      // slideshow must keep rotating while the pointer rests on the photo frame,
+      // and on touch (where a tap emits mouseenter without a reliable mouseleave).
       stage.addEventListener('touchstart', function (e) {
-        lfAnniv.paused = true;
         const t = e.touches && e.touches[0];
         if (t) lfAnniv.swipe = { x: t.clientX, y: t.clientY };
       }, { passive: true });
@@ -3500,26 +3639,32 @@
         const s = lfAnniv.swipe;
         const t = e.changedTouches && e.changedTouches[0];
         lfAnniv.swipe = null;
-        if (s && t) {
-          const dx = t.clientX - s.x, dy = t.clientY - s.y;
-          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) lfShowSlide(lfAnniv.index + (dx < 0 ? 1 : -1));
-        }
-        clearTimeout(lfAnniv.touchHold);
-        lfAnniv.touchHold = setTimeout(function () { lfAnniv.paused = false; }, 3000);
+        try {
+          if (s && t) {
+            const dx = t.clientX - s.x, dy = t.clientY - s.y;
+            // A swipe jumps AND restarts the auto window (inside lfShowSlide).
+            // No post-touch hold: rotation simply resumes its window.
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) lfStep(dx < 0 ? 1 : -1);
+          }
+        } catch (err) { /* a touch must never break the section */ }
       }, { passive: true });
       stage.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); lfShowSlide(lfAnniv.index - 1); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); lfShowSlide(lfAnniv.index + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); lfStep(-1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); lfStep(1); }
       });
     }
   }
 
   function teardownAnnivSection() {
-    ['timer', 'slideTimer', 'photoPoll', 'setPoll'].forEach(function (k) {
+    ['timer', 'photoPoll', 'setPoll'].forEach(function (k) {
       if (lfAnniv[k]) { clearInterval(lfAnniv[k]); lfAnniv[k] = null; }
     });
+    // lf-auto-rotate is a setTimeout chain, not an interval — clear its handle too.
+    if (lfAnniv.autoT) { clearTimeout(lfAnniv.autoT); lfAnniv.autoT = null; }
     clearTimeout(lfAnniv.touchHold);
     lfAnniv.touchHold = null;
+    lfAnniv.paused = false;   // a rebuild must never leave rotation stuck off
+    lfAnniv.swipe = null;     // no stale drag state
     if (lfAnniv.onVisible) {
       window.removeEventListener('focus', lfAnniv.onVisible);
       document.removeEventListener('visibilitychange', lfAnniv.onVisible);
@@ -3536,7 +3681,11 @@
     lfAnniv.photos = [];
     lfAnniv.anniversary = '';
     lfAnniv.index = 0;
-    lfAnniv.paused = false;
+    lfAnniv.paused = false;           // reset legacy hover/drag state on every mount
+    lfAnniv.swipe = null;
+    lfAnniv.order = [];               // lf-random-order: fresh shuffle on mount
+    lfAnniv.pinId = '';
+    lfAnniv.pinPos = -1;
     lfAnniv.uploading = false;
 
     const sec = buildAnnivSection();
@@ -3549,10 +3698,7 @@
     lfRefetchAll(false);              // initial shared-data pull
 
     lfAnniv.timer = setInterval(lfTickCountdown, 1000);
-    lfAnniv.slideTimer = setInterval(function () {
-      if (lfAnniv.paused || lfAnniv.uploading || document.hidden) return;
-      if (lfVisiblePhotos().length > 1) lfShowSlide(lfAnniv.index + 1);
-    }, 5000);
+    lfScheduleAuto();                 // start the ~5s self-rescheduling rotation chain
     lfAnniv.photoPoll = setInterval(function () { lfRefetchPhotos(false); }, 15000);
     lfAnniv.setPoll = setInterval(function () { lfRefetchSettings(false); }, 60000);
 
