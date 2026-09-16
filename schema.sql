@@ -128,6 +128,16 @@ CREATE TABLE IF NOT EXISTS date_ideas (
 CREATE INDEX IF NOT EXISTS idx_date_ideas_couple
   ON date_ideas (couple_id, completed, created_at DESC);
 
+-- Shared couple photo album (home page "Our Countdown | Our Photos" section).
+-- Keyed by the couple tenant id (users.id of the couple creator — resolved by
+-- authenticate() from the x-tenant-id header), so both partners see one album.
+CREATE TABLE IF NOT EXISTS couple_photos (
+  id TEXT PRIMARY KEY, couple_id TEXT NOT NULL, url TEXT NOT NULL,
+  caption TEXT DEFAULT '', uploaded_by TEXT,
+  created_at INTEGER DEFAULT (strftime('%s','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_couple_photos_couple ON couple_photos(couple_id, created_at);
+
 -- Default tenant so the app works out of the box.
 INSERT OR IGNORE INTO tenants (id, subdomain, couple_name, accent_color)
 VALUES ('default', 'app', 'LoveFlix', '#e50914');

@@ -983,6 +983,173 @@
     font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
     color: var(--text-dim); font-weight: 600; padding: 8px 0 6px; margin-bottom: 4px;
   }
+
+  /* ---------- Our Countdown | Our Photos (shared couple data) ---------- */
+  .lf-anniv { padding-bottom: 40px; }
+  .lf-anniv .lf-pipe { color: rgba(255,255,255,.25); font-weight: 400; margin: 0 4px; }
+  .lf-anniv-grid {
+    padding: 0 48px;
+    display: grid; grid-template-columns: 1fr; gap: 24px; align-items: stretch;
+  }
+  .lf-card {
+    display: flex; flex-direction: column; min-width: 0;
+    padding: 22px 22px 20px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px;
+  }
+  .lf-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .lf-card-title {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 15px; font-weight: 600; letter-spacing: -.2px;
+  }
+  .lf-card-title::before {
+    content: ''; width: 4px; height: 14px; border-radius: 99px;
+    background: var(--brand-accent, var(--red));
+  }
+  .lf-head-right { display: flex; align-items: center; gap: 10px; }
+  .lf-count { font-size: 11.5px; color: var(--text-dim); letter-spacing: .5px; }
+
+  .lf-together { font-size: 20px; font-weight: 600; line-height: 1.35; }
+  .lf-together b { color: var(--brand-accent, var(--red)); }
+  .lf-together-sub { margin-top: 6px; font-size: 12.5px; color: var(--text-dim); letter-spacing: .3px; }
+  .lf-next-label {
+    margin: 18px 0 10px; font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--text-dim); font-weight: 600;
+  }
+  .lf-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .lf-tile {
+    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px; padding: 10px 4px; text-align: center;
+  }
+  .lf-tile-num {
+    display: block; font-size: 22px; font-weight: 700;
+    font-variant-numeric: tabular-nums; letter-spacing: -.5px;
+  }
+  .lf-tile-lab {
+    display: block; margin-top: 3px; font-size: 9.5px; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .lf-celebrate {
+    margin: 16px 0 0; font-size: 15px; font-weight: 600;
+    color: var(--brand-accent, var(--red));
+  }
+  .lf-afford, .lf-nav, .lf-del, .lf-dot { cursor: pointer; }
+  .lf-afford {
+    width: 28px; height: 28px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid rgba(255,255,255,.12);
+    color: var(--text-light); border-radius: 8px; font-size: 12px; line-height: 1;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .lf-afford:hover { color: #fff; border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.05); }
+  .lf-edit-row { display: flex; gap: 8px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .lf-date {
+    background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.12);
+    color: #fff; border-radius: 9px; padding: 8px 10px; font: inherit; font-size: 13px;
+  }
+  .lf-date:focus { outline: none; border-color: var(--brand-accent, var(--red)); }
+  .lf-save {
+    background: var(--brand-accent, var(--red)); color: #fff; border: none;
+    border-radius: 9px; padding: 9px 16px; font-size: 13px; font-weight: 600;
+    transition: filter .18s, transform .18s;
+  }
+  .lf-save:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .lf-cancel {
+    background: transparent; border: 1px solid rgba(255,255,255,.14); color: var(--text-light);
+    border-radius: 9px; padding: 9px 14px; font-size: 13px;
+  }
+  .lf-cancel:hover { color: #fff; border-color: rgba(255,255,255,.3); }
+  .lf-empty-title { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+  .lf-empty-sub { font-size: 12.5px; color: var(--text-dim); margin-bottom: 14px; }
+  .lf-empty-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .lf-add {
+    background: var(--brand-accent, var(--red)); color: #fff;
+    border: none; border-radius: 9px; padding: 8px 14px;
+    font-size: 12.5px; font-weight: 600;
+    transition: filter .18s, transform .18s;
+  }
+  .lf-add:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .lf-add:disabled { opacity: .55; cursor: not-allowed; transform: none; filter: none; }
+
+  .lf-stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    border-radius: 14px; overflow: hidden; background: #0d0d0d;
+    border: 1px solid rgba(255,255,255,.07); outline: none; touch-action: pan-y;
+  }
+  .lf-stage:focus-visible { border-color: rgba(255,255,255,.3); }
+  .lf-slide {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0; user-select: none;
+    transition: opacity .7s cubic-bezier(.2,.8,.2,1);
+    will-change: opacity;
+  }
+  .lf-slide.on { opacity: 1; }
+  .lf-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.14);
+    color: #fff; opacity: 0; transition: opacity .2s, background .2s;
+  }
+  .lf-nav svg { width: 18px; height: 18px; fill: currentColor; }
+  .lf-nav.prev { left: 10px; }
+  .lf-nav.next { right: 10px; }
+  .lf-stage:hover .lf-nav, .lf-stage:focus-within .lf-nav, .lf-stage:focus-visible .lf-nav { opacity: 1; }
+  .lf-nav:hover { background: rgba(0,0,0,.75); }
+  .lf-del {
+    position: absolute; top: 10px; right: 10px; z-index: 4;
+    width: 26px; height: 26px; border-radius: 50%; font-size: 14px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.14);
+    color: #fff; opacity: 0; transition: opacity .2s, background .2s;
+  }
+  .lf-stage:hover .lf-del, .lf-stage:focus-within .lf-del { opacity: 1; }
+  .lf-del:hover { background: var(--brand-accent, var(--red)); }
+  .lf-photos-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; font-size: 14px; color: var(--text-dim);
+  }
+  .lf-prog {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 5;
+    background: rgba(255,255,255,.12);
+  }
+  .lf-prog-bar {
+    height: 100%; width: 0; background: var(--brand-accent, var(--red));
+    transition: width .2s ease;
+  }
+  .lf-dots { display: flex; gap: 7px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .lf-dot {
+    width: 7px; height: 7px; padding: 0; border: none; border-radius: 50%;
+    background: rgba(255,255,255,.25); transition: background .2s, transform .2s;
+  }
+  .lf-dot.on { background: var(--brand-accent, var(--red)); transform: scale(1.4); }
+  .lf-status { margin-top: 8px; font-size: 12px; color: var(--text-dim); min-height: 15px; line-height: 1.4; }
+  .lf-status.err { color: #ff6b6b; }
+  /* [hidden] must win over the display rules above */
+  .lf-del[hidden], .lf-nav[hidden], .lf-prog[hidden], .lf-photos-empty[hidden] { display: none; }
+  /* no hover on touch — keep the controls reachable */
+  @media (hover: none) {
+    .lf-nav, .lf-del { opacity: 1; }
+  }
+
+  @media (min-width: 900px) {
+    .lf-anniv-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .lf-anniv-grid { padding: 0 16px; gap: 18px; }
+    .lf-card { padding: 18px 16px 16px; }
+  }
+  @media (max-width: 560px) {
+    .lf-stage { aspect-ratio: 4 / 3; }
+    .lf-tile-num { font-size: 18px; }
+    .lf-tile-lab { font-size: 8.5px; letter-spacing: .8px; }
+    .lf-together { font-size: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -1533,6 +1700,7 @@
       (progressRes.progress || []).forEach(p => { progressById[p.video_id] = p; });
     } catch (e) {
       rowsWrap.appendChild(emptyRow("Couldn't load your library: " + e.message));
+      mountAnnivSection(rowsWrap); // its own data — still shows for the couple
       return;
     }
 
@@ -1584,6 +1752,9 @@
       if (!inProgress.length && i === 0) return; // already rendered above
       rowsWrap.appendChild(buildRow(cat, list, progressById));
     });
+
+    // ── OUR COUNTDOWN | OUR PHOTOS — last row, under the bento dashboard ──
+    mountAnnivSection(rowsWrap);
 
     bindArrows(rowsWrap);
   }
@@ -2797,6 +2968,599 @@
       } catch (e) { console.error('Edit failed', e); }
     });
   }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  Our Countdown | Our Photos
+  //  Both halves are SHARED couple data: the anniversary lives in
+  //  couple_settings and the album in couple_photos, both keyed by the couple
+  //  tenant id the API resolves from the x-tenant-id header — so both
+  //  partners read and write the exact same record.
+  // ══════════════════════════════════════════════════════════════════════
+  /* lf-anniv-start — self-contained block (extracted by the smoke test) */
+
+  // ── lf-math-start ── pure countdown math, no DOM (unit-tested in node)
+  function lfDaysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+  function lfParseYMD(str) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(str == null ? '' : str).trim());
+    if (!m) return null;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    if (mo < 1 || mo > 12 || d < 1 || d > lfDaysInMonth(y, mo)) return null;
+    return { y: y, m: mo, d: d };
+  }
+
+  // Add N months, clamped to the REAL length of the target month (Feb 29 → Feb 28).
+  function lfAddMonths(start, addMonths) {
+    const total = start.y * 12 + (start.m - 1) + addMonths;
+    const y = Math.floor(total / 12);
+    const m = ((total % 12) + 12) % 12 + 1;
+    return { y: y, m: m, d: Math.min(start.d, lfDaysInMonth(y, m)) };
+  }
+
+  function lfUtc(p) { return Date.UTC(p.y, p.m - 1, p.d); }
+
+  // Exact calendar "time together" — whole months first, then leftover days.
+  // Never divides by 365: it borrows the previous month's real length.
+  function lfTogether(start, now) {
+    const today = { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
+    let months = (today.y - start.y) * 12 + (today.m - start.m);
+    if (months < 0) months = 0;
+    let anchor = lfAddMonths(start, months);
+    if (months > 0 && lfUtc(anchor) > lfUtc(today)) { months -= 1; anchor = lfAddMonths(start, months); }
+    return {
+      years: Math.floor(months / 12),
+      months: months % 12,
+      days: Math.round((lfUtc(today) - lfUtc(anchor)) / 86400000),
+      totalDays: Math.round((lfUtc(today) - lfUtc(start)) / 86400000),
+    };
+  }
+
+  // Where the anniversary lands in a given year: Feb 29 → Feb 28 off-leap-year.
+  function lfOccurrence(ann, year) {
+    return { y: year, m: ann.m, d: Math.min(ann.d, lfDaysInMonth(year, ann.m)) };
+  }
+
+  // "5 months, 4 days" — zero units hidden; the smallest unit always shows.
+  function lfTogetherText(t) {
+    const units = [];
+    if (t.years) units.push(t.years + (t.years === 1 ? ' year' : ' years'));
+    if (t.months) units.push(t.months + (t.months === 1 ? ' month' : ' months'));
+    if (t.days || !units.length) units.push(t.days + (t.days === 1 ? ' day' : ' days'));
+    return units.join(', ');
+  }
+
+  function lfIsAnniversaryToday(ann, now) {
+    const o = lfOccurrence(ann, now.getFullYear());
+    return o.m === now.getMonth() + 1 && o.d === now.getDate();
+  }
+
+  // Next occurrence from today; on the anniversary itself we target NEXT year's.
+  function lfNextAnniversary(ann, now) {
+    const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const baseYear = now.getFullYear() + (lfIsAnniversaryToday(ann, now) ? 1 : 0);
+    let o = lfOccurrence(ann, baseYear);
+    if (lfUtc(o) < todayUtc) o = lfOccurrence(ann, baseYear + 1);
+    return o;
+  }
+
+  function lfCountdownParts(occ, now) {
+    let ms = new Date(occ.y, occ.m - 1, occ.d, 0, 0, 0, 0).getTime() - now.getTime();
+    if (!isFinite(ms) || ms < 0) ms = 0;
+    const total = Math.floor(ms / 1000);
+    return {
+      days: Math.floor(total / 86400),
+      hours: Math.floor(total / 3600) % 24,
+      minutes: Math.floor(total / 60) % 60,
+      seconds: total % 60,
+    };
+  }
+  // ── lf-math-end ──
+
+  const lfAnniv = {
+    root: null, refs: null, photos: [], anniversary: '', index: 0,
+    paused: false, touchHold: null, uploading: false,
+    timer: null, slideTimer: null, photoPoll: null, setPoll: null,
+    onVisible: null, swipe: null,
+  };
+
+  // JSON helper — uses the shared LoveFlix client (adds auth + x-tenant-id),
+  // with a plain fetch fallback so the section still works standalone.
+  function lfApi(path, opts) {
+    const lf = window.LoveFlix;
+    if (lf && typeof lf.api === 'function') return lf.api(path, opts);
+    return fetch(path, opts).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) throw new Error((data && data.error) || ('Request failed (' + res.status + ')'));
+        return data;
+      });
+    });
+  }
+
+  function lfSafeUrl(u) {
+    const s = String(u == null ? '' : u).trim();
+    return /^https?:\/\//i.test(s) || s.charAt(0) === '/' ? s : '';
+  }
+
+  function lfVisiblePhotos() {
+    return lfAnniv.photos.filter(function (p) { return p && lfSafeUrl(p.url); });
+  }
+
+  function lfCdStatus(msg, isErr) {
+    const el = lfAnniv.root && lfAnniv.root.querySelector('#lf-cd-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'lf-status' + (isErr ? ' err' : '');
+  }
+
+  function lfPsStatus(msg, isErr) {
+    const el = lfAnniv.root && lfAnniv.root.querySelector('#lf-ps-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'lf-status' + (isErr ? ' err' : '');
+  }
+
+  // ── section markup ────────────────────────────────────────────────────
+  function buildAnnivSection() {
+    const sec = document.createElement('section');
+    sec.className = 'row lf-anniv';
+    sec.id = 'lf-anniv';
+    sec.innerHTML = '' +
+      '<div class="row-head">' +
+        '<h2 class="row-title">Our Countdown <span class="lf-pipe">|</span> Our Photos</h2>' +
+      '</div>' +
+      '<div class="lf-anniv-grid">' +
+        '<div class="lf-card" id="lf-cd-card">' +
+          '<div class="lf-card-head">' +
+            '<h3 class="lf-card-title">Our Countdown</h3>' +
+            '<button type="button" class="lf-afford" id="lf-cd-edit" title="Change anniversary date" aria-label="Change anniversary date">&#9998;</button>' +
+          '</div>' +
+          '<div id="lf-cd-body"></div>' +
+        '</div>' +
+        '<div class="lf-card" id="lf-ps-card">' +
+          '<div class="lf-card-head">' +
+            '<h3 class="lf-card-title">Our Photos</h3>' +
+            '<div class="lf-head-right">' +
+              '<span class="lf-count" id="lf-ps-count"></span>' +
+              '<button type="button" class="lf-add" id="lf-ps-add">+ Add Photos</button>' +
+              '<input type="file" id="lf-ps-file" class="lf-file" accept="image/*" multiple hidden>' +
+            '</div>' +
+          '</div>' +
+          '<div class="lf-stage" id="lf-ps-stage" tabindex="0" role="group" aria-label="Our photos slideshow">' +
+            '<div id="lf-ps-slides"></div>' +
+            '<button type="button" class="lf-nav prev" id="lf-ps-prev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>' +
+            '<button type="button" class="lf-nav next" id="lf-ps-next" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>' +
+            '<button type="button" class="lf-del" id="lf-ps-del" title="Delete this photo" aria-label="Delete this photo">&#215;</button>' +
+            '<div class="lf-photos-empty" id="lf-ps-empty" hidden>No photos yet &mdash; add your first one 💕</div>' +
+            '<div class="lf-prog" id="lf-ps-prog" hidden><div class="lf-prog-bar" id="lf-ps-prog-bar"></div></div>' +
+          '</div>' +
+          '<div class="lf-dots" id="lf-ps-dots"></div>' +
+          '<div class="lf-status" id="lf-ps-status" role="status" aria-live="polite"></div>' +
+        '</div>' +
+      '</div>';
+    return sec;
+  }
+
+  // ── left card: countdown ──────────────────────────────────────────────
+  function renderAnnivCountdown() {
+    if (!lfAnniv.root) return;
+    const body = lfAnniv.root.querySelector('#lf-cd-body');
+    if (!body) return;
+    const ann = lfParseYMD(lfAnniv.anniversary);
+
+    if (!ann) {
+      lfAnniv.refs = null;
+      body.innerHTML = '' +
+        '<div class="lf-empty">' +
+          '<div class="lf-empty-title">Set your anniversary date</div>' +
+          '<div class="lf-empty-sub">Shared with your partner &mdash; you both see the same countdown.</div>' +
+          '<div class="lf-empty-row">' +
+            '<input type="date" class="lf-date" id="lf-cd-date" value="' + escAttr(lfAnniv.anniversary || '') + '">' +
+            '<button type="button" class="lf-save" id="lf-cd-save">Save</button>' +
+          '</div>' +
+          '<div class="lf-status" id="lf-cd-status" role="status"></div>' +
+        '</div>';
+      const input = body.querySelector('#lf-cd-date');
+      const save = body.querySelector('#lf-cd-save');
+      if (save) save.addEventListener('click', function () { lfSaveAnniversary(input ? input.value : ''); });
+      if (input) input.addEventListener('keydown', function (e) { if (e.key === 'Enter') lfSaveAnniversary(input.value); });
+      return;
+    }
+
+    body.innerHTML = '' +
+      '<div class="lf-together">Together for <b id="lf-together">&hellip;</b></div>' +
+      '<div class="lf-together-sub"><span id="lf-total-days">0</span> days together &middot; since <span id="lf-since"></span></div>' +
+      '<div class="lf-celebrate" id="lf-celebrate" hidden>Happy Anniversary 💕</div>' +
+      '<div class="lf-next-label" id="lf-next-label">Next anniversary in</div>' +
+      '<div class="lf-tiles">' +
+        '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-d">0</span><span class="lf-tile-lab">Days</span></div>' +
+        '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-h">0</span><span class="lf-tile-lab">Hours</span></div>' +
+        '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-m">0</span><span class="lf-tile-lab">Minutes</span></div>' +
+        '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-s">0</span><span class="lf-tile-lab">Seconds</span></div>' +
+      '</div>';
+
+    lfAnniv.refs = {
+      together: body.querySelector('#lf-together'),
+      total: body.querySelector('#lf-total-days'),
+      since: body.querySelector('#lf-since'),
+      celebrate: body.querySelector('#lf-celebrate'),
+      nextLabel: body.querySelector('#lf-next-label'),
+      d: body.querySelector('#lf-tile-d'),
+      h: body.querySelector('#lf-tile-h'),
+      m: body.querySelector('#lf-tile-m'),
+      s: body.querySelector('#lf-tile-s'),
+    };
+    if (lfAnniv.refs.since) {
+      lfAnniv.refs.since.textContent = new Date(ann.y, ann.m - 1, ann.d)
+        .toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+    lfTickCountdown();
+  }
+
+  function lfTickCountdown() {
+    const r = lfAnniv.refs;
+    if (!r || !lfAnniv.root) return;
+    if (lfAnniv.root.isConnected === false) { teardownAnnivSection(); return; }
+    const ann = lfParseYMD(lfAnniv.anniversary);
+    if (!ann) return;
+    const now = new Date();
+
+    const t = lfTogether(ann, now);
+    if (r.together) r.together.textContent = lfTogetherText(t);
+    if (r.total) r.total.textContent = t.totalDays.toLocaleString();
+
+    const celebrating = lfIsAnniversaryToday(ann, now);
+    const next = lfNextAnniversary(ann, now);
+    const c = lfCountdownParts(next, now);
+    if (r.celebrate) r.celebrate.hidden = !celebrating;
+    if (r.nextLabel) r.nextLabel.textContent = celebrating ? "Next anniversary in (you're celebrating today)" : 'Next anniversary in';
+    if (r.d) r.d.textContent = String(c.days);
+    if (r.h) r.h.textContent = String(c.hours).padStart(2, '0');
+    if (r.m) r.m.textContent = String(c.minutes).padStart(2, '0');
+    if (r.s) r.s.textContent = String(c.seconds).padStart(2, '0');
+  }
+
+  function lfToggleEditBox() {
+    if (!lfAnniv.root) return;
+    const card = lfAnniv.root.querySelector('#lf-cd-card');
+    if (!card) return;
+    const open = card.querySelector('#lf-cd-editbox');
+    if (open) { open.remove(); return; }
+    const box = document.createElement('div');
+    box.id = 'lf-cd-editbox';
+    box.className = 'lf-edit-row';
+    box.innerHTML = '' +
+      '<input type="date" class="lf-date" id="lf-cd-date2" value="' + escAttr(lfAnniv.anniversary || '') + '">' +
+      '<button type="button" class="lf-save" id="lf-cd-save2">Save</button>' +
+      '<button type="button" class="lf-cancel" id="lf-cd-cancel">Cancel</button>';
+    card.appendChild(box);
+    const input = box.querySelector('#lf-cd-date2');
+    box.querySelector('#lf-cd-save2').addEventListener('click', function () {
+      lfSaveAnniversary(input ? input.value : '');
+    });
+    box.querySelector('#lf-cd-cancel').addEventListener('click', function () { box.remove(); });
+  }
+
+  async function lfSaveAnniversary(value) {
+    const v = String(value == null ? '' : value).trim();
+    if (v && !lfParseYMD(v)) { lfCdStatus('Please pick a valid date', true); return; }
+    lfCdStatus('Saving…');
+    try {
+      await lfApi('/api/couple/settings', { method: 'PATCH', body: { anniversary_date: v } });
+      lfAnniv.anniversary = v;
+      const box = lfAnniv.root && lfAnniv.root.querySelector('#lf-cd-editbox');
+      if (box) box.remove();
+      renderAnnivCountdown();
+      lfCdStatus('Saved — your partner sees this too 💕');
+      setTimeout(function () { lfCdStatus(''); }, 4000);
+    } catch (e) {
+      // The last good state stays on screen.
+      lfCdStatus('Could not save — ' + ((e && e.message) || 'try again'), true);
+    }
+  }
+
+  // ── right card: slideshow ─────────────────────────────────────────────
+  function renderPhotos() {
+    if (!lfAnniv.root) return;
+    const slides = lfAnniv.root.querySelector('#lf-ps-slides');
+    const dots = lfAnniv.root.querySelector('#lf-ps-dots');
+    const empty = lfAnniv.root.querySelector('#lf-ps-empty');
+    const count = lfAnniv.root.querySelector('#lf-ps-count');
+    const del = lfAnniv.root.querySelector('#lf-ps-del');
+    if (!slides || !dots) return;
+
+    const photos = lfVisiblePhotos();
+    if (!photos.length) {
+      slides.innerHTML = '';
+      dots.innerHTML = '';
+      if (empty) empty.hidden = false;
+      if (count) count.textContent = '';
+      if (del) del.hidden = true;
+      lfAnniv.index = 0;
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+    if (del) del.hidden = false;
+    if (lfAnniv.index < 0 || lfAnniv.index >= photos.length) lfAnniv.index = 0;
+
+    let html = '';
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i];
+      const alt = p.caption ? p.caption : ('Photo ' + (i + 1));
+      html += '<img class="lf-slide' + (i === lfAnniv.index ? ' on' : '') + '" data-i="' + i + '"' +
+        ' src="' + escAttr(lfSafeUrl(p.url)) + '" alt="' + escAttr(alt) + '"' +
+        ' loading="' + (i === 0 ? 'eager' : 'lazy') + '" draggable="false">';
+    }
+    slides.innerHTML = html;
+
+    let dotsHtml = '';
+    for (let i = 0; i < photos.length; i++) {
+      dotsHtml += '<button type="button" class="lf-dot' + (i === lfAnniv.index ? ' on' : '') + '" data-i="' + i +
+        '" aria-label="Go to photo ' + (i + 1) + '"></button>';
+    }
+    dots.innerHTML = dotsHtml;
+    dots.querySelectorAll('.lf-dot').forEach(function (b) {
+      b.addEventListener('click', function () { lfShowSlide(parseInt(b.dataset.i, 10)); });
+    });
+
+    if (count) count.textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
+  }
+
+  function lfShowSlide(i) {
+    const photos = lfVisiblePhotos();
+    if (!photos.length || !lfAnniv.root) return;
+    const n = photos.length;
+    lfAnniv.index = ((Math.trunc(i) % n) + n) % n;
+    const slides = lfAnniv.root.querySelector('#lf-ps-slides');
+    const dots = lfAnniv.root.querySelector('#lf-ps-dots');
+    if (slides) {
+      slides.querySelectorAll('.lf-slide').forEach(function (el) {
+        const on = parseInt(el.dataset.i, 10) === lfAnniv.index;
+        if (el.classList) el.classList.toggle('on', on); else el.className = on ? 'lf-slide on' : 'lf-slide';
+      });
+    }
+    if (dots) {
+      dots.querySelectorAll('.lf-dot').forEach(function (el) {
+        const on = parseInt(el.dataset.i, 10) === lfAnniv.index;
+        if (el.classList) el.classList.toggle('on', on); else el.className = on ? 'lf-dot on' : 'lf-dot';
+      });
+    }
+  }
+
+  // ── upload pipeline (reuses the existing /api/upload-url + R2 flow) ────
+  function lfLoadImage(file) {
+    if (typeof createImageBitmap === 'function') return createImageBitmap(file);
+    return new Promise(function (resolve, reject) {
+      const img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('Could not read that image')); };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // Downscale to max 1600px on the longest edge, re-encode JPEG @ 0.85.
+  async function lfDownscale(file, maxEdge, quality) {
+    const bitmap = await lfLoadImage(file);
+    const w = bitmap.width || bitmap.naturalWidth;
+    const h = bitmap.height || bitmap.naturalHeight;
+    if (!w || !h) throw new Error('Unreadable image');
+    const scale = Math.min(1, maxEdge / Math.max(w, h));
+    const cw = Math.max(1, Math.round(w * scale));
+    const ch = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas unavailable');
+    ctx.drawImage(bitmap, 0, 0, cw, ch);
+    const blob = await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/jpeg', quality); });
+    return blob || file;
+  }
+
+  async function lfUploadFiles(fileList) {
+    if (!lfAnniv.root || lfAnniv.uploading) return;
+    const files = Array.prototype.slice.call(fileList || []).filter(function (f) {
+      return f && (/^image\//.test(f.type || '') || /\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(f.name || ''));
+    });
+    if (!files.length) { lfPsStatus('Please choose an image file', true); return; }
+
+    const addBtn = lfAnniv.root.querySelector('#lf-ps-add');
+    const prog = lfAnniv.root.querySelector('#lf-ps-prog');
+    const bar = lfAnniv.root.querySelector('#lf-ps-prog-bar');
+    lfAnniv.uploading = true;
+    if (addBtn) addBtn.disabled = true;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        lfPsStatus('Preparing photo ' + (i + 1) + ' of ' + files.length + '…');
+        const file = files[i];
+        let blob = file;
+        try { blob = await lfDownscale(file, 1600, 0.85); } catch (e) { blob = file; }
+        const base = (file.name || 'photo').replace(/\.[^.]+$/, '').slice(0, 40).replace(/[^a-zA-Z0-9._-]/g, '_') || 'photo';
+        const name = base + '-' + Date.now() + '.jpg';
+        const info = await lfApi('/api/upload-url?filename=' + encodeURIComponent(name) + '&type=image%2Fjpeg&folder=images');
+        if (!info || !info.upload_url || !info.public_url) throw new Error('Upload is unavailable right now');
+        if (prog) prog.hidden = false;
+        if (bar) bar.style.width = '0%';
+        const lfc = window.LoveFlix;
+        const put = (lfc && typeof lfc.putWithProgress === 'function')
+          ? lfc.putWithProgress
+          : function (url, body) { return fetch(url, { method: 'PUT', body: body }); };
+        await put(info.upload_url, blob, function (p) {
+          if (bar) bar.style.width = Math.round(p * 100) + '%';
+          lfPsStatus('Uploading photo ' + (i + 1) + ' of ' + files.length + '… ' + Math.round(p * 100) + '%');
+        });
+        await lfApi('/api/couple/photos', { method: 'POST', body: { url: info.public_url } });
+      }
+      lfPsStatus(files.length === 1 ? 'Photo added 💕' : files.length + ' photos added 💕');
+      await lfRefetchPhotos(true);
+    } catch (e) {
+      // A failed upload must never break the slideshow.
+      lfPsStatus('Upload failed — ' + ((e && e.message) || 'please try again'), true);
+    } finally {
+      lfAnniv.uploading = false;
+      if (addBtn) addBtn.disabled = false;
+      setTimeout(function () {
+        if (prog) prog.hidden = true;
+        if (bar) bar.style.width = '0%';
+      }, 900);
+    }
+  }
+
+  async function lfDeleteCurrent() {
+    const photos = lfVisiblePhotos();
+    const photo = photos[lfAnniv.index];
+    if (!photo || !photo.id) return;
+    if (typeof confirm === 'function' && !confirm('Remove this photo from your shared album?')) return;
+    try {
+      await lfApi('/api/couple/photos?id=' + encodeURIComponent(photo.id), { method: 'DELETE' });
+      lfPsStatus('Photo removed');
+      await lfRefetchPhotos(true);
+      setTimeout(function () { lfPsStatus(''); }, 3000);
+    } catch (e) {
+      lfPsStatus('Could not delete — ' + ((e && e.message) || 'try again'), true);
+    }
+  }
+
+  // ── shared-data sync ──────────────────────────────────────────────────
+  function lfSyncSig() {
+    return lfAnniv.photos.map(function (p) { return p.id + ':' + p.created_at; }).join(',') + '|' + (lfAnniv.anniversary || '');
+  }
+
+  async function lfRefetchPhotos(force) {
+    try {
+      const data = await lfApi('/api/couple/photos');
+      const list = data && Array.isArray(data.photos) ? data.photos : [];
+      const before = lfSyncSig();
+      const currentId = (lfAnniv.photos[lfAnniv.index] || {}).id;
+      lfAnniv.photos = list;
+      const keep = list.map(function (p) { return p.id; }).indexOf(currentId);
+      lfAnniv.index = keep >= 0 ? keep : Math.min(lfAnniv.index, Math.max(0, lfVisiblePhotos().length - 1));
+      if (force || lfSyncSig() !== before) renderPhotos();
+    } catch (e) {
+      // Leave the last good state on screen — never throw.
+    }
+  }
+
+  async function lfRefetchSettings(force) {
+    try {
+      const data = await lfApi('/api/couple/settings');
+      const val = (data && data.settings && data.settings.anniversary_date) || '';
+      if (force || val !== lfAnniv.anniversary) {
+        lfAnniv.anniversary = val;
+        renderAnnivCountdown();
+      }
+    } catch (e) {
+      // Keep the last good state.
+    }
+  }
+
+  function lfRefetchAll(force) {
+    // Both halves refresh together; each swallows its own errors.
+    return Promise.all([lfRefetchPhotos(force), lfRefetchSettings(force)]);
+  }
+
+  function lfOnVisible() {
+    if (document.hidden) return;
+    lfRefetchAll(false);
+  }
+
+  // ── wiring / lifecycle ────────────────────────────────────────────────
+  function wireAnnivSection(sec) {
+    const edit = sec.querySelector('#lf-cd-edit');
+    if (edit) edit.addEventListener('click', lfToggleEditBox);
+
+    const add = sec.querySelector('#lf-ps-add');
+    const file = sec.querySelector('#lf-ps-file');
+    if (add && file) {
+      add.addEventListener('click', function () { file.click(); });
+      file.addEventListener('change', function () {
+        lfUploadFiles(file.files);
+        file.value = '';
+      });
+    }
+
+    const prev = sec.querySelector('#lf-ps-prev');
+    const next = sec.querySelector('#lf-ps-next');
+    if (prev) prev.addEventListener('click', function () { lfShowSlide(lfAnniv.index - 1); });
+    if (next) next.addEventListener('click', function () { lfShowSlide(lfAnniv.index + 1); });
+
+    const del = sec.querySelector('#lf-ps-del');
+    if (del) del.addEventListener('click', lfDeleteCurrent);
+
+    const stage = sec.querySelector('#lf-ps-stage');
+    if (stage) {
+      stage.addEventListener('mouseenter', function () { lfAnniv.paused = true; });
+      stage.addEventListener('mouseleave', function () { lfAnniv.paused = false; });
+      stage.addEventListener('touchstart', function (e) {
+        lfAnniv.paused = true;
+        const t = e.touches && e.touches[0];
+        if (t) lfAnniv.swipe = { x: t.clientX, y: t.clientY };
+      }, { passive: true });
+      stage.addEventListener('touchend', function (e) {
+        const s = lfAnniv.swipe;
+        const t = e.changedTouches && e.changedTouches[0];
+        lfAnniv.swipe = null;
+        if (s && t) {
+          const dx = t.clientX - s.x, dy = t.clientY - s.y;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) lfShowSlide(lfAnniv.index + (dx < 0 ? 1 : -1));
+        }
+        clearTimeout(lfAnniv.touchHold);
+        lfAnniv.touchHold = setTimeout(function () { lfAnniv.paused = false; }, 3000);
+      }, { passive: true });
+      stage.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); lfShowSlide(lfAnniv.index - 1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); lfShowSlide(lfAnniv.index + 1); }
+      });
+    }
+  }
+
+  function teardownAnnivSection() {
+    ['timer', 'slideTimer', 'photoPoll', 'setPoll'].forEach(function (k) {
+      if (lfAnniv[k]) { clearInterval(lfAnniv[k]); lfAnniv[k] = null; }
+    });
+    clearTimeout(lfAnniv.touchHold);
+    lfAnniv.touchHold = null;
+    if (lfAnniv.onVisible) {
+      window.removeEventListener('focus', lfAnniv.onVisible);
+      document.removeEventListener('visibilitychange', lfAnniv.onVisible);
+      lfAnniv.onVisible = null;
+    }
+    lfAnniv.refs = null;
+  }
+
+  function mountAnnivSection(rowsWrap) {
+    if (!rowsWrap || typeof rowsWrap.appendChild !== 'function') return;
+    teardownAnnivSection();           // a rebuild must not leave timers behind
+    const stale = rowsWrap.querySelector('#lf-anniv');
+    if (stale && typeof stale.remove === 'function') stale.remove(); // idempotent re-mount
+    lfAnniv.photos = [];
+    lfAnniv.anniversary = '';
+    lfAnniv.index = 0;
+    lfAnniv.paused = false;
+    lfAnniv.uploading = false;
+
+    const sec = buildAnnivSection();
+    rowsWrap.appendChild(sec);
+    lfAnniv.root = sec;
+    wireAnnivSection(sec);
+    renderAnnivCountdown();           // "Set your anniversary date" until data lands
+    renderPhotos();                   // "No photos yet" until data lands
+
+    lfRefetchAll(false);              // initial shared-data pull
+
+    lfAnniv.timer = setInterval(lfTickCountdown, 1000);
+    lfAnniv.slideTimer = setInterval(function () {
+      if (lfAnniv.paused || lfAnniv.uploading || document.hidden) return;
+      if (lfVisiblePhotos().length > 1) lfShowSlide(lfAnniv.index + 1);
+    }, 5000);
+    lfAnniv.photoPoll = setInterval(function () { lfRefetchPhotos(false); }, 15000);
+    lfAnniv.setPoll = setInterval(function () { lfRefetchSettings(false); }, 60000);
+
+    lfAnniv.onVisible = lfOnVisible;
+    window.addEventListener('focus', lfAnniv.onVisible);
+    document.addEventListener('visibilitychange', lfAnniv.onVisible);
+  }
+  /* lf-anniv-end */
 
   function formatDate(d) {
     if (!d) return '';
