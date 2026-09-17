@@ -4,7 +4,7 @@
   "description": "A private Netflix-style streaming service for two. Vanilla JS + HTML, deployed on Cloudflare Pages with D1 (database), R2 (video storage), Pages Functions (API), and Supabase (auth only).",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/couple-shared-keys.test.mjs"
   },
   "repository": {
     "type": "git",

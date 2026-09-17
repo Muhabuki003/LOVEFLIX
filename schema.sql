@@ -97,7 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_music_plays_played_at
   ON couple_music_plays (played_at DESC);
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Per-couple settings with locked identity fields and editable preferences
+-- Per-couple settings. Keyed by the couple's real shared id (Supabase
+-- couple_members.couple_id, resolved server-side by resolveCoupleKey()) — NOT by
+-- a user id: that used to give each partner a private copy of the anniversary.
 CREATE TABLE IF NOT EXISTS couple_settings (
   tenant_id             TEXT PRIMARY KEY,
   anniversary_date      TEXT,
@@ -129,8 +131,8 @@ CREATE INDEX IF NOT EXISTS idx_date_ideas_couple
   ON date_ideas (couple_id, completed, created_at DESC);
 
 -- Shared couple photo album (home page "Our Countdown | Our Photos" section).
--- Keyed by the couple tenant id (users.id of the couple creator — resolved by
--- authenticate() from the x-tenant-id header), so both partners see one album.
+-- Keyed by the couple's real shared id — Supabase couple_members.couple_id,
+-- resolved server-side by resolveCoupleKey() — so both partners see one album.
 CREATE TABLE IF NOT EXISTS couple_photos (
   id TEXT PRIMARY KEY, couple_id TEXT NOT NULL, url TEXT NOT NULL,
   caption TEXT DEFAULT '', uploaded_by TEXT,
