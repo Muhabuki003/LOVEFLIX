@@ -308,7 +308,7 @@ export async function onRequest(context) {
     if (method === 'PATCH' && path === '/api/couple/settings') return patchCoupleSettings(env, request, user);
 
     // ── Couple photo album (home page "Our Countdown | Our Photos") ──────
-    // Shared: keyed by the couple tenant id (user.id), same as date_ideas.
+    // Shared: keyed by the couple's real couple_id, same as date_ideas.
     if (method === 'GET'    && path === '/api/couple/photos') return listCouplePhotos(env, user);
     if (method === 'POST'   && path === '/api/couple/photos') return createCouplePhoto(env, request, user);
     if (method === 'DELETE' && path === '/api/couple/photos') return deleteCouplePhoto(env, url, user);
@@ -2019,18 +2019,168 @@ async function getSupabaseCoupleId(env, user) {
   } catch { return null; }
 }
 
+// ── Shared couple identity (the key date_ideas / couple_photos / couple_settings
+//    are stored under) ────────────────────────────────────────────────────────
+// Every couple-scoped D1 table must key on ONE id that BOTH partners resolve to.
+// That id is the REAL couple id — Supabase `couple_members.couple_id` — resolved
+// server-side from the CALLER'S OWN JWT (RLS lets a member read their own row
+// and their partner's). Both partners' couple_members rows carry the identical
+// couple_id: it is minted once (invite.html → ensureCoupleId()) when the admin
+// sets the couple up and copied onto the partner's row by POST /api/join-partner
+// — so a brand-new couple resolves to one identical key from day one. A
+// client-supplied id (x-tenant-id / ?couple_id=) is NEVER trusted for this.
+//
+// Returns:
+//   key       — value to store in date_ideas.couple_id / couple_photos.couple_id
+//               / couple_settings.tenant_id
+//   shared    — true when `key` is the couple-wide id (both partners agree);
+//               false for a not-yet-paired account, which keeps its own bucket
+//               until it pairs (the bucket is then adopted, see below)
+//   coupleId  — the Supabase couple_id (null when unpaired)
+//   memberIds — every user_id in the couple (own id when unpaired)
+async function getCoupleIdentity(env, user) {
+  const solo = { key: user.id, shared: false, coupleId: null, memberIds: [user.id] };
+  const sbHeaders = { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${user.token}` };
+  try {
+    const res = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/couple_members?user_id=eq.${encodeURIComponent(user.id)}&select=couple_id&limit=1`,
+      { headers: sbHeaders }
+    );
+    if (!res.ok) return solo;
+    const rows = await res.json().catch(() => []);
+    const coupleId = rows?.[0]?.couple_id || null;
+    if (!coupleId) return solo;
+
+    const memberIds = [user.id];
+    try {
+      const res2 = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/couple_members?couple_id=eq.${encodeURIComponent(coupleId)}&select=user_id`,
+        { headers: sbHeaders }
+      );
+      if (res2.ok) {
+        const rows2 = await res2.json().catch(() => []);
+        for (const r of rows2 || []) {
+          if (r && r.user_id && !memberIds.includes(r.user_id)) memberIds.push(r.user_id);
+        }
+      }
+    } catch (_) {}
+
+    return { key: coupleId, shared: true, coupleId, memberIds };
+  } catch { return solo; }
+}
+
+// One-time, idempotent, lossless adoption of legacy per-user buckets.
+//
+// Before this fix, every partner wrote into their OWN user-id bucket
+// (date_ideas.couple_id === caller's user_id), so a couple's ideas/photos were
+// split across two private buckets and neither partner could see the other's.
+// Once the caller's real couple_id is known, re-key every row still sitting in
+// one of the couple's VERIFIED member buckets onto the shared couple_id.
+//
+// Safety: only keys that Supabase just returned as members of the caller's own
+// couple are touched; it is a re-key (row id / content / timestamps untouched,
+// never a copy, so it cannot duplicate rows); after the first pass nothing
+// matches and the whole sweep is skipped.
+async function adoptLegacyCoupleRows(env, id) {
+  const { coupleId, memberIds } = id;
+  const keys = memberIds.filter(m => m && m !== coupleId);
+  if (!keys.length) return 0;
+  const ph = keys.map(() => '?').join(',');
+  let moved = 0;
+
+  // date_ideas + couple_photos: couple_id is a plain column → pure re-key.
+  for (const table of ['date_ideas', 'couple_photos']) {
+    const r = await env.DB.prepare(
+      `UPDATE ${table} SET couple_id = ? WHERE couple_id IN (${ph})`
+    ).bind(coupleId, ...keys).run();
+    moved += r?.meta?.changes || 0;
+  }
+
+  // couple_settings is keyed by its PRIMARY KEY (tenant_id), so re-keying two
+  // rows would collide. Merge the scalar fields into one shared row, then drop
+  // only the member rows whose values were folded in — nothing is discarded.
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM couple_settings WHERE tenant_id IN (${[coupleId, ...keys].map(() => '?').join(',')})
+      ORDER BY updated_at DESC`
+  ).bind(coupleId, ...keys).all();
+  const rows = results || [];
+  const legacyRows = rows.filter(r => r.tenant_id !== coupleId);
+  if (legacyRows.length) {
+    // Base = the existing shared row if there is one, else the newest member row.
+    const base = rows.find(r => r.tenant_id === coupleId) || legacyRows[0];
+    const merged = { ...base };
+    const soft = ['anniversary_date', 'partner_1_name', 'partner_2_name', 'brand_accent_color', 'privacy_level'];
+    for (const f of soft) {
+      // newest non-empty value wins; never blank out a value we already hold
+      if (merged[f] === null || merged[f] === undefined || merged[f] === '') {
+        const donor = legacyRows.find(r => r[f] !== null && r[f] !== undefined && r[f] !== '');
+        if (donor) merged[f] = donor[f];
+      }
+    }
+    // A lock stays a lock; the shared row's notification preference wins.
+    merged.is_locked = rows.some(r => Number(r.is_locked) === 1) ? 1 : 0;
+    merged.updated_at = Math.max(...rows.map(r => Number(r.updated_at) || 0));
+    await env.DB.prepare(
+      `INSERT OR REPLACE INTO couple_settings
+         (tenant_id, anniversary_date, partner_1_name, partner_2_name, is_locked,
+          brand_accent_color, notifications_enabled, privacy_level, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      coupleId,
+      merged.anniversary_date ?? null,
+      merged.partner_1_name ?? null,
+      merged.partner_2_name ?? null,
+      Number(merged.is_locked) === 1 ? 1 : 0,
+      merged.brand_accent_color ?? '#e50914',
+      Number(merged.notifications_enabled) === 0 ? 0 : 1,
+      merged.privacy_level ?? 'private',
+      merged.updated_at || Math.floor(Date.now() / 1000)
+    ).run();
+
+    await env.DB.prepare(
+      `DELETE FROM couple_settings WHERE tenant_id IN (${ph})`
+    ).bind(...keys).run();
+    moved += legacyRows.length;
+  }
+
+  return moved;
+}
+
+// The single entry point every couple-scoped handler uses. Resolves the shared
+// key and, when legacy per-user rows exist (one extra COUNT query, only when the
+// caller actually has a couple), folds them in first so reads/writes/ownership
+// checks can never disagree about which bucket a row lives in.
+async function resolveCoupleKey(env, user) {
+  const id = await getCoupleIdentity(env, user);
+  if (!id.shared) return id.key;
+  try {
+    const ph = id.memberIds.map(() => '?').join(',');
+    const row = await env.DB.prepare(
+      `SELECT (SELECT COUNT(*) FROM date_ideas      WHERE couple_id IN (${ph}))
+            + (SELECT COUNT(*) FROM couple_photos   WHERE couple_id IN (${ph}))
+            + (SELECT COUNT(*) FROM couple_settings WHERE tenant_id IN (${ph})) AS legacy`
+    ).bind(...id.memberIds, ...id.memberIds, ...id.memberIds).first();
+    if (row && Number(row.legacy) > 0) await adoptLegacyCoupleRows(env, id);
+  } catch (_) { /* adoption is best-effort: reads still work off the shared key */ }
+  return id.key;
+}
+
 // Assemble the full Couple Context Object for a tenant. Cached in KV.
 async function buildFullCoupleContext(env, request, user) {
   const tenantId = user.id;
+  // Content tables (videos) key on the creator tenant; the couple-scoped D1
+  // tables (settings / playlists / music plays) key on the couple's real
+  // couple_id — resolve it once here so this context agrees with the handlers.
+  const coupleKey = await resolveCoupleKey(env, user);
 
   // ---- D1: settings, videos, music ----
   const [settingsRow, videoAgg, momentAgg, tripAgg, lastPlay, playlistAgg] = await Promise.all([
-    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(coupleKey).first().catch(() => null),
     env.DB.prepare('SELECT COUNT(*) c, MAX(created_at) last FROM videos WHERE tenant_id = ? AND is_published = 1').bind(tenantId).first().catch(() => null),
     env.DB.prepare("SELECT COUNT(*) c FROM videos WHERE tenant_id = ? AND is_published = 1 AND lower(category) IN ('moment','moments')").bind(tenantId).first().catch(() => null),
     env.DB.prepare("SELECT COUNT(*) c FROM videos WHERE tenant_id = ? AND is_published = 1 AND lower(category) IN ('trip','trips','travel')").bind(tenantId).first().catch(() => null),
-    env.DB.prepare('SELECT MAX(played_at) last FROM couple_music_plays WHERE couple_id = ?').bind(tenantId).first().catch(() => null),
-    env.DB.prepare('SELECT COUNT(*) c, MAX(created_at) last FROM couple_playlists WHERE couple_id = ?').bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT MAX(played_at) last FROM couple_music_plays WHERE couple_id = ?').bind(coupleKey).first().catch(() => null),
+    env.DB.prepare('SELECT COUNT(*) c, MAX(created_at) last FROM couple_playlists WHERE couple_id = ?').bind(coupleKey).first().catch(() => null),
   ]);
 
   // D1 timestamps are unix SECONDS (strftime('%s')). Convert to ms.
@@ -2086,7 +2236,7 @@ async function buildFullCoupleContext(env, request, user) {
   const distanceKm = haversineKm(partnerA?.current_location, partnerB?.current_location);
 
   return {
-    couple_id: coupleId || tenantId,
+    couple_id: coupleId || coupleKey,
     partner_a: partnerA,
     partner_b: partnerB,
     relationship: {
@@ -2536,15 +2686,16 @@ async function handleAiChat(env, request, user) {
 
 async function getCoupleStats(env, request, user) {
   const tenantId = user.id;
+  const coupleKey = await resolveCoupleKey(env, user);
 
   const [videosRes, settingsRow, musicRes] = await Promise.all([
     env.DB.prepare(
       `SELECT COUNT(*) as total, MAX(created_at) as last_upload FROM videos WHERE tenant_id = ? AND is_published = 1`
     ).bind(tenantId).first(),
-    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first(),
+    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(coupleKey).first(),
     env.DB.prepare(
       `SELECT youtube_id, COUNT(*) as plays FROM couple_music_plays WHERE couple_id = ? GROUP BY youtube_id ORDER BY plays DESC LIMIT 5`
-    ).bind(tenantId).all().catch(() => ({ results: [] })),
+    ).bind(coupleKey).all().catch(() => ({ results: [] })),
   ]);
 
   const totalVideos = videosRes?.total ?? 0;
@@ -2574,7 +2725,10 @@ async function getCoupleStats(env, request, user) {
 }
 
 async function getCoupleSettings(env, user) {
-  const tenantId = user.id;
+  // One row per COUPLE (shared key), not per user — otherwise each partner
+  // reads/writes their own copy of the anniversary (the countdown looked fine
+  // only because both copies happened to hold the same date).
+  const tenantId = await resolveCoupleKey(env, user);
   const row = await env.DB.prepare(
     'SELECT * FROM couple_settings WHERE tenant_id = ?'
   ).bind(tenantId).first();
@@ -2608,7 +2762,7 @@ async function getCoupleSettings(env, user) {
 
 async function patchCoupleSettings(env, request, user) {
   const body = await request.json().catch(() => ({}));
-  const tenantId = user.id;
+  const tenantId = await resolveCoupleKey(env, user);
   const now = Math.floor(Date.now() / 1000);
 
   const existing = await env.DB.prepare(
@@ -2675,7 +2829,9 @@ async function patchCoupleSettings(env, request, user) {
 // ── Date Ideas ──────────────────────────────────────────────────────────────
 
 async function listDateIdeas(env, user) {
-  const coupleId = user.id;
+  // Shared across both partners: the couple's real couple_id, not the caller's
+  // user id (that split every couple into two private buckets).
+  const coupleId = await resolveCoupleKey(env, user);
   const { results } = await env.DB.prepare(
     `SELECT id, couple_id, title, notes, planned_date, category,
             completed, completed_by, completed_at, created_by, created_at, updated_at
@@ -2695,7 +2851,7 @@ async function createDateIdea(env, request, user) {
   const plannedDate = body.planned_date || null;
   const category = sanitizeUserText(body.category || '', 50);
   const id = crypto.randomUUID();
-  const coupleId = user.id;
+  const coupleId = await resolveCoupleKey(env, user);
   const now = Math.floor(Date.now() / 1000);
 
   await env.DB.prepare(
@@ -2713,9 +2869,12 @@ async function updateDateIdea(env, id, request, user) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'invalid_json' }, 400); }
 
+  const key = await resolveCoupleKey(env, user);
   const existing = await env.DB.prepare(`SELECT * FROM date_ideas WHERE id = ?`).bind(id).first();
   if (!existing) return json({ error: 'not_found' }, 404);
-  if (existing.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+  // same resolved key as the read path — a partner must be able to edit/complete
+  // the idea the other one added
+  if (existing.couple_id !== key) return json({ error: 'forbidden' }, 403);
 
   const now = Math.floor(Date.now() / 1000);
   const updates = {};
@@ -2748,23 +2907,25 @@ async function updateDateIdea(env, id, request, user) {
 }
 
 async function deleteDateIdea(env, id, user) {
+  const key = await resolveCoupleKey(env, user);
   const existing = await env.DB.prepare(`SELECT * FROM date_ideas WHERE id = ?`).bind(id).first();
   if (!existing) return json({ error: 'not_found' }, 404);
-  if (existing.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+  if (existing.couple_id !== key) return json({ error: 'forbidden' }, 403);
 
   await env.DB.prepare(`DELETE FROM date_ideas WHERE id = ?`).bind(id).run();
   return json({ ok: true });
 }
 
-// ── Couple photos (shared album, keyed by the couple tenant id) ─────────────
+// ── Couple photos (shared album, keyed by the couple's real couple_id) ──────
 
 async function listCouplePhotos(env, user) {
+  const coupleId = await resolveCoupleKey(env, user);
   const { results } = await env.DB.prepare(
     `SELECT id, url, caption, uploaded_by, created_at
        FROM couple_photos
       WHERE couple_id = ?
       ORDER BY created_at ASC`
-  ).bind(user.id).all();
+  ).bind(coupleId).all();
   return json({ photos: results || [] });
 }
 
@@ -2781,12 +2942,13 @@ async function createCouplePhoto(env, request, user) {
 
   const caption = sanitizeUserText(body.caption || '', 200);
   const id = crypto.randomUUID();
+  const coupleId = await resolveCoupleKey(env, user);
   const now = Math.floor(Date.now() / 1000);
 
   await env.DB.prepare(
     `INSERT INTO couple_photos (id, couple_id, url, caption, uploaded_by, created_at)
      VALUES (?, ?, ?, ?, ?, ?)`
-  ).bind(id, user.id, photoUrl, caption, user.id, now).run();
+  ).bind(id, coupleId, photoUrl, caption, user.id, now).run();
 
   return json({
     ok: true,
@@ -2798,11 +2960,12 @@ async function deleteCouplePhoto(env, url, user) {
   const id = url.searchParams.get('id');
   if (!id) return json({ error: 'id_required' }, 400);
 
+  const key = await resolveCoupleKey(env, user);
   const row = await env.DB.prepare(
     'SELECT id, couple_id, url FROM couple_photos WHERE id = ?'
   ).bind(id).first();
   if (!row) return json({ error: 'not_found' }, 404);
-  if (row.couple_id !== user.id) return json({ error: 'forbidden' }, 403);
+  if (row.couple_id !== key) return json({ error: 'forbidden' }, 403);
 
   await env.DB.prepare('DELETE FROM couple_photos WHERE id = ?').bind(id).run();
 

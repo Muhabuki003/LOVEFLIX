@@ -104,11 +104,21 @@ async function buildCoupleSignals(env, coupleId, tenantId) {
   const daysSinceIso = v => (v ? Math.max(0, Math.floor((Date.now() - new Date(v).getTime()) / 86400000)) : null);
 
   // ---- D1 (videos, music, settings) ----
-  const [settings, lastVideo, lastTrip, lastPlaylist] = await Promise.all([
-    env.DB.prepare('SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?').bind(tenantId).first().catch(() => null),
+  // couple_settings is keyed by the couple's real couple_id (it used to be keyed
+  // per user; the API migrates legacy rows on read). Fall back to the billing
+  // owner's tenant id so this worker keeps working against an un-migrated DB.
+  let settings = await env.DB.prepare(
+    'SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?'
+  ).bind(coupleId).first().catch(() => null);
+  if (!settings) {
+    settings = await env.DB.prepare(
+      'SELECT anniversary_date, partner_1_name, partner_2_name FROM couple_settings WHERE tenant_id = ?'
+    ).bind(tenantId).first().catch(() => null);
+  }
+  const [lastVideo, lastTrip, lastPlaylist] = await Promise.all([
     env.DB.prepare('SELECT MAX(created_at) last FROM videos WHERE tenant_id = ? AND is_published = 1').bind(tenantId).first().catch(() => null),
     env.DB.prepare("SELECT MAX(created_at) last FROM videos WHERE tenant_id = ? AND is_published = 1 AND lower(category) IN ('trip','trips','travel')").bind(tenantId).first().catch(() => null),
-    env.DB.prepare('SELECT MAX(created_at) last FROM couple_playlists WHERE couple_id = ?').bind(tenantId).first().catch(() => null),
+    env.DB.prepare('SELECT MAX(created_at) last FROM couple_playlists WHERE couple_id = ?').bind(coupleId).first().catch(() => null),
   ]);
 
   // ---- Supabase (calls) ----
