@@ -1016,11 +1016,17 @@
   .lf-together { font-size: 20px; font-weight: 600; line-height: 1.35; }
   .lf-together b { color: var(--brand-accent, var(--red)); }
   .lf-together-sub { margin-top: 6px; font-size: 12.5px; color: var(--text-dim); letter-spacing: .3px; }
+  /* The label NAMES the milestone ("Countdown to Our 1st Anniversary"), so it reads as
+     a sentence instead of an uppercase eyebrow. */
   .lf-next-label {
-    margin: 18px 0 10px; font-size: 10.5px; text-transform: uppercase;
-    letter-spacing: 2px; color: var(--text-dim); font-weight: 600;
+    margin: 18px 0 10px; font-size: 13px; font-weight: 600;
+    letter-spacing: .2px; color: var(--text-light);
   }
+  .lf-next-label b { color: var(--brand-accent, var(--red)); font-weight: 700; }
+  .lf-next-label[hidden] { display: none; }
   .lf-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  /* [hidden] loses to an author `display:` rule — spell it out (the PR #170 trap). */
+  .lf-tiles[hidden] { display: none; }
   .lf-tile {
     background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.07);
     border-radius: 12px; padding: 10px 4px; text-align: center;
@@ -1034,8 +1040,33 @@
     text-transform: uppercase; color: var(--text-dim);
   }
   .lf-celebrate {
-    margin: 16px 0 0; font-size: 15px; font-weight: 600;
+    margin: 18px 0 0; font-size: 15px; font-weight: 600;
     color: var(--brand-accent, var(--red));
+  }
+  .lf-celebrate[hidden] { display: none; }
+  .lf-cel-line { font-size: 14.5px; font-weight: 600; color: var(--text-light); }
+  .lf-replay {
+    display: inline-block; margin-top: 14px; cursor: pointer;
+    background: transparent; border: 1px solid rgba(229,9,20,.55);
+    color: var(--text-light); border-radius: 9px; padding: 8px 14px;
+    font: inherit; font-size: 12.5px; font-weight: 600;
+    transition: border-color .18s, color .18s, background .18s;
+  }
+  .lf-replay:hover { color: #fff; border-color: var(--brand-accent, var(--red)); background: rgba(229,9,20,.14); }
+  .lf-replay:active { transform: translateY(1px); }
+
+  /* lf-celebration: the anniversary-day overlay (hearts + balloons + confetti) lives in
+     ONE canvas pinned to the viewport. position:fixed; inset:0; pointer-events:none, so
+     every click passes straight through to the page underneath — there is no scrim and
+     nothing is covered. z-index 45 sits BELOW the fixed nav (z-index 50) and above the
+     rows (z-index 5), and only this block writes to the canvas. */
+  .lf-cel-layer {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 45; overflow: hidden;
+    opacity: 1; transition: opacity .5s ease;
+  }
+  .lf-cel-canvas {
+    display: block; width: 100%; height: 100%; pointer-events: none;
   }
   .lf-afford, .lf-nav, .lf-del, .lf-dot { cursor: pointer; }
   .lf-afford {
@@ -3003,6 +3034,12 @@
   // Never divides by 365: it borrows the previous month's real length.
   function lfTogether(start, now) {
     const today = { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() };
+    const elapsed = lfUtc(today) - lfUtc(start);
+    // A start date in the future (someone picked next year's date with the ✎ editor)
+    // must never render as a negative "together" figure — count up to day one instead.
+    if (elapsed < 0) {
+      return { years: 0, months: 0, days: Math.round(-elapsed / 86400000), totalDays: Math.round(-elapsed / 86400000), future: true };
+    }
     let months = (today.y - start.y) * 12 + (today.m - start.m);
     if (months < 0) months = 0;
     let anchor = lfAddMonths(start, months);
@@ -3011,7 +3048,8 @@
       years: Math.floor(months / 12),
       months: months % 12,
       days: Math.round((lfUtc(today) - lfUtc(anchor)) / 86400000),
-      totalDays: Math.round((lfUtc(today) - lfUtc(start)) / 86400000),
+      totalDays: Math.round(elapsed / 86400000),
+      future: false,
     };
   }
 
@@ -3054,6 +3092,58 @@
       seconds: total % 60,
     };
   }
+
+  // lfOrdinal — 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st, 22nd, 23rd, 101st, 111th.
+  // Anything that is not a positive whole number yields '' (never a bogus ordinal).
+  function lfOrdinal(n) {
+    const k = Math.floor(Number(n));
+    if (!isFinite(k) || k < 1) return '';
+    const t = k % 100;
+    if (t >= 11 && t <= 13) return k + 'th';
+    const u = k % 10;
+    if (u === 1) return k + 'st';
+    if (u === 2) return k + 'nd';
+    if (u === 3) return k + 'rd';
+    return k + 'th';
+  }
+
+  // lfAnnivCountdown — the milestone being counted down to: the smallest k ≥ 1 whose
+  // k-th anniversary lands STRICTLY after today. Exact calendar maths on local date
+  // parts (never ms/365), leap-safe; an empty/invalid date returns no countdown
+  // instead of throwing. The k-th anniversary is lfOccurrence(ann, ann.y + k), so on
+  // an anniversary day itself this is already the NEXT one.
+  function lfAnnivCountdown(ann, now) {
+    const none = { n: 0, ordinal: '', occ: null };
+    try {
+      if (!ann || !now || typeof lfOccurrence !== 'function') return none;
+      const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      // Occurrences only move forward, so start a year early and walk up to k ≥ 1.
+      let k = Math.max(1, now.getFullYear() - ann.y - 1);
+      for (let i = 0; i < 6; i++) {
+        const occ = lfOccurrence(ann, ann.y + k);
+        if (lfUtc(occ) > todayUtc) return { n: k, ordinal: lfOrdinal(k), occ: occ };
+        k++;
+      }
+      return { n: k, ordinal: lfOrdinal(k), occ: lfOccurrence(ann, ann.y + k) };
+    } catch (e) {
+      return none;
+    }
+  }
+
+  // lfAnnivCelebrate — the number to celebrate when TODAY is itself an anniversary
+  // (the whole local day); 0 when it is not. A start date of "today" (k = 0) is not
+  // an anniversary, so it celebrates nothing and counts down to the 1st instead.
+  function lfAnnivCelebrate(ann, now) {
+    try {
+      if (!ann || !now) return 0;
+      const k = now.getFullYear() - ann.y;
+      if (k < 1) return 0;
+      const occ = lfOccurrence(ann, now.getFullYear());
+      return (occ.m === now.getMonth() + 1 && occ.d === now.getDate()) ? k : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
   // ── lf-math-end ──
 
   const lfAnniv = {
@@ -3066,6 +3156,327 @@
     order: [], pinId: '', pinPos: -1,
     onVisible: null, swipe: null,
   };
+
+  // ── lf-celebration ────────────────────────────────────────────────────
+  // Anniversary-day celebration: ONE DPR-aware canvas pinned to the viewport draws a
+  // small particle system of hearts, balloons (with strings) and confetti (rotating
+  // rectangles with sway + gravity). It is position:fixed; inset:0; pointer-events:none
+  // — no scrim, and every click passes straight through, so the site stays fully
+  // usable. Particle count/size scale with the viewport, the loop pauses on
+  // document.hidden, prefers-reduced-motion:reduce skips the AUTOMATIC play (the copy
+  // and the explicit Replay still work), and lfCelebrate/lfCelebrationStop are the only
+  // entry points so teardown can never leak a canvas, a frame or a timer.
+  const LF_CEL_MS = 11000;        // plays for ~11s, then cleans itself up
+  const LF_CEL_MAX = 340;         // particle cap on a big screen
+  const LF_CEL_KEY = 'lf_cel_';   // per-device, per-date session flag prefix
+
+  const lfCel = {
+    layer: null, canvas: null, ctx: null, raf: null, stopT: null, onVis: null, onResize: null,
+    parts: [], t0: 0, last: 0, hiddenAt: 0, running: false, dpr: 1, w: 0, h: 0,
+  };
+
+  function lfCelClock() {
+    try { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
+    catch (e) { return Date.now(); }
+  }
+
+  function lfCelReduced() {
+    try {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    } catch (e) { return false; }
+  }
+
+  function lfCelYMD(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // The auto-play guard is per DEVICE and per DATE (sessionStorage): it fires on a fresh
+  // visit that day, and never again in that visit while the partner clicks around.
+  function lfCelSeen(n) {
+    try { return sessionStorage.getItem(LF_CEL_KEY + lfCelYMD(new Date()) + '_' + n) === '1'; }
+    catch (e) { return false; }
+  }
+  function lfCelMark(n) {
+    try { sessionStorage.setItem(LF_CEL_KEY + lfCelYMD(new Date()) + '_' + n, '1'); } catch (e) { /* private mode — just play */ }
+  }
+
+  function lfCelRand(a, b) { return a + Math.random() * (b - a); }
+  function lfCelPick(a) { return a[Math.floor(Math.random() * a.length) % a.length]; }
+
+  // Fewer/smaller particles on a phone; a full sweep on a desktop.
+  function lfCelCount(w, h) {
+    const area = Math.max(1, w * h);
+    const n = Math.round(area / (w < 620 ? 9000 : 9500));
+    return Math.max(40, Math.min(LF_CEL_MAX, n));
+  }
+  function lfCelScale(w, h) { return Math.max(0.62, Math.min(1.12, Math.min(w, h) / 820)); }
+
+  function lfCelNew(w, h, seeding) {
+    const s = lfCelScale(w, h);
+    const r = Math.random();
+    const kind = r < 0.30 ? 'heart' : (r < 0.50 ? 'balloon' : 'confetti');
+    const p = {
+      kind: kind, x: Math.random() * w, y: 0, size: 0,
+      vx: 0, vy: 0, rot: 0, vr: 0, string: 0, tall: 1,
+      swayA: lfCelRand(6, 20) * s, swayF: lfCelRand(0.5, 1.4), swayP: Math.random() * 6.28,
+      color: '#e50914', alpha: lfCelRand(0.72, 1),
+    };
+    if (kind === 'heart') {
+      p.size = lfCelRand(13, 26) * s;
+      p.vy = lfCelRand(42, 92) * s;                 // hearts drift down
+      p.vx = lfCelRand(-9, 9) * s;
+      p.rot = lfCelRand(-0.35, 0.35); p.vr = lfCelRand(-0.5, 0.5);
+      p.color = lfCelPick(['#e50914', '#ff4d5e', '#ff8fa3', '#ffb3c1']);
+      p.y = seeding ? Math.random() * h : -p.size - Math.random() * h * 0.3;
+    } else if (kind === 'balloon') {
+      p.size = lfCelRand(19, 34) * s;
+      p.vy = -lfCelRand(26, 56) * s;                // balloons float up (slower than confetti)
+      p.vx = lfCelRand(-6, 6) * s;
+      p.rot = lfCelRand(-0.15, 0.15); p.vr = lfCelRand(-0.16, 0.16);
+      p.string = lfCelRand(26, 56) * s;
+      p.color = lfCelPick(['#e50914', '#ff5a6a', '#ffd166', '#ff8fa3', '#f7f7f7']);
+      p.y = seeding ? Math.random() * h : h + p.size + p.string + Math.random() * h * 0.35;
+    } else {
+      p.size = lfCelRand(6, 12) * s;
+      p.vy = lfCelRand(78, 168) * s;                // confetti falls fastest
+      p.vx = lfCelRand(-22, 22) * s;
+      p.rot = Math.random() * 6.28; p.vr = lfCelRand(-4.4, 4.4);
+      p.tall = Math.random() < 0.6 ? 2.2 : 1;
+      p.color = lfCelPick(['#e50914', '#ffd166', '#ffffff', '#ff8fa3', '#9fd8ff']);
+      p.y = seeding ? Math.random() * h : -p.size - Math.random() * h * 0.45;
+    }
+    return p;
+  }
+
+  function lfCelSpawn() {
+    const w = lfCel.w, h = lfCel.h, n = lfCelCount(w, h);
+    lfCel.parts = [];
+    for (let i = 0; i < n; i++) lfCel.parts.push(lfCelNew(w, h, true));
+  }
+
+  function lfCelResize() {
+    if (!lfCel.canvas) return;
+    try {
+      const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+      // The layout viewport (clientWidth/Height) is exactly the box a `position:fixed;
+      // inset:0` overlay covers — innerWidth would include the scrollbar.
+      const de = document.documentElement || {};
+      const w = Math.max(240, de.clientWidth || window.innerWidth || 240);
+      const h = Math.max(240, de.clientHeight || window.innerHeight || 240);
+      lfCel.dpr = dpr; lfCel.w = w; lfCel.h = h;
+      lfCel.canvas.width = Math.round(w * dpr);
+      lfCel.canvas.height = Math.round(h * dpr);
+      lfCel.canvas.style.width = w + 'px';
+      lfCel.canvas.style.height = h + 'px';
+      if (lfCel.ctx) lfCel.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } catch (e) { /* a resize must never break the celebration */ }
+  }
+
+  function lfCelStep(dt) {
+    const w = lfCel.w, h = lfCel.h, n = lfCel.parts.length;
+    for (let i = 0; i < n; i++) {
+      const p = lfCel.parts[i];
+      if (!p) { lfCel.parts[i] = lfCelNew(w, h, false); continue; }
+      p.swayP += dt * p.swayF;
+      p.x += (p.vx + Math.sin(p.swayP) * p.swayA) * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      const m = p.size + (p.string || 0) + 40;
+      if (p.vy >= 0) { if (p.y - m > h) lfCel.parts[i] = lfCelNew(w, h, false); }
+      else if (p.y + m < 0) lfCel.parts[i] = lfCelNew(w, h, false);
+      if (p.x < -m) p.x = w + m; else if (p.x > w + m) p.x = -m;
+    }
+  }
+
+  function lfCelHeartPath(ctx, s) {
+    const k = s / 2;
+    ctx.beginPath();
+    ctx.moveTo(0, k * 0.92);
+    ctx.bezierCurveTo(-k * 1.62, k * 0.06, -k * 0.96, -k * 1.06, 0, -k * 0.34);
+    ctx.bezierCurveTo(k * 0.96, -k * 1.06, k * 1.62, k * 0.06, 0, k * 0.92);
+    ctx.closePath();
+  }
+
+  function lfCelDraw() {
+    const ctx = lfCel.ctx;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, lfCel.w, lfCel.h);
+    const n = lfCel.parts.length;
+    for (let i = 0; i < n; i++) {
+      const p = lfCel.parts[i];
+      if (!p) continue;
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      if (p.kind === 'heart') {
+        lfCelHeartPath(ctx, p.size);
+        ctx.fill();
+      } else if (p.kind === 'balloon') {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size * 0.42, p.size * 0.52, 0, 0, 6.2832);
+        ctx.fill();
+        const s0 = p.size * 0.52;
+        ctx.beginPath();                       // knot + string
+        ctx.moveTo(-p.size * 0.07, s0);
+        ctx.lineTo(p.size * 0.07, s0);
+        ctx.lineTo(0, s0 + p.size * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(0, s0 + p.size * 0.1);
+        ctx.quadraticCurveTo(p.size * 0.16, s0 + p.string * 0.55, 0, s0 + p.string);
+        ctx.strokeStyle = 'rgba(255,255,255,.45)';
+        ctx.lineWidth = Math.max(0.6, p.size * 0.035);
+        ctx.stroke();
+        ctx.beginPath();                       // soft highlight
+        ctx.ellipse(-p.size * 0.13, -p.size * 0.16, p.size * 0.09, p.size * 0.13, -0.5, 0, 6.2832);
+        ctx.fillStyle = 'rgba(255,255,255,.4)';
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.size / 2, -(p.size * p.tall) / 2, p.size, p.size * p.tall);
+      }
+      ctx.restore();
+    }
+  }
+
+  function lfCelFrame() {
+    lfCel.raf = null;
+    if (!lfCel.running || !lfCel.ctx) return;
+    try {
+      const now = lfCelClock();
+      let dt = lfCel.last ? (now - lfCel.last) / 1000 : 1 / 60;
+      if (!isFinite(dt) || dt < 0) dt = 0;
+      if (dt > 0.05) dt = 0.05;             // a hiccup must not teleport the particles
+      lfCel.last = now;
+      if (now - lfCel.t0 >= LF_CEL_MS) { lfCelFinish(); return; }
+      lfCelStep(dt);
+      lfCelDraw();
+    } catch (e) {
+      lfCelFinish();                        // a frame must never throw
+      return;
+    }
+    lfCel.raf = window.requestAnimationFrame(lfCelFrame);
+  }
+
+  function lfCelVisibility() {
+    try {
+      if (!lfCel.running) return;
+      if (document.hidden) {
+        if (lfCel.raf) { window.cancelAnimationFrame(lfCel.raf); lfCel.raf = null; }
+        lfCel.hiddenAt = lfCelClock();
+      } else if (!lfCel.raf) {
+        // Hidden time does not eat into the ~11s sweep.
+        if (lfCel.hiddenAt) { lfCel.t0 += (lfCelClock() - lfCel.hiddenAt); lfCel.hiddenAt = 0; }
+        lfCel.last = 0;
+        lfCel.raf = window.requestAnimationFrame(lfCelFrame);
+      }
+    } catch (e) { /* visibility handling must never throw */ }
+  }
+
+  // Tear everything down. Called by the ~11s finish AND by the section teardown, so a
+  // re-mount can never leave a second loop running or a stray timer behind.
+  function lfCelebrationStop() {
+    try {
+      if (lfCel.raf) { window.cancelAnimationFrame(lfCel.raf); lfCel.raf = null; }
+      if (lfCel.stopT) { clearTimeout(lfCel.stopT); lfCel.stopT = null; }
+      if (lfCel.onVis) { document.removeEventListener('visibilitychange', lfCel.onVis); lfCel.onVis = null; }
+      if (lfCel.onResize && window.removeEventListener) { window.removeEventListener('resize', lfCel.onResize); lfCel.onResize = null; }
+      lfCel.running = false;
+      lfCel.hiddenAt = 0;
+      lfCel.parts = [];
+      if (lfCel.layer && lfCel.layer.parentNode) lfCel.layer.parentNode.removeChild(lfCel.layer);
+      lfCel.layer = null; lfCel.canvas = null; lfCel.ctx = null;
+    } catch (e) { /* teardown must never throw */ }
+  }
+
+  function lfCelFinish() {
+    // lf-celebration: the sweep is over — fade the layer out, then remove it.
+    lfCel.running = false;
+    if (lfCel.raf) { window.cancelAnimationFrame(lfCel.raf); lfCel.raf = null; }
+    if (lfCel.onVis) { document.removeEventListener('visibilitychange', lfCel.onVis); lfCel.onVis = null; }
+    lfCel.parts = [];
+    const layer = lfCel.layer;
+    try { if (layer) layer.style.opacity = '0'; } catch (e) { /* ignore */ }
+    if (lfCel.stopT) clearTimeout(lfCel.stopT);
+    lfCel.stopT = setTimeout(function () {
+      lfCel.stopT = null;
+      lfCelebrationStop();
+    }, 520);
+  }
+
+  // The single entry point. Restarts cleanly when called again (Replay).
+  function lfCelebrate() {
+    try {
+      if (!document || !document.body) return false;
+      lfCelebrationStop();
+      const layer = document.createElement('div');
+      layer.className = 'lf-cel-layer';
+      layer.id = 'lf-cel-layer';
+      layer.setAttribute('aria-hidden', 'true');
+      const canvas = document.createElement('canvas');
+      canvas.className = 'lf-cel-canvas';
+      canvas.id = 'lf-cel-canvas';
+      layer.appendChild(canvas);
+      document.body.appendChild(layer);
+      lfCel.layer = layer;
+      lfCel.canvas = canvas;
+      lfCel.ctx = canvas.getContext ? canvas.getContext('2d') : null;
+      if (!lfCel.ctx) { lfCelebrationStop(); return false; }
+      lfCelResize();
+      lfCelSpawn();
+      lfCel.running = true;
+      lfCel.t0 = lfCelClock();
+      lfCel.last = 0;
+      lfCel.hiddenAt = 0;
+      lfCel.onVis = lfCelVisibility;
+      document.addEventListener('visibilitychange', lfCel.onVis);
+      if (window.addEventListener) { lfCel.onResize = lfCelResize; window.addEventListener('resize', lfCel.onResize); }
+      lfCel.raf = window.requestAnimationFrame(lfCelFrame);
+      return true;
+    } catch (e) {
+      lfCelebrationStop();
+      return false;
+    }
+  }
+
+  // Auto-play: once per device per date, and never when the visitor asked for reduced
+  // motion (the card copy and the Replay button still work for them).
+  function lfMaybeAutoCelebrate(n) {
+    try {
+      if (!n || n < 1) return;
+      if (lfCel.running) return;
+      if (lfCelSeen(n)) return;
+      if (lfCelReduced()) return;
+      lfCelMark(n);
+      lfCelebrate();
+    } catch (e) { /* the animation is a bonus — it must never break the card */ }
+  }
+
+  // Introspection hook used by the headless tests (and handy in a browser console).
+  function lfCelState() {
+    const parts = lfCel.parts, sample = [], kinds = { heart: 0, balloon: 0, confetti: 0 };
+    for (let i = 0; i < parts.length; i++) {
+      if (!parts[i]) continue;
+      if (kinds[parts[i].kind] != null) kinds[parts[i].kind]++;
+      if (sample.length < 6) sample.push([Math.round(parts[i].x), Math.round(parts[i].y)]);
+    }
+    return {
+      running: lfCel.running,
+      particles: parts.length,
+      kinds: kinds,
+      sample: sample,
+      raf: lfCel.raf != null,
+      canvas: !!lfCel.canvas,
+      layerInDom: !!(lfCel.layer && lfCel.layer.parentNode),
+      countInDom: document.querySelectorAll ? document.querySelectorAll('#lf-cel-canvas').length : -1,
+      w: lfCel.w, h: lfCel.h, dpr: lfCel.dpr,
+      startedAt: Math.round(lfCel.t0),
+      durationMs: LF_CEL_MS,
+      reduced: lfCelReduced(),
+    };
+  }
 
   // ── lf-auto-rotate ────────────────────────────────────────────────────
   // The slideshow rotates on its own forever, unattended. This is a
@@ -3212,7 +3623,7 @@
       '<div class="lf-anniv-grid">' +
         '<div class="lf-card" id="lf-cd-card">' +
           '<div class="lf-card-head">' +
-            '<h3 class="lf-card-title">Our Countdown</h3>' +
+            '<h3 class="lf-card-title" id="lf-cd-title">Our Countdown</h3>' +
             '<button type="button" class="lf-afford" id="lf-cd-edit" title="Change anniversary date" aria-label="Change anniversary date">&#9998;</button>' +
           '</div>' +
           '<div id="lf-cd-body"></div>' +
@@ -3248,6 +3659,12 @@
     if (!body) return;
     const ann = lfParseYMD(lfAnniv.anniversary);
 
+    // lf-celebration: is TODAY the anniversary? (the whole local day, from the shared
+    // start date — so both partners see it by construction, no per-user state)
+    const now = new Date();
+    const celN = lfAnnivCelebrate(ann, now);
+    const celebrating = celN >= 1;
+
     if (!ann) {
       lfAnniv.refs = null;
       body.innerHTML = '' +
@@ -3268,11 +3685,14 @@
     }
 
     body.innerHTML = '' +
-      '<div class="lf-together">Together for <b id="lf-together">&hellip;</b></div>' +
-      '<div class="lf-together-sub"><span id="lf-total-days">0</span> days together &middot; since <span id="lf-since"></span></div>' +
-      '<div class="lf-celebrate" id="lf-celebrate" hidden>Happy Anniversary 💕</div>' +
-      '<div class="lf-next-label" id="lf-next-label">Next anniversary in</div>' +
-      '<div class="lf-tiles">' +
+      '<div class="lf-together"><span id="lf-together-pre">Together for </span><b id="lf-together">&hellip;</b></div>' +
+      '<div class="lf-together-sub"><span id="lf-total-days">0</span><span id="lf-sub-mid"> days together &middot; since </span><span id="lf-since"></span></div>' +
+      '<div class="lf-celebrate" id="lf-celebrate" hidden>' +
+        '<div class="lf-cel-line" id="lf-cel-line">' + escHtml(lfCelebrationLine(celN)) + '</div>' +
+        '<button type="button" class="lf-replay" id="lf-cd-replay">Replay celebration</button>' +
+      '</div>' +
+      '<div class="lf-next-label" id="lf-next-label"' + (celebrating ? ' hidden' : '') + '></div>' +
+      '<div class="lf-tiles" id="lf-cd-tiles"' + (celebrating ? ' hidden' : '') + '>' +
         '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-d">0</span><span class="lf-tile-lab">Days</span></div>' +
         '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-h">0</span><span class="lf-tile-lab">Hours</span></div>' +
         '<div class="lf-tile"><span class="lf-tile-num" id="lf-tile-m">0</span><span class="lf-tile-lab">Minutes</span></div>' +
@@ -3281,20 +3701,42 @@
 
     lfAnniv.refs = {
       together: body.querySelector('#lf-together'),
+      togetherPre: body.querySelector('#lf-together-pre'),
+      subMid: body.querySelector('#lf-sub-mid'),
       total: body.querySelector('#lf-total-days'),
       since: body.querySelector('#lf-since'),
       celebrate: body.querySelector('#lf-celebrate'),
       nextLabel: body.querySelector('#lf-next-label'),
+      tiles: body.querySelector('#lf-cd-tiles'),
+      celN: celN,
       d: body.querySelector('#lf-tile-d'),
       h: body.querySelector('#lf-tile-h'),
       m: body.querySelector('#lf-tile-m'),
       s: body.querySelector('#lf-tile-s'),
     };
+    // lf-celebration: the Replay control always lives in the card on the anniversary day
+    // and replays the hearts/balloons/confetti sweep on demand (never auto-plays twice).
+    const replay = body.querySelector('#lf-cd-replay');
+    if (replay) replay.addEventListener('click', function () { lfCelebrate(); });
     if (lfAnniv.refs.since) {
       lfAnniv.refs.since.textContent = new Date(ann.y, ann.m - 1, ann.d)
         .toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
     }
     lfTickCountdown();
+  }
+
+  // The line under the "Happy Nth Anniversary!" heading on the day itself.
+  function lfCelebrationLine(n) {
+    const words = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+    const head = (n >= 1 && n < words.length) ? words[n] : String(n);
+    if (!n || n < 1) return '';
+    return head + (n === 1 ? ' whole year' : ' whole years') + ' of you two 💞';
+  }
+
+  // The milestone copy: "Countdown to Our 1st Anniversary" (the ordinal is emphasised).
+  function lfCountdownLabel(n, ordinal) {
+    if (!n || !ordinal) return '';
+    return 'Countdown to Our <b>' + escHtml(ordinal) + '</b> Anniversary';
   }
 
   function lfTickCountdown() {
@@ -3305,19 +3747,41 @@
     if (!ann) return;
     const now = new Date();
 
+    // lf-celebration: on the anniversary day itself (the whole local day) the card turns
+    // into the celebration; every other day it names the milestone being counted down to.
+    const celN = lfAnnivCelebrate(ann, now);
+    const celebrating = celN >= 1;
+    if (r.celN !== celN) { renderAnnivCountdown(); return; }   // the day rolled over — rebuild the copy
+
     const t = lfTogether(ann, now);
     if (r.together) r.together.textContent = lfTogetherText(t);
     if (r.total) r.total.textContent = t.totalDays.toLocaleString();
+    if (r.togetherPre) r.togetherPre.textContent = t.future ? 'Our story starts in ' : 'Together for ';
+    if (r.subMid) r.subMid.textContent = t.future ? ' days to go \u00b7 day one is ' : ' days together \u00b7 since ';
 
-    const celebrating = lfIsAnniversaryToday(ann, now);
-    const next = lfNextAnniversary(ann, now);
-    const c = lfCountdownParts(next, now);
+    const cd = lfAnnivCountdown(ann, now);
+    const c = cd.occ ? lfCountdownParts(cd.occ, now) : { days: 0, hours: 0, minutes: 0, seconds: 0 };
     if (r.celebrate) r.celebrate.hidden = !celebrating;
-    if (r.nextLabel) r.nextLabel.textContent = celebrating ? "Next anniversary in (you're celebrating today)" : 'Next anniversary in';
+    if (r.tiles) r.tiles.hidden = celebrating;
+    if (r.nextLabel) {
+      r.nextLabel.hidden = celebrating;
+      const label = lfCountdownLabel(cd.n, cd.ordinal);
+      if (r.nextLabel.getAttribute('data-lf-label') !== label) {
+        r.nextLabel.innerHTML = label;
+        r.nextLabel.setAttribute('data-lf-label', label);
+      }
+    }
+    const title = lfAnniv.root.querySelector('#lf-cd-title');
+    if (title) {
+      const want = celebrating ? ('❤️ Happy ' + lfOrdinal(celN) + ' Anniversary! ❤️') : 'Our Countdown';
+      if (title.textContent !== want) title.textContent = want;
+    }
     if (r.d) r.d.textContent = String(c.days);
     if (r.h) r.h.textContent = String(c.hours).padStart(2, '0');
     if (r.m) r.m.textContent = String(c.minutes).padStart(2, '0');
     if (r.s) r.s.textContent = String(c.seconds).padStart(2, '0');
+
+    if (celebrating) lfMaybeAutoCelebrate(celN);
   }
 
   function lfToggleEditBox() {
@@ -3671,6 +4135,9 @@
       lfAnniv.onVisible = null;
     }
     lfAnniv.refs = null;
+    // lf-celebration: the overlay canvas, its frame loop, its timers and its listeners
+    // all belong to this section — a re-mount must never leave a second one running.
+    lfCelebrationStop();
   }
 
   function mountAnnivSection(rowsWrap) {
