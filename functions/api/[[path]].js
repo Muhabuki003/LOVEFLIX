@@ -208,12 +208,27 @@ export async function onRequest(context) {
     const isAiRoute = method === 'POST' && path === '/api/ai';
     const isPublic = PUBLIC_ROUTES.has(routeKey) || isYouTubeRoute || isAiRoute;
 
+    // Machine caller: the transcode worker (VPS, ffmpeg). Authenticated by a
+    // shared service key and scoped to the transcode + chunked-upload endpoints.
+    const serviceCall = serviceActor(request, env, path);
+
     let user = null;
     if (!isPublic) {
       user = await authenticate(request, env);
+      if (!user) user = serviceCall;
       if (!user) return json({ error: 'unauthorized' }, 401);
     } else {
       user = await authenticate(request, env).catch(() => null);
+    }
+
+    // ── Transcode queue (machine-only) ─────────────────────────────────────
+    // Pull-based: the VPS asks what still needs a web-playable rendition, rather
+    // than the Worker reaching into the VPS. No inbound access, no R2 credentials.
+    if (path.startsWith('/api/transcode/')) {
+      if (!serviceCall) return json({ error: 'unauthorized' }, 401);
+      if (method === 'GET'  && path === '/api/transcode/queue')  return transcodeQueue(env);
+      if (method === 'POST' && path === '/api/transcode/report') return transcodeReport(env, request);
+      return json({ error: 'not_found' }, 404);
     }
 
     // Structured request log — every call, every endpoint.
@@ -904,6 +919,8 @@ function uploadKeyFor(user, filename, folder) {
   const clean = String(filename || 'upload.bin')
     .replace(/[^a-zA-Z0-9._-]/g, '_')
     .slice(0, 180) || 'upload.bin';
+  // The transcode worker owns exactly one folder: the rendition folder.
+  if (user && user.service) return { clean, key: `videos/transcoded/${Date.now()}-${clean}` };
   return { clean, key: `${folder || 'videos'}/${user.id}/${Date.now()}-${clean}` };
 }
 
@@ -946,7 +963,7 @@ async function multipartPart(env, request, url, user) {
   if (!key || !uploadId || !Number.isInteger(partNumber) || partNumber < 1) {
     return json({ error: 'key, uploadId and a positive partNumber are required' }, 400);
   }
-  if (!keyBelongsToUser(key, user)) return json({ error: 'forbidden_key' }, 403);
+  if (!keyAllowed(key, user)) return json({ error: 'forbidden_key' }, 403);
 
   const declared = Number(request.headers.get('content-length') || 0);
   const expect = Number(url.searchParams.get('bytes') || 0);
@@ -976,7 +993,7 @@ async function multipartComplete(env, request, user) {
 
   if (!key || !uploadId) return json({ error: 'key and uploadId are required' }, 400);
   if (!parts.length) return json({ error: 'no_valid_parts' }, 400);
-  if (!keyBelongsToUser(key, user)) return json({ error: 'forbidden_key' }, 403);
+  if (!keyAllowed(key, user)) return json({ error: 'forbidden_key' }, 403);
 
   let obj = null;
   try {
@@ -1012,11 +1029,130 @@ async function multipartAbort(env, request, user) {
   if (!env.VIDEOS) return json({ error: 'r2_not_configured' }, 500);
   const body = await request.json().catch(() => ({}));
   if (!body.key || !body.uploadId) return json({ error: 'key and uploadId are required' }, 400);
-  if (!keyBelongsToUser(body.key, user)) return json({ error: 'forbidden_key' }, 403);
+  if (!keyAllowed(body.key, user)) return json({ error: 'forbidden_key' }, 403);
   try {
     await env.VIDEOS.resumeMultipartUpload(body.key, body.uploadId).abort();
   } catch (_) { /* already aborted or expired */ }
   return json({ ok: true });
+}
+
+// ---------- Transcode queue (machine caller only) ----------
+// A video is only worth serving if every browser can decode it. iPhone and
+// screen-recording .mov files are routinely HEVC or ProRes, which Chrome/Edge
+// cannot decode — the player then stalls partway ("videos getting cut"). The
+// VPS transcode worker polls this queue, converts what it must to H.264/AAC,
+// uploads the rendition through the chunked endpoint and reports back here.
+const TRANSCODE_KV_PREFIX = 'transcode:';
+
+function constantTimeEqual(a, b) {
+  const x = String(a || ''), y = String(b || '');
+  if (!x || !y || x.length !== y.length) return false;
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x.charCodeAt(i) ^ y.charCodeAt(i);
+  return diff === 0;
+}
+
+// Upload paths the transcode worker may call with the service key.
+const SERVICE_UPLOAD_PATHS = new Set([
+  '/api/upload-multipart/create',
+  '/api/upload-multipart/part',
+  '/api/upload-multipart/complete',
+  '/api/upload-multipart/abort',
+]);
+
+function serviceActor(request, env, path) {
+  const expected = env.TRANSCODE_SERVICE_KEY || '';
+  const provided = request.headers.get('x-service-key') || '';
+  if (!expected || !provided || !constantTimeEqual(provided, expected)) return null;
+  const allowed = path.startsWith('/api/transcode/') || SERVICE_UPLOAD_PATHS.has(path);
+  if (!allowed) return null;
+  return { id: 'transcode-service', service: true };
+}
+
+// The service may only write into the transcoded-rendition folder.
+function keyAllowed(key, user) {
+  if (user && user.service) return typeof key === 'string' && key.startsWith('videos/transcoded/');
+  return keyBelongsToUser(key, user);
+}
+
+async function transcodeQueue(env) {
+  if (!env.DB) return json({ error: 'db_missing' }, 500);
+  let rows = [];
+  try {
+    const r = await env.DB.prepare(
+      `SELECT id, title, video_url, duration_seconds, created_at
+         FROM videos
+        WHERE video_url IS NOT NULL AND video_url != ''
+        ORDER BY created_at DESC LIMIT 100`
+    ).all();
+    rows = r.results || [];
+  } catch (e) {
+    return json({ error: 'db_query_failed', message: String((e && e.message) || e).slice(0, 200) }, 500);
+  }
+
+  const out = [];
+  for (const row of rows) {
+    let state = null;
+    if (env.RATE_LIMIT_KV) {
+      try { state = await env.RATE_LIMIT_KV.get(`${TRANSCODE_KV_PREFIX}${row.id}`, 'json'); } catch (_) {}
+    }
+    // 'playable' and 'transcoded' are terminal; 'failed' (or no record) is retried.
+    if (state && (state.status === 'playable' || state.status === 'transcoded')) continue;
+    out.push({
+      id: row.id,
+      title: row.title,
+      video_url: state && state.original_url ? state.original_url : row.video_url,
+      duration_seconds: row.duration_seconds,
+      attempts: (state && state.attempts) || 0,
+    });
+  }
+  return json({ ok: true, count: out.length, videos: out });
+}
+
+async function transcodeReport(env, request) {
+  const b = await request.json().catch(() => ({}));
+  const id = b.videoId;
+  const status = b.status;
+  if (!id || !status) return json({ error: 'videoId and status are required' }, 400);
+  if (!['transcoded', 'playable', 'failed'].includes(status)) {
+    return json({ error: 'status must be transcoded, playable or failed' }, 400);
+  }
+
+  let state = null;
+  if (env.RATE_LIMIT_KV) {
+    try { state = await env.RATE_LIMIT_KV.get(`${TRANSCODE_KV_PREFIX}${id}`, 'json'); } catch (_) {}
+  }
+
+  const rec = {
+    status,
+    video_codec: b.video_codec || null,
+    audio_codec: b.audio_codec || null,
+    width: b.width || null,
+    height: b.height || null,
+    rendition_url: b.rendition_url || null,
+    rendition_bytes: b.rendition_bytes || null,
+    original_url: (state && state.original_url) || b.original_url || null,
+    attempts: ((state && state.attempts) || 0) + (status === 'failed' ? 1 : 0),
+    checked_at: Date.now(),
+    note: b.note ? String(b.note).slice(0, 300) : null,
+  };
+
+  // Point the video at its playable rendition.
+  if (status === 'transcoded') {
+    if (!b.rendition_url) return json({ error: 'rendition_url is required when transcoded' }, 400);
+    if (!env.DB) return json({ error: 'db_missing' }, 500);
+    try {
+      await env.DB.prepare(`UPDATE videos SET video_url = ? WHERE id = ?`).bind(b.rendition_url, id).run();
+      rec.applied = true;
+    } catch (e) {
+      return json({ error: 'db_update_failed', message: String((e && e.message) || e).slice(0, 200) }, 500);
+    }
+  }
+
+  if (env.RATE_LIMIT_KV) {
+    try { await env.RATE_LIMIT_KV.put(`${TRANSCODE_KV_PREFIX}${id}`, JSON.stringify(rec)); } catch (_) {}
+  }
+  return json({ ok: true, videoId: id, status, applied: !!rec.applied });
 }
 
 // AWS SigV4 query-string presign for `PUT s3://bucket/key`.
