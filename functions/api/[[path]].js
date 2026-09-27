@@ -617,7 +617,7 @@ async function presignVideoUpload(env, request, url, user) {
   const body = await request.json().catch(() => ({}));
   const rawName = (body.filename || `editor-${Date.now()}.mp4`).toString();
   const filename = rawName.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const contentType = body.contentType || 'video/mp4';
+  const contentType = lfUploadContentType(filename, body.contentType, 'videos');
   const videoId = `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const key = `videos/${user.id}/${Date.now()}-${filename}`;
 
@@ -754,12 +754,39 @@ async function putSettings(env, request, user) {
   return json({ ok: true });
 }
 
+// ── lf-upload-mime-start ── (extracted by tests/video-mime.test.mjs)
+const LF_IMAGE_EXT_MIME = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', jpe: 'image/jpeg', png: 'image/png',
+  webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
+  heic: 'image/heic', heif: 'image/heic', svg: 'image/svg+xml',
+};
+const LF_VIDEO_EXT_MIME = {
+  mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', qt: 'video/quicktime',
+  webm: 'video/webm', mkv: 'video/x-matroska', ogv: 'video/ogg', avi: 'video/x-msvideo',
+};
+
+// Both MP4 and MOV uploads must work. Browsers hand us an empty `type` for .mov
+// (and .mkv) quite often — Windows, Android and some Safari builds — and the
+// old code turned that into `video/mp4`, storing a QuickTime file under the
+// wrong content type (which then refuses to play in <video>). Trust an explicit
+// video/* or image/* type, otherwise derive it from the filename extension.
+function lfUploadContentType(filename, provided, folder) {
+  const given = String(provided || '').toLowerCase().trim();
+  if (given && given !== 'video/*' && given !== 'image/*' && /^(video|image)\//.test(given)) return given;
+  const m = String(filename || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+  const ext = m ? m[1] : '';
+  if (LF_VIDEO_EXT_MIME[ext]) return LF_VIDEO_EXT_MIME[ext];
+  if (LF_IMAGE_EXT_MIME[ext]) return LF_IMAGE_EXT_MIME[ext];
+  return folder === 'images' ? 'image/jpeg' : 'video/mp4';
+}
+// ── lf-upload-mime-end ──
+
 // ---------- R2 upload URL ----------
 async function getUploadUrl(env, url, user) {
   const filename = (url.searchParams.get('filename') || `upload-${Date.now()}.bin`)
     .replace(/[^a-zA-Z0-9._-]/g, '_');
-  const contentType = url.searchParams.get('type') || 'application/octet-stream';
   const folder = url.searchParams.get('folder') || 'videos';
+  const contentType = lfUploadContentType(filename, url.searchParams.get('type'), folder);
   const key = `${folder}/${user.id}/${Date.now()}-${filename}`;
 
   const publicUrl = env.R2_PUBLIC_URL

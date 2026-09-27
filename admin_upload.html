@@ -158,7 +158,7 @@
         <h2>1 · Video File</h2>
         <div class="drop" id="drop">
           <label for="fileInput" class="sr-only">Video file</label>
-          <input type="file" id="fileInput" accept="video/*" hidden>
+          <input type="file" id="fileInput" accept="video/mp4,video/quicktime,.mp4,.mov,.m4v,.webm,.mkv,video/*" hidden>
           <div id="dropEmpty">
             <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
             <div class="t">Drag and drop a video here</div>
@@ -341,7 +341,41 @@
     });
   }
 
+  /* ── lf-video-type-start ── (extracted by tests/video-mime.test.mjs) */
+  // MP4 and MOV are both accepted. A .mov frequently arrives with an empty
+  // file.type (Windows, Android, some Safari), so infer the real type from the
+  // extension instead of silently mislabelling it video/mp4.
+  const LF_VIDEO_MIME = {
+    mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', qt: 'video/quicktime',
+    webm: 'video/webm', mkv: 'video/x-matroska', ogv: 'video/ogg', avi: 'video/x-msvideo'
+  };
+  function lfExtOf(file) {
+    const m = String((file && file.name) || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : '';
+  }
+  function lfVideoContentType(file) {
+    const given = String((file && file.type) || '').toLowerCase().trim();
+    if (given.indexOf('video/') === 0 && given !== 'video/*') return given;
+    const ext = lfExtOf(file);
+    return (ext && LF_VIDEO_MIME[ext]) || 'video/mp4';
+  }
+  function lfIsVideoFile(file) {
+    const given = String((file && file.type) || '').toLowerCase().trim();
+    if (given.indexOf('video/') === 0 && given !== 'video/*') return true;
+    return !!LF_VIDEO_MIME[lfExtOf(file)];
+  }
+  /* ── lf-video-type-end ── */
+
   async function startUpload(file) {
+    if (!lfIsVideoFile(file)) {
+      dropEmpty.style.display = '';
+      uploaded.classList.remove('show');
+      status.textContent = 'That file is not a video — choose an MP4 or MOV file.';
+      fill.style.width = '0%';
+      fill.style.background = '#b0070f';
+      fileInput.value = '';
+      return;
+    }
     selectedFile = file;
     uploadComplete = false;
     uploadedVideoUrl = null;
@@ -355,7 +389,7 @@
 
     try {
       const filename = encodeURIComponent(file.name);
-      const type     = encodeURIComponent(file.type || 'video/mp4');
+      const type     = encodeURIComponent(lfVideoContentType(file));
       const presign  = await LoveFlix.api(
         `/api/upload-url?folder=videos&filename=${filename}&type=${type}`
       );
