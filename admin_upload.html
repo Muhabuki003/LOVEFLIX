@@ -162,7 +162,7 @@
           <div id="dropEmpty">
             <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg></div>
             <div class="t">Drag and drop a video here</div>
-            <div class="s">or click to browse — MP4, MOV, up to 4GB</div>
+            <div class="s">or click to browse — MP4, MOV, any size (large files upload in parts)</div>
             <button type="button" class="browse" id="browseBtn">Choose File</button>
             <div class="specs">1080p · 4K · HDR Supported</div>
           </div>
@@ -366,6 +366,116 @@
   }
   /* ── lf-video-type-end ── */
 
+  /* ── lf-chunk-start ── (extracted by tests/upload-multipart.test.mjs) */
+  // Cloudflare kills any single Pages Function request body over ~100 MB with a 413,
+  // which is what "cut" long videos. So large files go up in parts and R2 re-assembles
+  // them (no R2 S3 credentials needed — it uses the Worker's R2 binding).
+  const LF_CHUNK_OVER  = 32 * 1024 * 1024;   // switch to chunked above 32 MB
+  const LF_CHUNK_FALLBACK = 8 * 1024 * 1024; // if the server doesn't dictate a part size
+
+  function lfPartsFor(size, partSize) {
+    const ps = partSize > 0 ? partSize : LF_CHUNK_FALLBACK;
+    const n = Math.max(1, Math.ceil(size / ps));
+    const out = [];
+    for (let i = 0; i < n; i++) out.push({ n: i + 1, start: i * ps, end: Math.min(size, (i + 1) * ps) });
+    return out;
+  }
+
+  // Tell the server how many bytes to expect, so a cut upload is caught.
+  function singleShotUrl(url, size) {
+    return url + (url.indexOf('?') === -1 ? '?' : '&') + 'bytes=' + size;
+  }
+
+  // Server error codes → something a person can act on.
+  const LF_UPLOAD_ERRORS = {
+    size_mismatch: 'the file did not arrive whole — please try again',
+    upload_truncated: 'the upload was cut short — please try again',
+    part_length_mismatch: 'a part arrived the wrong size — please try again',
+    part_upload_failed: 'a part failed to upload — please try again',
+    complete_failed: 'the upload could not be finished — please try again',
+    multipart_create_failed: 'the upload could not be started — please try again',
+    no_valid_parts: 'no data arrived — please try again',
+    r2_not_configured: 'video storage is not configured',
+    unauthorized: 'your session expired — sign in again',
+  };
+  function lfUploadErrorText(err) {
+    const k = String((err && err.message) || err || '');
+    return LF_UPLOAD_ERRORS[k] || k || 'unknown error';
+  }
+  /* ── lf-chunk-end ── */
+
+  function lfAuthToken() {
+    try { return localStorage.getItem('loveflix_token') || ''; } catch (_) { return ''; }
+  }
+
+  // PUT one binary part and hand back the parsed JSON (LoveFlix.api() can't send a Blob).
+  function putChunk(url, blob, onLoaded) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      const t = lfAuthToken();
+      if (t) xhr.setRequestHeader('Authorization', 'Bearer ' + t);
+      xhr.upload.onprogress = e => { if (e.lengthComputable && onLoaded) onLoaded(e.loaded); };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let data = null; try { data = JSON.parse(xhr.responseText); } catch (_) {}
+          resolve(data || {});
+        } else {
+          let msg = 'HTTP ' + xhr.status;
+          try { const d = JSON.parse(xhr.responseText); msg = (d && (d.message || d.error)) || msg; } catch (_) {}
+          if (xhr.status === 413) msg = 'the server refused the file as too large (413)';
+          reject(new Error(msg));
+        }
+      };
+      xhr.onerror = () => reject(new Error('network error during upload'));
+      xhr.onabort = () => reject(new Error('upload aborted'));
+      xhr.send(blob);
+    });
+  }
+
+  // Upload in parts. Returns {key, public_url} or throws with a readable reason.
+  async function chunkedUpload(file, setStatus, setFill) {
+    const created = await LoveFlix.api('/api/upload-multipart/create', {
+      method: 'POST',
+      body: { filename: file.name, contentType: lfVideoContentType(file), folder: 'videos' },
+    });
+    if (!created || created.error) throw new Error((created && (created.message || created.error)) || 'could not start the upload');
+
+    const parts = lfPartsFor(file.size, created.partSize || LF_CHUNK_FALLBACK);
+    if (parts.length > (created.maxParts || 10000)) {
+      throw new Error('file is too large (' + parts.length + ' parts)');
+    }
+
+    const uploaded = [];
+    let sent = 0;
+    for (const p of parts) {
+      const chunk = file.slice(p.start, p.end);
+      const qs = 'key=' + encodeURIComponent(created.key) +
+                 '&uploadId=' + encodeURIComponent(created.uploadId) +
+                 '&partNumber=' + p.n + '&bytes=' + chunk.size;
+      const res = await putChunk('/api/upload-multipart/part?' + qs, chunk, loaded => {
+        const done = sent + Math.min(loaded, chunk.size);
+        const pct = Math.floor((done / file.size) * 100);
+        setFill(pct);
+        setStatus(`Uploading… ${pct}% · ${readableSize(file.size)} (part ${p.n}/${parts.length})`);
+      });
+      if (!res || !res.etag) throw new Error('part ' + p.n + ' did not confirm');
+      uploaded.push({ partNumber: res.partNumber || p.n, etag: res.etag });
+      sent += chunk.size;
+    }
+
+    const done = await LoveFlix.api('/api/upload-multipart/complete', {
+      method: 'POST',
+      body: { key: created.key, uploadId: created.uploadId, parts: uploaded, size: file.size },
+    });
+    if (!done || done.error) throw new Error((done && (done.message || done.error)) || 'could not finish the upload');
+    if (done.size != null && done.size !== file.size) {
+      throw new Error('upload incomplete: stored ' + readableSize(done.size) + ' of ' + readableSize(file.size));
+    }
+    return { key: created.key, public_url: done.public_url || created.public_url };
+  }
+
   async function startUpload(file) {
     if (!lfIsVideoFile(file)) {
       dropEmpty.style.display = '';
@@ -388,38 +498,51 @@
     status.textContent = 'Preparing upload…';
 
     try {
-      const filename = encodeURIComponent(file.name);
-      const type     = encodeURIComponent(lfVideoContentType(file));
-      const presign  = await LoveFlix.api(
-        `/api/upload-url?folder=videos&filename=${filename}&type=${type}`
-      );
-
-      if (presign.error) {
-        status.textContent = presign.error;
-        fill.style.background = '#b0070f';
-        uploadComplete = false;
-        return;
-      }
-
-      uploadedKey = presign.key;
-      uploadedVideoUrl = presign.public_url;
-
       durationSeconds = await probeDuration(file);
 
       const progressBar = fill.closest('.upload-bar');
-      await LoveFlix.putWithProgress(presign.upload_url, file, p => {
-        const pct = Math.floor(p * 100);
+      const setFill = pct => {
         fill.style.width = pct + '%';
         if (progressBar) progressBar.setAttribute('aria-valuenow', String(pct));
-        status.textContent = `Uploading… ${pct}% · ${readableSize(file.size)}`;
-      });
+      };
+      const setStatus = t => { status.textContent = t; };
 
-      fill.style.width = '100%';
-      if (progressBar) progressBar.setAttribute('aria-valuenow', '100');
+      if (file.size > LF_CHUNK_OVER) {
+        // Big file → parts, so Cloudflare's ~100 MB per-request cap can't cut it.
+        setStatus('Uploading… ' + readableSize(file.size));
+        const up = await chunkedUpload(file, setStatus, setFill);
+        uploadedKey = up.key;
+        uploadedVideoUrl = up.public_url;
+      } else {
+        const filename = encodeURIComponent(file.name);
+        const type     = encodeURIComponent(lfVideoContentType(file));
+        const presign  = await LoveFlix.api(
+          `/api/upload-url?folder=videos&filename=${filename}&type=${type}`
+        );
+
+        if (presign.error) {
+          status.textContent = presign.error;
+          fill.style.background = '#b0070f';
+          uploadComplete = false;
+          return;
+        }
+
+        uploadedKey = presign.key;
+        uploadedVideoUrl = presign.public_url;
+
+        await LoveFlix.putWithProgress(singleShotUrl(presign.upload_url, file.size), file, p => {
+          const pct = Math.floor(p * 100);
+          setFill(pct);
+          setStatus(`Uploading… ${pct}% · ${readableSize(file.size)}`);
+        });
+      }
+
+      setFill(100);
       uploadComplete = true;
       status.textContent = 'Ready to publish · ' + readableSize(file.size);
     } catch (e) {
-      status.textContent = 'Upload failed: ' + (e.message || 'unknown error');
+      uploadComplete = false;
+      status.textContent = 'Upload failed: ' + lfUploadErrorText(e);
       fill.style.background = '#b0070f';
     }
   }

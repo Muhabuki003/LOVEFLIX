@@ -53,9 +53,10 @@ check('.HEIC in images folder -> image/heic', lfUploadContentType('us.HEIC', und
 check('unknown ext, images    -> image/jpeg', lfUploadContentType('mystery', '', 'images'), 'image/jpeg');
 check('explicit image type kept', lfUploadContentType('us.png', 'image/png', 'images'), 'image/png');
 
-// both upload paths must actually use the helper (1 definition + 2 call sites)
+// every upload path must use the helper: 1 definition + getUploadUrl +
+// presignVideoUpload + multipartCreate
 const callSites = (serverSrc.match(/lfUploadContentType\(/g) || []).length;
-check('helper used by all upload paths (def + 2 calls)', callSites, 3);
+check('helper used by every upload path (def + 3 calls)', callSites, 4);
 
 // ---------------------------------------------------------------- client side
 const htmlSrc = readFileSync(join(root, 'admin_upload.html'), 'utf8');
