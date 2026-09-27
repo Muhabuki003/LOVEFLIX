@@ -291,6 +291,13 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/api/upload-url') return getUploadUrl(env, url, user);
     if (method === 'PUT' && path === '/api/upload-object') return uploadObject(env, request, url, user);
 
+    // Chunked upload for large files — Cloudflare caps one request body at ~100 MB
+    // (the reason long videos used to arrive cut), so big files go up in parts.
+    if (method === 'POST' && path === '/api/upload-multipart/create') return multipartCreate(env, request, user);
+    if (method === 'PUT'  && path === '/api/upload-multipart/part') return multipartPart(env, request, url, user);
+    if (method === 'POST' && path === '/api/upload-multipart/complete') return multipartComplete(env, request, user);
+    if (method === 'POST' && path === '/api/upload-multipart/abort') return multipartAbort(env, request, user);
+
     // Editor "Save to LoveFlix" flow.
     if (method === 'POST' && path === '/api/videos/presign') return presignVideoUpload(env, request, url, user);
     if (method === 'POST' && path === '/api/videos/confirm') return confirmVideoUpload(env, request, user);
@@ -857,11 +864,159 @@ async function uploadObject(env, request, url, user) {
   }
 
   const contentType = request.headers.get('content-type') || 'application/octet-stream';
+  // Browsers put Content-Length on a File upload; `bytes` is a belt-and-braces
+  // declaration for clients/proxies that don't (or strip it).
+  const declared = Number(url.searchParams.get('bytes') || request.headers.get('content-length') || 0);
   await env.VIDEOS.put(key, request.body, {
     httpMetadata: { contentType },
   });
 
+  // Cloudflare aborts an oversized body (413) or a dropped connection mid-stream.
+  // Verify what actually landed before reporting success, otherwise a half-uploaded
+  // video is published as if it were complete ("videos getting cut").
+  if (declared) {
+    const head = await env.VIDEOS.head(key).catch(() => null);
+    if (head && head.size !== declared) {
+      await env.VIDEOS.delete(key).catch(() => {});
+      return json({
+        error: 'upload_truncated',
+        message: `Only ${head.size} of ${declared} bytes arrived — the upload was cut short. ` +
+                 'Files over ~100 MB must use the chunked upload endpoint.',
+        stored_bytes: head.size,
+        declared_bytes: declared,
+      }, 400);
+    }
+  }
+
   return json({ ok: true, key });
+}
+
+// ---------- Chunked (multipart) upload ----------
+// A single Pages Function request body is capped at ~100 MB by Cloudflare: the
+// connection is killed with 413 and the file lands truncated. Videos are routinely
+// larger than that (an iPhone .mov or a Mac screen recording easily runs to GB), so
+// large files are split into <=8 MiB parts, each its own request, and re-assembled by
+// R2 multipart. Uses the existing VIDEOS binding — no R2 S3 credentials required.
+const MULTIPART_PART_SIZE = 8 * 1024 * 1024;      // 8 MiB per part (must be >=5 MiB, <100 MiB)
+const MULTIPART_MAX_PARTS = 10000;                // R2 limit
+
+function uploadKeyFor(user, filename, folder) {
+  const clean = String(filename || 'upload.bin')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .slice(0, 180) || 'upload.bin';
+  return { clean, key: `${folder || 'videos'}/${user.id}/${Date.now()}-${clean}` };
+}
+
+function keyBelongsToUser(key, user) {
+  return typeof key === 'string' &&
+    (key.startsWith(`videos/${user.id}/`) || key.startsWith(`images/${user.id}/`));
+}
+
+function publicUrlFor(env, key) {
+  if (!env.R2_PUBLIC_URL) return null;
+  return `${env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`;
+}
+
+async function multipartCreate(env, request, user) {
+  if (!env.VIDEOS) return json({ error: 'r2_not_configured' }, 500);
+  const body = await request.json().catch(() => ({}));
+  const folder = body.folder === 'images' ? 'images' : 'videos';
+  const { clean, key } = uploadKeyFor(user, body.filename, folder);
+  const contentType = lfUploadContentType(clean, body.contentType, folder);
+  try {
+    const upload = await env.VIDEOS.createMultipartUpload(key, { httpMetadata: { contentType } });
+    return json({
+      key,
+      uploadId: upload.uploadId,
+      partSize: MULTIPART_PART_SIZE,
+      maxParts: MULTIPART_MAX_PARTS,
+      content_type: contentType,
+      public_url: publicUrlFor(env, key),
+    });
+  } catch (e) {
+    return json({ error: 'multipart_create_failed', message: String((e && e.message) || e).slice(0, 300) }, 500);
+  }
+}
+
+async function multipartPart(env, request, url, user) {
+  if (!env.VIDEOS) return json({ error: 'r2_not_configured' }, 500);
+  const key = url.searchParams.get('key');
+  const uploadId = url.searchParams.get('uploadId');
+  const partNumber = Number(url.searchParams.get('partNumber'));
+  if (!key || !uploadId || !Number.isInteger(partNumber) || partNumber < 1) {
+    return json({ error: 'key, uploadId and a positive partNumber are required' }, 400);
+  }
+  if (!keyBelongsToUser(key, user)) return json({ error: 'forbidden_key' }, 403);
+
+  const declared = Number(request.headers.get('content-length') || 0);
+  const expect = Number(url.searchParams.get('bytes') || 0);
+  if (expect && declared && declared !== expect) {
+    return json({ error: 'part_length_mismatch', declared_bytes: declared, expected_bytes: expect }, 400);
+  }
+
+  try {
+    const upload = env.VIDEOS.resumeMultipartUpload(key, uploadId);
+    const part = await upload.uploadPart(partNumber, request.body);
+    return json({ partNumber: part.partNumber, etag: part.etag });
+  } catch (e) {
+    return json({ error: 'part_upload_failed', partNumber, message: String((e && e.message) || e).slice(0, 300) }, 400);
+  }
+}
+
+async function multipartComplete(env, request, user) {
+  if (!env.VIDEOS) return json({ error: 'r2_not_configured' }, 500);
+  const body = await request.json().catch(() => ({}));
+  const key = body.key;
+  const uploadId = body.uploadId;
+  const declared = body.size == null ? null : Number(body.size);
+  const parts = (Array.isArray(body.parts) ? body.parts : [])
+    .map(p => ({ partNumber: Number(p && p.partNumber), etag: String((p && p.etag) || '') }))
+    .filter(p => Number.isInteger(p.partNumber) && p.partNumber > 0 && p.etag)
+    .sort((a, b) => a.partNumber - b.partNumber);
+
+  if (!key || !uploadId) return json({ error: 'key and uploadId are required' }, 400);
+  if (!parts.length) return json({ error: 'no_valid_parts' }, 400);
+  if (!keyBelongsToUser(key, user)) return json({ error: 'forbidden_key' }, 403);
+
+  let obj = null;
+  try {
+    obj = await env.VIDEOS.resumeMultipartUpload(key, uploadId).complete(parts);
+  } catch (e) {
+    return json({ error: 'complete_failed', message: String((e && e.message) || e).slice(0, 300) }, 400);
+  }
+
+  // Never report success for a file that arrived short — that is exactly how a video
+  // got published looking complete while the tail was missing.
+  const head = await env.VIDEOS.head(key).catch(() => null);
+  const stored = head ? head.size : (obj && obj.size) || null;
+  if (declared != null && stored != null && stored !== declared) {
+    return json({
+      error: 'size_mismatch',
+      message: `Stored ${stored} bytes but the file is ${declared} bytes — the upload was incomplete.`,
+      stored_bytes: stored,
+      declared_bytes: declared,
+      key,
+    }, 400);
+  }
+
+  return json({
+    ok: true,
+    key,
+    size: stored,
+    parts: parts.length,
+    public_url: publicUrlFor(env, key),
+  });
+}
+
+async function multipartAbort(env, request, user) {
+  if (!env.VIDEOS) return json({ error: 'r2_not_configured' }, 500);
+  const body = await request.json().catch(() => ({}));
+  if (!body.key || !body.uploadId) return json({ error: 'key and uploadId are required' }, 400);
+  if (!keyBelongsToUser(body.key, user)) return json({ error: 'forbidden_key' }, 403);
+  try {
+    await env.VIDEOS.resumeMultipartUpload(body.key, body.uploadId).abort();
+  } catch (_) { /* already aborted or expired */ }
+  return json({ ok: true });
 }
 
 // AWS SigV4 query-string presign for `PUT s3://bucket/key`.
