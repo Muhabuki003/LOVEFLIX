@@ -18,3 +18,21 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
+
+# --- Add-to-Home-Screen (a2hs): force the manifest MIME so installability
+#     cannot be broken by a wrong/HTML content-type, and let the icons cache.
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=604800
+
+/apple-touch-icon-precomposed.png
+  Cache-Control: public, max-age=604800
+
+/assets/apple-touch-icon-*
+  Cache-Control: public, max-age=604800
+
+/assets/icon-*
+  Cache-Control: public, max-age=604800
